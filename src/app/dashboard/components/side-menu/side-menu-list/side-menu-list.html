@@ -11,7 +11,7 @@
           @for (acceso of accesos; track acceso.accesoId) {
 
             <li>
-            <a [routerLink]="[acceso.menu.pathApp]"><ion-icon [name]="acceso.menu.icon"></ion-icon> <span>{{acceso.menu.label}}</span></a>
+            <a [routerLink]="[acceso.menu.pathWeb]"><ion-icon [name]="acceso.menu.icon"></ion-icon> <span>{{acceso.menu.label}}</span></a>
             <ul class="nav-flyout">
               <li>
                 <a href="#"><ion-icon name="bar-chart-outline"></ion-icon> Gestión de parámetros</a>

@@ -1,0 +1,20 @@
+<nav class="text-sm breadcrumbs my-4 text-gray-600">
+  <ol class="flex space-x-2 items-center">
+    <li>
+      <a routerLink="/" class="hover:underline text-blue-600">Inicio</a>
+    </li>
+
+    @for (breadcrumb of breadcrumbs; track $index; let last = $last) {
+      <li class="mx-1">/</li>
+      <li>
+        @if (!last) {
+          <a [routerLink]="breadcrumb.url" class="hover:underline text-blue-600">
+            {{ breadcrumb.label }}
+          </a>
+        } @else {
+          <span class="font-semibold text-gray-900">{{ breadcrumb.label }}</span>
+        }
+      </li>
+    }
+  </ol>
+</nav>

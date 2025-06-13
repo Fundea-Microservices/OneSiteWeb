@@ -1,12 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
 import { SideMenuComponent } from "../../components/side-menu/side-menu.component";
 import { RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../services/auth.service';
+import { BreadcrumbComponent } from "../../../shared/components/breadcrumb/breadcrumb";
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [SideMenuComponent, RouterOutlet],
+  imports: [SideMenuComponent, RouterOutlet, BreadcrumbComponent],
   templateUrl: './dashboard-page.html',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export default class DashboardPageComponent { 
 

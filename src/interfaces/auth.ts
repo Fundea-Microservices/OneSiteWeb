@@ -31,6 +31,8 @@ export interface IUser {
     lastName3:   string;
     password:    string;
     email:       string;
+    photoUrl?:   string;
+    lastPasswordUpdate?: Date; 
     fingerprint: null;
     validateMAC: null;
     active:      boolean;
