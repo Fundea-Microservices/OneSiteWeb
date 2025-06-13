@@ -12,8 +12,8 @@
                 alt="">
         </span>
         <span class="text-sm md:text-base font-bold">
-            Iván Esteban 
+            {{user?.name1 || 'Usuario'}} {{user?.lastName1 ? user.lastName1 : ''}}
         </span>
     </a>
-    <p class="text-slate-700">Administrador</p>
+    <p class="text-slate-700">{{user?.rol?.name || 'Rol desconocido'}}</p>
 </div>
