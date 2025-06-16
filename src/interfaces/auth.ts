@@ -47,10 +47,11 @@ export interface IUser {
 }
 
 export interface IRol {
-    rolId:     string;
+    rolId?:     string;
     name:      string;
     active:    boolean;
-    createdAt: Date;
+    guest:    boolean;
+    createdAt?: Date;
 }
 
 export interface IMenu {
@@ -68,3 +69,23 @@ export interface IMenu {
     subMenus?:   IMenu[];
     createdAt:   Date;
 }
+
+
+export interface RolesResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       Data;
+}
+
+export interface Data {
+    roles:    IRol[];
+    metadata: Metadata;
+}
+
+export interface Metadata {
+    total: number;
+    page:  number;
+    limit: number;
+}
+

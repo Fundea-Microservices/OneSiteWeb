@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 export class HttpService {
   private baseUrl: string = environment.apiPath;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Obtiene el token desde localStorage. 
@@ -53,18 +53,13 @@ export class HttpService {
     });
   }
 
-  public delete<T>(url: string, data?: any): Observable<HttpEvent<T>> {
-    const options: any = {
+  public delete<T>(url: string, data?: any): Observable<HttpResponse<T>> {
+    
+    return this.http.request<T>('delete', this.baseUrl + url, {
       headers: this.setHeaders(),
-      observe: 'response'
-    };
-
-    if (data) {
-      options.body = data;
-      return this.http.request<T>('delete', this.baseUrl + url, options);
-    }
-
-    return this.http.delete<T>(this.baseUrl + url, options);
+      observe: 'response' as const,
+      body: data
+    });
   }
 
   public patch<T>(url: string, data: any): Observable<HttpResponse<T>> {

@@ -1,0 +1,19 @@
+<nav class="flex items-center justify-center space-x-1 mt-6">
+    <button (click)="previousPage()" [disabled]="paginationObj().page === 1"
+        class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">
+        ←
+    </button>
+
+    @for (page of totalPagesArray(); track $index) {
+    <button (click)="goToPage(page)" [class.bg-blue-500]="page === paginationObj().page"
+        [class.text-white]="page === paginationObj().page" class="px-3 py-1 rounded hover:bg-gray-300">
+        {{ page }}
+    </button>
+    }
+
+    <button (click)="nextPage()" [disabled]="paginationObj().page === totalPages"
+        class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">
+        →
+    </button>
+</nav>
+<!--  -->
