@@ -31,7 +31,9 @@
       <div class="flex items-center border border-gray-300 rounded-lg bg-white px-3 py-2">
         <i class="text-xl text-gray-400 mr-2" name="lock-closed-outline"></i>
         <input type="password" placeholder="Contraseña" class="w-full outline-none text-sm text-black"
-          [value]="password()" (input)="password.set(txtPassword.value)" #txtPassword />
+          [value]="password()" (input)="password.set(txtPassword.value)" #txtPassword 
+          (keyup.enter)="login()"
+          />
 
       </div>
       <!-- Div para manejar errores de validación -->
