@@ -30,8 +30,7 @@ export default class LoginPageComponent {
     try {
 
       let authData = await  this.authService.login({ userName: this.userName(), password: this.password() })
-
-      if(authData) {
+      if(authData.success) {
         localStorage.setItem('token', authData?.data.token || '');
         localStorage.setItem('user', JSON.stringify(authData?.data.user || {}));
 
@@ -49,7 +48,7 @@ export default class LoginPageComponent {
         this.router.navigate(['/home']);
       } else {
         this.errorObj.set({
-          message: 'Invalid username or password',
+          message: authData.message || 'Login failed',
           code: 401,
           isError: true
         });

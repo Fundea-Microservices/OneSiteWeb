@@ -86,15 +86,14 @@ export class AuthService extends HttpService {
 
       const resp = await firstValueFrom(this.post<AuthResponse>(this.endpoints.login, data));
       if (resp.body?.success) {
-        this.toastr.success(resp.body.message, 'Success');
+        // this.toastr.success(resp.body.message, 'Success');
         return resp.body;
       }
-
       return null;
     } catch (error: any) {
       console.log("🚀 ~ AuthService ~ login ~ error:", error)
       this.toastr.error(error?.error?.message || '', 'Error en login');
-      return null;
+      return error.error;
     }
   }
 
