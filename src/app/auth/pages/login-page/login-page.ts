@@ -19,19 +19,41 @@ export default class LoginPageComponent {
   userName = signal('iesteban');
   password = signal('');
 
+  errorObj = signal<{ message: string; code: number, isError: boolean }>({
+    message: '',
+    code: 0,
+    isError: false
+  });
+
   async login() {
 
     try {
+
       let authData = await  this.authService.login({ userName: this.userName(), password: this.password() })
-      localStorage.setItem('token', authData.body?.data.token || '');
-      localStorage.setItem('user', JSON.stringify(authData.body?.data.user || {}));
 
-      if (authData.body?.data.user.rolId) {
-        let accesosData = await this.authService.getMenusByRol(authData.body?.data.user.rolId);
-        localStorage.setItem('menu', JSON.stringify(accesosData.body?.data.accesos || []));
+      if(authData) {
+        localStorage.setItem('token', authData?.data.token || '');
+        localStorage.setItem('user', JSON.stringify(authData?.data.user || {}));
+
+        this.errorObj.set({
+          message: '',
+          code: 0,
+          isError: false
+        });
+
+        if (authData?.data.user.rolId) {
+          let accesosData = await this.authService.getMenusByRol(authData?.data.user.rolId);
+          localStorage.setItem('menu', JSON.stringify(accesosData.body?.data.accesos || []));
+        }
+
+        this.router.navigate(['/home']);
+      } else {
+        this.errorObj.set({
+          message: 'Invalid username or password',
+          code: 401,
+          isError: true
+        });
       }
-
-      this.router.navigate(['/home']);
 
     } catch (error) {
       console.error('Login failed:', error);

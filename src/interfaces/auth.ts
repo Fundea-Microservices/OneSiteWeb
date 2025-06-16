@@ -42,8 +42,8 @@ export interface IUser {
     puesto:      null;
     methodId:    null;
     created_at:  Date;
-    updated_at:  null;
-    deleted_at:  null;
+    updated_at?:  Date;
+    deleted_at?:  Date;
 }
 
 export interface IRol {
