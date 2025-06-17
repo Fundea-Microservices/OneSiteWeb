@@ -1,0 +1,100 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+    @if (form()) {
+    <div class="row g-2">
+        <div class="col-md-6">
+            <label class="form-label">Nombre de usuario</label>
+            <input class="form-control" formControlName="userName" (change)="changeUserName(txtUserName.value)"
+                #txtUserName />
+            @if (showError('userName', 'required')) {
+            <small class="text-danger">Este campo es requerido</small>
+            }
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Correo</label>
+            <input class="form-control" type="email" formControlName="email" />
+            @if (showError('email', 'required')) {
+            <small class="text-danger">Este campo es requerido</small>
+            }
+            @if (showError('email', 'email')) {
+            <small class="text-danger">Debe ser un email válido</small>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Primer nombre</label>
+            <input class="form-control" formControlName="name1" />
+            @if (showError('name1', 'required')) {
+            <small class="text-danger">Este campo es requerido</small>
+            }
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Segundo nombre</label>
+            <input class="form-control" formControlName="name2" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Tercer nombre</label>
+            <input class="form-control" formControlName="name3" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Apellido 1</label>
+            <input class="form-control" formControlName="lastName1" />
+            @if (showError('lastName1', 'required')) {
+            <small class="text-danger">Este campo es requerido</small>
+            }
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Apellido 2</label>
+            <input class="form-control" formControlName="lastName2" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Apellido 3</label>
+            <input class="form-control" formControlName="lastName3" />
+        </div>
+
+
+        @if(nuevo()){
+        <div class="col-md-6">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-control" formControlName="password" />
+            @if (showError('password', 'required')) {
+            <small class="text-danger">Este campo es requerido</small>
+            }
+            @if (showError('password', 'minlength')) {
+            <small class="text-danger">Debe tener al menos 6 caracteres</small>
+            }
+        </div>
+
+        }
+
+
+        <div class="col-md-6">
+            <label class="form-label">Rol</label>
+            <select class="form-select" formControlName="rolId">
+                @for (rol of roles(); track rol.rolId) {
+                <option [value]="rol.rolId">{{ rol.name }}</option>
+                }
+            </select>
+            @if (showError('rolId', 'required')) {
+            <small class="text-danger">Este campo es requerido</small>
+            }
+        </div>
+
+        <div class="col-md-6 d-flex align-items-center mt-6 mx-4">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" formControlName="active" />
+                <label class="form-check-label">Activo</label>
+            </div>
+        </div>
+
+        <div class="col-12 d-flex justify-content-end">
+            <button type="button" class="btn btn-secondary me-2" (click)="onCancel()">
+                Cancelar
+            </button>
+            <button class="btn btn-primary" type="submit" [disabled]="form().invalid">
+                {{ btnText }}
+            </button>
+        </div>
+    </div>
+    }
+</form>

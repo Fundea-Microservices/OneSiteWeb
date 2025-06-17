@@ -1,1 +1,134 @@
-<p>users-page works!</p>,
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Home</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/config']">Config</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Usuarios</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header">
+        Administrar Usuarios
+        <button class="btn btn-primary btn-sm float-end" (click)="openModal(true)">Crear
+            nuevo usuario</button>
+    </div>
+    <div class="card-body">
+        <form class="row g-3">
+            <div class="col-auto">
+                <label for="inputPassword2" class="visually-hidden">Buscar por nombre</label>
+                <input type="text" class="form-control form-control-sm" id="search" placeholder="Nombre usuario"
+                    (change)="buscador.set(txtBuscar.value)" (input)="buscador.set(txtBuscar.value)"
+                    (keyup.enter)="fetchData()" #txtBuscar>
+            </div>
+            <div class="col-auto">
+                <label for="selectRol" class="visually-hidden">Buscar por rol</label>
+                <select class="form-select form-select-sm" aria-label="Seleccionar rol" id="selectRol"
+                    (change)="rolFilter.set(selectRol.value)" (input)="rolFilter.set(selectRol.value)"
+                    #selectRol>
+                    >
+                    <option value = '' selected>Todos</option>
+                    @for (item of rolesList(); track item.rolId) {
+                        <option value="{{ item.rolId }}">{{ item.name }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="button" (click)="fetchData()" class="btn btn-success btn-sm mb-3">
+                    Buscar
+                </button>
+            </div>
+        </form>
+        <br>
+
+        <table class="table table-striped table-sm table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th class="text-center" scope="col">#</th>
+                    <th class="text-center" scope="col">Nombre</th>
+                    <th class="text-center" scope="col">Activo</th>
+                    <th class="text-center" scope="col">Rol</th>
+                    <th class="text-center" scope="col">Creado</th>
+                    <th class="text-center" scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (item of usersList(); track item.userId; let i = $index) {
+                <tr>
+                    <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
+                    <td>{{ item.fullName }}
+                    </td>
+                    <td class="text-center justify-items-center items-center">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault"
+                                [checked]="item.active" (change)="changeActive(item, cbxActive.checked)"
+                                [value]="item.active" #cbxActive>
+                        </div>
+                    </td>
+                    <td>{{ item.rol.name }}</td>
+                    <td class="text-center justify-items-center items-center">
+                        {{ item.created_at | date: 'dd/MM/yyyy' }} <br>
+                    </td>
+                    <td class="text-center">
+                        <!-- <button class="btn btn-sm btn-secondary mx-1"
+                            [routerLink]="['/config/rol/edit', item.rolId]"><ion-icon
+                                name="eye-outline"></ion-icon></button> -->
+                        <button class="btn btn-sm btn-success mx-1" (click)="openModal(false, item)"><ion-icon
+                                name="create-outline"></ion-icon></button>
+                        <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)">
+                            <ion-icon name="trash-outline"></ion-icon>
+                        </button>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+
+        <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+
+
+    </div>
+
+    <!-- Modal Upsert Usuario-->
+    <div #upsertUsuarioModal class="modal fade" id="upsertUsuarioModal" tabindex="-1"
+        aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertModal">{{modal().titulo}}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <app-upsert-user [user]="usuarioEdit()" [nuevo]="nuevoUsuario()"
+                        [roles]="rolesList()" (save)="onSave($event)" (cancel)="closeModal()"></app-upsert-user>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delete Usuario-->
+    <div #deleteUsuarioModal class="modal fade" id="deleteUsuarioModal" tabindex="-1"
+        aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 text-red" id="titleDeleteModal">Eliminar Usuario</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar el usuario "{{ usuarioEdit().userName }}"?</p>
+                    <p>Nombre completo: {{ usuarioEdit().fullName }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger"
+                        (click)="deleteUsuario(usuarioEdit())">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>

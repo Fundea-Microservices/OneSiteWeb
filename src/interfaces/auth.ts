@@ -21,7 +21,7 @@ export interface AccesoResponse {
 
 export interface IUser {
     userId:      string;
-    name:        string;
+    fullName:        string;
     userName:    string;
     name1:       string;
     name2:       string;
@@ -67,7 +67,7 @@ export interface IMenu {
     main:        boolean;
     active:      boolean;
     subMenus?:   IMenu[];
-    createdAt:   Date;
+    created_at:   Date;
 }
 
 
@@ -87,5 +87,17 @@ export interface Metadata {
     total: number;
     page:  number;
     limit: number;
+}
+
+export interface UsersResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       DataU;
+}
+
+export interface DataU {
+    users:    IUser[];
+    metadata: Metadata;
 }
 

@@ -25,11 +25,20 @@ export default class LoginPageComponent {
     isError: false
   });
 
+  loading = signal(false);
+
   async login() {
 
     try {
+      this.loading.set(true);
+      this.errorObj.set({
+        message: '',
+        code: 0,
+        isError: false
+      })
 
       let authData = await  this.authService.login({ userName: this.userName(), password: this.password() })
+      this.loading.set(false);
       if(authData.success) {
         localStorage.setItem('token', authData?.data.token || '');
         localStorage.setItem('user', JSON.stringify(authData?.data.user || {}));
@@ -55,6 +64,7 @@ export default class LoginPageComponent {
       }
 
     } catch (error) {
+      this.loading.set(false);
       console.error('Login failed:', error);
     }
     

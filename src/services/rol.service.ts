@@ -18,9 +18,17 @@ export class RolService extends HttpService {
     super(http); // pasa HttpClient al servicio base
   }
 
-  async getRoles({ page = 1, limit = 10, search = '' } = {}) {
+  async getRoles({ page = 1, limit = 10, search = '', all = false } = {}) {
     try {
-      const resp =  await firstValueFrom(this.get<RolesResponse>(`${this.endpoints.rol}?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`));
+      let params: any = {
+        page,
+        limit,
+        search
+      }
+      if (all) {
+        params = {...params, all: all};
+      }
+      const resp =  await firstValueFrom(this.get<RolesResponse>(`${this.endpoints.rol}`, params));
       if (resp.body?.success) {        
         // this.toastr.success(resp.body.message, 'Success');      
         return resp.body;

@@ -94,6 +94,13 @@ export default class RolPageComponent {
     if (resp?.success) {
       this.fetchData()
       this.closeModal();
+      this.rolEdit.set({
+        rolId: '',
+        name: '',
+        active: true,
+        guest: false,
+      })
+      this.nuevoRol.set(true); // Reseteamos el estado de nuevo rol
     }
   }
 

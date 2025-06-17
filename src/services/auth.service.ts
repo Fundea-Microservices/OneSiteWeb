@@ -29,7 +29,7 @@ export class AuthService extends HttpService {
     }
     return {
       userId: '',
-      name: 'Sin autenticar',
+      fullName: 'Sin autenticar',
       userName: '',
       name1: '',
       name2: '',
