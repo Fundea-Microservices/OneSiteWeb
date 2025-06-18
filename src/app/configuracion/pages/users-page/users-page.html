@@ -40,21 +40,25 @@
         </form>
         <br>
 
-        <table class="table table-striped table-sm table-bordered table-hover">
+        <table class="table table-striped table-sm table-bordered table-hover ">
             <thead>
                 <tr>
                     <th class="text-center" scope="col">#</th>
-                    <th class="text-center" scope="col">Nombre</th>
+                    <th class="text-center" scope="col">Usuario</th>
+                    <th class="text-center" scope="col">Correo</th>
+                    <th class="text-center" scope="col">Nombre Completo</th>
                     <th class="text-center" scope="col">Activo</th>
                     <th class="text-center" scope="col">Rol</th>
-                    <th class="text-center" scope="col">Creado</th>
+                    <!-- <th class="text-center" scope="col">Creado</th> -->
                     <th class="text-center" scope="col">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="text-[0.85em]">
                 @for (item of usersList(); track item.userId; let i = $index) {
                 <tr>
                     <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
+                    <td>{{ item.userName }}
+                    <td>{{ item.email }}
                     <td>{{ item.fullName }}
                     </td>
                     <td class="text-center justify-items-center items-center">
@@ -65,9 +69,9 @@
                         </div>
                     </td>
                     <td>{{ item.rol.name }}</td>
-                    <td class="text-center justify-items-center items-center">
+                    <!-- <td class="text-center justify-items-center items-center">
                         {{ item.created_at | date: 'dd/MM/yyyy' }} <br>
-                    </td>
+                    </td> -->
                     <td class="text-center">
                         <!-- <button class="btn btn-sm btn-secondary mx-1"
                             [routerLink]="['/config/rol/edit', item.rolId]"><ion-icon
