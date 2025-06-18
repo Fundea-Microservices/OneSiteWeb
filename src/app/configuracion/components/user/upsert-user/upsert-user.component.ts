@@ -59,11 +59,13 @@ export class UpsertUserComponent {
   
 
   form = signal<FormGroup>(this.fb.group({}));
+  key = input<number>(0);
 
   constructor() {
     effect(() => {
       const isNuevo = this.nuevo();
       const user = this.user();
+      const _ = this.key(); // provoca que el form se reinicie cada vez que cambia el key
 
       const newForm: FormGroup = this.fb.group({
         fullName: [user.fullName],

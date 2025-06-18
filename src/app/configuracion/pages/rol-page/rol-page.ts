@@ -33,6 +33,7 @@ export default class RolPageComponent {
     pageSize: 10,
     totalItems: 0
   })
+  isLoading = signal(false);
 
   @ViewChild('upsertRolModal') modalElementRef!: ElementRef;
   private modalUpsertInstance!: bootstrap.Modal;
@@ -61,6 +62,8 @@ export default class RolPageComponent {
   }
 
   async fetchData() {
+    if (this.isLoading()) return;
+    this.isLoading.set(true);
     let resp = await this.rolService.getRoles({ page: this.pagination().page, limit: this.pagination().pageSize, search: this.buscador() });
     if (resp) {
       let { roles, metadata } = resp.data;
@@ -72,6 +75,7 @@ export default class RolPageComponent {
         totalItems: metadata.total
       });
     }
+    this.isLoading.set(false);
   }
 
   async deleteRol(rol: IRol) {

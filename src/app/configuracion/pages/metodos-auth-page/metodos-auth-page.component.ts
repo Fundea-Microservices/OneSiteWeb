@@ -2,11 +2,11 @@ import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef,
 import { RouterLink } from '@angular/router';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { DatePipe } from '@angular/common';
-import { IRol } from '../../../../interfaces/auth';
 import { Modal } from 'bootstrap';
 import { MetodoService } from '../../../../services/metodo.service';
 import { IMetodo } from '../../../../interfaces/metodo';
 import { UpsertMetodoComponent } from "../../components/metodo/upsert-metodo/upsert-metodo.component";
+import { empty } from 'rxjs';
 
 const emptyMetodo: IMetodo = {
     metodoId: '',
@@ -38,6 +38,8 @@ export default class MetodosAuthPageComponent {
     pageSize: 10,
     totalItems: 0
   })
+  isLoading = signal(false);
+  formKey = signal(Date.now());
 
   @ViewChild('upsertModal') modalElementRef!: ElementRef;
   private modalUpsertInstance!: bootstrap.Modal;
@@ -66,6 +68,8 @@ export default class MetodosAuthPageComponent {
   }
 
   async fetchData() {
+    if (this.isLoading()) return;
+    this.isLoading.set(true);
     let resp = await this.metodoService.getMetodos({ page: this.pagination().page, limit: this.pagination().pageSize, search: this.buscador() });
     if (resp) {
       let { metodos, metadata } = resp.data;
@@ -77,6 +81,7 @@ export default class MetodosAuthPageComponent {
         totalItems: metadata.total
       });
     }
+    this.isLoading.set(false);
   }
 
   async deleteMetodo(metodo: IMetodo) {
@@ -126,22 +131,16 @@ export default class MetodosAuthPageComponent {
     }
   }
 
-  openModal(nuevo: boolean = true, metodo: IMetodo = { metodoId: '', name: '', code: '', description: '', verb: '', tokenLocation: null, isDefault: false, active: true, }) {
+  openModal(nuevo: boolean = true, metodo: IMetodo = emptyMetodo) {
     this.nuevoMetodo.set(nuevo);
 
     if (this.nuevoMetodo()) {
       this.metodoEdit.set(emptyMetodo)
-      this.modal.set({
-        titulo: 'Crear Método',
-        visible: true,
-      });
     } else {
       this.metodoEdit.set(metodo);
-      this.modal.set({
-        titulo: 'Actualizar Método',
-        visible: true,
-      });
     }
+    this.formKey.set(Date.now()); // esto obliga al componente hijo a resetear
+    this.modal.set({ titulo: nuevo ? 'Crear Método' : 'Actualizar Método', visible: true });
     if (!this.modalUpsertInstance) {
       this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
     }
@@ -164,6 +163,5 @@ export default class MetodosAuthPageComponent {
       this.modalDeleteInstance = new Modal(this.modalDeleteElementRef.nativeElement);
     }
     this.modalDeleteInstance.show();
-    // this.openModal();
   }
  }

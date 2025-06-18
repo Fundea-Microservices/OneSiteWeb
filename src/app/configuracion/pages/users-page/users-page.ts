@@ -3,7 +3,6 @@ import { RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { IRol, IUser } from '../../../../interfaces/auth';
 import { RolService } from '../../../../services/rol.service';
-import { DatePipe } from '@angular/common';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { UserService } from '../../../../services/user.service';
 import { UpsertUserComponent } from "../../components/user/upsert-user/upsert-user.component";
@@ -42,7 +41,7 @@ const emptyUser: IUser = {
 
 @Component({
   selector: 'app-users-page',
-  imports: [RouterLink, DatePipe, PaginationComponent, UpsertUserComponent],
+  imports: [RouterLink, PaginationComponent, UpsertUserComponent],
   templateUrl: './users-page.html',
   styleUrl: './users-page.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -63,6 +62,8 @@ export default class UsersPageComponent {
     pageSize: 10,
     totalItems: 0
   })
+  isLoading = signal(false);
+  formKey = signal(Date.now());
 
   @ViewChild('upsertUsuarioModal') modalElementRef!: ElementRef;
   private modalUpsertInstance!: bootstrap.Modal;
@@ -100,6 +101,8 @@ export default class UsersPageComponent {
   }
 
   async fetchData() {
+    if (this.isLoading()) return;
+    this.isLoading.set(true);
     let params: any = {
       page: this.pagination().page,
       limit: this.pagination().pageSize,
@@ -119,6 +122,7 @@ export default class UsersPageComponent {
         totalItems: metadata.total
       });
     }
+    this.isLoading.set(false);
   }
 
   async deleteUsuario(user: IUser) {
@@ -168,6 +172,7 @@ export default class UsersPageComponent {
       this.usuarioEdit.set(user);
     }
     
+    this.formKey.set(Date.now()); // esto obliga al componente hijo a resetear
     this.modal.set({
       titulo: user.userId ? 'Actualizar Usuario' : 'Crear Usuario',
       visible: true,

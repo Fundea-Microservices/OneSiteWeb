@@ -54,7 +54,7 @@
                     <td class="text-center justify-items-center items-center">{{item.verb}}</td>
                     <td class="text-center justify-items-center items-center">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault"
+                            <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault{{i}}"
                                 [checked]="item.active" (change)="changeActive(item, cbxActive.checked)"
                                 [value]="item.active" #cbxActive>
                         </div>
@@ -91,7 +91,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <app-upsert-metodo [metodo]="metodoEdit()" [nuevo]="nuevoMetodo()"
+                    <app-upsert-metodo [metodo]="metodoEdit()" 
+                        [nuevo]="nuevoMetodo()"
+                        [key]="formKey()"
                         (save)="upsertMetodo($event)"
                         (cancel)="closeModal()" />
                 </div>

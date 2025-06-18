@@ -43,6 +43,7 @@ export class UpsertMetodoComponent {
   });
 
   nuevo = input<boolean>(true);
+  key = input<number>(0);
 
   validationRules: MetodoValidationRules = {
     name: [Validators.required, Validators.minLength(5)],
@@ -60,33 +61,38 @@ export class UpsertMetodoComponent {
 
   constructor() {
     effect(() => {
-      const isNuevo = this.nuevo();
+      const _ = this.key(); // provoca que el form se reinicie cada vez que cambia el key
       const metodo = this.metodo();
+      const isNuevo = this.nuevo();
 
-      const newForm = this.fb.group({
-        name: [metodo.name, this.validationRules.name],
-        description: [metodo.description, this.validationRules.description],
-        verb: [metodo.verb, this.validationRules.verb],
-        code: [metodo.code, this.validationRules.code],
-        tokenLocation: [metodo.tokenLocation, this.validationRules.tokenLocation],
-        active: [metodo.active, this.validationRules.active],
-        isDefault: [metodo.isDefault, this.validationRules.isDefault],
-      });
-
-      if (isNuevo) {
-        newForm.reset({
-          name: '',
-          code: '',
-          description: '',
-          verb: '',
-          tokenLocation: null,
-          active: true,
-          isDefault: false,
-        });
-      }
-
-      this.form.set(newForm); // Actualiza el signal
+      this.initForm(metodo, isNuevo);
     });
+  }
+
+  private initForm(metodo: IMetodo, isNuevo: boolean) {
+    const newForm = this.fb.group({
+      name: [metodo.name, this.validationRules.name],
+      description: [metodo.description, this.validationRules.description],
+      verb: [metodo.verb, this.validationRules.verb],
+      code: [metodo.code, this.validationRules.code],
+      tokenLocation: [metodo.tokenLocation, this.validationRules.tokenLocation],
+      active: [metodo.active, this.validationRules.active],
+      isDefault: [metodo.isDefault, this.validationRules.isDefault],
+    });
+
+    if (isNuevo) {
+      newForm.reset({
+        name: '',
+        code: '',
+        description: '',
+        verb: '',
+        tokenLocation: null,
+        active: true,
+        isDefault: false,
+      });
+    }
+
+    this.form.set(newForm);
   }
 
   get btnText(): string {
