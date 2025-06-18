@@ -37,5 +37,9 @@ export class PaginationComponent {
     }
   }
 
+  changePageSize(pageSize: number = 10): void {
+    this.changePage.emit({ ...this.paginationObj(), pageSize, page: 1 });
+  }
+
 }
 
