@@ -12,20 +12,18 @@
 
             <li>
             <a [routerLink]="[acceso.menu.pathWeb]"><ion-icon [name]="acceso.menu.icon"></ion-icon> <span>{{acceso.menu.label}}</span></a>
-            <ul class="nav-flyout">
-              <li>
-                <a href="#"><ion-icon name="bar-chart-outline"></ion-icon> Gestión de parámetros</a>
-              </li>
-              <li>
-                <a href="#"><ion-icon name="file-tray-full-outline"></ion-icon> Gestión de formularios</a>
-              </li>
-              <li>
-                <a href="#"><ion-icon name="barcode-outline"></ion-icon> Solicitud de Scoring</a>
-              </li>
-              <li>
-                <a href="#"><ion-icon name="information-circle-outline"></ion-icon> Información de solicitudes</a>
-              </li>
-            </ul>
+
+            @if (acceso.subMenus.length > 0) {
+              <ul class="nav-flyout">
+                @for (submenu of acceso.subMenus; track submenu.accesoId) {
+                  <li>
+                    <a [routerLink]="[submenu.menu.pathWeb]"><ion-icon [name]="submenu.menu.icon"></ion-icon> {{submenu.menu.label}}</a>
+                  </li>
+
+                }
+              </ul>              
+            }
+            
           </li>
 
           }

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
 import { AuthService } from '../../../../../services/auth.service';
 import { Router, RouterLink } from '@angular/router';
+import { SideMenuListItemComponent } from '../side-menu-list-item/side-menu-list-item';
 
 @Component({
   selector: 'app-side-menu-list',
@@ -20,7 +21,6 @@ export class SideMenuListComponent {
 
   ngOnInit(): void {
     this.accesos = this.authService.getMenusStorage() || [];
-    console.log("🚀 ~ SideMenuListComponent ~ ngOnInit ~ this.menus:", this.accesos)
   }
 
 
