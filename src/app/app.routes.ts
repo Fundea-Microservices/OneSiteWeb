@@ -25,11 +25,14 @@ export const routes: Routes = [
                     {
                         path: 'users',
                         loadComponent: () => import('./configuracion/pages/users-page/users-page'),
-                    },
-                    
+                    },                    
                     {
                         path: 'roles',
                         loadComponent: () => import('./configuracion/pages/rol-page/rol-page'),
+                    },
+                    {
+                        path: 'metodos',
+                        loadComponent: () => import('./configuracion/pages/metodos-auth-page/metodos-auth-page.component')
                     }
                 ]
             }

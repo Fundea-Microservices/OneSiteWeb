@@ -1,0 +1,96 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+    <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" class="form-control form-control-sm" formControlName="name" />
+
+        @if (form().get('name')?.touched && form().get('name')?.invalid) {
+        <div class="text-danger small">
+            @if (form().get('name')?.errors?.['required']) {
+            <div>Nombre es requerido</div>
+            }
+            @if (form().get('name')?.errors?.['minlength']) {
+            <div>Mínimo 3 caracteres</div>
+            }
+        </div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <input type="text" class="form-control form-control-sm" formControlName="description" />
+
+        @if (form().get('description')?.touched && form().get('description')?.invalid) {
+        <div class="text-danger small">
+            @if (form().get('description')?.errors?.['required']) {
+            <div>Descripción es requerida</div>
+            }
+            @if (form().get('description')?.errors?.['minlength']) {
+            <div>Mínimo 3 caracteres</div>
+            }
+        </div>
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <label class="form-label">Código</label>
+            <input type="text" class="form-control form-control-sm" formControlName="code" />
+            @if (form().get('code')?.touched && form().get('code')?.invalid) {
+            <div class="text-danger small">
+                @if (form().get('code')?.errors?.['required']) {
+                <div>Código es requerido</div>
+                }
+                @if (form().get('code')?.errors?.['minlength']) {
+                <div>Mínimo 3 caracteres</div>
+                }
+            </div>
+            }
+        </div>
+        <div class="col-6">
+            <label class="form-label">Verbo</label>
+            <select class="form-select form-select-sm" formControlName="verb">
+                <option value="" disabled>Seleccione un verbo</option>
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+            </select>
+             <div class="text-danger small">
+                @if (form().get('verb')?.errors?.['required']) {
+                <div>Verbo es requerido</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+
+    </div>
+
+
+    <div class="row mb-3">
+        <div class="col">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" formControlName="active" />
+                <label class="form-check-label">Activo</label>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" formControlName="isDefault" />
+                <label class="form-check-label">Por defecto</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-end">
+        <div class="col-auto">
+            <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
+            <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid">
+                {{ btnText }}
+            </button>
+        </div>
+    </div>
+</form>

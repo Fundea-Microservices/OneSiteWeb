@@ -55,7 +55,7 @@ export interface IRol {
 }
 
 export interface IMenu {
-    menuId:      string;
+    menuId?:      string;
     name:        string;
     description: string;
     pathApp:     string;
