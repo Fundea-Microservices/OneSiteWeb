@@ -5,7 +5,6 @@ import { RouterOutlet } from '@angular/router';
   selector: 'app-config-page',
   imports: [RouterOutlet],
   templateUrl: './config-page.html',
-  styleUrl: './config-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class ConfigPageComponent { }
