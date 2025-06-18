@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-config-page',
-  imports: [RouterOutlet],
+  imports: [],
   templateUrl: './config-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
