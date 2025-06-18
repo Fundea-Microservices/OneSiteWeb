@@ -6,6 +6,8 @@ import { RolService } from '../../../../services/rol.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { UserService } from '../../../../services/user.service';
 import { UpsertUserComponent } from "../../components/user/upsert-user/upsert-user.component";
+import { IMetodo } from '../../../../interfaces/metodo';
+import { MetodoService } from '../../../../services/metodo.service';
 
 const emptyUser: IUser = {
   userId: '',
@@ -27,7 +29,7 @@ const emptyUser: IUser = {
   rolId: '',
   puestoId: null,
   puesto: null,
-  methodId: null,
+  metodoId: null,
   created_at: new Date(),
   rol: {
     rolId: '',
@@ -50,8 +52,10 @@ const emptyUser: IUser = {
 export default class UsersPageComponent {
 
   rolService = inject(RolService);
+  metodoService = inject(MetodoService);
   userService = inject(UserService);
   rolesList = signal<IRol[]>([]);
+  metodosList = signal<IMetodo[]>([]);
   usersList = signal<IUser[]>([]);
   metadata = signal({})// Cambia el tipo según tu modelo de datos
   nuevoUsuario = signal(true)
@@ -78,6 +82,7 @@ export default class UsersPageComponent {
 
   buscador = signal('');
   rolFilter = signal('');
+  metodoFilter = signal('');
 
   constructor() { }
 
@@ -98,6 +103,11 @@ export default class UsersPageComponent {
     if (resp) {
       this.rolesList.set(resp.data.roles);
     }
+
+    let metodosResp = await this.metodoService.getMetodos({all: true});
+    if (metodosResp) {
+      this.metodosList.set(metodosResp.data.metodos);
+    }
   }
 
   async fetchData() {
@@ -110,6 +120,9 @@ export default class UsersPageComponent {
     }
     if (this.rolFilter()) {
       params.rolId = this.rolFilter();
+    }
+    if (this.metodoFilter()) {
+      params.metodoId = this.metodoFilter();
     }
     let resp = await this.userService.getUsers(params);
     if (resp) {

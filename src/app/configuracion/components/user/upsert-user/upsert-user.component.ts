@@ -16,6 +16,7 @@ import {
   FormGroup
 } from '@angular/forms';
 import { IRol, IUser } from '../../../../../interfaces/auth';
+import { IMetodo } from '../../../../../interfaces/metodo';
 
 @Component({
   selector: 'app-upsert-user',
@@ -45,13 +46,13 @@ export class UpsertUserComponent {
     fingerprint: null,
     validateMAC: null,
     puestoId: null,
-    puesto: null,
-    methodId: null,
+    metodoId: null,
     created_at: new Date(),
   });
 
   nuevo = input<boolean>(true);
   roles = input<IRol[]>([]);
+  metodos = input<IMetodo[]>([]);
 
   @Output() save = new EventEmitter<IUser>();
   @Output() cancel = new EventEmitter<void>();
@@ -79,7 +80,8 @@ export class UpsertUserComponent {
         email: [user.email, [Validators.required, Validators.email]],
         password: ['123456', [Validators.required, Validators.minLength(6)]],
         active: [user.active, []],
-        rolId: [user.rolId, [Validators.required]]
+        rolId: [user.rolId, [Validators.required]],
+        metodoId: [user.metodoId,]
       });
 
       if (isNuevo) {
@@ -95,7 +97,8 @@ export class UpsertUserComponent {
           email: '',
           password: '',
           active: true,
-          rolId: this.roles().filter(rol => rol.guest === true)[0]?.rolId || ''
+          rolId: this.roles().filter(rol => rol.guest === true)[0]?.rolId || '',
+          metodoId: ''
         });
       }
       this.form.set(newForm);

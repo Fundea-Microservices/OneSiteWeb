@@ -47,7 +47,7 @@ export class AuthService extends HttpService {
       rolId: '',
       puestoId: null,
       puesto: null,
-      methodId: null,
+      metodoId: null,
       created_at: new Date(),
       rol: {
         rolId: '',

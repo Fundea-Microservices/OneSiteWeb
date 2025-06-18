@@ -1,3 +1,5 @@
+import { IMetodo } from "./metodo";
+
 export interface AuthResponse {
     success: boolean;
     statusCode: number;
@@ -39,9 +41,10 @@ export interface IUser {
     rolId:       string;
     rol:         IRol;
     puestoId:    null;
-    puesto:      null;
-    methodId:    null;
-    created_at:  Date;
+    puesto?:      null;
+    metodoId:    null;
+    metodo?:    IMetodo;
+    created_at?:  Date;
     updated_at?:  Date;
     deleted_at?:  Date;
 }

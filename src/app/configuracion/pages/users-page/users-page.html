@@ -26,9 +26,21 @@
                     (change)="rolFilter.set(selectRol.value)" (input)="rolFilter.set(selectRol.value)"
                     #selectRol>
                     >
-                    <option value = '' selected>Todos</option>
+                    <option value = '' selected>Cualquier rol</option>
                     @for (item of rolesList(); track item.rolId) {
                         <option value="{{ item.rolId }}">{{ item.name }}</option>
+                    }
+                </select>
+            </div>
+             <div class="col-auto">
+                <label for="selectRol" class="visually-hidden">Autenticación</label>
+                <select class="form-select form-select-sm" aria-label="Seleccionar método" id="selectMetodo"
+                    (change)="metodoFilter.set(selectMetodo.value)" (input)="metodoFilter.set(selectMetodo.value)"
+                    #selectMetodo>
+                    >
+                    <option value = '' selected>Cualquier autenticación</option>
+                    @for (item of metodosList(); track item.metodoId) {
+                        <option value="{{ item.metodoId }}">{{ item.name }}</option>
                     }
                 </select>
             </div>
@@ -49,6 +61,7 @@
                     <th class="text-center" scope="col">Nombre Completo</th>
                     <th class="text-center" scope="col">Activo</th>
                     <th class="text-center" scope="col">Rol</th>
+                    <th class="text-center" scope="col">Autenticación</th>
                     <!-- <th class="text-center" scope="col">Creado</th> -->
                     <th class="text-center" scope="col">Acciones</th>
                 </tr>
@@ -69,6 +82,12 @@
                         </div>
                     </td>
                     <td>{{ item.rol.name }}</td>
+                    @if(item.metodo?.name ) {
+                        <td>{{ item.metodo?.name }}</td>
+                    } @else {
+                        <td><span class="text-gray-500">Por defecto</span></td>
+                    }
+                    
                     <!-- <td class="text-center justify-items-center items-center">
                         {{ item.created_at | date: 'dd/MM/yyyy' }} <br>
                     </td> -->
@@ -105,7 +124,9 @@
                     <app-upsert-user [user]="usuarioEdit()" 
                         [nuevo]="nuevoUsuario()"
                         [key]="formKey()"
-                        [roles]="rolesList()" (save)="onSave($event)" (cancel)="closeModal()"></app-upsert-user>
+                        [roles]="rolesList()" 
+                        [metodos]="metodosList()"
+                        (save)="onSave($event)" (cancel)="closeModal()"></app-upsert-user>
                 </div>
                 <div class="modal-footer">
                 </div>

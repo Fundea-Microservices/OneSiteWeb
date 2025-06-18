@@ -48,7 +48,7 @@ export class UserService extends HttpService {
   async updateUser(userUpdate: IUser) {
     try {
       // Retiramos el password, el rol, puesto y metodo
-      const { password, rol, puesto, created_at, updated_at, deleted_at, lastPasswordUpdate, ...userData } = userUpdate;
+      const { password, rol, puesto, metodo, created_at, updated_at, deleted_at, lastPasswordUpdate, ...userData } = userUpdate;
       const resp =  await firstValueFrom(this.put<UsersResponse>(`${this.endpoints.user}`, userData));
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');

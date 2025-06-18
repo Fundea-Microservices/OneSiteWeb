@@ -2,21 +2,22 @@
     @if (form()) {
     <div class="row g-2">
         <div class="col-md-6">
+            <label class="form-label">Rol</label>
+            <select class="form-select" formControlName="rolId">
+                @for (rol of roles(); track rol.rolId) {
+                <option [value]="rol.rolId">{{ rol.name }}</option>
+                }
+            </select>
+            @if (showError('rolId', 'required')) {
+            <small class="text-danger">Este campo es requerido</small>
+            }
+        </div>
+        <div class="col-md-6">
             <label class="form-label">Nombre de usuario</label>
             <input class="form-control" formControlName="userName" (change)="changeUserName(txtUserName.value)"
                 #txtUserName />
             @if (showError('userName', 'required')) {
             <small class="text-danger">Este campo es requerido</small>
-            }
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Correo</label>
-            <input class="form-control" type="email" formControlName="email" />
-            @if (showError('email', 'required')) {
-            <small class="text-danger">Este campo es requerido</small>
-            }
-            @if (showError('email', 'email')) {
-            <small class="text-danger">Debe ser un email válido</small>
             }
         </div>
 
@@ -69,16 +70,26 @@
 
 
         <div class="col-md-6">
-            <label class="form-label">Rol</label>
-            <select class="form-select" formControlName="rolId">
-                @for (rol of roles(); track rol.rolId) {
-                <option [value]="rol.rolId">{{ rol.name }}</option>
-                }
-            </select>
-            @if (showError('rolId', 'required')) {
+            <label class="form-label">Correo</label>
+            <input class="form-control" type="email" formControlName="email" />
+            @if (showError('email', 'required')) {
             <small class="text-danger">Este campo es requerido</small>
             }
+            @if (showError('email', 'email')) {
+            <small class="text-danger">Debe ser un email válido</small>
+            }
         </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Metodo de autenticación</label>
+            <select class="form-select" formControlName="metodoId">
+                <option value="{{null}}" selected>Por defecto</option>
+                @for (metodo of metodos(); track metodo.metodoId) {
+                <option [value]="metodo.metodoId">{{ metodo.name }}</option>
+                }
+            </select>
+        </div>
+        
 
         <div class="col-md-6 d-flex align-items-center mt-6 mx-4">
             <div class="form-check form-switch">
