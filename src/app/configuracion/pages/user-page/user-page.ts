@@ -13,7 +13,7 @@ import { Modal } from 'bootstrap';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class UserPageComponent {
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
 
   public user = this.authService.getUserStorage();
 
