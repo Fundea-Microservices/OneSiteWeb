@@ -51,7 +51,7 @@ export interface IRol {
     name:      string;
     active:    boolean;
     guest:    boolean;
-    createdAt?: Date;
+    created_at?: Date;
 }
 
 export interface IMenu {

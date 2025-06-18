@@ -54,7 +54,7 @@ export class AuthService extends HttpService {
         name: 'Sin autenticar',
         active: false,
         guest: false,
-        createdAt: new Date()
+        created_at: new Date()
       }
     };
   }
