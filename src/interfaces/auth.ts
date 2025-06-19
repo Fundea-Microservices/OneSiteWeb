@@ -64,13 +64,12 @@ export interface IMenu {
     pathApp:     string;
     pathWeb:     string;
     label:       string;
-    title:       string;
     icon:        string;
     color:       string;
     main:        boolean;
     active:      boolean;
     subMenus?:   IMenu[];
-    created_at:   Date;
+    created_at?:   Date;
 }
 
 

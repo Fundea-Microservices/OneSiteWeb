@@ -1,0 +1,136 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+    <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" class="form-control form-control-sm" formControlName="name" />
+
+        @if (form().get('name')?.touched && form().get('name')?.invalid) {
+        <div class="text-danger small">
+            @if (form().get('name')?.errors?.['required']) {
+            <div>Nombre es requerido</div>
+            }
+            @if (form().get('name')?.errors?.['minlength']) {
+            <div>Mínimo 3 caracteres</div>
+            }
+        </div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Descripción</label>
+        <input type="text" class="form-control form-control-sm" formControlName="description" />
+
+        @if (form().get('description')?.touched && form().get('description')?.invalid) {
+        <div class="text-danger small">
+            @if (form().get('description')?.errors?.['required']) {
+            <div>Descripción es requerida</div>
+            }
+            @if (form().get('description')?.errors?.['minlength']) {
+            <div>Mínimo 3 caracteres</div>
+            }
+        </div>
+        }
+    </div>
+
+    
+    <div class="row mb-3">
+        <div class="col-6">
+            <label class="form-label">Label</label>
+            <input type="text" class="form-control form-control-sm" formControlName="label" />
+            @if (form().get('label')?.touched && form().get('label')?.invalid) {
+            <div class="text-danger small">
+                @if (form().get('label')?.errors?.['required']) {
+                <div>Label es requerido</div>
+                }
+            </div>
+            }
+        </div>
+        <div class="col-6">
+            <label class="form-label">Icono <small>(Listado <a href="https://ionic.io/ionicons" target="_blank" rel="noopener noreferrer">aquí</a>)</small></label>
+            <div class="input-group">
+                <span class="input-group-text" id="basic-addon1">
+                    <ion-icon [name]="form().get('icon')?.value"></ion-icon>
+                </span>
+                <input type="text" class="form-control form-control-sm" formControlName="icon" />
+                
+            </div>
+            @if (form().get('icon')?.touched && form().get('icon')?.invalid) {
+                <div class="text-danger small">
+                    @if (form().get('icon')?.errors?.['required']) {
+                    <div>Icono es requerido</div>
+                    }
+                </div>
+                }
+
+        </div>
+    </div>
+
+
+    <div class="row mb-3">
+        <div class="col-6">
+            <label class="form-label">Path APP</label>
+            <input type="text" class="form-control form-control-sm" formControlName="pathApp" />
+            @if (form().get('pathApp')?.touched && form().get('pathApp')?.invalid) {
+            <div class="text-danger small">
+                @if (form().get('pathApp')?.errors?.['required']) {
+                <div>Path APP es requerido</div>
+                }
+                @if (form().get('pathApp')?.errors?.['minlength']) {
+                <div>Mínimo 3 caracteres</div>
+                }
+            </div>
+            }
+        </div>
+        <div class="col-6">
+            <label class="form-label">Path Web</label>
+            <input type="text" class="form-control form-control-sm" formControlName="pathWeb" />
+            @if (form().get('pathWeb')?.touched && form().get('pathWeb')?.invalid) {
+            <div class="text-danger small">
+                @if (form().get('pathWeb')?.errors?.['required']) {
+                <div>Path Web es requerido</div>
+                }
+                @if (form().get('pathWeb')?.errors?.['minlength']) {
+                <div>Mínimo 3 caracteres</div>
+                }
+            </div>
+            }
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-6">
+            <label class="form-label">Color</label>
+            <input type="color" class="form-control form-control-color form-control-sm" formControlName="color"
+                value="fff" />
+            @if (form().get('color')?.touched && form().get('color')?.invalid) {
+            <div class="text-danger small">
+                @if (form().get('color')?.errors?.['required']) {
+                <div>Color es requerido</div>
+                }
+            </div>
+            }
+        </div>
+        <div class="col-6 my-1">
+            <div class="form-check form-switch my-1">
+                <input class="form-check-input" type="checkbox" formControlName="active" />
+                <label class="form-check-label">Activo</label>
+            </div>
+            <div class="form-check form-switch my-1">
+                <input class="form-check-input" type="checkbox" formControlName="main" />
+                <label class="form-check-label">Es menú principal</label>
+            </div>
+        </div>
+
+        <div class="col">
+
+        </div>
+    </div>
+
+    <div class="row justify-content-end">
+        <div class="col-auto">
+            <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
+            <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid">
+                {{ btnText }}
+            </button>
+        </div>
+    </div>
+</form>

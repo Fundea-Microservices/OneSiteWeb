@@ -1,0 +1,130 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Home</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/config']">Config</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Menús</li>
+    </ol>
+</nav>
+
+
+<div class="card">
+    <div class="card-header">
+        Administrar menús y submenus
+        <button class="btn btn-primary btn-sm float-end" (click)="openModal(true)">Crear
+            nuevo</button>
+    </div>
+    <div class="card-body">
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#menu-tab-pane"
+                    type="button" role="tab" aria-controls="menu-tab-pane" aria-selected="true">Menú</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#submenu-tab-pane"
+                    type="button" role="tab" aria-controls="submenu-tab-pane" aria-selected="false">Submenú</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active my-4 mx-2" id="menu-tab-pane" role="tabpanel" aria-labelledby="home-tab"
+                tabindex="0">
+                <form class="row g-3">
+                    <div class="col-auto">
+                        <label for="buscarMenu" class="visually-hidden">Nombre menú</label>
+                        <input type="text" class="form-control" id="buscarMenu" placeholder="Nombre menú"
+                            (change)="buscador.set(txtBuscar.value)" (input)="buscador.set(txtBuscar.value)"
+                            (keyup.enter)="fetchDataMenu()" #txtBuscar>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" (click)="fetchDataMenu()" class="btn btn-success mb-3">
+                            Buscar
+                        </button>
+                    </div>
+                </form>
+                <br>
+
+                <app-menu-tabla [menuList]="menuList()" [pagination]="paginationMenu()"
+                    (openModal)="openModal(false,$event)"
+                    (openDeleteModal)="openDeleteModal($event)" 
+                    (changeActive)="changeActive($event)"/>
+
+                
+
+                <app-pagination [paginationObj]="paginationMenu()" (changePage)="onChangePageMenu($event)" />
+
+            </div>
+            <div class="tab-pane fade my-4 mx-2" id="submenu-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+                <form class="row g-3">
+                    <div class="col-auto">
+                        <label for="buscarSubmenu" class="visually-hidden">Nombre submenú</label>
+                        <input type="text" class="form-control" id="buscarSubmenu" placeholder="Nombre submenú"
+                            (change)="buscador.set(txtBuscarSub.value)" (input)="buscador.set(txtBuscarSub.value)"
+                            (keyup.enter)="fetchDataSubmenu()" #txtBuscarSub>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" (click)="fetchDataSubmenu()" class="btn btn-success mb-3">
+                            Buscar
+                        </button>
+                    </div>
+                </form>
+                <br>
+
+                <app-menu-tabla [menuList]="submenuList()" [pagination]="paginationSubmenu()"
+                    (openModal)="openModal(false,$event)"
+                    (openDeleteModal)="openDeleteModal($event)" 
+                    (changeActive)="changeActive($event)"/>
+
+                
+
+                <app-pagination [paginationObj]="paginationSubmenu()" (changePage)="onChangePageSubmenu($event)" />
+            </div>
+        </div>
+
+
+
+
+    </div>
+
+    <!-- Modal Upsert Rol-->
+    <div #upsertModal class="modal fade" id="upsertModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertModal">{{modal().titulo}}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <app-upsert-menu [menu]="menuEdit()" [nuevo]="nuevoMenu()" [key]="formKey()"
+                        (save)="upsertMenu($event)" (cancel)="closeModal()" />
+                    <!-- <app-upsert-menu [menu]="menuEdit()" [nuevo]="nuevoMenu()" [key]="formKey()"
+                        (save)="upsertMenu($event)" (cancel)="closeModal()" /> -->
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delete-->
+    <div #deleteModal class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 text-red" id="titleDeleteModal">Eliminar Menú</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar el menu "{{ menuEdit().name }}"
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" (click)="deleteMenu(menuEdit())">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>

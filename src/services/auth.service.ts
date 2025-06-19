@@ -14,7 +14,7 @@ export class AuthService extends HttpService {
     login: '/auth/login',
     verify: '/auth/verify',
     menus: '/acceso/menu',
-    menuByRol: '/acceso/menu/rol',
+    menuByRol: '/acceso/rol',
     changePassword: '/config/change-password'
   };
 

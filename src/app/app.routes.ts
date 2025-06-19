@@ -33,7 +33,11 @@ export const routes: Routes = [
                     {
                         path: 'metodos',
                         loadComponent: () => import('./configuracion/pages/metodos-auth-page/metodos-auth-page.component')
-                    }
+                    },
+                    {
+                        path: 'menus',
+                        loadComponent: () => import('./configuracion/pages/menu-page/menu-page.component')
+                    },
                 ]
             }
         ]
