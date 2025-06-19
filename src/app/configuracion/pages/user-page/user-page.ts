@@ -3,6 +3,7 @@ import { AuthService } from '../../../../services/auth.service';
 import { DatePipe } from '@angular/common';
 import { ChangePasswordComponent } from "../../components/user/change-password/change-password.component";
 import { Modal } from 'bootstrap';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-user-page',
@@ -17,12 +18,14 @@ export default class UserPageComponent {
 
   public user = this.authService.getUserStorage();
 
+  public router = inject(Router);
+
   @ViewChild('changePasswordModal') modalElementRef!: ElementRef;
   private modalChangePasswordInstance!: bootstrap.Modal;
 
   ngAfterViewInit() {
-      this.modalChangePasswordInstance = new Modal(this.modalElementRef.nativeElement);
-    }
+    this.modalChangePasswordInstance = new Modal(this.modalElementRef.nativeElement);
+  }
 
   async changePassword(current: string, newPassword: string) {
     const data = {
@@ -32,15 +35,15 @@ export default class UserPageComponent {
     }
     const resp = await this.authService.changePassword(data)
 
-    if(resp?.success) {
+    if (resp?.success) {
       this.closeModal();
     }
   }
 
   handlePasswordChange($event: { current: string; new: string; }) {
-    if( $event.current && $event.new) {
+    if ($event.current && $event.new) {
       this.changePassword($event.current, $event.new);
-    } 
+    }
 
     return null
   }
@@ -56,6 +59,11 @@ export default class UserPageComponent {
     if (this.modalChangePasswordInstance) {
       this.modalChangePasswordInstance.hide();
     }
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
 
