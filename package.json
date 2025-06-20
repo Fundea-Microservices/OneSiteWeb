@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "deploy": "git fetch origin && git pull origin && npm install && ng build --configuration production"
+    "deploy": "git fetch origin && git pull && npm install && ng build --configuration production"
   },
   "private": true,
   "dependencies": {
