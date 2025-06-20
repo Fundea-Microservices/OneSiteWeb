@@ -78,13 +78,11 @@ Sidebar Nav
 }
 
 .sidebar-nav ul li a {
-  color: rgba(255, 255, 255, 0.9);
   font-size: 0.75em;
   padding: 1.05em 1em;
   position: relative;
   display: block;
   transition: all 0.6s ease;
-  color: black;
 }
 
 .sidebar-nav ul li a:hover {

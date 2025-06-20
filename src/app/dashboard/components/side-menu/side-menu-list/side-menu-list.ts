@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject } fr
 import { AuthService } from '../../../../../services/auth.service';
 import { Router, RouterLink } from '@angular/router';
 import { SideMenuListItemComponent } from '../side-menu-list-item/side-menu-list-item';
+import { AccesoService } from '../../../../../services/acceso.service';
 
 @Component({
   selector: 'app-side-menu-list',
@@ -14,13 +15,14 @@ import { SideMenuListItemComponent } from '../side-menu-list-item/side-menu-list
 export class SideMenuListComponent { 
 
   public authService = inject(AuthService);
+  public accesoService = inject(AccesoService);
   
   public router = inject(Router)
 
   public accesos: any[] = [];
 
   ngOnInit(): void {
-    this.accesos = this.authService.getMenusStorage() || [];
+    this.accesos = this.accesoService.getAccesosStorage() || [];
   }
 
 
