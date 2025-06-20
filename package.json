@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "deploy": "git fetch origin && git pull origin && npm install && ng build --configuration production"
   },
   "private": true,
   "dependencies": {

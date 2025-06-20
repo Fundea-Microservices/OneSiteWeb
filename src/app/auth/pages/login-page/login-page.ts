@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { AuthService } from '../../../../services/auth.service';
 import { Router } from '@angular/router';
 import { IMenu } from '../../../../interfaces/auth';
+import { AccesoService } from '../../../../services/acceso.service';
 
 @Component({
   selector: 'app-login-page',
@@ -13,11 +14,12 @@ import { IMenu } from '../../../../interfaces/auth';
 export default class LoginPageComponent {
 
   public authService = inject(AuthService)
+  public accesoService = inject(AccesoService)
   public router = inject(Router)
 
   public user = this.authService.getUserStorage();
-  userName = signal('iesteban');
-  password = signal('');
+  userName = signal('admindtd');
+  password = signal('Funde@2025');
 
   errorObj = signal<{ message: string; code: number, isError: boolean }>({
     message: '',
@@ -50,8 +52,15 @@ export default class LoginPageComponent {
         });
 
         if (authData?.data.user.rolId) {
-          let accesosData = await this.authService.getMenusByRol(authData?.data.user.rolId);
-          localStorage.setItem('menu', JSON.stringify(accesosData.body?.data.accesos || []));
+          let accesosData = await this.accesoService.getAccesosByRol(authData?.data.user.rolId);
+          if( accesosData) {
+            localStorage.setItem('accesos', JSON.stringify(accesosData.body?.data.accesos || []));
+            if(accesosData.body?.data.accesos.length == 0) {
+              this.authService.logout('No hay configurados accesos para su rol');
+            }
+          } else {
+            this.authService.logout('No se encontraron accesos para el rol');
+          }
         }
 
         this.router.navigate(['/home']);
