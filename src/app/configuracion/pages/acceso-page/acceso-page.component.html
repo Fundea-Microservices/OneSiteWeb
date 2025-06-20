@@ -1,1 +1,237 @@
-<app-drag-drop ></app-drag-drop>
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Home</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/config']">Config</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Accesos</li>
+    </ol>
+</nav>
+
+
+<div class="card">
+    <div class="card-header">
+        Administrar accesos
+    </div>
+    <div class="card-body">
+        <form class="row g-3">
+            <div class="col-auto">
+                <label for="selectRol" class="visually-hidden">Buscar por rol</label>
+                <select class="form-select form-select-sm" aria-label="Seleccionar rol" id="selectRol"
+                    (change)="rolFilter.set(selectRol.value)" (input)="rolFilter.set(selectRol.value)" #selectRol>
+                    >
+                    <option value='' selected>Seleccione rol</option>
+                    @for (item of rolesList(); track item.rolId) {
+                    <option value="{{ item.rolId }}">{{ item.name }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="button" (click)="fetchData()" class="btn btn-success btn-sm mb-3">
+                    Buscar
+                </button>
+            </div>
+        </form>
+        <br>
+
+        @if(rolFilter() != '' && rolActual()) {
+        <h3>Lista de Accesos de {{ rolActual().name }}</h3>
+        } @else {
+        <div class="alert alert-warning" role="alert">
+            Por favor, seleccione un rol para ver sus accesos.
+        </div>
+        }
+
+        <div class="row">
+            <div class="col-sm-4 col-md-4 p-2 card">
+                <small>Listado de accesos que no estan asignados al rol</small>
+                <div class="mt-2">
+                    <h5>Menús</h5>
+                    <ul class="list-group text-[0.85em] mt-2">
+                        @for (menu of menusUnused(); track menu.menuId) {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <ion-icon class="mx-2" name="{{ menu.icon }}"></ion-icon>{{ menu.name }}
+                            <button class="badge text-bg-success rounded-pill" (click)="addMenu(menu)">{{ 'Añadir'
+                                }}</button>
+                        </li>
+                        }
+                    </ul>
+                </div>
+                <div class="mt-4">
+                    <h5>Submenús</h5>
+                    <ul class="list-group text-[0.85em] mt-2">
+                        @for (menu of submenusUnused(); track menu.menuId) {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <ion-icon class="mx-2" name="{{ menu.icon }}"></ion-icon>{{ menu.name }}
+                            <span class="badge text-bg-success rounded-pill" (click)="addMenu(menu)">{{ 'Añadir'
+                                }}</span>
+                        </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+            <div class="col-sm-8 col-md-8 p-2 card">
+                <table class="table table-striped table-sm table-bordered table-hover text-[0.85em]">
+                    <thead>
+                        <tr>
+                            <th class="text-center" scope="col">Orden</th>
+                            <th class="text-center" scope="col">Menú</th>
+                            <th class="text-center" scope="col">Activo</th>
+                            <th class="text-center" scope="col">APP</th>
+                            <th class="text-center" scope="col">Web</th>
+                            <!-- <th class="text-center" scope="col">Creado</th> -->
+                            <th class="text-center" scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (item of accesosList(); track item.accesoId; let i = $index) {
+                        <tr>
+                            <td class="text-center justify-items-center items-center"><b>{{ item.orderMenu }}</b></td>
+                            <td><b><ion-icon class="mx-2" name="{{ item.menu.icon }}"></ion-icon> {{ item.menu.name
+                                    }}</b></td>
+                            <td class="text-center justify-items-center items-center">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        id="switchCheckDefault{{i}}" [checked]="item.active"
+                                        (change)="changeActive(item, cbxActive.checked)" [value]="item.active"
+                                        #cbxActive>
+                                </div>
+                            </td>
+                            <td class="text-center justify-items-center items-center text-[0.8em]">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="cbxShowApp{{i}}"
+                                        [checked]="item.showApp" (change)="changeShowApp(item, cbxShowApp.checked)"
+                                        [disabled]="!item.active" [value]="item.showApp" #cbxShowApp>
+                                </div>
+                            </td>
+                            <td class="text-center justify-items-center items-center text-[0.8em] custom-switch">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input custom-switch" type="checkbox" role="switch"
+                                        id="cbxShowWeb{{i}}" [checked]="item.showWeb"
+                                        (change)="changeShowWeb(item, cbxShowWeb.checked)" [disabled]="!item.active"
+                                        [value]="item.showWeb" #cbxShowWeb>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <!-- <button class="btn btn-sm btn-secondary mx-1"
+                            [routerLink]="['/config/rol/edit', item.rolId]"><ion-icon
+                                name="eye-outline"></ion-icon></button> -->
+                                <!-- <button class="btn btn-sm btn-success mx-1" (click)="openModal(false, item)"><ion-icon
+                                        name="create-outline"></ion-icon></button> -->
+                                <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </button>
+                            </td>
+                        </tr>
+                        @for (subacceso of item.subMenus; track subacceso.accesoId; let j = $index) {
+                        <tr>
+                            <td class="text-center justify-items-center items-center">{{ item.orderMenu + '.' +
+                                subacceso.orderMenu }}</td>
+                            <td><ion-icon class="mx-2" name="{{ subacceso.menu.icon }}"></ion-icon> {{
+                                subacceso.menu.name }}</td>
+                            <td class="text-center justify-items-center items-center">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        id="switchCheckDefault{{i}}" [checked]="subacceso.active"
+                                        (change)="changeActive(subacceso, cbxActive.checked)" [value]="subacceso.active"
+                                        #cbxActive>
+                                </div>
+                            </td>
+                            <td class="text-center justify-items-center items-center text-[0.8em]">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="cbxShowApp{{i}}"
+                                        [checked]="subacceso.showApp"
+                                        (change)="changeShowApp(subacceso, cbxShowApp.checked)"
+                                        [disabled]="!subacceso.active" [value]="subacceso.showApp" #cbxShowApp>
+                                </div>
+                            </td>
+                            <td class="text-center justify-items-center items-center text-[0.8em] custom-switch">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input custom-switch" type="checkbox" role="switch"
+                                        id="cbxShowWeb{{i}}" [checked]="subacceso.showWeb"
+                                        (change)="changeShowWeb(subacceso, cbxShowWeb.checked)"
+                                        [disabled]="!subacceso.active" [value]="subacceso.showWeb" #cbxShowWeb>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <!-- <button class="btn btn-sm btn-secondary mx-1"
+                            [routerLink]="['/config/rol/edit', item.rolId]"><ion-icon
+                                name="eye-outline"></ion-icon></button> -->
+                                <!-- <button class="btn btn-sm btn-success mx-1"
+                                    (click)="openModal(false, subacceso)"><ion-icon
+                                        name="create-outline"></ion-icon></button> -->
+                                <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(subacceso)">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+
+        <!-- <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" /> -->
+
+
+    </div>
+
+    <!-- Modal Upsert-->
+    <div #upsertModal class="modal fade" id="upsertModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertModal">{{modal().titulo}}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- <app-upsert-user [user]="usuarioEdit()" 
+                        [nuevo]="nuevoUsuario()"
+                        [key]="formKey()"
+                        [roles]="rolesList()" 
+                        [metodos]="metodosList()"
+                        (save)="onSave($event)" (cancel)="closeModal()"></app-upsert-user> -->
+                    <app-upsert-acceso [acceso]="accesoEdit()" 
+                        [nuevo]="nuevoMenu()" 
+                        [key]="formKey()"
+                        [allMenus]="allMenus()" 
+                        [allSubmenus]="allSubmenus()"  
+                        [roles]="rolesList()"
+                        [accesosByRol]="accesosList()" (save)="onSave($event)"
+                        (cancel)="closeModal()"></app-upsert-acceso>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delete-->
+    <div #deleteModal class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 text-red" id="titleDeleteModal">Eliminar acceso</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar el acceso "{{ accesoEdit().menu.name }}"?</p>
+                    <p>Rol: {{ accesoEdit().rol?.name }}</p>
+                    @if(accesoEdit().menu.main) {
+                        <div class="alert alert-danger" role="alert">
+                           Este acceso es un menú principal y al eliminarlo, se eliminarán todos sus submenús asociados.
+                        </div>
+                    }
+                        
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" (click)="deleteAcceso(accesoEdit())">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

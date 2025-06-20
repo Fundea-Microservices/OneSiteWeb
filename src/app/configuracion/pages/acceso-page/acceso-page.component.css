@@ -1,0 +1,5 @@
+/* Puedes colocarlo en tu archivo styles.scss o dentro de styles del componente */
+.form-check-input.secondary:checked {
+  background-color: #dc3545 ; /* Secondary Bootstrap color */
+  border-color: #dc3545 ;
+}

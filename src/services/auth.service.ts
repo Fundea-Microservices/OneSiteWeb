@@ -59,13 +59,6 @@ export class AuthService extends HttpService {
     };
   }
 
-  getMenusStorage() {
-    const user = localStorage.getItem('menu');
-    if (user) {
-      return JSON.parse(user);
-    }
-    return null;
-  }
 
   get token(): string | null {
     return localStorage.getItem('token');
@@ -75,10 +68,13 @@ export class AuthService extends HttpService {
     return !!this.token;
   }
 
-  logout() {
+  logout(message: string = '') {
+    if (message) {
+      this.toastr.error(message, 'Sesión cerrada');
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('menu');
+    localStorage.removeItem('accesos');
   }
 
   async login(data: { userName: string; password: string }) {
@@ -103,12 +99,6 @@ export class AuthService extends HttpService {
 
   getMenus(params?: { [key: string]: any }) {
     return this.get(this.endpoints.menus, params);
-  }
-
-  async getMenusByRol(rolId: string) {
-    const resp = await firstValueFrom(this.get<AccesoResponse>(`${this.endpoints.menuByRol}/${rolId}`))
-
-    return resp;
   }
 
   async changePassword(data: { userId: string; current: string; newPassword: string }) {

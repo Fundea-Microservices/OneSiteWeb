@@ -1,3 +1,4 @@
+import { IAcceso } from "./acceso";
 import { IMetodo } from "./metodo";
 
 export interface AuthResponse {
@@ -17,7 +18,8 @@ export interface AccesoResponse {
     status?: number;
     message: string;
     data: {
-        accesos: IMenu[];
+        accesos: IAcceso[];
+        metadata: Metadata
     }
 }
 

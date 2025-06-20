@@ -1,0 +1,114 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+    <div class="row">
+        <p>
+            {{ 'Asignar ' + (acceso().menu.main ? ' menú ' : 'submenú ') }}
+            <span class="badge text-bg-secondary rounded-pill opacity-80">
+                <span><ion-icon [name]="acceso().menu.icon"></ion-icon> {{ acceso().menu.label }}</span>
+            </span>
+
+            {{' al rol ' }}
+            <span class="badge text-bg-secondary rounded-pill opacity-80">
+                {{acceso().rol?.name}}
+            </span>
+        </p>
+
+
+    </div>
+    <div class="row mb-3">
+        @if(!acceso().menu.main) {
+        <div class="col-md-6">
+            <label class="form-label">Menú principal</label>
+            <select class="form-select" formControlName="mainMenuId">
+                <option value="{{null}}" selected>Seleccione opción</option>
+                @for (acceso of accesosByRol(); track acceso.accesoId) {
+                @if(acceso.menu && acceso.menu.main) {
+
+                <option [value]="acceso.menu.menuId">{{ acceso.menu.name }}</option>
+                }
+                }
+                @if (form().get('mainMenuId')?.errors?.['required']) {
+                <div>Menú principal es requerido</div>
+                }
+            </select>
+        </div>
+        @if(form().get('mainMenuId')?.value !== null && form().get('mainMenuId')?.value !== '') {
+        <div class="col-6">
+            <label class="form-label">Orden <small>(colocar antes de)</small></label>
+            <select class="form-select" formControlName="orderMenu">
+                <option value="{{0}}" selected>Colocar al inicio</option>
+                @for (accesoRol of accesosByRol(); track accesoRol.accesoId) {
+
+                @if(accesoRol.menuId === form().get('mainMenuId')?.value && accesoRol.menu && accesoRol.menu.main) {
+                @for (submenu of accesoRol.subMenus; track submenu.menuId) {
+                <option [value]="submenu.orderMenu">{{ submenu.menu.name }}</option>
+                }
+                }
+                }
+                @if (form().get('orderMenu')?.touched && form().get('orderMenu')?.invalid) {
+                <div class="text-danger small">
+                    @if (form().get('orderMenu')?.errors?.['required']) {
+                    <div>Orden del menú es requerido</div>
+                    }
+                </div>
+                }
+                <option value="{{100}}" selected>Colocar al final</option>
+            </select>
+        </div>
+
+        }
+        } @else {
+        <div class="col-6">
+            <label class="form-label">Orden <small>(colocar antes de)</small></label>
+            <select class="form-select" formControlName="orderMenu">
+                <option value="{{0}}" selected>Colocar al inicio</option>
+                @for (accesoRol of accesosByRol(); track accesoRol.accesoId) {
+                @if(accesoRol.menu && accesoRol.menu.main) {
+                <option [value]="accesoRol.orderMenu">{{ accesoRol.menu.name }}</option>
+                }
+                }
+                @if (form().get('orderMenu')?.touched && form().get('orderMenu')?.invalid) {
+                <div class="text-danger small">
+                    @if (form().get('orderMenu')?.errors?.['required']) {
+                    <div>Orden del menú es requerido</div>
+                    }
+                </div>
+                }
+                <option value="{{100}}" selected>Colocar al final</option>
+            </select>
+        </div>
+
+        }
+
+
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 my-1">
+            <div class="form-check form-switch my-1">
+                <input class="form-check-input" type="checkbox" formControlName="active" />
+                <label class="form-check-label">Activo</label>
+            </div>
+            <div class="form-check form-switch my-1">
+                <input class="form-check-input" type="checkbox" formControlName="showApp" />
+                <label class="form-check-label">Mostrar en aplicación móvil</label>
+            </div>
+            <div class="form-check form-switch my-1">
+                <input class="form-check-input" type="checkbox" formControlName="showWeb" />
+                <label class="form-check-label">Mostrar en aplicación web</label>
+            </div>
+        </div>
+
+        <div class="col">
+
+        </div>
+    </div>
+
+    <div class="row justify-content-end">
+        <div class="col-auto">
+            <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
+            <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid">
+                {{ btnText }}
+            </button>
+        </div>
+    </div>
+</form>

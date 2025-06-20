@@ -1,3 +1,5 @@
+import { IMenu, IRol } from "./auth";
+
 export interface AccesoResponse {
     success:    boolean;
     message:    string;
@@ -10,26 +12,17 @@ export interface Data {
 }
 
 export interface IAcceso {
-    accesoId:  string;
+    accesoId?:  string;
     orderMenu: number;
     showApp:   boolean;
     showWeb:   boolean;
+    mainMenuId?: string;
     active:    boolean;
-    menu:      IMenu;
+    menu:     IMenu;
+    rol?:      IRol;
+    rolId:    string;
+    menuId:    string;
     subMenus?: IAcceso[];
 }
 
-export interface IMenu {
-    menuId:      string;
-    name:        string;
-    description: string;
-    pathApp:     string;
-    pathWeb:     string;
-    label:       string;
-    icon:        string;
-    color:       string;
-    main:        boolean;
-    active:      boolean;
-    createdAt:   Date;
-}
 
