@@ -118,6 +118,7 @@ export default class MenuPageComponent {
     let resp = await this.menuService.deleteMenu(menu);
     if (resp?.success) {
       this.fetchDataMenu();
+      this.fetchDataSubmenu()
       if (this.modalDeleteInstance) {
         this.modalDeleteInstance.hide();
       }
@@ -133,6 +134,7 @@ export default class MenuPageComponent {
     let resp = await this.menuService.createMenu(menu)
     if (resp?.success) {
       this.fetchDataMenu()
+      this.fetchDataSubmenu();
       this.closeModal();
       this.menuEdit.set(emptyMenu);
       this.nuevoMenu.set(true); // Reseteamos el estado de nuevo menú
@@ -143,6 +145,7 @@ export default class MenuPageComponent {
     let resp = await this.menuService.updateMenu(menu)
     if (resp?.success) {
       this.fetchDataMenu()
+      this.fetchDataSubmenu();
       this.closeModal();
     }
   }
