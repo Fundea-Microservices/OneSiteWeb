@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, effect, EventEmitter, inject, input, Output, signal } from '@angular/core';
 import { FormBuilder, Validators, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { IMetodo } from '../../../../../interfaces/metodo';
 import { IMenu } from '../../../../../interfaces/auth';
 import { CommonModule } from '@angular/common';
 
@@ -47,7 +46,7 @@ export class UpsertMenuComponent {
     description: [Validators.required, Validators.minLength(3)],
     pathApp: [Validators.required, Validators.minLength(3)], // Validación para que comience con /
     pathWeb: [Validators.required, Validators.minLength(3)], // Validación para que comience con /
-    label: [Validators.required],
+    label: [Validators.required, Validators.maxLength(30)],
     icon: [Validators.required],
     color: [],
     main: [Validators.required],

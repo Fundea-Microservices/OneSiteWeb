@@ -41,6 +41,9 @@
                 @if (form().get('label')?.errors?.['required']) {
                 <div>Label es requerido</div>
                 }
+                @if (form().get('label')?.errors?.['maxlength']) {
+                <div>Máximo 30 caracteres</div>
+                }
             </div>
             }
         </div>
