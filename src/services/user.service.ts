@@ -66,7 +66,13 @@ export class UserService extends HttpService {
   async createUser(createUser: IUser) {
     try {
       //Retiramos el id
-      const { userId, lastPasswordUpdate, created_at, rol, puesto, ...userData } = createUser;
+      const { userId, lastPasswordUpdate, created_at, rol, puesto, metodoId, ...other } = createUser;
+      let userData: any = {
+        ...other
+      }
+      if (metodoId && metodoId !== '') {
+        userData.metodoId = metodoId;
+      }
 
       const resp =  await firstValueFrom(this.post<UsersResponse>(`${this.endpoints.user}`, userData));
       if (resp.body?.success) {

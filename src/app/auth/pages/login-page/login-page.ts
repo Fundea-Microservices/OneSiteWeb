@@ -18,8 +18,8 @@ export default class LoginPageComponent {
   public router = inject(Router)
 
   public user = this.authService.getUserStorage();
-  userName = signal('admindtd');
-  password = signal('Funde@2025');
+  userName = signal('');
+  password = signal('');
 
   errorObj = signal<{ message: string; code: number, isError: boolean }>({
     message: '',
