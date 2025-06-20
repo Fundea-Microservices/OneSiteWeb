@@ -5,4 +5,5 @@ export const environment = {
     production: false,
     path: API_URL,
     apiPath: (API_URL) + 'api',
+    tokenCheckInterval: 5 // minutos
 };
