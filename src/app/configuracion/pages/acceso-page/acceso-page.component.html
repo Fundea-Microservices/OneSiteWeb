@@ -16,7 +16,7 @@
             <div class="col-auto">
                 <label for="selectRol" class="visually-hidden">Buscar por rol</label>
                 <select class="form-select form-select-sm" aria-label="Seleccionar rol" id="selectRol"
-                    (change)="rolFilter.set(selectRol.value)" (input)="rolFilter.set(selectRol.value)" #selectRol>
+                    (change)="changeRolSelected(selectRol.value) " (input)="rolFilter.set(selectRol.value)" #selectRol>
                     >
                     <option value='' selected>Seleccione rol</option>
                     @for (item of rolesList(); track item.rolId) {
@@ -25,14 +25,14 @@
                 </select>
             </div>
             <div class="col-auto">
-                <button type="button" (click)="fetchData()" class="btn btn-success btn-sm mb-3">
+                <!-- <button type="button" (click)="fetchData()" class="btn btn-success btn-sm mb-3">
                     Buscar
-                </button>
+                </button> -->
             </div>
         </form>
         <br>
 
-        @if(rolFilter() != '' && rolActual()) {
+        @if(selectRol.value !== '') {
         <h3>Lista de Accesos de {{ rolActual().name }}</h3>
         } @else {
         <div class="alert alert-warning" role="alert">
@@ -41,6 +41,7 @@
         }
 
         <div class="row">
+            @if(selectRol.value !== '') {
             <div class="col-sm-4 col-md-4 p-2 card">
                 <small>Listado de accesos que no estan asignados al rol</small>
                 <div class="mt-2">
@@ -48,7 +49,7 @@
                     <ul class="list-group text-[0.85em] mt-2">
                         @for (menu of menusUnused(); track menu.menuId) {
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <ion-icon class="mx-2" name="{{ menu.icon }}"></ion-icon>{{ menu.name }}
+                            <ion-icon class="mx-2" name="{{ menu.icon }}"></ion-icon>{{ menu.label }}
                             <button class="badge text-bg-success rounded-pill" (click)="addMenu(menu)">{{ 'Añadir'
                                 }}</button>
                         </li>
@@ -60,7 +61,7 @@
                     <ul class="list-group text-[0.85em] mt-2">
                         @for (menu of submenusUnused(); track menu.menuId) {
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <ion-icon class="mx-2" name="{{ menu.icon }}"></ion-icon>{{ menu.name }}
+                            <ion-icon class="mx-2" name="{{ menu.icon }}"></ion-icon>{{ menu.label }}
                             <span class="badge text-bg-success rounded-pill" (click)="addMenu(menu)">{{ 'Añadir'
                                 }}</span>
                         </li>
@@ -85,7 +86,7 @@
                         @for (item of accesosList(); track item.accesoId; let i = $index) {
                         <tr>
                             <td class="text-center justify-items-center items-center"><b>{{ item.orderMenu }}</b></td>
-                            <td><b><ion-icon class="mx-2" name="{{ item.menu.icon }}"></ion-icon> {{ item.menu.name
+                            <td><b><ion-icon class="mx-2" name="{{ item.menu.icon }}"></ion-icon> {{ item.menu.label
                                     }}</b></td>
                             <td class="text-center justify-items-center items-center">
                                 <div class="form-check form-switch">
@@ -131,7 +132,8 @@
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" role="switch"
                                         id="switchCheckDefault{{i}}" [checked]="subacceso.active"
-                                        (change)="changeActive(subacceso, cbxActive.checked)" [value]="subacceso.active"
+                                        (change)="changeActive(subacceso, cbxActive.checked)" 
+                                        [disabled]="!item.active" [value]="subacceso.active"
                                         #cbxActive>
                                 </div>
                             </td>
@@ -140,7 +142,7 @@
                                     <input class="form-check-input" type="checkbox" role="switch" id="cbxShowApp{{i}}"
                                         [checked]="subacceso.showApp"
                                         (change)="changeShowApp(subacceso, cbxShowApp.checked)"
-                                        [disabled]="!subacceso.active" [value]="subacceso.showApp" #cbxShowApp>
+                                        [disabled]="!subacceso.active || !item.active" [value]="subacceso.showApp" #cbxShowApp>
                                 </div>
                             </td>
                             <td class="text-center justify-items-center items-center text-[0.8em] custom-switch">
@@ -148,7 +150,7 @@
                                     <input class="form-check-input custom-switch" type="checkbox" role="switch"
                                         id="cbxShowWeb{{i}}" [checked]="subacceso.showWeb"
                                         (change)="changeShowWeb(subacceso, cbxShowWeb.checked)"
-                                        [disabled]="!subacceso.active" [value]="subacceso.showWeb" #cbxShowWeb>
+                                        [disabled]="!subacceso.active || !item.active" [value]="subacceso.showWeb" #cbxShowWeb>
                                 </div>
                             </td>
                             <td class="text-center">
@@ -168,6 +170,7 @@
                     </tbody>
                 </table>
             </div>
+            }
         </div>
 
 
@@ -209,7 +212,7 @@
     </div>
 
     <!-- Modal Delete-->
-    <div #deleteModal class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+    <div #deleteModal class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleDeleteModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

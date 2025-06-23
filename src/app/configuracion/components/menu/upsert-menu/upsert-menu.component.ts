@@ -42,7 +42,7 @@ export class UpsertMenuComponent {
   key = input<number>(0);
 
   validationRules: MenuValidationRules = {
-    name: [Validators.required, Validators.minLength(5)],
+    name: [Validators.required, Validators.minLength(3)],
     description: [Validators.required, Validators.minLength(3)],
     pathApp: [Validators.required, Validators.minLength(3)], // Validación para que comience con /
     pathWeb: [Validators.required, Validators.minLength(3)], // Validación para que comience con /

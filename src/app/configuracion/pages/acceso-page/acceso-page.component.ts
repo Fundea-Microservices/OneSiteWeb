@@ -253,7 +253,6 @@ export default class AccesoPageComponent {
   }
 
   onSave(acceso: IAcceso) {
-    console.log("🚀 ~ AccesoPageComponent ~ onSave ~ acceso:", acceso)
     if (!acceso.accesoId) {
       this.createAcceso(acceso);
     } else {
@@ -283,4 +282,10 @@ export default class AccesoPageComponent {
     this.openModal(true, this.accesoEdit());
 
   }
+
+  changeRolSelected(rolId: string) {
+    this.rolFilter.set(rolId)
+    this.fetchData();
+  }
+
 }
