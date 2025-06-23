@@ -21,11 +21,11 @@ export class AccesoService extends HttpService {
   }
 
   getAccesosStorage() {
-    const user = localStorage.getItem('accesos');
-    if (user) {
-      return JSON.parse(user);
+    const accesos = localStorage.getItem('accesos');
+    if (accesos) {
+      return JSON.parse(accesos);
     }
-    return null;
+    return [];
   }
 
   async getAccesosByRol(rolId: string, params: any = {}) {
