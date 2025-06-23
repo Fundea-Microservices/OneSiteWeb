@@ -44,7 +44,9 @@ export class RolService extends HttpService {
 
   async updateRol(rolUpdate: IRol) {
     try {
-      const resp =  await firstValueFrom(this.put<RolesResponse>(`${this.endpoints.rol}`, rolUpdate));
+      //Obtenemos solo lo necesario para actualizar el rol
+      const { updated_at, deleted_at, ...data } = rolUpdate;
+      const resp =  await firstValueFrom(this.put<RolesResponse>(`${this.endpoints.rol}`, data));
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');
         return resp.body;

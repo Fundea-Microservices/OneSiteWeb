@@ -56,7 +56,10 @@ export interface IRol {
     name:      string;
     active:    boolean;
     guest:    boolean;
+    isAdmin?: boolean;
     created_at?: Date;
+    updated_at?:  Date;
+    deleted_at?:  Date;
 }
 
 export interface IMenu {
@@ -72,6 +75,8 @@ export interface IMenu {
     active:      boolean;
     subMenus?:   IMenu[];
     created_at?:   Date;
+    updated_at?:  Date;
+    deleted_at?:  Date;
 }
 
 
