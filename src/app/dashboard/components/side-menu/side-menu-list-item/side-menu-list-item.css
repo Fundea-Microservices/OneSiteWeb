@@ -35,7 +35,7 @@ Sidebar
   height: 100%;
   top: 0;
   overflow: hidden;
-  background-color: #b4b7bf;
+  background-color: #cdcfd4;
   transform: translateZ(0);
   visibility: visible;
   backface-visibility: hidden;
@@ -53,7 +53,7 @@ Sidebar Nav
 ----------------*/
 .sidebar-nav {
   position: fixed;
-  background-color: #aaadb5;
+  background-color: #cdcfd4;
   height: 100%;
   font-weight: 400;
   font-size: 1.2em;
@@ -127,7 +127,7 @@ Nav-Flyout
 ----------------*/
 .sidebar-nav .nav-flyout {
   position: absolute;
-  background-color: #d1d5e0;
+  background-color: #cdcfd4;
   z-index: 9;
   left: 2.5em;
   top: 0;

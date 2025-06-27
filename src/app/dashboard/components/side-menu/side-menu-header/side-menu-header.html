@@ -1,29 +1,24 @@
-<div id="logo" class="my-1 px-6 align-middle justify-center">
-    <!-- <h1 class="text-lg md:text-2xl font-bold text-slate-900">Dash<span class="text-blue-500">8</span>.</h1> -->
-    
-    <img src="images/OneSite-logo.png" alt="Logo" width="180" />
-</div>
-<div id="profile" class="px-6 py-2">
-  <p class="text-slate-500">Bienvenido,</p>
+<div id="logo" class=" px-8 align-middle justify-center">
+  <!-- <h1 class="text-lg md:text-2xl font-bold text-slate-900">Dash<span class="text-blue-500">8</span>.</h1> -->
 
+  <img src="images/OneSite-logo.png" alt="Logo" width="160" />
+</div>
+<div id="profile" class="px-4 flex items-center">
   <a routerLink="/config/user" class="inline-flex items-center space-x-2">
     <!-- Imagen con tamaño fijo -->
     <span class="flex-shrink-0">
-      <img
-        class="rounded-full w-10 h-10 object-cover"
-        src="images/default-user.png"
-        alt="Usuario"
-      />
+      <img class="rounded-full w-10 h-10 object-cover" src="images/default-user.png" alt="Usuario" />
     </span>
-
-    <!-- Nombre adaptable -->
-    <span
-      class="font-bold text-sm md:text-base max-w-[12rem] truncate sm:whitespace-normal sm:break-words"
-      [style]="{ 'font-size': user.name1.length > 20 ? '0.75rem' : '', 'line-height': '1.2' }"
-    >
-      {{ user.name1 || 'Usuario' }} {{ user.lastName1 || '' }}
-    </span>
+    <br>
   </a>
+</div>
 
-  <p class="text-slate-700 truncate">{{ user.rol.name || 'Rol desconocido' }}</p>
+<div class="px-4 flex flex-col items-start">
+  <a routerLink="/config/user"
+      class="font-bold text-sm truncate sm:whitespace-normal sm:break-words pt-2"
+      [style]="{ 'font-size': user.name1.length > 20 ? '0.75rem' : '', }">
+      {{ user.name1 || 'Usuario' }} {{ user.lastName1 || '' }}
+    </a>
+  <!-- Nombre adaptable -->
+  <p class="text-slate-700 truncate text-xs">{{ user.rol.name || 'Rol desconocido' }}</p>
 </div>
