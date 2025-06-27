@@ -29,6 +29,9 @@ export class AccessGuard implements CanActivate {
             }
         })
     })
+    rutasPermitidas.push('/'); // Agrega la ruta raíz al array de rutas permitidas
+    rutasPermitidas.push('/home'); // Agrega la ruta de inicio al array de rutas permitidas
+    rutasPermitidas.push('/config/user'); // Agrega la ruta de configuración de usuario al array de rutas permitidas
     console.log("🚀 ~ AccessGuard ~ canActivate ~ rutasPermitidas:", rutasPermitidas)
     if (rutasPermitidas.includes(rutaActual)) {
       return true;
