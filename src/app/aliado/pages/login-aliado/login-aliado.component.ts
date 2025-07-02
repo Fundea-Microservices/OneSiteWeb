@@ -12,8 +12,8 @@ export default class LoginAliadoComponent {
   
   public router = inject(Router)
 
-  userName = signal('invitado');
-  password = signal('Funde@2025');
+  userName = signal('');
+  password = signal('');
 
   login() {
     console.log('Logging in with', this.userName(), this.password());
