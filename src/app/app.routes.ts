@@ -21,6 +21,11 @@ export const routes: Routes = [
                         canActivate: [AccessGuard]
                     },
                     {
+                        path: 'config',
+                        loadComponent: () => import('./configuracion/pages/configuraciones-page/configuraciones-page.component'),
+                        canActivate: [AccessGuard]
+                    },
+                    {
                         path: 'user',
                         loadComponent: () => import('./configuracion/pages/user-page/user-page'),
                         canActivate: [AccessGuard]

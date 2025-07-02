@@ -1,0 +1,182 @@
+<form [formGroup]="form()" >
+
+    <div class="row">
+        <div class="mb-3 col-md-6">
+            <label class="form-label">Key (PascalCase)</label>
+            <input type="text" class="form-control form-control-sm" formControlName="key" />
+
+            @if (form().get('key')?.touched && form().get('key')?.invalid) {
+            <div class="text-danger small">
+                @if (form().get('key')?.errors?.['required']) {
+                <div>Key es requerido</div>
+                }
+                @if (form().get('key')?.errors?.['minlength']) {
+                <div>Mínimo 3 caracteres</div>
+                }
+            </div>
+            }
+        </div>
+
+        <div class="mb-3 col-md-6">
+            <label class="form-label">Tipo</label>
+            <select class="form-select form-select-sm" formControlName="type">
+                <option value="" disabled>Seleccione un tipo</option>
+                <option value="string">STRING</option>
+                <option value="number">NUMBER</option>
+                <option value="boolean">BOOLEAN</option>
+                <option value="array">ARRAY</option>
+                <option value="object">OBJECT</option>
+            </select>
+            @if (form().get('type')?.touched && form().get('type')?.invalid) {
+            <div class="text-danger small">
+                @if (form().get('type')?.errors?.['required']) {
+                <div>Tipo es requerido</div>
+                }
+            </div>
+            }
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <input type="text" class="form-control form-control-sm" formControlName="description" />
+
+            @if (form().get('description')?.touched && form().get('description')?.invalid) {
+            <div class="text-danger small">
+                @if (form().get('description')?.errors?.['required']) {
+                <div>Descripción es requerida</div>
+                }
+                @if (form().get('description')?.errors?.['minlength']) {
+                <div>Mínimo de 1 caracteres</div>
+                }
+            </div>
+            }
+        </div>
+    </div>
+
+
+    @if(form().get('type')?.value === 'boolean') {
+    <div class="row">
+        <div class="row mb-3">
+            <div class="col">
+                <label for="">Valor de la configuración: </label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" formControlName="value" />
+                    <label class="form-check-label">True</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if(form().get('type')?.value === 'number') {
+    <div class="row">
+        <div class="col">
+            <label for="">Valor de la configuración: </label>
+            <input type="number" class="form-control form-control-sm" formControlName="value" />
+        </div>
+    </div>
+    }
+
+    @if(form().get('type')?.value === 'string') {
+    <div class="row">
+        <div class="col-mb-12">
+            <label for="">Valor de la configuración: </label>
+            <input type="text" class="form-control form-control-sm" formControlName="value" />
+        </div>
+    </div>
+    }
+
+    @if(form().get('type')?.value === 'array') {
+    <hr>
+    <div class="row mb-2">
+        <div class="col-sm-8">
+            <label for="">Elemento a agregar: </label>
+            <input type="text" class="form-control form-control-sm" #element (keyup.enter)="addElement(element)"/>
+        </div>
+        <div class="col-sm-4 pt-6">
+            <button class="btn btn-primary btn-sm mt-6" (click)="addElement(element)">Agregar</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-mb-12">
+            <ul class="list-group">
+                @for (item of arrayValues(); track $index; let i = $index) {
+                    <li
+                        class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item }}
+                        <button class="btn btn-danger btn-sm" (click)="removeElement(i)">Eliminar</button>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    }
+
+    @if(form().get('type')?.value === 'object') {
+    <hr>
+    <div class="row mb-2">
+        <div class="col-sm-4">
+            <label for="">Nombre: </label>
+            <input type="text" class="form-control form-control-sm" #nameObj />
+        </div>
+        <div class="col-sm-4">
+            <label for="">Valor: </label>
+            <input type="text" class="form-control form-control-sm" #valueObj (keyup.enter)="addElementObj(nameObj, valueObj)"/>
+        </div>
+        <div class="col-sm-2 pt-6">
+            <button class="btn btn-primary btn-sm mt-6" (click)="addElementObj(nameObj, valueObj)">Agregar</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-mb-12">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Elemento</th>
+                        <th>Valor</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (item of objectValues(); track $index; let i = $index) {
+                    <tr>
+                        <td>{{ item.key }}</td>
+                        <td>{{ item.value }}</td>
+                        <td><button class="btn btn-danger btn-sm" (click)="removeElementObj(i)">Eliminar</button></td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+
+    <div class="mb-3">
+
+    </div>
+
+
+    <div class="row mb-3">
+        <div class="col">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" formControlName="active" />
+                <label class="form-check-label">Activo</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-end">
+        <div class="col-auto">
+            <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
+            <button type="submit" class="btn btn-primary m-2"  (click)="onSubmit()"
+            [disabled]="form().invalid"
+            >
+                {{ btnText }}
+            </button>
+        </div>
+    </div>
+</form>
