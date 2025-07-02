@@ -6,10 +6,14 @@ export const routes: Routes = [
     {
         path: '',
         loadComponent: () => import('./shared/pages/home-page/home-page.component'),
-    },    
+    },
     {
         path: 'fundea/login',
         loadComponent: () => import('./auth/pages/login-page/login-page'),
+    },
+    {
+        path: 'aliado/login',
+        loadComponent: () => import('./aliado/pages/login-aliado/login-aliado.component'),
     },
     {
         path: '',
@@ -42,7 +46,7 @@ export const routes: Routes = [
                         path: 'users',
                         loadComponent: () => import('./configuracion/pages/users-page/users-page'),
                         canActivate: [AccessGuard]
-                    },                    
+                    },
                     {
                         path: 'roles',
                         loadComponent: () => import('./configuracion/pages/rol-page/rol-page'),
@@ -64,6 +68,20 @@ export const routes: Routes = [
                         canActivate: [AccessGuard]
                     }
                 ]
+            }
+        ]
+    },
+    {
+        path: 'aliado',
+        loadComponent: () => import('./aliado/pages/dashboard-aliado/dashboard-aliado.component'),
+        children: [
+            {
+                path: 'home',
+                loadComponent: () => import('./aliado/pages/home-aliado/home-aliado.component'),
+            },
+            {
+                path: '**',
+                redirectTo: 'home',
             }
         ]
     },

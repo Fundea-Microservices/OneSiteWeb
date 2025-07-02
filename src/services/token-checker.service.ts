@@ -24,7 +24,7 @@ export class TokenCheckerService {
 
       if (this.isTokenExpired(token)) {
         this.authService.logout('Cierre de sesión por expiración del token');
-        this.router.navigate(['/login']);
+        this.router.navigate(['/']);
       }
     }, this.CHECK_INTERVAL);
   }

@@ -9,7 +9,7 @@ import { AuthService } from '../../../../services/auth.service';
   templateUrl: './dashboard-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export default class DashboardPageComponent { 
+export default class DashboardPageComponent {
 
   public authService = inject(AuthService)
 
