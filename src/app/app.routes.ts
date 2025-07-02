@@ -5,6 +5,14 @@ import { AccessGuard } from './auth/guards/access-guard';
 export const routes: Routes = [
     {
         path: '',
+        loadComponent: () => import('./shared/pages/home-page/home-page.component'),
+    },    
+    {
+        path: 'fundea/login',
+        loadComponent: () => import('./auth/pages/login-page/login-page'),
+    },
+    {
+        path: '',
         loadComponent: () => import('./dashboard/pages/dashboard-page/dashboard-page'),
         canActivate: [AuthGuard],
         children: [
@@ -59,12 +67,6 @@ export const routes: Routes = [
             }
         ]
     },
-
-    {
-        path: 'login',
-        loadComponent: () => import('./auth/pages/login-page/login-page'),
-    },
-
     {
         path: '404',
         loadComponent: () => import('./shared/pages/404-page/404-page'),

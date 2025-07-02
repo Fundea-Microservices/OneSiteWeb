@@ -1,0 +1,82 @@
+<nav class="custom-nav" [class.affix]="isAffixed">
+    <div class="custom-container">
+        <div class="logo">
+            <a href="#">LOGO</a>
+        </div>
+        <div id="mainListDiv" class="main_list" [class.show_list]="showMenu">
+            <ul class="navlinks">
+                <li><a href="#">Inicio</a></li>
+                <li><a href="#">Servicios</a></li>
+                <li><a href="#">Contacto</a></li>
+                <li><a [routerLink]="['/aliado/login']" href="#">Aliados</a></li>
+                <li><a [routerLink]="['/fundea/login']">OneSite</a></li>
+            </ul>
+        </div>
+        <span class="navTrigger" [class.active]="showMenu" (click)="toggleMenu()">
+            <i></i>
+            <i></i>
+            <i></i>
+        </span>
+    </div>
+</nav>
+
+<section class="home">
+</section>
+<div>
+    <!-- just to make scrolling effect possible -->
+    <h2 class="myH2">FUNDEA - OneSite</h2>
+    <p class="myP">OneSite es una plataforma centralizada diseñada para facilitar y gestionar de forma eficiente todas las operaciones que involucran al personal interno y a empresas externas asociadas.</p>
+    <p class="myP">Somos una fundación que gestiona servicios financieros con enfoque social y empresarial.</p>
+    <p class="myP">En FUNDEA brindamos soluciones a sus necesidades de capital de trabajo (compra de inventarios, cuentas por cobrar, gastos de operación); capital permanente (compra de inventarios para nuevos negocios); capital de inversión (adquisición de maquinaria, equipo, tecnología, transporte, ampliación de instalaciones, inmuebles comerciales), por medio de nuestras facilidades crediticias.</p>
+    
+    <p class="myP">
+
+        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ipsum ratione facere animi impedit rem labore sint
+        repellendus ipsa sapiente voluptatem aut excepturi quo itaque, ab earum cumque. Voluptatem beatae id inventore
+        quod voluptate qui deserunt, quis placeat, tempora ex totam, dolore sequi harum eos voluptatibus animi labore
+        officiis minus laboriosam
+        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ipsum ratione facere animi impedit rem labore sint
+        repellendus ipsa sapiente voluptatem aut excepturi quo itaque, ab earum cumque. Voluptatem beatae id inventore
+        quod voluptate qui deserunt, quis placeat, tempora ex totam, dolore sequi harum eos voluptatibus animi labore
+        officiis minus laboriosam
+        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ipsum ratione facere animi impedit rem labore sint
+        repellendus ipsa sapiente voluptatem aut excepturi quo itaque, ab earum cumque. Voluptatem beatae id inventore
+        quod voluptate qui deserunt, quis placeat, tempora ex totam, dolore sequi harum eos voluptatibus animi labore
+        officiis minus laboriosam
+        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ipsum ratione facere animi impedit rem labore sint
+        repellendus ipsa sapiente voluptatem aut excepturi quo itaque, ab earum cumque. Voluptatem beatae id inventore
+        quod voluptate qui deserunt, quis placeat, tempora ex totam, dolore sequi harum eos voluptatibus animi labore
+        officiis minus laboriosam
+        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ipsum ratione facere animi impedit rem labore sint
+        repellendus ipsa sapiente voluptatem aut excepturi quo itaque, ab earum cumque. Voluptatem beatae id inventore
+        quod voluptate qui deserunt, quis placeat, tempora ex totam, dolore sequi harum eos voluptatibus animi labore
+        officiis minus laboriosam
+    </p>
+</div>
+
+<!-- Jquery needed -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+
+
+<footer class="bg-white rounded-lg shadow-sm m-4 dark:bg-gray-800">
+    <div class="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
+        <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2025 <a href="https://flowbite.com/"
+                class="hover:underline">FUNDEA</a>. All Rights Reserved.
+        </span>
+        <ul class="flex flex-wrap items-center mt-3 text-sm font-medium text-gray-500 dark:text-gray-400 sm:mt-0">
+            <li>
+                <a href="#" class="hover:underline me-4 md:me-6">About</a>
+            </li>
+            <li>
+                <a href="#" class="hover:underline me-4 md:me-6">Privacy Policy</a>
+            </li>
+            <li>
+                <a href="#" class="hover:underline me-4 md:me-6">Licensing</a>
+            </li>
+            <li>
+                <a href="#" class="hover:underline">Contact</a>
+            </li>
+        </ul>
+    </div>
+</footer>
