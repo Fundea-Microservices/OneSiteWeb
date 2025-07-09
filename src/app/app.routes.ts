@@ -80,6 +80,10 @@ export const routes: Routes = [
                 path: 'empresas',
                 loadComponent: () => import('./aliado/pages/empresa-page/empresa-page.component'),
             },
+            {
+                path: 'usuarios',
+                loadComponent: () => import('./aliado/pages/usuarios-page/usuarios-page.component'),
+            },
         ]
     },
     {
