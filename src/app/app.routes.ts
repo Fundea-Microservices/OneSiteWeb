@@ -72,6 +72,17 @@ export const routes: Routes = [
         ]
     },
     {
+        path: 'aliados-fundea',
+        loadComponent: () => import('./dashboard/pages/dashboard-page/dashboard-page'),
+        canActivate: [AuthGuard],
+        children: [
+            {
+                path: 'empresas',
+                loadComponent: () => import('./aliado/pages/empresa-page/empresa-page.component'),
+            },
+        ]
+    },
+    {
         path: 'aliado',
         loadComponent: () => import('./aliado/pages/dashboard-aliado/dashboard-aliado.component'),
         children: [
@@ -79,6 +90,7 @@ export const routes: Routes = [
                 path: 'home',
                 loadComponent: () => import('./aliado/pages/home-aliado/home-aliado.component'),
             },
+            
             {
                 path: '**',
                 redirectTo: 'home',

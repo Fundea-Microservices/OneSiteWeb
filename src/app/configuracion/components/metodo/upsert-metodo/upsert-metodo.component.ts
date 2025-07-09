@@ -10,7 +10,6 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { IRol } from '../../../../../interfaces/auth';
 import { IMetodo } from '../../../../../interfaces/metodo';
 
 export interface MetodoValidationRules {
