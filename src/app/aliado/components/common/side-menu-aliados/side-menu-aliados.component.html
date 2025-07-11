@@ -5,18 +5,17 @@
     <hr>
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
-            <a href="#" class="nav-link active" aria-current="page">
-                
+            <a routerLink="/aliado/home" class="nav-link  text-white" routerLinkActive="active" aria-current="page">
                 Inicio
             </a>
         </li>
         <li>
-            <a href="#" class="nav-link text-white">
+            <a routerLink="/aliado/referido/create" class="nav-link text-white" routerLinkActive="active">
                 Ingresar referido
             </a>
         </li>
         <li>
-            <a href="#" class="nav-link text-white">
+            <a routerLink="/aliado/referido/list" class="nav-link text-white" routerLinkActive="active">
                 Listado Referidos
             </a>
         </li>
@@ -36,7 +35,7 @@
         <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1"
             data-bs-toggle="dropdown" aria-expanded="false">
             <img src="images/default-user.png" alt="" width="32" height="32" class="rounded-circle me-2">
-            <strong>Usuario</strong>
+            <strong>{{user.userName}}</strong>
         </a>
         <ul class="dropdown-menu dropdown-menu-light text-small shadow" aria-labelledby="dropdownUser1">
             <li><a class="dropdown-item" href="#">Ajustes</a></li>

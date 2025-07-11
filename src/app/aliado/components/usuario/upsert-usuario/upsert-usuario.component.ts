@@ -65,9 +65,7 @@ export class UpsertUsuarioAliadoComponent {
       this.form().reset();
     }
   }
-
-
-
+  
   get btnText(): string {
     return this.nuevo() ? 'Crear Usuario' : 'Actualizar Usuario';
   }
