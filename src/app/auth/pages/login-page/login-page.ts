@@ -40,7 +40,6 @@ export default class LoginPageComponent {
       })
 
       let authData = await  this.authService.login({ userName: this.userName(), password: this.password() })
-      this.loading.set(false);
       if(authData.success) {
         localStorage.setItem('token', authData?.data.token || '');
         localStorage.setItem('user', JSON.stringify(authData?.data.user || {}));
@@ -62,9 +61,10 @@ export default class LoginPageComponent {
             this.authService.logout('No se encontraron accesos para el rol');
           }
         }
-
+        this.loading.set(false);
         this.router.navigate(['/home']);
       } else {
+        this.loading.set(false);
         this.errorObj.set({
           message: authData.message || 'Login failed',
           code: 401,
