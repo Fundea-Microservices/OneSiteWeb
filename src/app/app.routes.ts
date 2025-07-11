@@ -88,11 +88,20 @@ export const routes: Routes = [
     },
     {
         path: 'aliado',
-        loadComponent: () => import('./aliado/pages/dashboard-aliado/dashboard-aliado.component'),
+        loadComponent: () => import('./aliado/pages/dashboard-aliado/dashboard-aliado.component'),        
+        canActivate: [AuthGuard],
         children: [
             {
                 path: 'home',
                 loadComponent: () => import('./aliado/pages/home-aliado/home-aliado.component'),
+            },
+            {
+                path: 'referido/create',
+                loadComponent: () => import('./aliado/pages/ingresar-referido/ingresar-referido.component'),
+            },
+            {
+                path: 'referido/list',
+                loadComponent: () => import('./aliado/pages/referidos-usuario/referidos-usuario.component'),
             },
             
             {
