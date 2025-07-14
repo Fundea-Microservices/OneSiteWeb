@@ -100,7 +100,6 @@ export default class ConfiguracionesPageComponent {
   async createConfiguracion(config: IConfiguracion) {
     let resp = await this.configService.createConfiguracion(config);
     if (resp?.success) {
-      this.configList.set([]); // Limpiamos la lista antes de cargar nuevos datos
       this.fetchData()
       this.closeModal();
       this.configuracionEdit.set(emptyConfiguracion);
@@ -111,7 +110,7 @@ export default class ConfiguracionesPageComponent {
   async updateConfiguracion(config: IConfiguracion) {
     let resp = await this.configService.updateConfiguracion(config);
     if (resp?.success) {
-      this.configList.set([]); // Limpiamos la lista antes de cargar nuevos datos
+      // this.configList.set([]); // Limpiamos la lista antes de cargar nuevos datos
       this.fetchData()
       this.closeModal();
     }
