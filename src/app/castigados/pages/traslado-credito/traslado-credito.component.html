@@ -1,0 +1,135 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/castigados']">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Traslado</li>
+    </ol>
+</nav>
+
+
+<div class="card">
+    <div class="card-header">
+        Traslado de créditos castigados
+    </div>
+    <div class="card-body">
+        <form class="row g-3">
+            <div class="col-auto">
+                <label for="inputPassword2" class="">Fecha inicial</label>
+                <input type="date" class="form-control" id="inputPassword2" placeholder="Fecha inicial"
+                    [value]="fechaInicial()" (change)="fechaInicial.set(inputFechaInicial.value)"
+                    (input)="fechaInicial.set(inputFechaInicial.value)" (keyup.enter)="fetchData()" #inputFechaInicial>
+
+            </div>
+            <div class="col-auto">
+                <label for="inputPassword2" class="">Fecha Final</label>
+                <input type="date" class="form-control" id="inputPassword2" placeholder="Fecha Final"
+                    [value]="fechaFinal()" (change)="fechaFinal.set(inputFechaFinal.value)"
+                    (input)="fechaFinal.set(inputFechaFinal.value)" (keyup.enter)="fetchData()" #inputFechaFinal>
+
+            </div>
+            <div class="col-auto">
+                <label for="inputPassword2" class=""></label><br>
+                <button type="button" (click)="fetchData()" class="btn btn-success mb-3">
+                    Buscar
+                </button>
+            </div>
+        </form>
+        <!-- //Creamos un boton que se muestra solo si el hay al menos un elemento en el listado para trasladar -->
+        <div class="row">
+            <div class="col-7"></div>
+            <div class="col-3">
+                <label for="selectRol" class="visually-hidden">Empresa para trasladar</label>
+                <select class="form-select form-select-sm" aria-label="Seleccionar empresa" id="selectEmpresa"
+                    (change)="changeSelectEmpresa(selectEmpresa.value)"
+                    (input)="empresaSelected.set(selectEmpresa.value)" #selectEmpresa>
+                    >
+                    <option value='' selected>Seleccione empresa</option>
+                    @for (item of empresasList(); track item.empresaId) {
+                    <option value="{{ item.empresaId }}">{{ item.name }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="button" (click)="trasladarCreditos()" class="btn btn-primary mb-3"
+                    [disabled]="creditosListTrasladar().length === 0">
+                    Trasladar
+                </button>
+            </div>
+        </div>
+        <br>
+
+        <table class="table table-striped table-sm table-bordered table-hover" style="font-size: 0.8em;">
+            <thead>
+                <tr>
+                    <th class="text-center" scope="col">#</th>
+                    <th class="text-center" scope="col">Sucursal</th>
+                    <th class="text-center" scope="col">Cuenta</th>
+                    <th class="text-center" scope="col">Cliente</th>
+                    <th class="text-center" scope="col">Operacion</th>
+                    <th class="text-center" scope="col">Capital</th>
+                    <th class="text-center" scope="col">Intereses corrientes</th>
+                    <th class="text-center" scope="col">Intereses Moratorios</th>
+                    <th class="text-center" scope="col">Total</th>
+                    <th class="text-center" scope="col">Garantía</th>
+                    <th class="text-center" scope="col">Fecha de castigo</th>
+                    <th class="text-center" scope="col">Trasladar</th>
+                    <th class="text-center" scope="col">Observaciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (item of creditosList(); track item.IncoOpe; let i = $index) {
+                <tr>
+                    <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
+                    <td>{{ item.IncoSuc }}</td>
+                    <td class="text-center justify-items-center items-center">{{item.IncoCta}}</td>
+                    <td class="text-center justify-items-center items-center">{{item.Nombre}}</td>
+                    <td class="text-center justify-items-center items-center">{{item.IncoOpe}}</td>
+                    <td class="text-center justify-items-center items-center">{{item.Capital}}</td>
+                    <td class="text-center justify-items-center items-center">{{item.Intereses_Corrientes}}</td>
+                    <td class="text-center justify-items-center items-center">{{item.Intereses_Moratorios}}</td>
+                    <td class="text-center justify-items-center items-center">{{item.Total}}</td>
+                    <td class="text-center justify-items-center items-center">{{item.IncoGarantia}}</td>
+                    <td class="text-center justify-items-center items-center">
+                        {{ item.IncoFechaCastigo | date: 'dd/MM/yyyy' }} <br>
+                    </td>
+                    <td class="text-center justify-items-center items-center">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault{{i}}"
+                                [checked]="item.trasladar" [value]="item.trasladar" #cbxTrasladar
+                                (change)="item.trasladar = cbxTrasladar.checked; actualizarListadoTrasladar()">
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <input type="text" class="form-control" [value]="item.observaciones"
+                            (input)="item.observaciones = $any($event.target).value">
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+
+        <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+
+
+    </div>
+
+    <!-- Modal Upsert-->
+    <div #upsertModal class="modal fade" id="upsertModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertModal">{{modal().titulo}}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>

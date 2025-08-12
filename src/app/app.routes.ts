@@ -68,7 +68,24 @@ export const routes: Routes = [
                         canActivate: [AccessGuard]
                     }
                 ]
-            }
+            },
+            {
+                path: 'castigados',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./castigados/pages/home-castigados/home-castigados.component'),
+                    },
+                    {
+                        path: 'traslado',
+                        loadComponent: () => import('./castigados/pages/traslado-credito/traslado-credito.component'),
+                    },
+                    {
+                        path: '**',
+                        redirectTo: '',
+                    }
+                ]
+            },
         ]
     },
     {
@@ -88,7 +105,7 @@ export const routes: Routes = [
     },
     {
         path: 'aliado',
-        loadComponent: () => import('./aliado/pages/dashboard-aliado/dashboard-aliado.component'),        
+        loadComponent: () => import('./aliado/pages/dashboard-aliado/dashboard-aliado.component'),
         canActivate: [AuthGuard],
         children: [
             {
@@ -103,7 +120,7 @@ export const routes: Routes = [
                 path: 'referido/list',
                 loadComponent: () => import('./aliado/pages/referidos-usuario/referidos-usuario.component'),
             },
-            
+
             {
                 path: '**',
                 redirectTo: 'home',
