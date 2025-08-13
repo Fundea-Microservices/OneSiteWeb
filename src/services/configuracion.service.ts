@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { HttpService } from './HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { ConfiguracionResponse, IConfiguracion } from '../interfaces/configuracion';
+import { ConfiguracionByKeyResponse, ConfiguracionResponse, IConfiguracion } from '../interfaces/configuracion';
 
 @Injectable({
   providedIn: 'root'
@@ -41,6 +41,22 @@ export class ConfiguracionService extends HttpService {
       return null;
     }
   }
+
+  async getConfigByKey(key: string) {
+    try {
+      const resp =  await firstValueFrom(this.get<ConfiguracionByKeyResponse>(`${this.endpoints.configuracion}/${key}`));
+      if (resp.body?.success) {
+        return resp.body;
+      }
+
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ ConfiguracionMetodo ~ getConfigByKey ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error en configuraciones');
+      return null;
+    }
+  }
+
 
   async updateConfiguracion(configUpdate: IConfiguracion) {
     try {

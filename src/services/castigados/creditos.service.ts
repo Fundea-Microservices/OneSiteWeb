@@ -50,10 +50,8 @@ export class CreditosCastigadosService extends HttpService {
     try {
       const resp =  await firstValueFrom(this.post<CreditoCastigadoResponse>(`${this.endpoints.trasladar}`,data));
       if (resp.body?.success) {
-        console.log("🚀 ~ CreditosCastigadosService ~ trasladarCreditos ~ (resp.body.statusCode:", resp.body.statusCode)
         if(resp.body.statusCode == 206){
           this.toastr.warning(resp.body.message, 'Warning', {timeOut: 200000});
-          console.log("🚀 ~ CreditosCastigadosService ~ trasladarCreditos ~ resp.body.message:", resp.body.message)
         }
         this.toastr.success(resp.body.message, 'Success', {timeOut: 5000});
         return resp.body;

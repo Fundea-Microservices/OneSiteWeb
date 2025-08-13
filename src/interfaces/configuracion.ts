@@ -27,3 +27,11 @@ export interface IConfiguracion {
     updated_at?:    Date;
     deleted_at?:    Date;
 }
+
+
+export interface ConfiguracionByKeyResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       IConfiguracion;
+}

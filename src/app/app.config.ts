@@ -16,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideToastr({           // Config de los mensajes de error
       positionClass: 'toast-top-right',
       preventDuplicates: true,
+      timeOut: 5000
     }),
   ]
 };

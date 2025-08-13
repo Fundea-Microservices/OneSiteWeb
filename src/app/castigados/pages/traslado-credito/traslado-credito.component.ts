@@ -8,6 +8,7 @@ import { DatePipe } from '@angular/common';
 import { EmpresaCastigadosService } from '../../../../services/castigados/empresa.service';
 import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa';
 import { ToastrService } from 'ngx-toastr';
+import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 
 const emptyCredito: CreditoCastigadoView = {
   IncoSuc: 0,
@@ -41,11 +42,11 @@ hace30Dias.setDate(hace30Dias.getDate() - 30);
 
 @Component({
   selector: 'app-traslado-credito',
-  imports: [RouterLink, PaginationComponent, DatePipe],
+  imports: [RouterLink, PaginationAllComponent, DatePipe],
   templateUrl: './traslado-credito.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class TrasladoCreditoComponent { 
+export default class TrasladoCreditoComponent {
   creditosService = inject(CreditosCastigadosService);
   empresaService = inject(EmpresaCastigadosService);
   creditosList = signal<CreditoCastigadoView[]>([]);
@@ -73,10 +74,10 @@ export default class TrasladoCreditoComponent {
     visible: false,
   });
 
-  
+
   fechaInicial = signal(hace30Dias.toISOString().split('T')[0]); // yyyy-MM-dd
   fechaFinal = signal(hoy.toISOString().split('T')[0]); // yyyy-MM-dd
-  constructor( private toastr: ToastrService) { }
+  constructor(private toastr: ToastrService) { }
 
   ngOnInit() {
 
@@ -89,8 +90,8 @@ export default class TrasladoCreditoComponent {
     this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
   }
 
-  async cargarEmpresas(){
-    let resp = await this.empresaService.getEmpresas({all: true});
+  async cargarEmpresas() {
+    let resp = await this.empresaService.getEmpresas({ all: true });
     if (resp) {
       let { empresas, metadata } = resp.data;
       this.empresasList.set(empresas);
@@ -119,14 +120,14 @@ export default class TrasladoCreditoComponent {
       console.log("🚀 ~ TrasladoCreditoComponent ~ fetchData ~ this.pagination:", this.pagination())
     }
     console.log("🚀 ~ TrasladoCreditoComponent ~ fetchData ~ all:", all)
-    if(all) this.ocultarPaginacion.set(true) 
-      else this.ocultarPaginacion.set(false);
+    if (all) this.ocultarPaginacion.set(true)
+    else this.ocultarPaginacion.set(false);
 
-    if(this.creditosList().length == 0){
+    if (this.creditosList().length == 0) {
       this.toastr.warning('No se encontraron créditos para trasladar', 'Advertencia');
     }
     this.isLoading.set(false);
-  } 
+  }
 
   onChangePage(newPagination: IPagination) {
     this.creditosList.set([]); // Limpiamos la lista antes de cargar nuevos datos
@@ -160,18 +161,18 @@ export default class TrasladoCreditoComponent {
     this.empresaSelected.set(empresaId)
   }
 
-  async trasladarCreditos(){
-    if(!this.empresaSelected()) {
+  async trasladarCreditos() {
+    if (!this.empresaSelected()) {
       this.toastr.warning('No ha seleccionado empresa', 'Advertencia');
       return;
     }
 
-    if(this.resolucion().trim() === '') {
+    if (this.resolucion().trim() === '') {
       this.toastr.warning('No ha ingresado una resolución', 'Advertencia');
       return;
     }
 
-    if(this.creditosListTrasladar().length === 0) {
+    if (this.creditosListTrasladar().length === 0) {
       this.toastr.warning('No ha seleccionado créditos para trasladar', 'Advertencia');
       return;
     }
@@ -185,15 +186,16 @@ export default class TrasladoCreditoComponent {
       resolucion: this.resolucion()
     };
 
-    await this.creditosService.trasladarCreditos(data)
-
-    if (this.modalUpsertInstance) {
-      this.modalUpsertInstance.hide();
+    let response = await this.creditosService.trasladarCreditos(data)
+    if (response?.success) {
+      if (this.modalUpsertInstance) {
+        this.modalUpsertInstance.hide();
+      }
+      this.creditosListTrasladar.set([]);
     }
-
   }
 
-  trasladarTodo(checked: boolean){
+  trasladarTodo(checked: boolean) {
     this.creditosList().forEach(item => {
       item.trasladar = checked;
     });
