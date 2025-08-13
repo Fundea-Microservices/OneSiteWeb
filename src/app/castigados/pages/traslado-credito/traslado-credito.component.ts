@@ -142,7 +142,6 @@ export default class TrasladoCreditoComponent {
       this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
     }
     this.resolucion.set('')
-    this.empresaSelected.set(''); // Reseteamos la empresa seleccionada
     this.modalUpsertInstance.show();
   }
 
@@ -159,7 +158,6 @@ export default class TrasladoCreditoComponent {
 
   changeSelectEmpresa(empresaId: string) {
     this.empresaSelected.set(empresaId)
-    this.fetchData();
   }
 
   async trasladarCreditos(){
@@ -189,6 +187,9 @@ export default class TrasladoCreditoComponent {
 
     await this.creditosService.trasladarCreditos(data)
 
+    if (this.modalUpsertInstance) {
+      this.modalUpsertInstance.hide();
+    }
 
   }
 
