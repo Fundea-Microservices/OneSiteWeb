@@ -54,6 +54,8 @@ export default class TrasladoCreditoComponent {
   metadata = signal({})// Cambia el tipo según tu modelo de datos
   nuevoMetodo = signal(true)
   empresaSelected = signal('')
+  resolucion = signal('')
+  ocultarPaginacion = signal(false)
 
   pagination = signal<IPagination>({
     page: 1,
@@ -95,10 +97,11 @@ export default class TrasladoCreditoComponent {
     }
   }
 
-  async fetchData() {
+  async fetchData(all: boolean = false) {
     if (this.isLoading()) return;
+    this.creditosList.set([]); // Limpiamos la lista antes de cargar nuevos datos
     this.isLoading.set(true);
-    let resp = await this.creditosService.getCreditos({ page: this.pagination().page, limit: this.pagination().pageSize, fechaInicial: this.fechaInicial(), fechaFinal: this.fechaFinal() });
+    let resp = await this.creditosService.getCreditos({ page: this.pagination().page, limit: this.pagination().pageSize, fechaInicial: this.fechaInicial(), fechaFinal: this.fechaFinal(), all });
     if (resp) {
       let { creditos, metadata } = resp.data;
       this.creditosList.set(creditos);
@@ -113,7 +116,12 @@ export default class TrasladoCreditoComponent {
         pageSize: metadata.limit,
         totalItems: metadata.total
       });
+      console.log("🚀 ~ TrasladoCreditoComponent ~ fetchData ~ this.pagination:", this.pagination())
     }
+    console.log("🚀 ~ TrasladoCreditoComponent ~ fetchData ~ all:", all)
+    if(all) this.ocultarPaginacion.set(true) 
+      else this.ocultarPaginacion.set(false);
+
     if(this.creditosList().length == 0){
       this.toastr.warning('No se encontraron créditos para trasladar', 'Advertencia');
     }
@@ -133,6 +141,8 @@ export default class TrasladoCreditoComponent {
     if (!this.modalUpsertInstance) {
       this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
     }
+    this.resolucion.set('')
+    this.empresaSelected.set(''); // Reseteamos la empresa seleccionada
     this.modalUpsertInstance.show();
   }
 
@@ -158,6 +168,11 @@ export default class TrasladoCreditoComponent {
       return;
     }
 
+    if(this.resolucion().trim() === '') {
+      this.toastr.warning('No ha ingresado una resolución', 'Advertencia');
+      return;
+    }
+
     if(this.creditosListTrasladar().length === 0) {
       this.toastr.warning('No ha seleccionado créditos para trasladar', 'Advertencia');
       return;
@@ -168,12 +183,20 @@ export default class TrasladoCreditoComponent {
         id: this.empresaSelected(),
         name: this.empresasList().find(item => item.empresaId === this.empresaSelected())?.name
       },
-      creditos: this.creditosListTrasladar()
+      creditos: this.creditosListTrasladar(),
+      resolucion: this.resolucion()
     };
 
     await this.creditosService.trasladarCreditos(data)
 
 
+  }
+
+  trasladarTodo(checked: boolean){
+    this.creditosList().forEach(item => {
+      item.trasladar = checked;
+    });
+    this.actualizarListadoTrasladar();
   }
 
 

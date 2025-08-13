@@ -28,34 +28,28 @@
             </div>
             <div class="col-auto">
                 <label for="inputPassword2" class=""></label><br>
-                <button type="button" (click)="fetchData()" class="btn btn-success mb-3">
-                    Buscar
+                <button type="button" (click)="fetchData()" class="btn btn-secondary mb-3">
+                    Buscar con paginación
+                </button>
+            </div>
+            <div class="col-auto">
+                <label for="inputPassword2" class=""></label><br>
+                <button type="button" (click)="fetchData(true)" class="btn btn-success mb-3">
+                    Buscar todos los registros
                 </button>
             </div>
         </form>
         <!-- //Creamos un boton que se muestra solo si el hay al menos un elemento en el listado para trasladar -->
-        <div class="row">
-            <div class="col-7"></div>
-            <div class="col-3">
-                <label for="selectRol" class="visually-hidden">Empresa para trasladar</label>
-                <select class="form-select form-select-sm" aria-label="Seleccionar empresa" id="selectEmpresa"
-                    (change)="changeSelectEmpresa(selectEmpresa.value)"
-                    (input)="empresaSelected.set(selectEmpresa.value)" #selectEmpresa>
-                    >
-                    <option value='' selected>Seleccione empresa</option>
-                    @for (item of empresasList(); track item.empresaId) {
-                    <option value="{{ item.empresaId }}">{{ item.name }}</option>
-                    }
-                </select>
-            </div>
-            <div class="col-auto">
-                <button type="button" (click)="trasladarCreditos()" class="btn btn-primary mb-3"
+        @if (creditosListTrasladar().length > 0) {
+        <div class="row justify-content-end">
+            <div class="col-auto ms-auto">
+                <button type="button" (click)="openModal()" class="btn btn-primary mb-2 btn-sm"
                     [disabled]="creditosListTrasladar().length === 0">
                     Trasladar
                 </button>
             </div>
         </div>
-        <br>
+        }
 
         <table class="table table-striped table-sm table-bordered table-hover" style="font-size: 0.8em;">
             <thead>
@@ -71,7 +65,15 @@
                     <th class="text-center" scope="col">Total</th>
                     <th class="text-center" scope="col">Garantía</th>
                     <th class="text-center" scope="col">Fecha de castigo</th>
-                    <th class="text-center" scope="col">Trasladar</th>
+                    <th class="text-center" scope="col">
+                        Trasladar
+                        <div class="text-center justify-items-center items-center">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="switchTodo" 
+                                    #cbxTrasladarTodo (change)="trasladarTodo(cbxTrasladarTodo.checked)">
+                            </div>
+                        </div>
+                    </th>
                     <th class="text-center" scope="col">Observaciones</th>
                 </tr>
             </thead>
@@ -106,8 +108,20 @@
                 }
             </tbody>
         </table>
+        @if (creditosListTrasladar().length > 0) {
+        <div class="row justify-content-end">
+            <div class="col-auto ms-auto">
+                <button type="button" (click)="openModal()" class="btn btn-primary btn-sm"
+                    [disabled]="creditosListTrasladar().length === 0">
+                    Trasladar
+                </button>
+            </div>
+        </div>
+        }
 
-        <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+        @if(!ocultarPaginacion()){
+            <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+        }
 
 
     </div>
@@ -122,9 +136,35 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-
+                    Va a trasladar un total de {{creditosListTrasladar().length}} créditos. Por favor seleccione empresa
+                    y resolución del traslado.
+                    <br>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label for="selectRol" class="visually-hidden">Empresa para trasladar</label>
+                            <select class="form-select form-select-sm" aria-label="Seleccionar empresa"
+                                id="selectEmpresa" (change)="changeSelectEmpresa(selectEmpresa.value)"
+                                (input)="empresaSelected.set(selectEmpresa.value)" #selectEmpresa>
+                                >
+                                <option value='' selected>Seleccione empresa</option>
+                                @for (item of empresasList(); track item.empresaId) {
+                                <option value="{{ item.empresaId }}">{{ item.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <textarea class="form-control" placeholder="Resolución"
+                                [value]="resolucion()" (change)="resolucion.set(txtResolucion.value)"
+                                (input)="resolucion.set(txtResolucion.value)" (keyup.enter)="fetchData()" #txtResolucion></textarea>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary mb-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" (click)="trasladarCreditos()" class="btn btn-primary mb-3"
+                        [disabled]="creditosListTrasladar().length === 0">
+                        Trasladar
+                    </button>
                 </div>
             </div>
         </div>
