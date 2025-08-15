@@ -28,7 +28,7 @@
 
   <div class="mb-3">
     <label class="form-label">Procedimiento</label>
-    <textarea class="form-control form-control-sm" rows="3" formControlName="procedimiento"></textarea>
+    <textarea class="form-control form-control-sm" rows="5" formControlName="procedimiento"></textarea>
     @if (form().get('procedimiento')?.touched && form().get('procedimiento')?.invalid) {
       <div class="text-danger small">
         @if (form().get('procedimiento')?.errors?.['required']) {
