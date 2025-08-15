@@ -1,0 +1,108 @@
+<div>
+    <form class="row g-3">
+        <div class="col-auto">
+            <label for="inputPassword2" class="visually-hidden">Nombre atributo</label>
+            <input type="text" class="form-control" id="inputPassword2" placeholder="Nombre atributo"
+                (change)="buscador.set(txtBuscar.value)" (input)="buscador.set(txtBuscar.value)"
+                (keyup.enter)="fetchData()" #txtBuscar>
+        </div>
+        <div class="col-auto">
+            <button type="button" (click)="fetchData()" class="btn btn-success mb-3">
+                Buscar
+            </button>
+        </div>
+        <div class="col-auto ms-auto">
+            <button class="btn btn-primary float-end" (click)="openModal(true)" type="button">Crear
+            nuevo atributo</button>
+        </div>
+    </form>
+    <br>
+
+    <table class="table table-striped table-sm table-bordered table-hover">
+        <thead>
+            <tr>
+                <th class="text-center" scope="col">#</th>
+                <th class="text-center" scope="col">Nombre</th>
+                <th class="text-center" scope="col">Descripcion</th>
+                <th class="text-center" scope="col">Tipo</th>
+                <!-- <th class="text-center" scope="col">Value</th> -->
+                <th class="text-center" scope="col">Visible</th>
+                <th class="text-center" scope="col">Creado</th>
+                <th class="text-center" scope="col">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (item of atributosList(); track item.atributoId; let i = $index) {
+            <tr>
+                <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
+                <td class="text-center justify-items-center items-center">{{item.variable}}</td>
+                <td class="text-center justify-items-center items-center">{{item.alias}}</td>
+                <td class="text-center justify-items-center items-center">{{item.tipo}}</td>
+                <!-- <td class="text-center justify-items-center items-center">{{item.procedimiento}}</td> -->
+                <td class="text-center justify-items-center items-center">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault{{i}}"
+                            [checked]="item.visible" (change)="changeActive(item, cbxActive.checked)"
+                            [value]="item.visible" #cbxActive>
+                    </div>
+                </td>
+                <td class="text-center justify-items-center items-center">
+                    {{ item.created_at | date: 'dd/MM/yyyy' }} <br>
+                </td>
+                <td class="text-center">
+                    <!-- <button class="btn btn-sm btn-secondary mx-1"
+                            [routerLink]="['/config/rol/edit', item.rolId]"><ion-icon
+                                name="eye-outline"></ion-icon></button> -->
+                    <button class="btn btn-sm btn-success mx-1" (click)="openModal(false, item)"><ion-icon
+                            name="create-outline"></ion-icon></button>
+                    <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)"><ion-icon
+                            name="trash-outline"></ion-icon></button>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+</div>
+
+<!-- Modal Upsert-->
+<div #upsertModal class="modal fade" id="upsertModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="titleUpsertModal">{{modal().titulo}}</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <app-upsert-atributo [reporteId]="reporteId()" [atributo]="atributoEdit()" [nuevo]="nuevoAtributo()"
+                    (save)="upsertAtributo($event)" (cancel)="closeModal()"></app-upsert-atributo>
+
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Delete-->
+<div #deleteModal class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-red" id="titleDeleteModal">Eliminar Rol</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar el reporte "{{ atributoEdit().variable }}" con nombre  <b>{{
+                        atributoEdit().alias }}</b>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" (click)="deleteAtributo(atributoEdit())">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
