@@ -1,0 +1,92 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Home</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/reportes', 'diseño']">Diseño reportes</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{reporte().nombre}}</li>
+    </ol>
+</nav>
+
+
+<div class="card">
+    <div class="card-header">
+        Detalle de: {{reporte().nombre}}
+    </div>
+    <div class="card-body">
+
+        <p>
+            <button class="btn btn-link p-0 btn-sm" (click)="mostrarProcedimiento = !mostrarProcedimiento">
+                {{ mostrarProcedimiento ? 'Ocultar procedimiento' : 'Ver procedimiento' }}
+            </button>
+        </p>
+
+        <!-- Contenedor con animación -->
+        @if(mostrarProcedimiento) {
+        <div class="border p-3 mb-3 transition-box">
+            <pre><code>{{ reporte().procedimiento }}</code></pre>
+        </div>
+        }
+
+
+
+        @if(buscandoReporte()) {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-grow spinner-grow-sm mx-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="spinner-grow spinner-grow-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="spinner-grow spinner-grow-sm mx-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        }
+
+        @if(!buscandoReporte() && sinReporte()) {
+        <div class="alert alert-danger" role="alert">
+            No se ha encontrado reporte
+        </div>
+        }
+
+        @if(!buscandoReporte() && !sinReporte()) {
+        <ul class="nav nav-tabs nav-fill" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#parametro-tab-pane"
+                    type="button" role="tab" aria-controls="parametro-tab-pane" aria-selected="true">Parámetros</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#atributos-tab-pane"
+                    type="button" role="tab" aria-controls="atributos-tab-pane" aria-selected="false">Atributos</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#reglas-tab-pane"
+                    type="button" role="tab" aria-controls="reglas-tab-pane" aria-selected="false">Reglas de
+                    ejecución</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active my-4 mx-2" id="parametro-tab-pane" role="tabpanel"
+                aria-labelledby="home-tab" tabindex="0">
+
+                <app-reporte-parametros [reporteId]="reporteId()"></app-reporte-parametros>
+
+            </div>
+            <div class="tab-pane fade my-4 mx-2" id="atributos-tab-pane" role="tabpanel" aria-labelledby="profile-tab"
+                tabindex="0">
+
+                <app-reporte-atributos [reporteId]="reporteId()"></app-reporte-atributos>
+
+
+            </div>
+            <div class="tab-pane fade my-4 mx-2" id="reglas-tab-pane" role="tabpanel" aria-labelledby="profile-tab"
+                tabindex="0">
+
+                <app-reglas-ejecucion [reporteId]="reporteId()"></app-reglas-ejecucion>
+
+            </div>
+        </div>
+        }
+
+    </div>
+
+</div>
