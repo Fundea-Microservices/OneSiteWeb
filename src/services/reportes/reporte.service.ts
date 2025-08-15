@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { IReporte, ReportesResponse } from '../../interfaces/reportes/reporte';
+import { IReporte, ReporteResponse, ReportesResponse } from '../../interfaces/reportes/reporte';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +11,7 @@ import { IReporte, ReportesResponse } from '../../interfaces/reportes/reporte';
 export class ReporteService extends HttpService {
 
   private readonly endpoints = {
-    reporte: '/reportes/',
+    reporte: '/reportes',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
@@ -26,9 +26,9 @@ export class ReporteService extends HttpService {
         search
       }
       if (all) {
-        params = {...params, all: all};
+        params = { ...params, all: all };
       }
-      const resp =  await firstValueFrom(this.get<ReportesResponse>(`${this.endpoints.reporte}`, params));
+      const resp = await firstValueFrom(this.get<ReportesResponse>(`${this.endpoints.reporte}`, params));
       if (resp.body?.success) {
         // this.toastr.success(resp.body.message, 'Success');
         return resp.body;
@@ -43,53 +43,69 @@ export class ReporteService extends HttpService {
   }
 
   async updateReporte(reporteUpdate: IReporte) {
-      try {
-        const resp =  await firstValueFrom(this.put<ReportesResponse>(`${this.endpoints.reporte}`, reporteUpdate));
-        if (resp.body?.success) {
-          this.toastr.success(resp.body.message, 'Success');
-          return resp.body;
-        }
-  
-        return null;
-      } catch (error: any) {
-        console.log("🚀 ~ ReporteService ~ updateReporte ~ error:", error)
-        this.toastr.error(error?.error?.message || '', 'Error en reportes');
-        return null;
+    try {
+      const resp = await firstValueFrom(this.put<ReportesResponse>(`${this.endpoints.reporte}`, reporteUpdate));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Success');
+        return resp.body;
       }
-    }
 
-    async createReporte(createReporte: IReporte) {
-      try {
-        //Obtenemos solo lo necesario para crear el reporte
-        const { nombre, descripcion, procedimiento, activo } = createReporte;
-        const resp =  await firstValueFrom(this.post<ReportesResponse>(`${this.endpoints.reporte}`, {nombre, descripcion, procedimiento, activo}));
-        if (resp.body?.success) {
-          this.toastr.success(resp.body.message, 'Success');
-          return resp.body;
-        }
-  
-        return null;
-      } catch (error: any) {
-        console.log("🚀 ~ ReporteService ~ createReporte ~ error:", error)
-        this.toastr.error(error?.error?.message || '', 'Error en reportes');
-        return null;
-      }
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ ReporteService ~ updateReporte ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      return null;
     }
+  }
 
-    async deleteReporte(reporteDelete: IReporte) {
-      try {
-        const resp =  await firstValueFrom(this.delete<ReportesResponse>(`${this.endpoints.reporte}`, reporteDelete));
-        if (resp.body?.success) {
-          this.toastr.success(resp.body.message, 'Success');
-          return resp.body;
-        }
-  
-        return null;
-      } catch (error: any) {
-        console.log("🚀 ~ ReporteService ~ deleteReporte ~ error:", error)
-        this.toastr.error(error?.error?.message || '', 'Error en reportes');
-        return null;
+  async createReporte(createReporte: IReporte) {
+    try {
+      //Obtenemos solo lo necesario para crear el reporte
+      const { nombre, descripcion, procedimiento, activo } = createReporte;
+      const resp = await firstValueFrom(this.post<ReportesResponse>(`${this.endpoints.reporte}`, { nombre, descripcion, procedimiento, activo }));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Success');
+        return resp.body;
       }
+
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ ReporteService ~ createReporte ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      return null;
     }
+  }
+
+  async deleteReporte(reporteDelete: IReporte) {
+    try {
+      const resp = await firstValueFrom(this.delete<ReportesResponse>(`${this.endpoints.reporte}`, reporteDelete));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Success');
+        return resp.body;
+      }
+
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ ReporteService ~ deleteReporte ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      return null;
+    }
+  }
+
+  async getReporteById(id: string) {
+    try {
+      const resp = await firstValueFrom(this.get<ReporteResponse>(`${this.endpoints.reporte}/${id}`));
+      if (resp.body?.success) {
+        // this.toastr.success(resp.body.message, 'Success');
+        return resp.body;
+      }
+
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ ReporteService ~ getReportes ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error en empresas');
+      return null;
+    }
+  }
 
 }

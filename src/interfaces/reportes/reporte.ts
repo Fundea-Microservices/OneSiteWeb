@@ -16,6 +16,14 @@ export interface Metadata {
     limit: number;
 }
 
+export interface ReporteResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       IReporte;
+}
+
+
 export interface IReporte {
     reporteId:     string;
     nombre:        string;

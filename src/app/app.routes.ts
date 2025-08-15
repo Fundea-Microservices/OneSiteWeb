@@ -98,7 +98,7 @@ export const routes: Routes = [
                         loadComponent: () => import('./reportes/pages/reporte/reporte.component'),
                     },  
                     {
-                        path: 'detalle',
+                        path: 'detalle/:id',
                         loadComponent: () => import('./reportes/pages/reporte-detalle/reporte-detalle.component'),
                     },                    
                     {

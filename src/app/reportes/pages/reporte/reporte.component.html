@@ -9,7 +9,7 @@
 
 <div class="card">
     <div class="card-header">
-        Administrar configuraciones generales
+        Diseño de reportes
         <button class="btn btn-primary btn-sm float-end" (click)="openModal(true)">Crear
             nuevo reporte</button>
     </div>
@@ -65,7 +65,7 @@
                         <button class="btn btn-sm btn-success mx-1"
                                 (click)="openModal(false, item)"><ion-icon
                                 name="create-outline"></ion-icon></button>
-                        <button [routerLink]="['/reportes','detalle']" class="btn btn-sm btn-primary mx-1"
+                        <button [routerLink]="['/reportes','detalle', item.reporteId]" class="btn btn-sm btn-primary mx-1"
                                 ><ion-icon
                                 name="construct-outline"></ion-icon></button>
                         <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)"><ion-icon
@@ -111,7 +111,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar la configuración "{{ reporteEdit().nombre }}" con valor <b>{{ reporteEdit().procedimiento }}</b>?</p>
+                    <p>¿Estás seguro de que deseas eliminar el reporte "{{ reporteEdit().nombre }}" con valor <b>{{ reporteEdit().procedimiento }}</b>?</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
