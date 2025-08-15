@@ -86,6 +86,31 @@ export const routes: Routes = [
                     }
                 ]
             },
+            {
+                path: 'reportes',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./reportes/pages/home-reporte/home-reporte.component'),
+                    },
+                    {
+                        path: 'diseño',
+                        loadComponent: () => import('./reportes/pages/reporte/reporte.component'),
+                    },  
+                    {
+                        path: 'detalle',
+                        loadComponent: () => import('./reportes/pages/reporte-detalle/reporte-detalle.component'),
+                    },                    
+                    {
+                        path: 'ejecutar',
+                        loadComponent: () => import('./reportes/pages/ejecucion/ejecucion.component'),
+                    },
+                    {
+                        path: '**',
+                        redirectTo: '',
+                    }
+                ]
+            },
         ]
     },
     {
