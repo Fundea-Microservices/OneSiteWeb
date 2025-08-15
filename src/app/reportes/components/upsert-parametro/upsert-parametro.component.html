@@ -1,0 +1,48 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+  <div class="mb-3">
+    <label class="form-label">Nombre</label>
+    <input type="text" class="form-control form-control-sm" formControlName="nombre" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Variable</label>
+    <input type="text" class="form-control form-control-sm" formControlName="variable" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Tipo</label>
+    <select class="form-select form-select-sm" formControlName="tipo">
+      <option value="" disabled>Seleccione un tipo</option>
+      <option value="string">Texto</option>
+      <option value="number">Número entero</option>
+      <option value="decimal">Número decimal</option>
+      <option value="date">Fecha</option>
+      <option value="boolean">Booleano</option>
+      <option value="array">Lista (separar por comas)</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Valor por defecto</label>
+    <input type="text" class="form-control form-control-sm" formControlName="valor" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Orden</label>
+    <input type="number" class="form-control form-control-sm" formControlName="orden" />
+  </div>
+
+  <div class="form-check form-switch mb-3">
+    <input class="form-check-input" type="checkbox" formControlName="obligatorio" />
+    <label class="form-check-label">Obligatorio</label>
+  </div>
+
+  <div class="row justify-content-end">
+    <div class="col-auto">
+      <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid">
+        {{ btnText }}
+      </button>
+    </div>
+  </div>
+</form>

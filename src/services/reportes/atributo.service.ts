@@ -95,20 +95,5 @@ export class AtributoService extends HttpService {
     }
   }
 
-  async getReporteById(id: string) {
-    try {
-      const resp = await firstValueFrom(this.get<ReporteResponse>(`${this.endpoints.atributo}/${id}`));
-      if (resp.body?.success) {
-        // this.toastr.success(resp.body.message, 'Success');
-        return resp.body;
-      }
-
-      return null;
-    } catch (error: any) {
-      console.log("🚀 ~ ReporteService ~ getReportes ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en empresas');
-      return null;
-    }
-  }
 
 }
