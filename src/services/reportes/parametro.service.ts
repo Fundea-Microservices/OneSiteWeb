@@ -40,7 +40,7 @@ export class ParametroService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ getAtributos ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en empresas');
+      this.toastr.error(error?.error?.message || '', 'Error en parámetros');
       return null;
     }
   }

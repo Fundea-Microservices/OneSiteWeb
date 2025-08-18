@@ -103,9 +103,11 @@ export class ReporteService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ getReportes ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en empresas');
+      this.toastr.error(error?.error?.message || '', 'Error en obtener reporte');
       return null;
     }
   }
+
+  
 
 }

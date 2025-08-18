@@ -39,7 +39,7 @@ export class AtributoService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ getAtributos ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en empresas');
+      this.toastr.error(error?.error?.message || '', 'Error en atributos');
       return null;
     }
   }
@@ -55,7 +55,7 @@ export class AtributoService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ updateAtributo ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error en atributos');
       return null;
     }
   }
@@ -74,7 +74,7 @@ export class AtributoService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ createAtributo ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error en atributos');
       return null;
     }
   }
@@ -90,7 +90,7 @@ export class AtributoService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ deleteAtributo ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error en atributos');
       return null;
     }
   }
