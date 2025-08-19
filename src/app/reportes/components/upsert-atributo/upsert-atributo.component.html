@@ -1,26 +1,10 @@
 <form [formGroup]="form()" (ngSubmit)="onSubmit()">
-  <div class="mb-3">
-    <label class="form-label">Variable</label>
-    <input type="text" class="form-control form-control-sm" formControlName="variable" />
-    @if (form().get('variable')?.touched && form().get('variable')?.invalid) {
-    <div class="text-danger small">
-      @if (form().get('variable')?.errors?.['required']) {<div>Variable es requerida</div> }
-      @if (form().get('variable')?.errors?.['maxlength']) {<div>Máximo 200 caracteres</div> }
-    </div>
-    }
-  </div>
 
   <div class="row">
 
     <div class="mb-3 col-6">
-      <label class="form-label">Alias</label>
-      <input type="text" class="form-control form-control-sm" formControlName="alias" />
-      @if (form().get('alias')?.touched && form().get('alias')?.invalid) {
-      <div class="text-danger small">
-        @if (form().get('alias')?.errors?.['required']) {<div>Alias es requerido</div> }
-        @if (form().get('alias')?.errors?.['maxlength']) {<div>Máximo 200 caracteres</div> }
-      </div>
-      }
+      <label class="form-label">Orden</label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden" />
     </div>
 
     <div class="mb-3 col-6">
@@ -42,16 +26,40 @@
     </div>
   </div>
 
+
+  <div class="row">
+    <div class="mb-3 col-6">
+      <label class="form-label">Descripción</label>
+      <input type="text" class="form-control form-control-sm" formControlName="alias" />
+      @if (form().get('alias')?.touched && form().get('alias')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('alias')?.errors?.['required']) {<div>Descripción es requerida</div> }
+        @if (form().get('alias')?.errors?.['maxlength']) {<div>Máximo 200 caracteres</div> }
+      </div>
+      }
+    </div>
+    <div class="mb-3 col-6">
+      <label class="form-label">Expresión</label>
+      <input type="text" class="form-control form-control-sm" formControlName="variable" />
+      @if (form().get('variable')?.touched && form().get('variable')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('variable')?.errors?.['required']) {<div>Campo Expresión es requerido</div> }
+        @if (form().get('variable')?.errors?.['maxlength']) {<div>Máximo 200 caracteres</div> }
+      </div>
+      }
+    </div>
+  </div>
+
+
+
+
   <div class="row">
     <div class="mb-3 col-6">
       <label class="form-label">Formato</label>
       <input type="text" class="form-control form-control-sm" formControlName="formato" />
     </div>
 
-    <div class="mb-3 col-6">
-      <label class="form-label">Orden</label>
-      <input type="number" class="form-control form-control-sm" formControlName="orden" />
-    </div>
+
   </div>
 
   <div class="form-check form-switch mb-3">

@@ -13,6 +13,7 @@ export class AtributoService extends HttpService {
 
   private readonly endpoints = {
     atributo: '/atributo-reporte',
+    reordenar: '/atributo-reporte/reordenar',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
@@ -95,5 +96,22 @@ export class AtributoService extends HttpService {
     }
   }
 
+  async reordenarAtributos(atributos: { atributoId: string; orden: number }[]) {
+    console.log("🚀 ~ AtributoService ~ reordenarAtributos ~ atributos  1  :", atributos)
+    try {
+      const resp = await firstValueFrom(this.post<AtributosResponse>(`${this.endpoints.reordenar}`, atributos ));
+      console.log("🚀 ~ AtributoService ~ reordenarAtributos ~ resp  2 :", resp)
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Success');
+        return resp.body;
+      }
+
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ ReporteService ~ reordenarAtributos ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error en atributos');
+      return null;
+    }
+  }
 
 }

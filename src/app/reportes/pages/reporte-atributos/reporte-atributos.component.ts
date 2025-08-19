@@ -5,10 +5,13 @@ import { IAtributo } from '../../../../interfaces/reportes/atributo';
 import { Modal } from 'bootstrap';
 import { DatePipe } from '@angular/common';
 import { UpsertAtributoComponent } from '../../components/upsert-atributo/upsert-atributo.component';
+import { CdkDropList, CdkDrag, DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
+
 
 @Component({
   selector: 'app-reporte-atributos',
-  imports: [PaginationAllComponent, DatePipe, UpsertAtributoComponent],
+  imports: [PaginationAllComponent, DatePipe, UpsertAtributoComponent, DragDropModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './reporte-atributos.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -146,6 +149,27 @@ export default class ReporteAtributosComponent {
       if (this.modalDeleteInstance) {
         this.modalDeleteInstance.hide();
       }
+    }
+  }
+
+  async drop(event: CdkDragDrop<IAtributo[]>) {
+    const items = [...this.atributosList()];
+
+    // Reordenar en el array local
+    moveItemInArray(items, event.previousIndex, event.currentIndex);
+
+    // Reasignar el orden según la nueva posición
+    const nuevosOrdenes = items.map((item, index) => ({
+      atributoId: item.atributoId || '',
+      orden: (index + 1) + ((this.pagination().page - 1) * this.pagination().pageSize)
+    }));
+
+    // Llamar al API para actualizar en backend
+    let resp = await this.atributoService.reordenarAtributos(nuevosOrdenes)
+    if (resp?.success) {
+      // Si falla, revertir lista
+      //this.atributosList.set([]);
+      this.fetchData();
     }
   }
 

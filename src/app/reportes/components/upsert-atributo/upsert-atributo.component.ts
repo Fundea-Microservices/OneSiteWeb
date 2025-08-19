@@ -77,7 +77,7 @@ export class UpsertAtributoComponent {
         newForm.reset({
           variable: '',
           alias: '',
-          tipo: '',
+          tipo: 'string',
           formato: null,
           orden: 1,
           visible: true,
