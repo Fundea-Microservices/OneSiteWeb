@@ -7,6 +7,7 @@ import { ReporteService } from '../../../../services/reportes/reporte.service';
 import { IReporte } from '../../../../interfaces/reportes/reporte';
 import { ToastrService } from 'ngx-toastr';
 import { EjecutarService } from '../../../../services/reportes/ejecutar.service';
+import { ExportarService } from '../../../../services/reportes/exportar.service';
 
 interface IParametroSend {
 
@@ -24,6 +25,7 @@ export default class EjecucionComponent {
   reporteService = inject(ReporteService);
   parametroService = inject(ParametroService);
   ejecutarService = inject(EjecutarService);
+  exportarService = inject(ExportarService);
 
   reportesList = signal<IReporte[]>([]);
   parametrosList = signal<IParametro[]>([]);
@@ -32,7 +34,7 @@ export default class EjecucionComponent {
   formParametros: FormGroup = this.fb.group({});
 
   selectReporte = signal('')
-  mostrarResultado = signal(false)
+  showResults = signal(false)
   dataResultado = signal<any[]>([])
 
 
@@ -101,7 +103,7 @@ export default class EjecucionComponent {
   }
 
   async generarReporte() {
-    this.mostrarResultado.set(false);
+    this.showResults.set(false);
     let data = {
       reporteId: this.reporteIdSeleccionado,
       parametros: this.parametrosList()
@@ -127,7 +129,7 @@ export default class EjecucionComponent {
     let response = await this.ejecutarService.ejecutarReporte(data);
 
     if (response?.success) {
-      this.mostrarResultado.set(true);
+      this.showResults.set(true);
       this.dataResultado.set(response.data);
     }
 
@@ -136,6 +138,31 @@ export default class EjecucionComponent {
   getColumnKeys(data: any[]): string[] {
     if (!data || data.length === 0) return [];
     return Object.keys(data[0]);
+  }
+
+  async exportarExcel() {
+    let data = {
+      reporteId: this.reporteIdSeleccionado,
+      parametros: this.parametrosList()
+    }
+
+    // Validamos los parámetros obligatorios
+    let parametrosObligatorios = this.parametrosList().filter(param => param.obligatorio);
+    let hayErrores = false;
+    for (let param of parametrosObligatorios) {
+      if (!param.valorSeleccionado || param.valorSeleccionado === '') {
+        hayErrores = true;
+        this.toastr.warning(`El parámetro obligatorio ${param.nombre} no tiene un valor seleccionado.`, 'Advertencia');
+        return
+      }
+    }
+    if (hayErrores) {
+      console.error("No se puede generar el reporte debido a errores en los parámetros.");
+      return;
+    }
+
+    let response = await this.exportarService.exportarExcel(data);
+
   }
 
 

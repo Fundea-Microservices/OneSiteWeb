@@ -79,13 +79,23 @@
             }
 
             <div class="col-auto align-self-end">
-                <button type="button" class="btn btn-primary" (click)="generarReporte()">Generar Reporte</button>
+                <!-- <button type="button" class="btn btn-primary" (click)="generarReporte()">Generar Reporte</button> -->
+                <button type="button" class="btn btn-primary" (click)="exportarExcel()">Exportar Excel</button>
             </div>
         </div>
         }
         <hr>
 
-        @if(mostrarResultado()){
+        @if(showResults()){
+        <div class="row">
+            <!-- <div class="col d-flex justify-content-end mb-2">
+                <button type="button" class="btn btn-success btn-sm" (click)="exportarExcel()">
+                    Exportar a Excel
+                </button>
+            </div> -->
+        </div>
+
+
         <div style="overflow-x: auto;">
 
             <table class="table table-bordered" style="font-size: 0.8em; padding: 0.5em;">
