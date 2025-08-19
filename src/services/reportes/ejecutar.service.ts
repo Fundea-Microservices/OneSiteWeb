@@ -13,6 +13,7 @@ export class EjecutarService extends HttpService {
 
   private readonly endpoints = {
     ejecutar: '/reportes/ejecutar',
+    exportar_excel: '/reportes/ejecutar/excel',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
@@ -35,6 +36,17 @@ export class EjecutarService extends HttpService {
       return null;
     }
   }
-  
+
+  async exportarExcel(data: any) {
+    try {
+      await firstValueFrom(this.post(`${this.endpoints.exportar_excel}`, data));
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ EjecutarService ~ ejecutarReporte ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error al ejecutar reporte');
+      return null;
+    }
+  }
+
 
 }
