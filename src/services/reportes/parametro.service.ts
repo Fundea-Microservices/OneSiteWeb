@@ -56,7 +56,7 @@ export class ParametroService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ updateAtributo ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error en parámetros');
       return null;
     }
   }
@@ -76,7 +76,7 @@ export class ParametroService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ createAtributo ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error en parámetros');
       return null;
     }
   }
@@ -92,7 +92,7 @@ export class ParametroService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ deleteAtributo ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error en parámetros');
       return null;
     }
   }

@@ -37,7 +37,7 @@ export class ReporteService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ getReportes ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en empresas');
+      this.toastr.error(error?.error?.message || '', 'Error al obtener reportes');
       return null;
     }
   }
@@ -53,7 +53,7 @@ export class ReporteService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ updateReporte ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error al actualizar reporte');
       return null;
     }
   }
@@ -71,7 +71,7 @@ export class ReporteService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ createReporte ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error al crear reporte');
       return null;
     }
   }
@@ -87,7 +87,7 @@ export class ReporteService extends HttpService {
       return null;
     } catch (error: any) {
       console.log("🚀 ~ ReporteService ~ deleteReporte ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error en reportes');
+      this.toastr.error(error?.error?.message || '', 'Error al eliminar reporte');
       return null;
     }
   }

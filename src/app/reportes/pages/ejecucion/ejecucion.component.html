@@ -17,9 +17,8 @@
         <form class="row g-3 mb-3">
             <div class="col-md-6">
                 <label class="form-label">Seleccione un reporte</label>
-                <select class="form-select form-select-sm" (change)="reporteIdSeleccionado = selectReporte.value"
-                    (input)="reporteIdSeleccionado = selectReporte.value" #selectReporte>
-                    <option value="" disabled>Seleccione un reporte</option>
+                <select class="form-select form-select-sm" (input)="changeReporte(selectReporte.value)" #selectReporte>
+                    <option value="">Seleccione un reporte</option>
                     @for (item of reportesList(); track item.reporteId; let i = $index) {
                     <option [value]="item.reporteId">
                         {{ item.nombre }}
@@ -78,9 +77,25 @@
 
             }
 
-            <div class="col-auto align-self-end">
-                <!-- <button type="button" class="btn btn-primary" (click)="generarReporte()">Generar Reporte</button> -->
+            <!-- <div class="col-auto align-self-end">
+                <button type="button" class="btn btn-primary" (click)="generarReporte()">Generar Reporte</button>
                 <button type="button" class="btn btn-primary" (click)="exportarExcel()">Exportar Excel</button>
+            </div> -->
+            <div class="col-auto align-self-end">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Ejecutar
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu2">
+                        <button class="dropdown-item" type="button" (click)="generarReporte()">Generar Reporte vista actual</button>
+                        <button class="dropdown-item" type="button" (click)="exportarExcel()">Exportar PDF</button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item" type="button" (click)="exportarExcel()">Exportar Excel sin plantilla</button>
+                        <button class="dropdown-item" type="button" (click)="exportarExcel()">Exportar Excel - 2001</button>
+                        <button class="dropdown-item" type="button" (click)="exportarExcel()">Exportar Excel - 9001</button>
+                    </div>
+                </div>
             </div>
         </div>
         }

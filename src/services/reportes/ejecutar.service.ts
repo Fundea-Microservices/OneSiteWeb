@@ -37,16 +37,4 @@ export class EjecutarService extends HttpService {
     }
   }
 
-  async exportarExcel(data: any) {
-    try {
-      await firstValueFrom(this.post(`${this.endpoints.exportar_excel}`, data));
-      return null;
-    } catch (error: any) {
-      console.log("🚀 ~ EjecutarService ~ ejecutarReporte ~ error:", error)
-      this.toastr.error(error?.error?.message || '', 'Error al ejecutar reporte');
-      return null;
-    }
-  }
-
-
 }

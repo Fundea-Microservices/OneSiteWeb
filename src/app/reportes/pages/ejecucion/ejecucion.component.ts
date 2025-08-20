@@ -17,6 +17,7 @@ interface IParametroSend {
   selector: 'app-ejecucion',
   imports: [RouterLink, ReactiveFormsModule],
   templateUrl: './ejecucion.component.html',
+  styleUrls: ['./ejecucion.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class EjecucionComponent {
@@ -30,7 +31,7 @@ export default class EjecucionComponent {
   reportesList = signal<IReporte[]>([]);
   parametrosList = signal<IParametro[]>([]);
 
-  reporteIdSeleccionado = '';
+  reporteSelected = signal<IReporte | null>(null);
   formParametros: FormGroup = this.fb.group({});
 
   selectReporte = signal('')
@@ -67,11 +68,16 @@ export default class EjecucionComponent {
     this.isLoading.set(false);
   }
 
-  async buscarParametros() {
-    if (!this.reporteIdSeleccionado) return;
+  changeReporte(idReporte: string){
+    let reporteS = this.reportesList().find(r => r.reporteId === idReporte) || null;
+    this.reporteSelected.set(reporteS);
+    this.parametrosList.set([]);
+  }
 
-    const resp = await this.parametroService.getParametros({ parentId: this.reporteIdSeleccionado, page: 1, limit: 100 });
-    console.log("🚀 ~ ReporteService ~ createReporte ~ resp:", resp)
+  async buscarParametros() {
+    if (!this.reporteSelected()?.reporteId) return;
+
+    const resp = await this.parametroService.getParametros({ parentId: this.reporteSelected()?.reporteId == null ? '' : this.reporteSelected()?.reporteId, page: 1, limit: 100 });
     if (resp) {
       let parametros: IParametro[] = resp.data.parametros.map(param => {
         let valorSeleccionado: string | boolean = param.valor;
@@ -105,10 +111,11 @@ export default class EjecucionComponent {
   async generarReporte() {
     this.showResults.set(false);
     let data = {
-      reporteId: this.reporteIdSeleccionado,
-      parametros: this.parametrosList()
+      reporteId: this.reporteSelected()?.reporteId,
+      parametros: this.parametrosList(),
+      type: 'json',
+      fileName: 'reporte.json'
     }
-    console.log("🚀 ~ EjecucionComponent ~ generarReporte ~ data:", data)
 
     // Validamos los parámetros obligatorios
     let parametrosObligatorios = this.parametrosList().filter(param => param.obligatorio);
@@ -125,7 +132,6 @@ export default class EjecucionComponent {
       console.error("No se puede generar el reporte debido a errores en los parámetros.");
       return;
     }
-
     let response = await this.ejecutarService.ejecutarReporte(data);
 
     if (response?.success) {
@@ -142,8 +148,10 @@ export default class EjecucionComponent {
 
   async exportarExcel() {
     let data = {
-      reporteId: this.reporteIdSeleccionado,
-      parametros: this.parametrosList()
+      reporteId: this.reporteSelected()?.reporteId,
+      parametros: this.parametrosList(),
+      type: 'excel',
+      fileName: this.reporteSelected()?.nombre || 'reporte.xlsx'
     }
 
     // Validamos los parámetros obligatorios

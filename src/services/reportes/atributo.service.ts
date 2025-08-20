@@ -97,7 +97,6 @@ export class AtributoService extends HttpService {
   }
 
   async reordenarAtributos(atributos: { atributoId: string; orden: number }[]) {
-    console.log("🚀 ~ AtributoService ~ reordenarAtributos ~ atributos  1  :", atributos)
     try {
       const resp = await firstValueFrom(this.post<AtributosResponse>(`${this.endpoints.reordenar}`, atributos ));
       console.log("🚀 ~ AtributoService ~ reordenarAtributos ~ resp  2 :", resp)

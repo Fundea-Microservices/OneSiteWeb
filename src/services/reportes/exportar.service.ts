@@ -24,7 +24,7 @@ export class ExportarService {
   async exportarExcel(data: any) {
     try {
       this.httpService.post(`${this.baseUrl}${this.endpoints.exportar_excel}`, data, {
-        responseType: 'blob' // 👈 importante
+        responseType: 'blob' 
       }).subscribe((file: Blob) => {
         const url = window.URL.createObjectURL(file);
         const a = document.createElement('a');
