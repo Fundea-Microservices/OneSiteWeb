@@ -12,8 +12,14 @@ const emptyReporte: IReporte = {
   reporteId: '',
   nombre: '',
   descripcion: '',
+  rutaPlantilla: '',
   procedimiento: '',
   activo: true,
+  exportarCSV: false,
+  exportarTabla: false,
+  exportarExcel: false,
+  exportarPDF: false,
+  exportarJSON: false,
   created_at: new Date()
 }
 

@@ -81,20 +81,24 @@
                 <button type="button" class="btn btn-primary" (click)="generarReporte()">Generar Reporte</button>
                 <button type="button" class="btn btn-primary" (click)="exportarExcel()">Exportar Excel</button>
             </div> -->
+
+
             <div class="col-auto align-self-end">
-                <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2"
-                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">
                         Ejecutar
                     </button>
-                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu2">
-                        <button class="dropdown-item" type="button" (click)="generarReporte()">Generar Reporte vista actual</button>
-                        <button class="dropdown-item" type="button" (click)="exportarExcel()">Exportar PDF</button>
-                        <div class="dropdown-divider"></div>
-                        <button class="dropdown-item" type="button" (click)="exportarExcel()">Exportar Excel sin plantilla</button>
-                        <button class="dropdown-item" type="button" (click)="exportarExcel()">Exportar Excel - 2001</button>
-                        <button class="dropdown-item" type="button" (click)="exportarExcel()">Exportar Excel - 9001</button>
-                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        @if(reporteSelected()?.exportarTabla) { <li><button class="dropdown-item" (click)="generarReporte()">Ver tabla</button></li> }
+                        @if(reporteSelected()?.exportarExcel) { <li><button class="dropdown-item" (click)="exportarExcel()">Exportar Excel sin
+                                Plantilla</button></li> }
+                        @if(reporteSelected()?.rutaPlantilla) { <li><button class="dropdown-item" (click)="exportarExcel()">Exportar Excel con
+                                Plantilla</button></li> }
+                        @if(reporteSelected()?.exportarPDF) { <li><button class="dropdown-item" (click)="exportarPDF()">Exportar PDF</button></li> }
+                        @if(reporteSelected()?.exportarCSV) { <li><button class="dropdown-item" (click)="exportarCSV()">Exportar CSV</button></li> }
+                        @if(reporteSelected()?.exportarJSON) { <li><button class="dropdown-item" (click)="exportarJSON()">Exportar JSON</button></li> }
+                    </ul>
                 </div>
             </div>
         </div>

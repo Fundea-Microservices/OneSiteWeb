@@ -33,8 +33,14 @@ export class UpsertReporteComponent {
     reporteId: '',
     nombre: '',
     descripcion: '',
+    rutaPlantilla: '',
     procedimiento: '',
     activo: true,
+    exportarExcel: false,
+    exportarTabla: false,
+    exportarPDF: false,
+    exportarCSV: false,
+    exportarJSON: false,
     created_at: new Date()
   });
 
@@ -61,6 +67,11 @@ export class UpsertReporteComponent {
         descripcion: [reporte.descripcion, this.validationRules.descripcion],
         procedimiento: [reporte.procedimiento, this.validationRules.procedimiento],
         activo: [reporte.activo],
+        exportarTabla: [reporte.exportarTabla],
+        exportarExcel: [reporte.exportarExcel],
+        exportarPDF: [reporte.exportarPDF],
+        exportarCSV: [reporte.exportarCSV],
+        exportarJSON: [reporte.exportarJSON],
       });
 
       if (isNuevo) {

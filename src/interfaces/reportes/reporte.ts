@@ -28,8 +28,14 @@ export interface IReporte {
     reporteId:     string;
     nombre:        string;
     descripcion:   string;
+    rutaPlantilla?:   string;
     procedimiento: string;
     activo:        boolean;
+    exportarTabla: boolean;
+    exportarExcel: boolean;
+    exportarPDF:   boolean;
+    exportarCSV:   boolean;
+    exportarJSON:  boolean;
     created_at:    Date;
     updated_at?:    null;
     deleted_at?:    null;

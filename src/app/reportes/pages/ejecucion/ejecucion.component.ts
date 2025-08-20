@@ -17,7 +17,7 @@ interface IParametroSend {
   selector: 'app-ejecucion',
   imports: [RouterLink, ReactiveFormsModule],
   templateUrl: './ejecucion.component.html',
-  styleUrls: ['./ejecucion.component.css'],
+  // styleUrls: ['./ejecucion.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class EjecucionComponent {
@@ -173,7 +173,17 @@ export default class EjecucionComponent {
 
   }
 
+  exportarPDF() {
+    this.toastr.warning(`Exportar a PDF pendiente de implementación`, 'Advertencia');
+  }
 
+  exportarCSV() {
+    this.toastr.warning(`Exportar a CSV pendiente de implementación`, 'Advertencia');
+  }
+
+  exportarJSON() {
+    this.toastr.warning(`Exportar a JSON pendiente de implementación`, 'Advertencia');
+  }
 
 
 }
