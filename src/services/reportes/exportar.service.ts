@@ -15,6 +15,7 @@ export class ExportarService {
   private readonly endpoints = {
     ejecutar: '/reportes/ejecutar',
     exportar_excel: '/reportes/ejecutar/excel',
+    exportar_excel_plantilla: '/reportes/ejecutar/excel-plantilla'
   };
   private baseUrl: string = environment.apiPath;
 
@@ -24,15 +25,52 @@ export class ExportarService {
   async exportarExcel(data: any) {
     try {
       this.httpService.post(`${this.baseUrl}${this.endpoints.exportar_excel}`, data, {
-        responseType: 'blob' 
+        responseType: 'blob'
       }).subscribe((file: Blob) => {
         const url = window.URL.createObjectURL(file);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'reporte.xlsx';
+        a.download = data.fileName || 'reporte.xlsx';
         a.click();
         window.URL.revokeObjectURL(url);
-      }); 
+      });
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ EjecutarService ~ ejecutarReporte ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error al ejecutar reporte');
+      return null;
+    }
+  }
+
+  async exportarExcelPlantilla(data: any) {
+    try {
+      this.httpService.post(`${this.baseUrl}${this.endpoints.exportar_excel_plantilla}`, data, {
+        observe: 'response',
+        responseType: 'blob'
+      }).subscribe({
+        next: (response) => {
+          // Si es Excel
+          if (response.body && response.headers.get('Content-Type')?.includes('spreadsheetml')) {
+            const url = window.URL.createObjectURL(response.body);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = data.fileName || 'reporte.xlsx';
+            a.click();
+            window.URL.revokeObjectURL(url);
+          } else {
+            // Si vino JSON de error
+            const reader = new FileReader();
+            reader.onload = () => {
+              const error = JSON.parse(reader.result as string);
+              this.toastr.error(error.message, 'Error');
+            };
+            reader.readAsText(response.body || new Blob());
+          }
+        },
+        error: (err) => {
+          this.toastr.error(err.message || 'No se pudo exportar el reporte', 'Error');
+        }
+      });
       return null;
     } catch (error: any) {
       console.log("🚀 ~ EjecutarService ~ ejecutarReporte ~ error:", error)

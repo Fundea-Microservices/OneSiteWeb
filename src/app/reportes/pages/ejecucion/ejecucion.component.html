@@ -93,7 +93,7 @@
                         @if(reporteSelected()?.exportarTabla) { <li><button class="dropdown-item" (click)="generarReporte()">Ver tabla</button></li> }
                         @if(reporteSelected()?.exportarExcel) { <li><button class="dropdown-item" (click)="exportarExcel()">Exportar Excel sin
                                 Plantilla</button></li> }
-                        @if(reporteSelected()?.rutaPlantilla) { <li><button class="dropdown-item" (click)="exportarExcel()">Exportar Excel con
+                        @if(reporteSelected()?.rutaPlantilla) { <li><button class="dropdown-item" (click)="exportarExcelPlantilla()">Exportar Excel con
                                 Plantilla</button></li> }
                         @if(reporteSelected()?.exportarPDF) { <li><button class="dropdown-item" (click)="exportarPDF()">Exportar PDF</button></li> }
                         @if(reporteSelected()?.exportarCSV) { <li><button class="dropdown-item" (click)="exportarCSV()">Exportar CSV</button></li> }

@@ -68,7 +68,7 @@ export default class EjecucionComponent {
     this.isLoading.set(false);
   }
 
-  changeReporte(idReporte: string){
+  changeReporte(idReporte: string) {
     let reporteS = this.reportesList().find(r => r.reporteId === idReporte) || null;
     this.reporteSelected.set(reporteS);
     this.parametrosList.set([]);
@@ -170,6 +170,39 @@ export default class EjecucionComponent {
     }
 
     let response = await this.exportarService.exportarExcel(data);
+
+  }
+
+  async exportarExcelPlantilla() {
+
+    const day = String(new Date().getDate()).padStart(2, '0');
+    const month = String(new Date().getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
+    const year = new Date().getFullYear();
+
+    let data = {
+      reporteId: this.reporteSelected()?.reporteId,
+      parametros: this.parametrosList(),
+      type: 'excel',
+      rutaPlantilla: this.reporteSelected()?.rutaPlantilla || '',
+      fileName: this.reporteSelected()?.nombre ? `${this.reporteSelected()?.nombre}_${day}_${month}_${year}.xlsx` : 'reporte.xlsx'
+    }
+
+    // Validamos los parámetros obligatorios
+    let parametrosObligatorios = this.parametrosList().filter(param => param.obligatorio);
+    let hayErrores = false;
+    for (let param of parametrosObligatorios) {
+      if (!param.valorSeleccionado || param.valorSeleccionado === '') {
+        hayErrores = true;
+        this.toastr.warning(`El parámetro obligatorio ${param.nombre} no tiene un valor seleccionado.`, 'Advertencia');
+        return
+      }
+    }
+    if (hayErrores) {
+      console.error("No se puede generar el reporte debido a errores en los parámetros.");
+      return;
+    }
+
+    let response = await this.exportarService.exportarExcelPlantilla(data);
 
   }
 
