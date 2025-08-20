@@ -147,11 +147,21 @@ export default class EjecucionComponent {
   }
 
   async exportarExcel() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    
     let data = {
       reporteId: this.reporteSelected()?.reporteId,
       parametros: this.parametrosList(),
       type: 'excel',
-      fileName: this.reporteSelected()?.nombre || 'reporte.xlsx'
+      fileName: this.reporteSelected()?.nombre
+        ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}.xlsx`
+        : `reporte_${day}${month}${year}_${hours}${minutes}.xlsx`
     }
 
     // Validamos los parámetros obligatorios
@@ -175,16 +185,21 @@ export default class EjecucionComponent {
 
   async exportarExcelPlantilla() {
 
-    const day = String(new Date().getDate()).padStart(2, '0');
-    const month = String(new Date().getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
-    const year = new Date().getFullYear();
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
 
     let data = {
       reporteId: this.reporteSelected()?.reporteId,
       parametros: this.parametrosList(),
       type: 'excel',
       rutaPlantilla: this.reporteSelected()?.rutaPlantilla || '',
-      fileName: this.reporteSelected()?.nombre ? `${this.reporteSelected()?.nombre}_${day}_${month}_${year}.xlsx` : 'reporte.xlsx'
+      fileName: this.reporteSelected()?.nombre 
+          ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}.xlsx`
+          : `reporte_${day}${month}${year}_${hours}${minutes}.xlsx`
     }
 
     // Validamos los parámetros obligatorios
