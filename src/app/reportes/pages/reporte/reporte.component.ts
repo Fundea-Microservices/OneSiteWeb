@@ -7,6 +7,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 import { DatePipe } from '@angular/common';
 import { UpsertReporteComponent } from '../../components/upsert-reporte/upsert-reporte.component';
+import { UpsertPlantillaComponent } from "../../components/upsert-plantilla/upsert-plantilla.component";
 
 const emptyReporte: IReporte = {
   reporteId: '',
@@ -25,7 +26,7 @@ const emptyReporte: IReporte = {
 
 @Component({
   selector: 'app-reporte',
-  imports: [RouterLink, PaginationAllComponent, DatePipe, UpsertReporteComponent],
+  imports: [RouterLink, PaginationAllComponent, DatePipe, UpsertReporteComponent, UpsertPlantillaComponent],
   templateUrl: './reporte.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,8 @@ export default class ReporteComponent {
   metadata = signal({})// Cambia el tipo según tu modelo de datos
   reporteEdit = signal<IReporte>(emptyReporte)
   nuevoReporte = signal<boolean>(true); // Indica si es una nueva configuración o una existente
+
+  reporteId = signal('')
 
   pagination = signal<IPagination>({
     page: 1,
@@ -50,6 +53,12 @@ export default class ReporteComponent {
 
   @ViewChild('deleteModal') modalDeleteElementRef!: ElementRef;
   private modalDeleteInstance!: bootstrap.Modal;
+
+  @ViewChild('upsertModalPlantilla') modalUpsertPlantillaElementRef!: ElementRef;
+  private modalUpsertPlantillaInstance!: bootstrap.Modal;
+
+  @ViewChild('deleteModalPlantilla') modalDeletePlantillaElementRef!: ElementRef;
+  private modalDeletePlantillaInstance!: bootstrap.Modal;
 
   modal = signal({
     titulo: 'Crear reporte',
@@ -69,6 +78,8 @@ export default class ReporteComponent {
   ngAfterViewInit() {
     this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
     this.modalDeleteInstance = new Modal(this.modalDeleteElementRef.nativeElement);
+    this.modalUpsertPlantillaInstance = new Modal(this.modalUpsertPlantillaElementRef.nativeElement);
+    this.modalDeletePlantillaInstance = new Modal(this.modalDeletePlantillaElementRef.nativeElement);
   }
 
   async fetchData() {
@@ -113,7 +124,8 @@ export default class ReporteComponent {
     }
   }
 
-  async updateReporte(reporte: IReporte) {
+  async updateReporte(reporte: IReporte, eliminarPlantilla: boolean = false) {
+    if(eliminarPlantilla) reporte.rutaPlantilla = undefined;
     let resp = await this.reporteService.updateReporte(reporte);
     if (resp?.success) {
       // this.configList.set([]); // Limpiamos la lista antes de cargar nuevos datos
@@ -156,6 +168,12 @@ export default class ReporteComponent {
     if (this.modalUpsertInstance) {
       this.modalUpsertInstance.hide();
     }
+    if (this.modalDeleteInstance) {
+      this.modalDeleteInstance.hide();
+    }
+    if (this.modalDeletePlantillaInstance) {
+      this.modalDeletePlantillaInstance.hide();
+    }
   }
 
   openDeleteModal(reporte: IReporte) {
@@ -168,6 +186,34 @@ export default class ReporteComponent {
       this.modalDeleteInstance = new Modal(this.modalDeleteElementRef.nativeElement);
     }
     this.modalDeleteInstance.show();
+  }
+
+  openDeleteModalPlantilla(reporte: IReporte) {
+    this.reporteEdit.set(reporte);
+    this.modal.set({
+      titulo: 'Eliminar Plantilla',
+      visible: true,
+    });
+    if (!this.modalDeletePlantillaInstance) {
+      this.modalDeletePlantillaInstance = new Modal(this.modalDeletePlantillaElementRef.nativeElement);
+    }
+    this.modalDeletePlantillaInstance.show();
+  }
+
+  openModalPlantilla(reporteId: string) {
+    this.reporteId.set(reporteId);
+    this.modal.set({
+      titulo: 'Actualizar Plantilla',
+      visible: true,
+    });
+    this.modalUpsertPlantillaInstance.show();
+  }
+
+  closeModalPlantilla() {
+    console.log('Cerrando modal de plantilla');
+    if (this.modalUpsertPlantillaInstance) {
+      this.modalUpsertPlantillaInstance.hide();
+    }
   }
 
 }

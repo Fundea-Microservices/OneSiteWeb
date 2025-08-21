@@ -38,6 +38,7 @@
                     <!-- <th class="text-center" scope="col">Value</th> -->
                     <th class="text-center" scope="col">Activo</th>
                     <th class="text-center" scope="col">Creado</th>
+                    <th class="text-center" scope="col">Plantilla</th>
                     <th class="text-center" scope="col">Acciones</th>
                 </tr>
             </thead>
@@ -58,16 +59,27 @@
                     <td class="text-center justify-items-center items-center">
                         {{ item.created_at | date: 'dd/MM/yyyy' }} <br>
                     </td>
+                    <td class="text-center justify-items-center items-center">
+                        @if(item.rutaPlantilla) {
+                        <!-- <button class="btn btn-sm btn-secondary mx-1" ><ion-icon
+                                name="eye-sharp"></ion-icon></button> -->
+                        }
+                        @if(!item.rutaPlantilla) {
+                        <button class="btn btn-sm mx-1"
+                            (click)="openModalPlantilla(item.reporteId)"><ion-icon
+                                name="cloud-upload-sharp" class="text-amber-400"></ion-icon></button> }
+                        @if(item.rutaPlantilla) {
+                        <button class="btn btn-sm mx-1 " (click)="openDeleteModalPlantilla(item)"><ion-icon
+                                name="trash-bin-sharp" class="text-red-500"></ion-icon></button> }
+                    </td>
                     <td class="text-center">
                         <!-- <button class="btn btn-sm btn-secondary mx-1"
                             [routerLink]="['/config/rol/edit', item.rolId]"><ion-icon
                                 name="eye-outline"></ion-icon></button> -->
-                        <button class="btn btn-sm btn-success mx-1"
-                                (click)="openModal(false, item)"><ion-icon
+                        <button class="btn btn-sm btn-success mx-1" (click)="openModal(false, item)"><ion-icon
                                 name="create-outline"></ion-icon></button>
-                        <button [routerLink]="['/reportes','detalle', item.reporteId]" class="btn btn-sm btn-primary mx-1"
-                                ><ion-icon
-                                name="construct-outline"></ion-icon></button>
+                        <button [routerLink]="['/reportes','detalle', item.reporteId]"
+                            class="btn btn-sm btn-primary mx-1"><ion-icon name="construct-outline"></ion-icon></button>
                         <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)"><ion-icon
                                 name="trash-outline"></ion-icon></button>
                     </td>
@@ -82,7 +94,8 @@
     </div>
 
     <!-- Modal Upsert-->
-    <div #upsertModal class="modal fade" id="upsertModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div #upsertModal class="modal modal-lg fade" id="upsertModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -90,11 +103,27 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <app-upsert-reporte [reporte]="reporteEdit()" 
-                        [nuevo]="nuevoReporte()"
-                        [key]="formKey()"
-                        (save)="upsertReporte($event)"
-                        (cancel)="closeModal()" />
+                    <app-upsert-reporte [reporte]="reporteEdit()" [nuevo]="nuevoReporte()" [key]="formKey()"
+                        (save)="upsertReporte($event)" (cancel)="closeModal()" />
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Upsert Plantilla-->
+    <div #upsertModalPlantilla class="modal fade" id="upsertModalPlantilla" tabindex="-1"
+        aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertModal">{{modal().titulo}}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <app-upsert-plantilla [reporteId]="reporteId()" (closed)="closeModalPlantilla()"
+                        (saved)="fetchData()"></app-upsert-plantilla>
                 </div>
                 <div class="modal-footer">
                 </div>
@@ -103,22 +132,50 @@
     </div>
 
     <!-- Modal Delete-->
-    <div #deleteModal class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div #deleteModal class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5 text-red" id="titleDeleteModal">Eliminar Rol</h1>
+                    <h1 class="modal-title fs-5 text-red" id="titleDeleteModal">Eliminar Reporte</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar el reporte "{{ reporteEdit().nombre }}" con valor <b>{{ reporteEdit().procedimiento }}</b>?</p>
+                    <p>¿Estás seguro de que deseas eliminar el reporte "{{ reporteEdit().nombre }}" con valor <b>{{
+                            reporteEdit().procedimiento }}</b>?</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" (click)="deleteReporte(reporteEdit())">Eliminar</button>
+                    <button type="button" class="btn btn-danger"
+                        (click)="deleteReporte(reporteEdit())">Eliminar</button>
                 </div>
             </div>
         </div>
     </div>
 
+
+
+</div>
+
+<!-- Modal Delete-->
+<div #deleteModalPlantilla class="modal fade" id="deleteModalPlantilla" tabindex="-1"
+    aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-red" id="titleDeleteModal">Eliminar Plantilla</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar la plantilla "{{ reporteEdit().rutaPlantilla }}" para el reporte
+                    <b>{{
+                        reporteEdit().nombre }}</b>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger"
+                    (click)="updateReporte(reporteEdit(), true)">Eliminar</button>
+            </div>
+        </div>
+    </div>
 </div>
