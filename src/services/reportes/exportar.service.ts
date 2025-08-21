@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
@@ -22,9 +22,28 @@ export class ExportarService {
   constructor(private httpService: HttpClient, private toastr: ToastrService) {
   }
 
+  /**
+  * Obtiene el token desde localStorage. 
+  * Asegúrate de que tu AuthService lo guarde ahí correctamente después del login.
+  */
+  private getToken(): string {
+    return localStorage.getItem('token') || '';
+  }
+
+  private setHeaders(extraHeaders: { [key: string]: string } = {}): HttpHeaders {
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.getToken()}`,
+      ...extraHeaders
+    });
+
+    return headers;
+  }
+
   async exportarExcel(data: any) {
     try {
       this.httpService.post(`${this.baseUrl}${this.endpoints.exportar_excel}`, data, {
+        headers: this.setHeaders({}),
         responseType: 'blob'
       }).subscribe((file: Blob) => {
         const url = window.URL.createObjectURL(file);
@@ -45,6 +64,7 @@ export class ExportarService {
   async exportarExcelPlantilla(data: any) {
     try {
       this.httpService.post(`${this.baseUrl}${this.endpoints.exportar_excel_plantilla}`, data, {
+        headers: this.setHeaders({}),
         observe: 'response',
         responseType: 'blob'
       }).subscribe({
