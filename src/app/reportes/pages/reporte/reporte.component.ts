@@ -8,6 +8,7 @@ import { PaginationAllComponent } from '../../../shared/components/pagination-al
 import { DatePipe } from '@angular/common';
 import { UpsertReporteComponent } from '../../components/upsert-reporte/upsert-reporte.component';
 import { UpsertPlantillaComponent } from "../../components/upsert-plantilla/upsert-plantilla.component";
+import { PlantillaService } from '../../../../services/reportes/plantilla.service';
 
 const emptyReporte: IReporte = {
   reporteId: '',
@@ -33,6 +34,7 @@ const emptyReporte: IReporte = {
 })
 export default class ReporteComponent {
   reporteService = inject(ReporteService);
+  plantillaService = inject(PlantillaService);
   reporteList = signal<IReporte[]>([]);
   metadata = signal({})// Cambia el tipo según tu modelo de datos
   reporteEdit = signal<IReporte>(emptyReporte)
@@ -214,6 +216,10 @@ export default class ReporteComponent {
     if (this.modalUpsertPlantillaInstance) {
       this.modalUpsertPlantillaInstance.hide();
     }
+  }
+
+  descargarPlantilla(reporteId: string) {
+    this.plantillaService.descargarPlantilla(reporteId);
   }
 
 }

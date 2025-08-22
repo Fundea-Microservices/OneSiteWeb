@@ -65,11 +65,12 @@
                                 name="eye-sharp"></ion-icon></button> -->
                         }
                         @if(!item.rutaPlantilla) {
-                        <button class="btn btn-sm mx-1"
-                            (click)="openModalPlantilla(item.reporteId)"><ion-icon
-                                name="cloud-upload-sharp" class="text-amber-400"></ion-icon></button> }
+                        <button class="btn btn-sm" (click)="openModalPlantilla(item.reporteId)"><ion-icon
+                                name="push" class="text-amber-400"></ion-icon></button> }
                         @if(item.rutaPlantilla) {
-                        <button class="btn btn-sm mx-1 " (click)="openDeleteModalPlantilla(item)"><ion-icon
+                        <button class="btn btn-sm" (click)="descargarPlantilla(item.reporteId)"><ion-icon
+                                name="download" class="text-green-400"></ion-icon></button>
+                        <button class="btn btn-sm" (click)="openDeleteModalPlantilla(item)"><ion-icon
                                 name="trash-bin-sharp" class="text-red-500"></ion-icon></button> }
                     </td>
                     <td class="text-center">
@@ -169,7 +170,8 @@
             <div class="modal-body">
                 <p>¿Estás seguro de que deseas eliminar la plantilla "{{ reporteEdit().rutaPlantilla }}" para el reporte
                     <b>{{
-                        reporteEdit().nombre }}</b>?</p>
+                        reporteEdit().nombre }}</b>?
+                </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

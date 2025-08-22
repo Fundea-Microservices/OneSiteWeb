@@ -60,4 +60,60 @@ export class PlantillaService {
     }
   }
 
+  async descargarPlantilla(reporteId: string) {
+    try {
+      this.http.get(`${this.baseUrl}${this.endpoints.plantilla}/${reporteId}`, {
+        headers: this.setHeaders(),
+        observe: 'response',
+        responseType: 'blob'
+      }).subscribe({
+        next: (response) => {
+          const contentType = response.headers.get('Content-Type');
+          const contentDisposition = response.headers.get('Content-Disposition');
+          console.log("🚀 ~ PlantillaService ~ descargarPlantilla ~ response.headers:", response.headers)
+
+          // Si es Excel
+          if (response.body && contentType?.includes('spreadsheetml')) {
+            // Obtener nombre real del archivo desde Content-Disposition
+            let fileName = 'plantilla.xlsx';
+            if (contentDisposition) {
+              const match = contentDisposition.match(/filename="(.+)"/);
+              if (match && match[1]) {
+                fileName = match[1];
+              }
+            }
+
+            const url = window.URL.createObjectURL(response.body);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            window.URL.revokeObjectURL(url);
+          } else {
+            // Si vino JSON de error
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const error = JSON.parse(reader.result as string);
+                this.toastr.error(error.message, 'Error');
+              } catch (e) {
+                this.toastr.error('Error desconocido al procesar la respuesta', 'Error');
+              }
+            };
+            reader.readAsText(response.body || new Blob());
+          }
+        },
+        error: (err) => {
+          console.log("🚀 ~ PlantillaService ~ descargarPlantilla ~ err:", err)
+          this.toastr.error(err.message || 'No se pudo exportar la plantilla', 'Error');
+        }
+      });
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ PlantillaService ~ descargarPlantilla ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error al descargar plantilla');
+      return null;
+    }
+  }
+
 }
