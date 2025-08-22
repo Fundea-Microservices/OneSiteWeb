@@ -3,12 +3,12 @@
 
     <div class="mb-3">
       <label class="form-label">Archivo Excel</label>
-      <input type="file" class="form-control" (change)="onFileSelected($event)" />
+      <input  #fileInput type="file" class="form-control" (change)="onFileSelected($event)" />
     </div>
 
     <div class="mb-3">
-      <label class="form-label">Nombre de la plantilla</label>
-      <input type="text" class="form-control" formControlName="nombre" placeholder="Ej: plantilla_creditos" />
+      <!-- <label class="form-label">Nombre de la plantilla</label> -->
+      <input type="hidden" class="form-control" formControlName="nombre" placeholder="Ej: plantilla_creditos" />
     </div>
 
     @if (mensaje()) {

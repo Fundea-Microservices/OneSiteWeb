@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Output, ViewChild, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -18,6 +18,8 @@ export class UpsertPlantillaComponent {
 
   plantillaService = inject(PlantillaService);
 
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
 
@@ -28,6 +30,10 @@ export class UpsertPlantillaComponent {
 
   mensaje = signal<string | null>(null);
   cargando = signal(false);
+
+  ngOnInit() {
+    this.mensaje.set('');
+  }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -74,12 +80,14 @@ export class UpsertPlantillaComponent {
       this.mensaje.set('Plantilla cargada correctamente.');
       //Limpiamos los campos
       this.form.reset();
+      this.fileInput.nativeElement.value = '';
       this.saved.emit(); // Avisamos al padre que se guardó correctamente
     } catch (error) {
       console.error(error);
       this.mensaje.set('Error al guardar la plantilla.');
     } finally {
       this.cargando.set(false);
+      setTimeout(() => this.mensaje.set(null), 3000);
     }
   }
 
