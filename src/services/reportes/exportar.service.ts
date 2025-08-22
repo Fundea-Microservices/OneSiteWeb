@@ -15,7 +15,8 @@ export class ExportarService {
   private readonly endpoints = {
     ejecutar: '/reportes/ejecutar',
     exportar_excel: '/reportes/ejecutar/excel',
-    exportar_excel_plantilla: '/reportes/ejecutar/excel-plantilla'
+    exportar_excel_plantilla: '/reportes/ejecutar/excel-plantilla',
+    exportar_pdf_plantilla: '/reportes/ejecutar/pdf'
   };
   private baseUrl: string = environment.apiPath;
 
@@ -115,6 +116,51 @@ export class ExportarService {
       return null;
     }
   }
+
+  async exportarPDFPlantilla(data: any) {
+  try {
+    this.httpService.post(`${this.baseUrl}${this.endpoints.exportar_pdf_plantilla}`, data, {
+      headers: this.setHeaders({}),
+      observe: 'response',
+      responseType: 'blob'
+    }).subscribe({
+      next: (response) => {
+        const contentType = response.headers.get('Content-Type') || '';
+
+        // Si es PDF
+        if (response.body && contentType.includes('pdf')) {
+          const url = window.URL.createObjectURL(response.body);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = data.fileName ? `${data.fileName}.pdf` : 'reporte.pdf';
+          a.click();
+          window.URL.revokeObjectURL(url);
+        } else {
+          // Si vino JSON de error
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const error = JSON.parse(reader.result as string);
+              this.toastr.error(error.message, 'Error');
+            } catch {
+              this.toastr.error('Error desconocido al generar el PDF', 'Error');
+            }
+          };
+          reader.readAsText(response.body || new Blob());
+        }
+      },
+      error: (err) => {
+        this.toastr.error(err.message || 'No se pudo exportar el reporte', 'Error');
+      }
+    });
+
+    return null;
+  } catch (error: any) {
+    console.log("🚀 ~ EjecutarService ~ exportarExcelPlantilla ~ error:", error);
+    this.toastr.error(error?.error?.message || '', 'Error al ejecutar reporte');
+    return null;
+  }
+}
 
 
 }

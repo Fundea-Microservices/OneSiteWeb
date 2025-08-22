@@ -154,7 +154,7 @@ export default class EjecucionComponent {
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
 
-    
+
     let data = {
       reporteId: this.reporteSelected()?.reporteId,
       parametros: this.parametrosList(),
@@ -197,9 +197,9 @@ export default class EjecucionComponent {
       parametros: this.parametrosList(),
       type: 'excel',
       rutaPlantilla: this.reporteSelected()?.rutaPlantilla || '',
-      fileName: this.reporteSelected()?.nombre 
-          ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}.xlsx`
-          : `reporte_${day}${month}${year}_${hours}${minutes}.xlsx`
+      fileName: this.reporteSelected()?.nombre
+        ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}.xlsx`
+        : `reporte_${day}${month}${year}_${hours}${minutes}.xlsx`
     }
 
     // Validamos los parámetros obligatorios
@@ -221,8 +221,40 @@ export default class EjecucionComponent {
 
   }
 
-  exportarPDF() {
-    this.toastr.warning(`Exportar a PDF pendiente de implementación`, 'Advertencia');
+  async exportarPDF() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    let data = {
+      reporteId: this.reporteSelected()?.reporteId,
+      parametros: this.parametrosList(),
+      type: 'PDF',
+      rutaPlantilla: this.reporteSelected()?.rutaPlantilla || '',
+      fileName: this.reporteSelected()?.nombre
+        ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}.pdf`
+        : `reporte_${day}${month}${year}_${hours}${minutes}.pdf`
+    }
+
+    // Validamos los parámetros obligatorios
+    let parametrosObligatorios = this.parametrosList().filter(param => param.obligatorio);
+    let hayErrores = false;
+    for (let param of parametrosObligatorios) {
+      if (!param.valorSeleccionado || param.valorSeleccionado === '') {
+        hayErrores = true;
+        this.toastr.warning(`El parámetro obligatorio ${param.nombre} no tiene un valor seleccionado.`, 'Advertencia');
+        return
+      }
+    }
+    if (hayErrores) {
+      console.error("No se puede generar el reporte debido a errores en los parámetros.");
+      return;
+    }
+
+    let response = await this.exportarService.exportarPDFPlantilla(data);
   }
 
   exportarCSV() {
