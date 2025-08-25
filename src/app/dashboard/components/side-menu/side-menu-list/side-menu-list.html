@@ -4,23 +4,34 @@
       <nav class="sidebar-nav">
         <ul>
 
-          @for (acceso of accesos; track acceso.accesoId) {          
-            @if(acceso.showWeb && acceso.menu.active && acceso.active) {
-              <li> 
-                <a [style]="{color: acceso.menu.color || 'black'}" [routerLink]="[acceso.menu.pathWeb]"><ion-icon [name]="acceso.menu.icon"></ion-icon> <span>{{acceso.menu.label}}</span></a>             
-              @if (acceso.subMenus.length > 0) {
-                <ul class="nav-flyout">
-                  @for (submenu of acceso.subMenus; track submenu.accesoId) { 
-                    @if(submenu.showWeb && submenu.menu.active && submenu.active) {
-                      <li>
-                        <a class="w-[195px]" [style]="{color: submenu.menu.color || 'black'}" [routerLink]="[submenu.menu.pathWeb]"><ion-icon [name]="submenu.menu.icon"></ion-icon>{{submenu.menu.label}}</a>
-                      </li>
-                    }
-                  }
-                </ul>              
-              }              
-              </li>
-            }      
+          @for (acceso of accesos; track acceso.accesoId) {
+          @if(acceso.showWeb && acceso.menu.active && acceso.active) {
+          <li>
+            <a [style]="{color: acceso.menu.color || 'black'}" [routerLink]="[acceso.menu.pathWeb]"><ion-icon
+                [name]="acceso.menu.icon"></ion-icon> <span>{{acceso.menu.label}}</span></a>
+            @if (acceso.subMenus.length > 0) {
+            <ul class="nav-flyout">
+              @for (submenu of acceso.subMenus; track submenu.accesoId) {
+              @if(submenu.showWeb && submenu.menu.active && submenu.active) {
+                @if(!submenu.menu.reporteId) {
+                <li>
+                  <a class="w-[195px]" [style]="{color: submenu.menu.color || 'black'}"
+                    [routerLink]="[submenu.menu.pathWeb]"><ion-icon
+                      [name]="submenu.menu.icon"></ion-icon>{{submenu.menu.label}}</a>
+                </li>
+                } @else {
+                <li>
+                  <a class="w-[195px]" [style]="{color: submenu.menu.color || 'black'}"
+                    [routerLink]="['/','reportes', 'ejecutar', submenu.menu.reporteId]"><ion-icon
+                      [name]="submenu.menu.icon"></ion-icon>{{submenu.menu.label}}</a>
+                </li>
+                }
+              }
+              }
+            </ul>
+            }
+          </li>
+          }
           }
 
           <li [style]="{color: 'red'}">
@@ -28,7 +39,7 @@
           </li>
 
         </ul>
-        
+
       </nav>
     </div>
   </section>

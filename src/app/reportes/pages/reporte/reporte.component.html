@@ -65,8 +65,8 @@
                                 name="eye-sharp"></ion-icon></button> -->
                         }
                         @if(!item.rutaPlantilla) {
-                        <button class="btn btn-sm" (click)="openModalPlantilla(item.reporteId)"><ion-icon
-                                name="push" class="text-amber-400"></ion-icon></button> }
+                        <button class="btn btn-sm" (click)="openModalPlantilla(item.reporteId)"><ion-icon name="push"
+                                class="text-amber-400"></ion-icon></button> }
                         @if(item.rutaPlantilla) {
                         <button class="btn btn-sm" (click)="descargarPlantilla(item.reporteId)"><ion-icon
                                 name="download" class="text-green-400"></ion-icon></button>
@@ -81,6 +81,8 @@
                                 name="create-outline"></ion-icon></button>
                         <button [routerLink]="['/reportes','detalle', item.reporteId]"
                             class="btn btn-sm btn-primary mx-1"><ion-icon name="construct-outline"></ion-icon></button>
+                        <button class="btn btn-sm btn-warning mx-1" (click)="openModalAsignarMenu(true,item)"><ion-icon
+                                name="menu-outline"></ion-icon></button>
                         <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)"><ion-icon
                                 name="trash-outline"></ion-icon></button>
                     </td>
@@ -127,6 +129,68 @@
                         (saved)="fetchData()"></app-upsert-plantilla>
                 </div>
                 <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Asignar a menu-->
+    <div #asignarMenuModal class="modal fade" id="asignarMenuModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertModal">Asignar reporte a un submenú</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        ALERTA: Estás a punto de asignar un reporte a un submenú. Al realizar esta acción la ruta web
+                        del submenú será sobreescrita.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <div class="row">
+                        <form class="row g-3">
+                            <div class="col-auto">
+                                <label for="buscarSubmenu" class="visually-hidden">Nombre submenú</label>
+                                <input type="text" class="form-control" id="buscarSubmenu" placeholder="Nombre submenú"
+                                    (change)="buscadorSubmenu.set(txtBuscarSub.value)"
+                                    (input)="buscadorSubmenu.set(txtBuscarSub.value)" (keyup.enter)="fetchDataSubmenu()"
+                                    #txtBuscarSub>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" (click)="fetchDataSubmenu()" class="btn btn-success mb-3">
+                                    Buscar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="row">
+                        <div class="col-auto">
+                            <label for="selectSubmenu" class="visually-hidden">Seleccione submenu</label>
+                            @if(submenuList().length > 0) {
+
+                                <select class="form-select" aria-label="Seleccionar rol" id="selectSubmenu"
+                                (change)="idSubmenuSelected.set(selectSubmenu.value) " (input)="idSubmenuSelected.set(selectSubmenu.value)"
+                                #selectSubmenu>
+                                >
+                                <option value='' selected>Seleccione submenu</option>
+                                @for (item of submenuList(); track item.menuId) {
+                                    <option value="{{ item.menuId }}">{{ item.name }}</option>
+                                }
+                            </select>
+                        } @else {
+                            @if(!isLoadingSubmenu()) {
+                            <small>No hay submenús disponibles. {{buscadorSubmenu() !== '' ? 'Modifique el término de búsqueda.' : 'Ingrese un término a buscar'}}</small>
+                            }
+                        }
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" (click)="asignarReporteSubmenu()">Asignar</button>
                 </div>
             </div>
         </div>

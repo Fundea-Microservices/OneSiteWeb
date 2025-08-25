@@ -106,6 +106,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./reportes/pages/ejecucion/ejecucion.component'),
                     },
                     {
+                        path: 'ejecutar/:idReporte',
+                        loadComponent: () => import('./reportes/pages/ejecucion-individual/ejecucion-individual.component'),
+                    },
+                    {
                         path: '**',
                         redirectTo: '',
                     }
