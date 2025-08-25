@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { IParametro } from '../../../../interfaces/reportes/parametro';
@@ -18,6 +18,7 @@ import { ActivatedRoute } from '@angular/router';
   imports: [RouterLink, ReactiveFormsModule],
   templateUrl: './ejecucion-individual.component.html',
   // styleUrls: ['./ejecucion.component.css'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class EjecucionIndividualComponent {
@@ -38,6 +39,8 @@ export default class EjecucionIndividualComponent {
   showResults = signal(false)
   dataResultado = signal<any[]>([])
   metodoSalidaSelected = signal('')
+  progresoDescarga = signal<number>(0);
+  intervaloProgreso: any = null;
 
 
   metadata = signal({})
@@ -106,136 +109,94 @@ export default class EjecucionIndividualComponent {
     }
   }
 
+  getColumnKeys(data: any[]): string[] {
+    if (!data || data.length === 0) return [];
+    return Object.keys(data[0]);
+  }
+
   async generarReporte() {
     this.showResults.set(false);
     let data = {
       reporteId: this.reporteSelected()?.reporteId,
       parametros: this.parametrosList(),
-      type: 'json',
+      type: 'TABLE',
       fileName: 'reporte.json'
     }
+    if (!this.validarParametros()) return;
 
-    // Validamos los parámetros obligatorios
-    let parametrosObligatorios = this.parametrosList().filter(param => param.obligatorio);
-    let hayErrores = false;
-    for (let param of parametrosObligatorios) {
-      if (!param.valorSeleccionado || param.valorSeleccionado === '') {
-        hayErrores = true;
-        this.toastr.warning(`El parámetro obligatorio ${param.nombre} no tiene un valor seleccionado.`, 'Advertencia');
-        return
-      }
-    }
-
-    if (hayErrores) {
-      console.error("No se puede generar el reporte debido a errores en los parámetros.");
-      return;
-    }
     let response = await this.ejecutarService.ejecutarReporte(data);
 
     if (response?.success) {
       this.showResults.set(true);
       this.dataResultado.set(response.data);
     }
+    return
 
   }
 
-  getColumnKeys(data: any[]): string[] {
-    if (!data || data.length === 0) return [];
-    return Object.keys(data[0]);
-  }
 
   async exportarExcel() {
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-
-
     let data = {
       reporteId: this.reporteSelected()?.reporteId,
       parametros: this.parametrosList(),
       type: 'excel',
-      fileName: this.reporteSelected()?.nombre
-        ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}.xlsx`
-        : `reporte_${day}${month}${year}_${hours}${minutes}.xlsx`
+      fileName: await this.getFileName()
     }
-
-    // Validamos los parámetros obligatorios
-    let parametrosObligatorios = this.parametrosList().filter(param => param.obligatorio);
-    let hayErrores = false;
-    for (let param of parametrosObligatorios) {
-      if (!param.valorSeleccionado || param.valorSeleccionado === '') {
-        hayErrores = true;
-        this.toastr.warning(`El parámetro obligatorio ${param.nombre} no tiene un valor seleccionado.`, 'Advertencia');
-        return
-      }
-    }
-    if (hayErrores) {
-      console.error("No se puede generar el reporte debido a errores en los parámetros.");
-      return;
-    }
+    if (!this.validarParametros()) return;
 
     let response = await this.exportarService.exportarExcel(data);
+
+    return true
 
   }
 
   async exportarExcelPlantilla() {
-
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
 
     let data = {
       reporteId: this.reporteSelected()?.reporteId,
       parametros: this.parametrosList(),
       type: 'excel',
       rutaPlantilla: this.reporteSelected()?.rutaPlantilla || '',
-      fileName: this.reporteSelected()?.nombre
-        ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}.xlsx`
-        : `reporte_${day}${month}${year}_${hours}${minutes}.xlsx`
+      fileName: await this.getFileName()
     }
-
-    // Validamos los parámetros obligatorios
-    let parametrosObligatorios = this.parametrosList().filter(param => param.obligatorio);
-    let hayErrores = false;
-    for (let param of parametrosObligatorios) {
-      if (!param.valorSeleccionado || param.valorSeleccionado === '') {
-        hayErrores = true;
-        this.toastr.warning(`El parámetro obligatorio ${param.nombre} no tiene un valor seleccionado.`, 'Advertencia');
-        return
-      }
-    }
-    if (hayErrores) {
-      console.error("No se puede generar el reporte debido a errores en los parámetros.");
-      return;
-    }
+    if (!this.validarParametros()) return;
 
     let response = await this.exportarService.exportarExcelPlantilla(data);
 
   }
 
   async exportarPDF() {
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
 
     let data = {
       reporteId: this.reporteSelected()?.reporteId,
       parametros: this.parametrosList(),
       type: 'PDF',
       rutaPlantilla: this.reporteSelected()?.rutaPlantilla || '',
-      fileName: this.reporteSelected()?.nombre
-        ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}.pdf`
-        : `reporte_${day}${month}${year}_${hours}${minutes}.pdf`
+      fileName: await this.getFileName()
     }
+    if (!this.validarParametros()) return;
+
+    let response = await this.exportarService.exportarPDFPlantilla(data);
+  }
+
+  async exportarCSV() {
+    let data = {
+      reporteId: this.reporteSelected()?.reporteId,
+      parametros: this.parametrosList(),
+      type: 'csv',
+      fileName: await this.getFileName()
+    }
+
+    if (!this.validarParametros()) return;
+
+    let response = await this.exportarService.exportarCSV(data);
+  }
+
+  exportarJSON() {
+    this.toastr.warning(`Exportar a JSON pendiente de implementación`, 'Advertencia');
+  }
+
+  async validarParametros(): Promise<boolean> {
 
     // Validamos los parámetros obligatorios
     let parametrosObligatorios = this.parametrosList().filter(param => param.obligatorio);
@@ -244,50 +205,86 @@ export default class EjecucionIndividualComponent {
       if (!param.valorSeleccionado || param.valorSeleccionado === '') {
         hayErrores = true;
         this.toastr.warning(`El parámetro obligatorio ${param.nombre} no tiene un valor seleccionado.`, 'Advertencia');
-        return
+        return false
       }
     }
     if (hayErrores) {
       console.error("No se puede generar el reporte debido a errores en los parámetros.");
-      return;
+      return false;
     }
-
-    let response = await this.exportarService.exportarPDFPlantilla(data);
+    return true;
   }
 
-  exportarCSV() {
-    this.toastr.warning(`Exportar a CSV pendiente de implementación`, 'Advertencia');
-  }
+  async getFileName(): Promise<string> {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Los meses empiezan en 0
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
 
-  exportarJSON() {
-    this.toastr.warning(`Exportar a JSON pendiente de implementación`, 'Advertencia');
+    let fileName = this.reporteSelected()?.nombre
+      ? `${this.reporteSelected()?.nombre}_${day}${month}${year}_${hours}${minutes}`
+      : `reporte_${day}${month}${year}_${hours}${minutes}`
+
+    return fileName;
   }
 
   async procesarReporte() {
-    this.procesandoReporte.set(true)
-    switch (this.metodoSalidaSelected()) {
-      case 'tabla':
-        await this.generarReporte();
-        break;
-      case 'excel':
-        await this.exportarExcel();
-        break;
-      case 'excel_plantilla':
-        await this.exportarExcelPlantilla();
-        break;
-      case 'pdf':
-        await this.exportarPDF();
-        break;
-      case 'csv':
-        await this.exportarCSV();
-        break;
-      case 'json':
-        this.exportarJSON();
-        break;
-      default:
-        this.toastr.warning(`Método de salida no válido`, 'Advertencia');
+    this.procesandoReporte.set(true);
+    this.iniciarProgreso();
+
+    try {
+      switch (this.metodoSalidaSelected()) {
+        case 'tabla':
+          await this.generarReporte();
+          break;
+        case 'excel':
+          await this.exportarExcel();
+          break;
+        case 'excel_plantilla':
+          await this.exportarExcelPlantilla();
+          break;
+        case 'pdf':
+          await this.exportarPDF();
+          break;
+        case 'csv':
+          await this.exportarCSV();
+          break;
+        case 'json':
+          this.exportarJSON();
+          break;
+        default:
+          this.toastr.warning(`Método de salida no válido`, 'Advertencia');
+      }
+    } catch (error) {
+      this.toastr.error('Error al procesar el reporte', 'Error');
+    } finally {
+      this.detenerProgreso(true); // completa al 100%
+      setTimeout(() => {
+        this.procesandoReporte.set(false); // oculta la barra 0.5s después
+      }, 500);
     }
-    this.procesandoReporte.set(false)
+  }
+
+  iniciarProgreso() {
+    this.progresoDescarga.set(0);
+    this.intervaloProgreso = setInterval(() => {
+      const actual = this.progresoDescarga();
+      if (actual < 90) {
+        this.progresoDescarga.set(actual + 10);
+      }
+    }, 900); // cada 900ms sube 10%
+  }
+
+  detenerProgreso(final: boolean = false) {
+    if (this.intervaloProgreso) {
+      clearInterval(this.intervaloProgreso);
+      this.intervaloProgreso = null;
+    }
+    if (final) {
+      this.progresoDescarga.set(100);
+    }
   }
 
 
