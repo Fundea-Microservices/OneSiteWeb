@@ -9,6 +9,9 @@ import { DatePipe } from '@angular/common';
 import { UpsertReporteComponent } from '../../components/upsert-reporte/upsert-reporte.component';
 import { UpsertPlantillaComponent } from "../../components/upsert-plantilla/upsert-plantilla.component";
 import { PlantillaService } from '../../../../services/reportes/plantilla.service';
+import { MenuService } from '../../../../services/menu.service';
+import { IMenu } from '../../../../interfaces/auth';
+import { ToastrService } from 'ngx-toastr';
 
 const emptyReporte: IReporte = {
   reporteId: '',
@@ -25,6 +28,20 @@ const emptyReporte: IReporte = {
   created_at: new Date()
 }
 
+const emptyMenu: IMenu = {
+  menuId: '',
+  name: '',
+  description: '',
+  pathApp: '',
+  pathWeb: '',
+  reporteId: '',
+  label: '',
+  icon: '',
+  color: '',
+  main: false,
+  active: true,
+}
+
 @Component({
   selector: 'app-reporte',
   imports: [RouterLink, PaginationAllComponent, DatePipe, UpsertReporteComponent, UpsertPlantillaComponent],
@@ -34,11 +51,20 @@ const emptyReporte: IReporte = {
 })
 export default class ReporteComponent {
   reporteService = inject(ReporteService);
+  menuService = inject(MenuService);
   plantillaService = inject(PlantillaService);
   reporteList = signal<IReporte[]>([]);
   metadata = signal({})// Cambia el tipo según tu modelo de datos
   reporteEdit = signal<IReporte>(emptyReporte)
   nuevoReporte = signal<boolean>(true); // Indica si es una nueva configuración o una existente
+
+  // Para asignar reporte a menu
+  nuevaAsignacion = signal<boolean>(true);
+  buscadorSubmenu = signal('');
+  submenuList = signal<IMenu[]>([]);
+  menuEdit = signal<IMenu>(emptyMenu);
+  idSubmenuSelected = signal<string>('');
+  isLoadingSubmenu = signal(false);
 
   reporteId = signal('')
 
@@ -62,6 +88,9 @@ export default class ReporteComponent {
   @ViewChild('deleteModalPlantilla') modalDeletePlantillaElementRef!: ElementRef;
   private modalDeletePlantillaInstance!: bootstrap.Modal;
 
+  @ViewChild('asignarMenuModal') modalAsignarMenuElementRef!: ElementRef;
+  private modalAsignarMenuInstance!: bootstrap.Modal;
+
   modal = signal({
     titulo: 'Crear reporte',
     visible: false,
@@ -69,7 +98,7 @@ export default class ReporteComponent {
 
   buscador = signal('');
 
-  constructor() { }
+  constructor(private toastr: ToastrService) { }
 
   ngOnInit() {
 
@@ -82,6 +111,7 @@ export default class ReporteComponent {
     this.modalDeleteInstance = new Modal(this.modalDeleteElementRef.nativeElement);
     this.modalUpsertPlantillaInstance = new Modal(this.modalUpsertPlantillaElementRef.nativeElement);
     this.modalDeletePlantillaInstance = new Modal(this.modalDeletePlantillaElementRef.nativeElement);
+    this.modalAsignarMenuInstance = new Modal(this.modalAsignarMenuElementRef.nativeElement);
   }
 
   async fetchData() {
@@ -99,6 +129,17 @@ export default class ReporteComponent {
       });
     }
     this.isLoading.set(false);
+  }
+
+  async fetchDataSubmenu() {
+    if (this.isLoadingSubmenu()) return;
+    this.isLoadingSubmenu.set(true);
+    let resp = await this.menuService.getSubmenus({ page: 1, limit: 100, search: this.buscadorSubmenu() });
+    if (resp) {
+      let { menus } = resp.data;
+      this.submenuList.set(menus);
+    }
+    this.isLoadingSubmenu.set(false);
   }
 
   async deleteReporte(reporte: IReporte) {
@@ -127,7 +168,7 @@ export default class ReporteComponent {
   }
 
   async updateReporte(reporte: IReporte, eliminarPlantilla: boolean = false) {
-    if(eliminarPlantilla) reporte.rutaPlantilla = undefined;
+    if (eliminarPlantilla) reporte.rutaPlantilla = undefined;
     let resp = await this.reporteService.updateReporte(reporte);
     if (resp?.success) {
       // this.configList.set([]); // Limpiamos la lista antes de cargar nuevos datos
@@ -220,6 +261,63 @@ export default class ReporteComponent {
 
   descargarPlantilla(reporteId: string) {
     this.plantillaService.descargarPlantilla(reporteId);
+  }
+
+  openModalAsignarMenu(nuevo: boolean = true, reporte: IReporte = emptyReporte) {
+    this.nuevaAsignacion.set(nuevo);
+    this.reporteEdit.set(reporte);
+    this.idSubmenuSelected.set('');
+
+    if (this.nuevaAsignacion()) {
+      this.idSubmenuSelected.set('');
+      this.buscadorSubmenu.set('');
+      this.submenuList.set([]);
+    }
+
+    if (!this.modalAsignarMenuInstance) {
+      this.modalAsignarMenuInstance = new Modal(this.modalAsignarMenuElementRef.nativeElement);
+    }
+    this.modalAsignarMenuInstance.show();
+  }
+
+  closeModalAsignarMenu() {
+    if (this.modalAsignarMenuInstance) {
+      this.modalAsignarMenuInstance.hide();
+    }
+  }
+
+  async asignarReporteSubmenu() {
+    if (this.idSubmenuSelected() == '') {
+      this.toastr.warning(`No hay un submenu seleccionado`, 'Advertencia');
+      return;
+    }
+
+    let submenuSelected = this.submenuList().find(m => m.menuId === this.idSubmenuSelected()) || null;
+
+    if (!submenuSelected) {
+      this.toastr.warning(`No hay un submenu seleccionado`, 'Advertencia');
+      return;
+    }
+    this.menuEdit.set({
+      menuId: submenuSelected.menuId,
+      reporteId: this.reporteEdit().reporteId,
+      name: submenuSelected.name,
+      description: submenuSelected.description,
+      color: submenuSelected.color,
+      pathApp: submenuSelected.pathApp,
+      pathWeb: submenuSelected.pathWeb,
+      active: submenuSelected.active,
+      label: submenuSelected.label,
+      icon: submenuSelected.icon,
+      main: submenuSelected.main
+    });
+
+    let resp = await this.menuService.updateMenu(this.menuEdit())
+    if (resp?.success) {
+      if (this.modalAsignarMenuInstance) {
+        this.modalAsignarMenuInstance.hide();
+      }
+    }
   }
 
 }

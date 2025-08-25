@@ -68,6 +68,7 @@ export interface IMenu {
     description: string;
     pathApp:     string;
     pathWeb:     string;
+    reporteId?:   string;
     label:       string;
     icon:        string;
     color:       string;
