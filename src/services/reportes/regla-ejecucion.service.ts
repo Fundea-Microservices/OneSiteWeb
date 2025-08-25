@@ -83,7 +83,8 @@ export class ReglaEjecucionService extends HttpService {
 
   async deleteRegla(reglaDelete: IRegla) {
     try {
-      const resp = await firstValueFrom(this.delete<ReglasEjecucionResponse>(`${this.endpoints.regla}`, reglaDelete));
+      const {rol, ...reglaEjecucion} = reglaDelete
+      const resp = await firstValueFrom(this.delete<ReglasEjecucionResponse>(`${this.endpoints.regla}`, reglaEjecucion));
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');
         return resp.body;

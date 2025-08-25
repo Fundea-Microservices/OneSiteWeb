@@ -42,7 +42,7 @@
                     <th class="text-center" scope="col">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody style="font-size: 0.8em;">
                 @for (item of reporteList(); track item.reporteId; let i = $index) {
                 <tr>
                     <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
@@ -83,8 +83,8 @@
                             class="btn btn-sm btn-primary mx-1"><ion-icon name="construct-outline"></ion-icon></button>
                         <button class="btn btn-sm btn-warning mx-1" (click)="openModalAsignarMenu(true,item)"><ion-icon
                                 name="menu-outline"></ion-icon></button>
-                        <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)"><ion-icon
-                                name="trash-outline"></ion-icon></button>
+                        <!-- <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)"><ion-icon
+                                name="trash-outline"></ion-icon></button> -->
                     </td>
                 </tr>
                 }
@@ -177,7 +177,7 @@
                                 >
                                 <option value='' selected>Seleccione submenu</option>
                                 @for (item of submenuList(); track item.menuId) {
-                                    <option value="{{ item.menuId }}">{{ item.name }}</option>
+                                    <option value="{{ item.menuId }}">{{ item.label }}</option>
                                 }
                             </select>
                         } @else {

@@ -263,18 +263,18 @@ export default class EjecucionIndividualComponent {
       this.detenerProgreso(true); // completa al 100%
       setTimeout(() => {
         this.procesandoReporte.set(false); // oculta la barra 0.5s después
-      }, 500);
+      }, 800);
     }
   }
 
   iniciarProgreso() {
-    this.progresoDescarga.set(0);
+    this.progresoDescarga.set(20);
     this.intervaloProgreso = setInterval(() => {
       const actual = this.progresoDescarga();
       if (actual < 90) {
         this.progresoDescarga.set(actual + 10);
       }
-    }, 900); // cada 900ms sube 10%
+    }, 1200); // cada 1200ms sube 10%
   }
 
   detenerProgreso(final: boolean = false) {
