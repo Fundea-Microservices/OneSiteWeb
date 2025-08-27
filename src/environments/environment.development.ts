@@ -4,6 +4,6 @@ const API_URL = 'http://localhost:3000/'
 export const environment = {
     production: false,
     path: API_URL,
-    apiPath: (API_URL) + 'api',
+    apiPath: (API_URL) + 'v1',
     tokenCheckInterval: 5 // minutos
 };
