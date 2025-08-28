@@ -99,6 +99,8 @@
                                 name="eye-outline"></ion-icon></button> -->
                         <button class="btn btn-sm btn-success mx-1" (click)="openModal(false, item)"><ion-icon
                                 name="create-outline"></ion-icon></button>
+                        <button class="btn btn-sm btn-warning mx-1" (click)="openModalPassword(false, item)"><ion-icon
+                                name="lock-open-outline"></ion-icon></button>
                         <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)">
                             <ion-icon name="trash-outline"></ion-icon>
                         </button>
@@ -155,6 +157,25 @@
         </div>
     </div>
 
+    <!-- Modal Change Password-->
+    <div #changePasswordModal class="modal fade" id="changePasswordModal" tabindex="-1"
+        aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 text-red" id="exampleModalLabel">Cambiar contraseña</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <app-change-password (cancel)="closeModal()" [key]="formKey()"
+                        (changePassword)="handlePasswordChange($event, usuarioEdit().userId)" [isAdmin]="true">
+                    </app-change-password>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 </div>

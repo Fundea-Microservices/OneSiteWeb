@@ -8,6 +8,8 @@ import { UserService } from '../../../../services/user.service';
 import { UpsertUserComponent } from "../../components/user/upsert-user/upsert-user.component";
 import { IMetodo } from '../../../../interfaces/metodo';
 import { MetodoService } from '../../../../services/metodo.service';
+import { AuthService } from '../../../../services/auth.service';
+import { ChangePasswordComponent } from '../../components/user/change-password/change-password.component';
 
 const emptyUser: IUser = {
   userId: '',
@@ -43,7 +45,7 @@ const emptyUser: IUser = {
 
 @Component({
   selector: 'app-users-page',
-  imports: [RouterLink, PaginationComponent, UpsertUserComponent],
+  imports: [RouterLink, PaginationComponent, UpsertUserComponent, ChangePasswordComponent],
   templateUrl: './users-page.html',
   styleUrl: './users-page.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -54,6 +56,7 @@ export default class UsersPageComponent {
   rolService = inject(RolService);
   metodoService = inject(MetodoService);
   userService = inject(UserService);
+  authService = inject(AuthService);
   rolesList = signal<IRol[]>([]);
   metodosList = signal<IMetodo[]>([]);
   usersList = signal<IUser[]>([]);
@@ -74,6 +77,9 @@ export default class UsersPageComponent {
 
   @ViewChild('deleteUsuarioModal') modalDeleteElementRef!: ElementRef;
   private modalDeleteInstance!: bootstrap.Modal;
+
+  @ViewChild('changePasswordModal') modalChangePasswordElementRef!: ElementRef;
+  private modalChangePasswordInstance!: bootstrap.Modal;
 
   modal = signal({
     titulo: 'Crear Usuario',
@@ -96,6 +102,7 @@ export default class UsersPageComponent {
   ngAfterViewInit() {
     this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
     this.modalDeleteInstance = new Modal(this.modalDeleteElementRef.nativeElement);
+    this.modalChangePasswordInstance = new Modal(this.modalChangePasswordElementRef.nativeElement);
   }
 
   async loadFilters() {
@@ -197,9 +204,23 @@ export default class UsersPageComponent {
     this.modalUpsertInstance.show();
   }
 
+  openModalPassword(nuevo: boolean = true, user: IUser = emptyUser) {
+    
+    this.usuarioEdit.set(user);
+    this.formKey.set(Date.now()); // esto obliga al componente hijo a resetear    
+
+    if (!this.modalChangePasswordInstance) {
+      this.modalChangePasswordInstance = new Modal(this.modalChangePasswordElementRef.nativeElement);
+    }
+    this.modalChangePasswordInstance.show();
+  }
+
   closeModal() {
     if (this.modalUpsertInstance) {
       this.modalUpsertInstance.hide();
+    }
+    if (this.modalChangePasswordInstance) {
+      this.modalChangePasswordInstance.hide();
     }
   }
 
@@ -217,6 +238,27 @@ export default class UsersPageComponent {
       this.createUser(user);
     } else {
       this.updateUser(user);
+    }
+  }
+
+
+  handlePasswordChange($event: { current: string; new: string; }, userId: string) {
+    console.log("🚀 ~ UsersPageComponent ~ handlePasswordChange ~ event:", $event)
+    this.changePassword($event.current, $event.new, userId);
+    return null
+  }
+
+  async changePassword(current: string, newPassword: string, userId: string) {
+    console.log("🚀 ~ UsersPageComponent ~ changePassword ~ userId:", userId)
+    const data = {
+      current: current,
+      newPassword: newPassword,
+      userId: userId
+    }
+    const resp = await this.authService.changePassword(data)
+
+    if (resp?.success) {
+      this.closeModal();
     }
   }
 

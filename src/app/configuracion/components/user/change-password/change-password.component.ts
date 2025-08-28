@@ -3,7 +3,9 @@ import {
   Component,
   EventEmitter,
   Output,
-  inject
+  effect,
+  inject,
+  input
 } from '@angular/core';
 import {
   FormBuilder,
@@ -23,17 +25,33 @@ import { CommonModule } from '@angular/common';
 })
 export class ChangePasswordComponent {
   private fb = inject(FormBuilder);
+  
+  isAdmin = input<boolean>(false);
+  key = input<number>(0);
 
   @Output() cancel = new EventEmitter<void>();
   @Output() changePassword = new EventEmitter<{ current: string; new: string }>();
 
   form: FormGroup = this.fb.group({
-    currentPassword: ['', Validators.required],
+    currentPassword: ['',],
     newPassword: ['', [Validators.required, Validators.minLength(6)]],
     confirmPassword: ['', Validators.required]
   }, {
     validators: [this.passwordsMatchValidator]
   });
+
+  constructor() {
+    effect(() => {
+      const _ = this.key(); 
+      const isAdmin = this.isAdmin();
+
+      this.initForm();
+    });
+  }
+
+  private initForm(): void {
+    this.form.reset();
+  }
 
   get passwordsDoNotMatch(): boolean {   
     
