@@ -115,6 +115,32 @@ export const routes: Routes = [
                     }
                 ]
             },
+            
+            {
+                path: 'procedimientos',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./procedimientos/pages/home-procedimiento/home-procedimiento.component'),
+                    },
+                    {
+                        path: 'diseño',
+                        loadComponent: () => import('./procedimientos/pages/procedimiento/procedimiento.component'),
+                    },  
+                    {
+                        path: 'detalle/:id',
+                        loadComponent: () => import('./procedimientos/pages/procedimiento-detalle/procedimiento-detalle.component'),
+                    },                    
+                    {
+                        path: 'ejecutar',
+                        loadComponent: () => import('./procedimientos/pages/ejecutar-procedimiento/ejecutar-procedimiento.component'),
+                    },
+                    {
+                        path: '**',
+                        redirectTo: '',
+                    }
+                ]
+            },
         ]
     },
     {
