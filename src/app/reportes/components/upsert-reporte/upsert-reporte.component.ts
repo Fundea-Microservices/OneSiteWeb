@@ -45,6 +45,7 @@ export class UpsertReporteComponent {
   });
 
   nuevo = input<boolean>(true);
+  key = input<number>(0);
 
   validationRules: ReporteValidationRules = {
     nombre: [Validators.required, Validators.maxLength(150)],
@@ -59,6 +60,7 @@ export class UpsertReporteComponent {
 
   constructor() {
     effect(() => {
+      const _ = this.key(); // provoca que el form se reinicie cada vez que cambia el key
       const isNuevo = this.nuevo();
       const reporte = this.reporte();
 

@@ -1,0 +1,88 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Home</a></li>
+        <!-- <li class="breadcrumb-item"><a [routerLink]="['/reportes']">Reportes</a></li> -->
+        <li class="breadcrumb-item active" aria-current="page">Ejecutar Procedimiento</li>
+    </ol>
+</nav>
+
+
+<div class="card">
+    <div class="card-header">
+        Ejecución de procedimientos
+    </div>
+    <div class="card-body">
+
+        <!-- Selección del procedimiento -->
+        <form class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Seleccione un procedimiento</label>
+                <select class="form-select form-select-sm" (input)="changeProcedimiento(selectProcedimiento.value)" #selectProcedimiento>
+                    <option value="">Seleccione un procedimiento</option>
+                    @for (item of procedimientosList(); track item.procedimientoId; let i = $index) {
+                    <option [value]="item.procedimientoId">
+                        {{ item.nombre }}
+                    </option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto align-self-end">
+                <button type="button" class="btn btn-success" (click)="buscarParametros()">Buscar parámetros</button>
+            </div>
+        </form>
+        <hr>
+
+        <!-- Formulario de parámetros -->
+        @if(parametrosBuscados()) {
+        <div class="row">
+            @for (item of parametrosList(); track item.parametroId; let i = $index) {
+
+            @if(item.tipo === 'date'){
+            <div class="col-md-3">
+                <label class="form-label">{{ item.nombre }}</label>
+                <input type="date" class="form-control" [value]="item.valor"
+                    (input)="item.valorSeleccionado = $any($event.target).value">
+            </div>
+            }
+
+            @if(item.tipo === 'string' || item.tipo === 'decimal'){
+            <div class="col-md-4">
+                <label class="form-label">{{ item.nombre }}</label>
+                <input type="text" class="form-control" [value]="item.valor"
+                    (input)="item.valorSeleccionado = $any($event.target).value">
+            </div>
+            }
+
+            @if (item.tipo === 'array') {
+            <div class="col-md-4">
+                <label class="form-label">{{ item.nombre }}</label>
+                <select class="form-select" (change)="item.valorSeleccionado = $any($event.target).value">
+                    <option value="">Seleccione una opcion</option>
+                    @for (opt of item.valor.split(','); track opt; let i = $index) {
+                    <option [value]="opt">{{ opt }}</option>
+                    }
+                </select>
+            </div>
+            }
+
+            @if(item.tipo === 'boolean'){
+            <div class="col-md-3 form-check">
+                <input type="checkbox" class="form-check-input" [checked]="item.valorSeleccionado"
+                    (change)="item.valorSeleccionado = $any($event.target).checked" id="chk{{i}}">
+                <label class="form-check-label" for="chk{{i}}">{{ item.nombre }}</label>
+            </div>
+            }
+
+
+
+            }
+
+            <div class="col-auto align-self-end">
+                <button type="button" class="btn btn-primary" (click)="generarReporte()">Ejecutar</button>
+            </div>
+            
+        </div>
+        }
+        
+    </div>
+</div>
