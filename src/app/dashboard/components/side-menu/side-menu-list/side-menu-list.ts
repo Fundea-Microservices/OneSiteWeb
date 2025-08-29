@@ -28,6 +28,6 @@ export class SideMenuListComponent {
 
   logout() {
     this.authService.logout();
-    this.router.navigate(['/']);
+    this.router.navigate(['/fundea/login']);
   }
 }
