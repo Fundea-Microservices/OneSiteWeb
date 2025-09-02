@@ -34,15 +34,17 @@
             @for (item of parametrosList(); track item.parametroId; let i = $index) {
 
             @if(item.tipo === 'date'){
-            @if(item.fechaActual){
-            <label class="form-label">{{ item.nombre }}</label>
-            <input type="date" class="form-control" [value]="hoy() | date:'yyyy-MM-dd'"
-                (input)="item.valorSeleccionado = $any($event.target).value">
-            } @else {
-            <label class="form-label">{{ item.nombre }}</label>
-            <input type="date" class="form-control" [value]="item.valor"
-                (input)="item.valorSeleccionado = $any($event.target).value">
-            }
+            <div class="col-md-4">
+                @if(item.fechaActual){
+                <label class="form-label">{{ item.nombre }}</label>
+                <input type="date" class="form-control" [value]="hoy() | date:'yyyy-MM-dd'"
+                    (input)="item.valorSeleccionado = $any($event.target).value">
+                } @else {
+                <label class="form-label">{{ item.nombre }}</label>
+                <input type="date" class="form-control" [value]="item.valor"
+                    (input)="item.valorSeleccionado = $any($event.target).value">
+                }
+            </div>
             }
 
             @if(item.tipo === 'string' || item.tipo === 'decimal'){
