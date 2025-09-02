@@ -42,6 +42,7 @@ export class UpsertParametroSPComponent {
     obligatorio: false,
     valor: '',
     orden: 1,
+    fechaActual: false
   });
 
   nuevo = input<boolean>(true);

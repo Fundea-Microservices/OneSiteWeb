@@ -25,6 +25,7 @@ export interface IParametro {
     obligatorio: boolean;
     valor:       string;
     orden:       number;
+    fechaActual: boolean;
     valorSeleccionado?: string | boolean;
     created_at?:  Date;
     updated_at?:  null;

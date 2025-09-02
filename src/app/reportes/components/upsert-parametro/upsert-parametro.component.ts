@@ -42,6 +42,7 @@ export class UpsertParametroComponent {
     obligatorio: false,
     valor: '',
     orden: 1,
+    fechaActual: false
   });
 
   nuevo = input<boolean>(true);
@@ -71,6 +72,7 @@ export class UpsertParametroComponent {
         valor: [parametro.valor, this.validationRules.valor],
         orden: [parametro.orden, this.validationRules.orden],
         obligatorio: [parametro.obligatorio],
+        fechaActual: [parametro.fechaActual],
       });
 
       if (isNuevo) {
@@ -81,6 +83,7 @@ export class UpsertParametroComponent {
           valor: '',
           orden: 1,
           obligatorio: false,
+          fechaActual: false,
         });
       }
 

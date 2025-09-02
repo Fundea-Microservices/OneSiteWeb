@@ -8,6 +8,7 @@ import { IReporte } from '../../../../interfaces/reportes/reporte';
 import { ToastrService } from 'ngx-toastr';
 import { EjecutarService } from '../../../../services/reportes/ejecutar.service';
 import { ExportarService } from '../../../../services/reportes/exportar.service';
+import { DatePipe } from '@angular/common';
 
 interface IParametroSend {
 
@@ -15,7 +16,7 @@ interface IParametroSend {
 
 @Component({
   selector: 'app-ejecucion',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, DatePipe],
   templateUrl: './ejecucion.component.html',
   // styleUrls: ['./ejecucion.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +47,7 @@ export default class EjecucionComponent {
     totalItems: 0
   });
   isLoading = signal(false);
+  hoy = signal(new Date())
 
   constructor(private toastr: ToastrService) { }
 
