@@ -39,16 +39,9 @@
 
             @if(item.tipo === 'date'){
             <div class="col-md-3">
-                @if(item.fechaActual){
-                <label class="form-label">{{ item.nombre }}</label>
-                <input type="date" class="form-control" [value]="hoy() | date:'yyyy-MM-dd'" 
-                    (input)="item.valorSeleccionado = $any($event.target).value">
-                } @else {
                 <label class="form-label">{{ item.nombre }}</label>
                 <input type="date" class="form-control" [value]="item.valor"
                     (input)="item.valorSeleccionado = $any($event.target).value">
-                }
-
             </div>
             }
 
@@ -97,20 +90,14 @@
                         Ejecutar
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        @if(reporteSelected()?.exportarTabla) { <li><button class="dropdown-item"
-                                (click)="generarReporte()">Ver tabla</button></li> }
-                        @if(reporteSelected()?.exportarExcel) { <li><button class="dropdown-item"
-                                (click)="exportarExcel()">Exportar Excel sin
+                        @if(reporteSelected()?.exportarTabla) { <li><button class="dropdown-item" (click)="generarReporte()">Ver tabla</button></li> }
+                        @if(reporteSelected()?.exportarExcel) { <li><button class="dropdown-item" (click)="exportarExcel()">Exportar Excel sin
                                 Plantilla</button></li> }
-                        @if(reporteSelected()?.rutaPlantilla) { <li><button class="dropdown-item"
-                                (click)="exportarExcelPlantilla()">Exportar Excel con
+                        @if(reporteSelected()?.rutaPlantilla) { <li><button class="dropdown-item" (click)="exportarExcelPlantilla()">Exportar Excel con
                                 Plantilla</button></li> }
-                        @if(reporteSelected()?.exportarPDF) { <li><button class="dropdown-item"
-                                (click)="exportarPDF()">Exportar PDF</button></li> }
-                        @if(reporteSelected()?.exportarCSV) { <li><button class="dropdown-item"
-                                (click)="exportarCSV()">Exportar CSV</button></li> }
-                        @if(reporteSelected()?.exportarJSON) { <li><button class="dropdown-item"
-                                (click)="exportarJSON()">Exportar JSON</button></li> }
+                        @if(reporteSelected()?.exportarPDF) { <li><button class="dropdown-item" (click)="exportarPDF()">Exportar PDF</button></li> }
+                        @if(reporteSelected()?.exportarCSV) { <li><button class="dropdown-item" (click)="exportarCSV()">Exportar CSV</button></li> }
+                        @if(reporteSelected()?.exportarJSON) { <li><button class="dropdown-item" (click)="exportarJSON()">Exportar JSON</button></li> }
                     </ul>
                 </div>
             </div>

@@ -11,7 +11,7 @@ import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-ejecutar-procedimiento',
-  imports: [RouterLink, ReactiveFormsModule, DatePipe],
+  imports: [RouterLink, ReactiveFormsModule],
   templateUrl: './ejecutar-procedimiento.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -88,6 +88,13 @@ export default class EjecutarProcedimientoComponent {
           case 'array':
             // Para array, no seleccionamos nada
             valorSeleccionado = '0';
+            break;
+          case 'date':
+            valorSeleccionado = param.valor ? new Date(param.valor).toISOString().split('T')[0] : '';
+            if (param.fechaActual) {
+              param.valor = this.hoy().toISOString().split('T')[0];
+              valorSeleccionado = this.hoy().toISOString().split('T')[0];
+            }
             break;
           default:
             // string u otros tipos

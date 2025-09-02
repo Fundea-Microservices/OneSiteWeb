@@ -16,7 +16,7 @@ import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-ejecucion',
-  imports: [RouterLink, ReactiveFormsModule, DatePipe],
+  imports: [RouterLink, ReactiveFormsModule],
   templateUrl: './ejecucion-individual.component.html',
   // styleUrls: ['./ejecucion.component.css'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -99,6 +99,13 @@ export default class EjecucionIndividualComponent {
             // Para array, no seleccionamos nada
             valorSeleccionado = '0';
             break;
+          case 'date':
+            valorSeleccionado = param.valor || '';
+            if (param.fechaActual) {
+              param.valor = this.hoy().toISOString().split('T')[0];
+              valorSeleccionado = this.hoy().toISOString().split('T')[0];
+            }
+            break;
           default:
             // string u otros tipos
             valorSeleccionado = param.valor || '';
@@ -108,6 +115,7 @@ export default class EjecucionIndividualComponent {
       });
 
       this.parametrosList.set(parametros);
+      console.log("🚀 ~ EjecucionIndividualComponent ~ buscarParametros ~ parametros:", parametros)
     }
   }
 
@@ -124,7 +132,8 @@ export default class EjecucionIndividualComponent {
       type: 'TABLE',
       fileName: 'reporte.json'
     }
-    if (!this.validarParametros()) return;
+    let validado = await this.validarParametros();
+    if (!validado) return;
 
     let response = await this.ejecutarService.ejecutarReporte(data);
 
@@ -144,7 +153,8 @@ export default class EjecucionIndividualComponent {
       type: 'excel',
       fileName: await this.getFileName()
     }
-    if (!this.validarParametros()) return;
+    let validado = await this.validarParametros();
+    if (!validado) return;
 
     let response = await this.exportarService.exportarExcel(data);
 
@@ -161,7 +171,8 @@ export default class EjecucionIndividualComponent {
       rutaPlantilla: this.reporteSelected()?.rutaPlantilla || '',
       fileName: await this.getFileName()
     }
-    if (!this.validarParametros()) return;
+    let validado = await this.validarParametros();
+    if (!validado) return;
 
     let response = await this.exportarService.exportarExcelPlantilla(data);
 
@@ -176,7 +187,8 @@ export default class EjecucionIndividualComponent {
       rutaPlantilla: this.reporteSelected()?.rutaPlantilla || '',
       fileName: await this.getFileName()
     }
-    if (!this.validarParametros()) return;
+    let validado = await this.validarParametros();
+    if (!validado) return;
 
     let response = await this.exportarService.exportarPDFPlantilla(data);
   }
@@ -188,8 +200,8 @@ export default class EjecucionIndividualComponent {
       type: 'csv',
       fileName: await this.getFileName()
     }
-
-    if (!this.validarParametros()) return;
+    let validado = await this.validarParametros();
+    if (!validado) return;
 
     let response = await this.exportarService.exportarCSV(data);
   }
@@ -206,6 +218,7 @@ export default class EjecucionIndividualComponent {
     for (let param of parametrosObligatorios) {
       if (!param.valorSeleccionado || param.valorSeleccionado === '') {
         hayErrores = true;
+        console.log("🚀 ~ EjecucionIndividualComponent ~ validarParametros ~ param:", param)
         this.toastr.warning(`El parámetro obligatorio ${param.nombre} no tiene un valor seleccionado.`, 'Advertencia');
         return false
       }

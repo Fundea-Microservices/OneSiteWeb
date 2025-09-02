@@ -16,7 +16,7 @@ interface IParametroSend {
 
 @Component({
   selector: 'app-ejecucion',
-  imports: [RouterLink, ReactiveFormsModule, DatePipe],
+  imports: [RouterLink, ReactiveFormsModule],
   templateUrl: './ejecucion.component.html',
   // styleUrls: ['./ejecucion.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,6 +93,13 @@ export default class EjecucionComponent {
           case 'decimal':
             // Convertir string a número si aplica
             valorSeleccionado = param.valor ? Number(param.valor).toString() : '';
+            break;
+          case 'date':
+            valorSeleccionado = param.valor ? new Date(param.valor).toISOString().split('T')[0] : '';
+            if (param.fechaActual) {
+              param.valor = this.hoy().toISOString().split('T')[0];
+              valorSeleccionado = this.hoy().toISOString().split('T')[0];
+            }
             break;
           case 'array':
             // Para array, no seleccionamos nada
