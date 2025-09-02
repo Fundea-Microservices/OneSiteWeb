@@ -17,7 +17,8 @@
         <form class="row g-3 mb-3">
             <div class="col-md-6">
                 <label class="form-label">Seleccione un procedimiento</label>
-                <select class="form-select form-select-sm" (input)="changeProcedimiento(selectProcedimiento.value)" #selectProcedimiento>
+                <select class="form-select form-select-sm" (input)="changeProcedimiento(selectProcedimiento.value)"
+                    #selectProcedimiento>
                     <option value="">Seleccione un procedimiento</option>
                     @for (item of procedimientosList(); track item.procedimientoId; let i = $index) {
                     <option [value]="item.procedimientoId">
@@ -38,11 +39,15 @@
             @for (item of parametrosList(); track item.parametroId; let i = $index) {
 
             @if(item.tipo === 'date'){
-            <div class="col-md-3">
-                <label class="form-label">{{ item.nombre }}</label>
-                <input type="date" class="form-control" [value]="item.valor"
-                    (input)="item.valorSeleccionado = $any($event.target).value">
-            </div>
+            @if(item.fechaActual){
+            <label class="form-label">{{ item.nombre }}</label>
+            <input type="date" class="form-control" [value]="hoy() | date:'yyyy-MM-dd'"
+                (input)="item.valorSeleccionado = $any($event.target).value">
+            } @else {
+            <label class="form-label">{{ item.nombre }}</label>
+            <input type="date" class="form-control" [value]="item.valor"
+                (input)="item.valorSeleccionado = $any($event.target).value">
+            }
             }
 
             @if(item.tipo === 'string' || item.tipo === 'decimal'){
@@ -80,9 +85,9 @@
             <div class="col-auto align-self-end">
                 <button type="button" class="btn btn-primary" (click)="generarReporte()">Ejecutar</button>
             </div>
-            
+
         </div>
         }
-        
+
     </div>
 </div>

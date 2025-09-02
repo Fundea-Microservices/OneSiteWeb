@@ -10,12 +10,13 @@ import { EjecutarService } from '../../../../services/reportes/ejecutar.service'
 import { ExportarService } from '../../../../services/reportes/exportar.service';
 
 import { ActivatedRoute } from '@angular/router';
+import { DatePipe } from '@angular/common';
 
 
 
 @Component({
   selector: 'app-ejecucion',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, DatePipe],
   templateUrl: './ejecucion-individual.component.html',
   // styleUrls: ['./ejecucion.component.css'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -51,6 +52,7 @@ export default class EjecucionIndividualComponent {
   });
   isLoading = signal(false);
   procesandoReporte = signal(false);
+  hoy = signal(new Date())
 
   constructor(private toastr: ToastrService, private route: ActivatedRoute) { }
 

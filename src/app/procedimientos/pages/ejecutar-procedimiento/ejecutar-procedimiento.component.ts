@@ -7,10 +7,11 @@ import { EjecutarSPService } from '../../../../services/procedimientos/ejecutar.
 import { IProcedimiento } from '../../../../interfaces/procedimientos/procedimiento';
 import { IParametro } from '../../../../interfaces/reportes/parametro';
 import { ToastrService } from 'ngx-toastr';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-ejecutar-procedimiento',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, DatePipe],
   templateUrl: './ejecutar-procedimiento.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -37,6 +38,7 @@ export default class EjecutarProcedimientoComponent {
     totalItems: 0
   });
   isLoading = signal(false);
+  hoy = signal(new Date())
 
   constructor(private toastr: ToastrService) { }
 
