@@ -87,7 +87,7 @@
                     <option value="">Seleccione una opcion</option>
                     @if(reporteSelected()?.exportarTabla) { <option [value]="'tabla'">Ver tabla</option> }
                     @if(reporteSelected()?.exportarExcel) { <option [value]="'excel'">Exportar Excel</option> }
-                    @if(reporteSelected()?.rutaPlantilla) { <option [value]="'excel_plantilla'">Exportar Excel Plantilla
+                    @if(reporteSelected()?.rutaPlantilla && reporteSelected()?.exportarPlantilla) { <option [value]="'excel_plantilla'">Exportar Excel Plantilla
                     </option> }
                     @if(reporteSelected()?.exportarPDF) { <option [value]="'pdf'">Exportar PDF</option> }
                     @if(reporteSelected()?.exportarCSV) { <option [value]="'csv'">Exportar CSV</option> }

@@ -60,7 +60,7 @@ export class PlantillaService {
     }
   }
 
-  async descargarPlantilla(reporteId: string) {
+  async descargarPlantilla(reporteId: string, nombreArchivo: string = 'plantilla') {
     try {
       this.http.get(`${this.baseUrl}${this.endpoints.plantilla}/${reporteId}`, {
         headers: this.setHeaders(),
@@ -70,12 +70,11 @@ export class PlantillaService {
         next: (response) => {
           const contentType = response.headers.get('Content-Type');
           const contentDisposition = response.headers.get('Content-Disposition');
-          console.log("🚀 ~ PlantillaService ~ descargarPlantilla ~ response.headers:", response.headers)
 
           // Si es Excel
           if (response.body && contentType?.includes('spreadsheetml')) {
             // Obtener nombre real del archivo desde Content-Disposition
-            let fileName = 'plantilla.xlsx';
+            let fileName = `${nombreArchivo}.xlsx` || 'plantilla.xlsx';
             if (contentDisposition) {
               const match = contentDisposition.match(/filename="(.+)"/);
               if (match && match[1]) {

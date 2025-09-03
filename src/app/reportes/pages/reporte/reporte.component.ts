@@ -25,6 +25,7 @@ const emptyReporte: IReporte = {
   exportarExcel: false,
   exportarPDF: false,
   exportarJSON: false,
+  exportarPlantilla: false,
   created_at: new Date()
 }
 
@@ -260,7 +261,10 @@ export default class ReporteComponent {
   }
 
   descargarPlantilla(reporteId: string) {
-    this.plantillaService.descargarPlantilla(reporteId);
+    let reporte = this.reporteList().find(r => r.reporteId === reporteId);
+    // Obtenemos el nombre del archivo en la rutaPlantilla retirando el .xslx
+    let nombreArchivo = reporte?.rutaPlantilla?.split('/').pop()?.replace('.xlsx', '') || 'plantilla';
+    this.plantillaService.descargarPlantilla(reporteId, nombreArchivo);
   }
 
   openModalAsignarMenu(nuevo: boolean = true, reporte: IReporte = emptyReporte) {

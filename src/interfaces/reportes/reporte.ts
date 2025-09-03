@@ -36,6 +36,7 @@ export interface IReporte {
     exportarPDF:   boolean;
     exportarCSV:   boolean;
     exportarJSON:  boolean;
+    exportarPlantilla:  boolean;
     created_at:    Date;
     updated_at?:    null;
     deleted_at?:    null;

@@ -41,6 +41,7 @@ export class UpsertReporteComponent {
     exportarPDF: false,
     exportarCSV: false,
     exportarJSON: false,
+    exportarPlantilla: false,
     created_at: new Date()
   });
 
@@ -74,6 +75,7 @@ export class UpsertReporteComponent {
         exportarPDF: [reporte.exportarPDF],
         exportarCSV: [reporte.exportarCSV],
         exportarJSON: [reporte.exportarJSON],
+        exportarPlantilla: [reporte.exportarPlantilla],
       });
 
       if (isNuevo) {
