@@ -16,6 +16,10 @@ export class SideMenuHeaderComponent {
 
   public user = this.authService.getUserStorage();
 
+  ngOnInit() {
+    this.actualizarFoto();
+  }
+
   async actualizarFoto() {
     if (!this.user?.userId) return;
 

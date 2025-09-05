@@ -30,10 +30,13 @@ export default class UserPageComponent {
   @ViewChild('upsertModalFotoUsuario') modalFotoElementRef!: ElementRef;
   private modalUpsertFotoInstance!: bootstrap.Modal;
 
+  ngOnInit() {
+    this.actualizarFoto();
+  }
+
   ngAfterViewInit() {
     this.modalChangePasswordInstance = new Modal(this.modalElementRef.nativeElement);
     this.modalUpsertFotoInstance = new Modal(this.modalFotoElementRef.nativeElement);
-    this.actualizarFoto();
   }
 
   async changePassword(current: string, newPassword: string) {
