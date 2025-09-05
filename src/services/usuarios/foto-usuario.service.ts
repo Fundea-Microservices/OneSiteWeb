@@ -69,6 +69,7 @@ export class FotoPerfilService {
           responseType: 'blob'
         })
       );
+      console.log("🚀 ~ FotoPerfilService ~ descargarFotoUsuario ~ response:", response)
 
       if (response.size === 0) {
         this.toastr.warning('El usuario no tiene una foto asignada.', 'Aviso');
