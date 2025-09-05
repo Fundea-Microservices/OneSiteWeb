@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Output, ViewChild, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Output, ViewChild, effect, inject, input, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -23,6 +23,8 @@ export class UpsertPlantillaComponent {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
 
+  key = input<number>(0);
+
   form: FormGroup = this.fb.group({
     nombre: ['', Validators.required],
     archivo: [null, Validators.required]
@@ -33,6 +35,15 @@ export class UpsertPlantillaComponent {
 
   ngOnInit() {
     this.mensaje.set('');
+  }
+
+  constructor() {
+    effect(() => {
+      const _ = this.key(); // provoca que el form se reinicie cada vez que cambia el key
+      this.form.reset();
+      this.mensaje.set('');
+      this.fileInput.nativeElement.value = '';
+    });
   }
 
   onFileSelected(event: Event) {

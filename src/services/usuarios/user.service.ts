@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { HttpService } from './HttpService';
-import { AccesoResponse, AuthResponse, IRol, IUser, RolesResponse, UsersResponse } from '../interfaces/auth';
+import { HttpService } from '../HttpService';
+import { IUser, UsersResponse } from '../../interfaces/auth';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 

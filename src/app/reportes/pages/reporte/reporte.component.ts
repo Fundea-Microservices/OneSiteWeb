@@ -245,6 +245,7 @@ export default class ReporteComponent {
   }
 
   openModalPlantilla(reporteId: string) {
+    this.formKey.set(Date.now()); // esto obliga al componente hijo a resetear
     this.reporteId.set(reporteId);
     this.modal.set({
       titulo: 'Actualizar Plantilla',

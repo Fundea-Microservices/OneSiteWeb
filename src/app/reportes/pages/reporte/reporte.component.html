@@ -126,7 +126,7 @@
                 </div>
                 <div class="modal-body">
                     <app-upsert-plantilla [reporteId]="reporteId()" (closed)="closeModalPlantilla()"
-                        (saved)="fetchData()"></app-upsert-plantilla>
+                        (saved)="fetchData()" [key]="formKey()"></app-upsert-plantilla>
                 </div>
                 <div class="modal-footer">
                 </div>

@@ -4,12 +4,13 @@ import { Modal } from 'bootstrap';
 import { IRol, IUser } from '../../../../interfaces/auth';
 import { RolService } from '../../../../services/rol.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
-import { UserService } from '../../../../services/user.service';
+import { UserService } from '../../../../services/usuarios/user.service';
 import { UpsertUserComponent } from "../../components/user/upsert-user/upsert-user.component";
 import { IMetodo } from '../../../../interfaces/metodo';
 import { MetodoService } from '../../../../services/metodo.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ChangePasswordComponent } from '../../components/user/change-password/change-password.component';
+import { UpsertFotoUsuarioComponent } from '../../components/user/upsert-foto/upsert-foto.component';
 
 const emptyUser: IUser = {
   userId: '',
@@ -111,7 +112,7 @@ export default class UsersPageComponent {
       this.rolesList.set(resp.data.roles);
     }
 
-    let metodosResp = await this.metodoService.getMetodos({all: true});
+    let metodosResp = await this.metodoService.getMetodos({ all: true });
     if (metodosResp) {
       this.metodosList.set(metodosResp.data.metodos);
     }
@@ -146,7 +147,7 @@ export default class UsersPageComponent {
   }
 
   async deleteUsuario(user: IUser) {
-    let resp = await this.userService.deleteUser(user);    
+    let resp = await this.userService.deleteUser(user);
     if (resp?.success) {
       this.fetchData();
       if (this.modalDeleteInstance) {
@@ -186,12 +187,12 @@ export default class UsersPageComponent {
 
   openModal(nuevo: boolean = true, user: IUser = emptyUser) {
     this.nuevoUsuario.set(nuevo);
-    if(this.nuevoUsuario()) {
+    if (this.nuevoUsuario()) {
       this.usuarioEdit.set(emptyUser)
-    }else {
+    } else {
       this.usuarioEdit.set(user);
     }
-    
+
     this.formKey.set(Date.now()); // esto obliga al componente hijo a resetear
     this.modal.set({
       titulo: user.userId ? 'Actualizar Usuario' : 'Crear Usuario',
@@ -205,7 +206,7 @@ export default class UsersPageComponent {
   }
 
   openModalPassword(nuevo: boolean = true, user: IUser = emptyUser) {
-    
+
     this.usuarioEdit.set(user);
     this.formKey.set(Date.now()); // esto obliga al componente hijo a resetear    
 
