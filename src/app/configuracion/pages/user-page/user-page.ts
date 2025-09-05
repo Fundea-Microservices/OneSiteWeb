@@ -91,12 +91,11 @@ export default class UserPageComponent {
 
     const nuevaFotoUrl = await this.fotoPerfilService.descargarFotoUsuario(this.user.userId);
     if (nuevaFotoUrl) {
-      // Evitar caché añadiendo un timestamp
-      const fotoConTimestamp = `${nuevaFotoUrl}?t=${Date.now()}`;
-      this.user.photoUrl = fotoConTimestamp;
+      // Actualizamos la URL de la imagen en el objeto del usuario
+      this.user.photoUrl = nuevaFotoUrl;
 
       // Actualizar en localStorage (si manejas sesión desde ahí)
-      const userData = { ...this.user, photoUrl: fotoConTimestamp };
+      const userData = { ...this.user, photoUrl: nuevaFotoUrl };
       localStorage.setItem('user', JSON.stringify(userData));
     }
   }
