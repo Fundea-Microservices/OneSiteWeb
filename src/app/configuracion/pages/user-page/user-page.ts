@@ -94,9 +94,6 @@ export default class UserPageComponent {
       // Actualizamos la URL de la imagen en el objeto del usuario
       this.user.photoUrl = nuevaFotoUrl;
 
-      // Actualizar en localStorage (si manejas sesión desde ahí)
-      const userData = { ...this.user, photoUrl: nuevaFotoUrl };
-      localStorage.setItem('user', JSON.stringify(userData));
     }
   }
 
