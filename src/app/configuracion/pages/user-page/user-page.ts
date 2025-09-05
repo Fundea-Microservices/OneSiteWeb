@@ -30,10 +30,6 @@ export default class UserPageComponent {
   @ViewChild('upsertModalFotoUsuario') modalFotoElementRef!: ElementRef;
   private modalUpsertFotoInstance!: bootstrap.Modal;
 
-  ngOnInit() {
-    this.actualizarFoto();
-  }
-
   ngAfterViewInit() {
     this.modalChangePasswordInstance = new Modal(this.modalElementRef.nativeElement);
     this.modalUpsertFotoInstance = new Modal(this.modalFotoElementRef.nativeElement);
@@ -96,7 +92,6 @@ export default class UserPageComponent {
     if (nuevaFotoUrl) {
       // Actualizamos la URL de la imagen en el objeto del usuario
       this.user.photoUrl = nuevaFotoUrl;
-
     }
   }
 
