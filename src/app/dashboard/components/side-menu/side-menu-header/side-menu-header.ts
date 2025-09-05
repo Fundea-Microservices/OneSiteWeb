@@ -16,7 +16,7 @@ export class SideMenuHeaderComponent {
 
   public user = this.authService.getUserStorage();
 
-  ngOnInit() {
+  constructor() {
     this.actualizarFoto();
   }
 
