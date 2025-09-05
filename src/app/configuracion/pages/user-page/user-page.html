@@ -105,7 +105,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <app-upsert-foto-usuario [userId]="user.userId" (closed)="closeModal()"
+                    <app-upsert-foto-usuario [usuarioId]="user.userId" (closed)="closeModal()"
                         (saved)="actualizarFoto()" [key]="formKey()"></app-upsert-foto-usuario>
                 </div>
                 <div class="modal-footer">
