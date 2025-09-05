@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { AuthService } from '../../../../services/auth.service';
 import { DatePipe } from '@angular/common';
 import { ChangePasswordComponent } from "../../components/user/change-password/change-password.component";
@@ -18,6 +18,7 @@ import { FotoPerfilService } from '../../../../services/usuarios/foto-usuario.se
 export default class UserPageComponent {
   public authService = inject(AuthService);
   private fotoPerfilService = inject(FotoPerfilService);
+  private cdr = inject(ChangeDetectorRef);
 
   public user = this.authService.getUserStorage();
 
@@ -29,6 +30,10 @@ export default class UserPageComponent {
 
   @ViewChild('upsertModalFotoUsuario') modalFotoElementRef!: ElementRef;
   private modalUpsertFotoInstance!: bootstrap.Modal;
+
+  constructor() {
+    this.actualizarFoto();
+  }
 
   ngAfterViewInit() {
     this.modalChangePasswordInstance = new Modal(this.modalElementRef.nativeElement);
@@ -92,6 +97,7 @@ export default class UserPageComponent {
     if (nuevaFotoUrl) {
       // Actualizamos la URL de la imagen en el objeto del usuario
       this.user.photoUrl = nuevaFotoUrl;
+      this.cdr.detectChanges(); // forzar renderizado
     }
   }
 
