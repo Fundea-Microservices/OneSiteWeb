@@ -16,21 +16,22 @@ export class SideMenuHeaderComponent {
   private fotoPerfilService = inject(FotoPerfilService);
   private cdr = inject(ChangeDetectorRef);
 
-  public user = this.authService.getUserStorage();
+  // esto es un signal reactivo
+  public user = this.authService.user;
 
   constructor() {
     this.actualizarFoto();
   }
 
   async actualizarFoto() {
-    if (!this.user?.userId) return;
+    if (!this.user()?.userId) return;
 
-    const nuevaFotoUrl = await this.fotoPerfilService.descargarFotoUsuario(this.user.userId);
+    const nuevaFotoUrl = await this.fotoPerfilService.descargarFotoUsuario(this.user().userId);
     if (nuevaFotoUrl) {
-      // Actualizamos la URL de la imagen en el objeto del usuario
-      this.user.photoUrl = nuevaFotoUrl;
-      this.cdr.detectChanges(); // forzar renderizado
+      const updatedUser = { ...this.user()!, photoUrl: nuevaFotoUrl };
+      this.authService.updateUser(updatedUser); // 🔑 sincroniza signal
+      this.cdr.detectChanges();
     }
   }
 
- }
+}

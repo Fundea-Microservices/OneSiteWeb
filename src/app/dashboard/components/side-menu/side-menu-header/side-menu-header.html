@@ -7,7 +7,7 @@
   <a routerLink="/config/user" class="inline-flex items-center space-x-2">
     <!-- Imagen con tamaño fijo -->
     <span class="flex-shrink-0">
-      <img class="rounded-full w-10 h-10 object-cover" [src]="user.photoUrl || 'images/default-user.png'" alt="Usuario" />
+      <img class="rounded-full w-10 h-10 object-cover" [src]="user().photoUrl || 'images/default-user.png'" alt="Usuario" />
     </span>
     <br>
   </a>
@@ -16,9 +16,9 @@
 <div class="px-4 flex flex-col items-start">
   <a routerLink="/config/user"
       class="font-bold text-sm truncate sm:whitespace-normal sm:break-words pt-2"
-      [style]="{ 'font-size': user.name1.length > 20 ? '0.75rem' : '', }">
-      {{ user.name1 || 'Usuario' }} {{ user.lastName1 || '' }}
+      [style]="{ 'font-size': user().name1.length > 20 ? '0.75rem' : '', }">
+      {{ user().name1 || 'Usuario' }} {{ user().lastName1 || '' }}
     </a>
   <!-- Nombre adaptable -->
-  <p class="text-slate-700 truncate text-xs">{{ user.rol.name || 'Rol desconocido' }}</p>
+  <p class="text-slate-700 truncate text-xs">{{ user().rol.name || 'Rol desconocido' }}</p>
 </div>

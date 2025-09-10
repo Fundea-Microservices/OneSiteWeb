@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { HttpService } from './HttpService';
 import { AccesoResponse, AuthResponse, IUser } from '../interfaces/auth';
@@ -18,15 +18,20 @@ export class AuthService extends HttpService {
     changePassword: '/config/change-password'
   };
 
+  // 🔑 Signal para el estado del usuario
+  private _user = signal<IUser>(this.loadUserFromStorage());
+  public user = this._user.asReadonly();
+
   constructor(http: HttpClient, private toastr: ToastrService) {
-    super(http); // pasa HttpClient al servicio base
+    super(http);
   }
 
-  getUserStorage(): IUser {
+  /** Cargar usuario desde localStorage (si existe) */
+  private loadUserFromStorage(): IUser {
     const user = localStorage.getItem('user');
-    if (user) {
-      return JSON.parse(user);
-    }
+    if (user) return JSON.parse(user);
+
+    // Usuario "vacío"
     return {
       userId: '',
       fullName: 'Sin autenticar',
@@ -59,6 +64,16 @@ export class AuthService extends HttpService {
     };
   }
 
+  /** Obtener snapshot del usuario actual */
+  getUserStorage(): IUser {
+    return this._user();
+  }
+
+  /** Actualizar usuario en memoria y storage */
+  updateUser(user: IUser) {
+    this._user.set(user);
+    localStorage.setItem('user', JSON.stringify(user));
+  }
 
   get token(): string | null {
     return localStorage.getItem('token');
@@ -75,19 +90,24 @@ export class AuthService extends HttpService {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('accesos');
+
+    // Resetear signal del usuario
+    this._user.set(this.loadUserFromStorage());
   }
 
   async login(data: { userName: string; password: string }) {
     try {
-
       const resp = await firstValueFrom(this.post<AuthResponse>(this.endpoints.login, data));
       if (resp.body?.success) {
-        // this.toastr.success(resp.body.message, 'Success');
+        // Guardar en signal y storage
+        if (resp.body.data?.user) {
+          this.updateUser(resp.body.data.user);
+        }
         return resp.body;
       }
       return null;
     } catch (error: any) {
-      console.log("🚀 ~ AuthService ~ login ~ error:", error)
+      console.log("🚀 ~ AuthService ~ login ~ error:", error);
       this.toastr.error(error?.error?.message || '', 'Error en login');
       return error.error;
     }
@@ -103,16 +123,14 @@ export class AuthService extends HttpService {
 
   async changePassword(data: { userId: string; current: string; newPassword: string }) {
     try {
-
       const resp = await firstValueFrom(this.put<AuthResponse>(this.endpoints.changePassword, data));
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');
         return resp.body;
       }
-
       return null;
     } catch (error: any) {
-      console.log("🚀 ~ AuthService ~ changePassword ~ error:", error)
+      console.log("🚀 ~ AuthService ~ changePassword ~ error:", error);
       this.toastr.error(error?.error?.message || '', 'Error al cambiar la contraseña');
       return null;
     }

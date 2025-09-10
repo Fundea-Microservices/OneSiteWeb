@@ -92,12 +92,12 @@ export default class UserPageComponent {
 
   async actualizarFoto() {
     if (!this.user?.userId) return;
-
     const nuevaFotoUrl = await this.fotoPerfilService.descargarFotoUsuario(this.user.userId);
     if (nuevaFotoUrl) {
-      // Actualizamos la URL de la imagen en el objeto del usuario
-      this.user.photoUrl = nuevaFotoUrl;
-      this.cdr.detectChanges(); // forzar renderizado
+      const updatedUser = { ...this.user, photoUrl: nuevaFotoUrl };
+      this.authService.updateUser(updatedUser); // 🔑 dispara actualización global
+      this.user = this.authService.getUserStorage();
+      this.cdr.detectChanges();
     }
   }
 
