@@ -80,7 +80,7 @@ export class FotoPerfilService {
       return URL.createObjectURL(response);
     } catch (error: any) {
       console.error("🚀 ~ FotoPerfilService ~ descargarFotoUsuario ~ error:", error);
-      this.toastr.error(error?.error?.message || 'No se pudo obtener la foto del usuario', 'Error');
+      // this.toastr.error(error?.error?.message || 'No se pudo obtener la foto del usuario', 'Error');
       return null;
     }
   }

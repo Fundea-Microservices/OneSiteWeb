@@ -7,7 +7,7 @@
   <a routerLink="/config/user" class="inline-flex items-center space-x-2">
     <!-- Imagen con tamaño fijo -->
     <span class="flex-shrink-0">
-      <img class="rounded-full w-10 h-10 object-cover" [src]="user().photoUrl || 'images/default-user.png'" alt="Usuario" />
+      <img class="rounded-full w-10 h-10 object-cover" [src]="conFoto() ? user().photoUrl || 'images/default-user.png' : 'images/default-user.png'" alt="Usuario" />
     </span>
     <br>
   </a>

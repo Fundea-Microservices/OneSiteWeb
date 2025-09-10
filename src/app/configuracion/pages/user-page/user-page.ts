@@ -19,6 +19,7 @@ export default class UserPageComponent {
   public authService = inject(AuthService);
   private fotoPerfilService = inject(FotoPerfilService);
   private cdr = inject(ChangeDetectorRef);
+  conFoto = signal(false)
 
   public user = this.authService.getUserStorage();
 
@@ -93,7 +94,8 @@ export default class UserPageComponent {
   async actualizarFoto() {
     if (!this.user?.userId) return;
     const nuevaFotoUrl = await this.fotoPerfilService.descargarFotoUsuario(this.user.userId);
-    if (nuevaFotoUrl) {
+    if (nuevaFotoUrl) {      
+      this.conFoto.set(true);
       const updatedUser = { ...this.user, photoUrl: nuevaFotoUrl };
       this.authService.updateUser(updatedUser); // 🔑 dispara actualización global
       this.user = this.authService.getUserStorage();
