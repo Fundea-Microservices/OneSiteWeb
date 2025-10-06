@@ -141,6 +141,24 @@ export const routes: Routes = [
                     }
                 ]
             },
+
+            {
+                path: 'flujo-fondos',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./flujo-fondos/pages/home-flujo-fondos/home-flujo-fondos.component'),
+                    },
+                    {
+                        path: 'catalogos',
+                        loadComponent: () => import('./flujo-fondos/pages/catalogos/catalogos.component'),
+                    },
+                    {
+                        path: '**',
+                        redirectTo: '',
+                    }
+                ]
+            },
         ]
     },
     {
