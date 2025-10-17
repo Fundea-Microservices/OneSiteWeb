@@ -112,10 +112,7 @@ export class AuthService extends HttpService {
       return error.error;
     }
   }
-
-  verify(data: any) {
-    return this.post(this.endpoints.verify, data);
-  }
+  
 
   getMenus(params?: { [key: string]: any }) {
     return this.get(this.endpoints.menus, params);

@@ -42,7 +42,7 @@ export class UpsertPlantillaComponent {
       const _ = this.key(); // provoca que el form se reinicie cada vez que cambia el key
       this.form.reset();
       this.mensaje.set('');
-      this.fileInput.nativeElement.value = '';
+      if(this.fileInput) this.fileInput.nativeElement.value = '';
     });
   }
 
