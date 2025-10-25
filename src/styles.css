@@ -1,14 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
+@import "bootstrap/dist/css/bootstrap.min.css";
 @import "tailwindcss";
 /* @import 'ngx-toastr/toastr.css'; */
 @import "preline/variants.css";
 
 .bg-custom-sidebar {
-    background-color: #2b3747;
+    background-color: #29384d;
 }
 
 .text-custom-sidebar {
-    color: #f3f4f6;
+    color: #c9ced7;
 }
 
 

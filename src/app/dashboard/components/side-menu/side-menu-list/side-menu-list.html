@@ -2,27 +2,69 @@
   <section class="app">
     <div class="sidebar">
       <nav class="sidebar-nav">
-        <ul class="nav nav-pills flex-column mx-1 px-1" id="menu"> @for (acceso of accesos; track acceso.accesoId) {
-          @if(acceso.showWeb && acceso.menu.active && acceso.active) { <li
-            class="nav-item mb-1 rounded-xl hover:bg-gray-700 "> <a class="nav-link d-flex align-items-center"
-              data-bs-toggle="collapse" href="#submenu{{acceso.accesoId}}" role="button" aria-expanded="false"
-              [style]="{color: acceso.menu.color || 'black'}"><ion-icon [name]="acceso.menu.icon"></ion-icon> <span
-                class="ml-2">{{acceso.menu.label}}</span> </a> @if (acceso.subMenus.length > 0) { <div
-              class="collapse ps-3" id="submenu{{acceso.accesoId}}" data-bs-parent="#menu"> @for (submenu of
-              acceso.subMenus; track submenu.accesoId) { @if(submenu.showWeb && submenu.menu.active && submenu.active) {
-              @if(!submenu.menu.reporteId) {
-          <li class="hover:bg-gray-600 text-sm active"> <a class="nav-link d-flex align-items-center"
-              [routerLink]="[submenu.menu.pathWeb]"><ion-icon [name]="submenu.menu.icon"></ion-icon> <span
-                class="ml-2">{{submenu.menu.label}}</span></a> </li> } @else { <li
-            class="hover:bg-gray-600 text-sm text-orange-600"> <a class="nav-link d-flex align-items-center text-red"
-              [routerLink]="['/','reportes', 'ejecutar', submenu.menu.reporteId]"><ion-icon
-                [name]="submenu.menu.icon"></ion-icon> <span class="ml-2">{{submenu.menu.label}}</span></a> </li> } } }
-    </div> } </li> } } <!-- Otros -->
-    <li class="nav-item d-flex mt-3 align-items-center rounded-lg hover:bg-gray-700"> <a (click)="logout()"
-        class="btn text-danger"> <ion-icon name="log-out-outline"></ion-icon> <span class="ml-2">Cerrar Sesión</span>
-      </a> </li>
-    </ul>
-    </nav>
-</div>
-</section>
+  <ul class="flex flex-col mx-1 px-1 side-menu">
+          @for (acceso of accesos; track acceso.accesoId) {
+            @if(acceso.showWeb && acceso.menu.active && acceso.active) {
+              <li class="mb-1 rounded-xl">
+                <button type="button"
+                        class="menu-toggle w-full flex items-center gap-2 py-2 px-2.5 text-left rounded-lg"
+                        (click)="toggle(acceso.accesoId)"
+                        [style]="{color: acceso.menu.color || 'black'}">
+                  <ion-icon [name]="acceso.menu.icon"></ion-icon>
+                  <span class="ml-2">{{acceso.menu.label}}</span>
+                  <svg class="ml-auto size-4 transition-transform duration-200 text-custom-sidebar"
+                       [class.rotate-180]="isOpen(acceso.accesoId)"
+                       xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+
+                @if (acceso.subMenus.length > 0) {
+            <div class="ps-1 overflow-hidden"
+                       [@expandCollapse]="isOpen(acceso.accesoId) ? 'expanded' : 'collapsed'">
+                    <ul class="flex flex-col">
+                      @for (submenu of acceso.subMenus; track submenu.accesoId) {
+                        @if(submenu.showWeb && submenu.menu.active && submenu.active) {
+                          @if(!submenu.menu.reporteId) {
+                            <li class="text-sm">
+                              <a class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md"
+                                 [routerLink]="[submenu.menu.pathWeb]"
+                                 routerLinkActive="is-active"
+                                 [routerLinkActiveOptions]="{ exact: true }">
+                                <ion-icon [name]="submenu.menu.icon"></ion-icon>
+                                <span class="ml-2">{{submenu.menu.label}}</span>
+                              </a>
+                            </li>
+                          }
+                          @else {
+                            <li class="text-sm">
+                              <a class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md"
+                                 [routerLink]="['/','reportes', 'ejecutar', submenu.menu.reporteId]"
+                                 routerLinkActive="is-active"
+                                 [routerLinkActiveOptions]="{ exact: true }">
+                                <ion-icon [name]="submenu.menu.icon"></ion-icon>
+                                <span class="ml-2">{{submenu.menu.label}}</span>
+                              </a>
+                            </li>
+                          }
+                        }
+                      }
+                    </ul>
+                  </div>
+                }
+              </li>
+            }
+          }
+
+          <!-- Otros -->
+          <li class="mt-3 rounded-lg hover:bg-gray-700">
+            <button type="button" (click)="logout()" class="w-full flex items-center gap-2 py-2 px-2.5 text-left text-red-600">
+              <ion-icon name="log-out-outline"></ion-icon>
+              <span class="ml-2">Cerrar Sesión</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </section>
 </div>
