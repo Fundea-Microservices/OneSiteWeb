@@ -28,8 +28,12 @@
             </div>
             <div class="col-auto">
                 <label for="inputPassword2" class=""></label><br>
-                <button type="button" (click)="fetchData()" class="btn btn-success mb-3">
-                    Buscar
+                <button type="button" (click)="fetchData()" class="btn btn-success mb-3 w-36" [disabled]="isLoading()">
+                    @if (isLoading()) {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando...
+                    } @else {
+                        Buscar
+                    }
                 </button>
             </div>
         </form>
