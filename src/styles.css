@@ -2,12 +2,13 @@
 @import "tailwindcss";
 /* @import 'ngx-toastr/toastr.css'; */
 @import "preline/variants.css";
-@source "../node_modules/preline/dist/*.js";
 
 .bg-custom-sidebar {
-    background-color: #1f2937;
+    background-color: #2b3747;
 }
 
 .text-custom-sidebar {
     color: #f3f4f6;
 }
+
+

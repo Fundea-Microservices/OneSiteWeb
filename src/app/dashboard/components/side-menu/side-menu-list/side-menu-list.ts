@@ -8,7 +8,7 @@ import { AccesoService } from '../../../../../services/acceso.service';
   selector: 'app-side-menu-list',
   imports: [RouterLink],
   templateUrl: './side-menu-list.html',
-  styleUrl: './side-menu-list.css',
+  // styleUrl: './side-menu-list.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -23,6 +23,7 @@ export class SideMenuListComponent {
 
   ngOnInit(): void {
     this.accesos = this.accesoService.getAccesosStorage() || [];
+    
   }
 
 
@@ -30,4 +31,5 @@ export class SideMenuListComponent {
     this.authService.logout();
     this.router.navigate(['/fundea/login']);
   }
+
 }

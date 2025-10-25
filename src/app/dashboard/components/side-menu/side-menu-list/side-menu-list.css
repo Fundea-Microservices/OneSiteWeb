@@ -1,146 +1,93 @@
-@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,600');
-
-body {
-  font-family: "Lato", sans-serif;
-  font-size: 100%;
-  overflow-y: scroll;
-  -ms-text-size-adjust: 100%;
-  -webkit-text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  background-color: #fefefe;
-}
-
-a {
-  text-decoration: none;
-  transition: all 0.6s ease;
-}
-
-a:hover {
-  transition: all 0.6s ease;
-}
-
-/* .app {
-  height: 100vh;
-} */
-
-/* -------------
-Sidebar
-----------------*/
+/* === Sidebar general === */
 .sidebar {
-  position: absolute;
-  margin-top: 78%;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  overflow: hidden;
-  transform: translateZ(0);
-  visibility: visible;
-  backface-visibility: hidden;
-  border-top: #cad0d1 1px solid;
+  background-color: #1f2937; /* gray-800 */
+  width: 250px;
+  min-height: 100vh;
+  padding: 1rem 0.5rem;
+  color: #e5e7eb; /* gray-300 */
 }
 
-.sidebar header {
-  background-color: #09f;
-  width: 100%;
-  display: block;
-  padding: 0.75em 1em;
-}
-
-/* -------------
-Sidebar Nav
-----------------*/
-.sidebar-nav {
-  position: fixed;
-  height: 100%;
-  font-weight: 400;
-  font-size: 1.2em;
-  overflow: hidden;
-  padding-bottom: 6em;
-  z-index: 9;
-  -webkit-overflow-scrolling: touch;
-}
-
-.sidebar-nav ul {
+.sidebar-menu {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: block;
 }
 
-.sidebar-nav ul li {
-  margin-left: 0;
-  padding-left: 0;
-  display: inline-block;
-  width: 100%;
+/* === Nivel 1 (principal) === */
+.sidebar-item {
+  margin-bottom: 0.25rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
-.sidebar-nav ul li a {
-  font-size: 0.75em;
-  padding: 1.05em 1em;
-  position: relative;
-  display: block;
-  transition: all 0.6s ease;
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.sidebar-nav ul li a:hover {
-  background-color: rgba(13, 28, 117, 0.2);
-  transition: all 0.6s ease;
-}
-
-.sidebar-nav ul li i {
-  font-size: 1.8em;
-  padding-right: 0.5em;
-  width: 9em;
-  display: inline;
-  vertical-align: middle;
-}
-
-.sidebar-nav ul li ion-icon {
-  font-size: 1.8em;
-  padding-right: 0.5em;
-  width: 1em;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-/* -------------
-Sidebar: icons
-----------------*/
-/* .sidebar-nav > ul > li > a::after {
-  content: '\f125';
-  font-family: 'Ionicons'; 
-  font-size: 0.5em;
-  width: 10px;
+.sidebar-link:hover {
+  background-color: #374151; /* gray-700 */
   color: #fff;
-  position: absolute;
-  right: 0.75em;
-  top: 45%;
-} */
-
-/* -------------
-Nav-Flyout
-----------------*/
-.sidebar-nav .nav-flyout {
-  position: absolute;
-  background-color: white;
-  z-index: 9;
-  left: 2.5em;
-  top: 0;
-  height: 100%;
-  transform: translateX(100%);
-  transition: all 0.5s ease;
 }
 
-.sidebar-nav .nav-flyout a:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+/* Icono de flecha */
+.sidebar-chevron {
+  transition: transform 0.2s ease;
+}
+a[aria-expanded="true"] .sidebar-chevron {
+  transform: rotate(180deg);
 }
 
-/* -------------
-Hover
-----------------*/
-.sidebar-nav ul > li:hover .nav-flyout {
-  transform: translateX(0);
-  transition: all 0.5s ease;
+/* === Nivel 2 (submenús) === */
+.submenu {
+  padding-left: 1.25rem;
+}
+
+.submenu ul {
+  list-style: none;
+  padding: 0.25rem 0 0.25rem 0;
+  margin: 0;
+}
+
+.submenu-item {
+  border-radius: 0.375rem;
+}
+
+.submenu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9ca3af; /* gray-400 */
+  padding: 0.4rem 0.75rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  border-radius: 0.375rem;
+}
+
+.submenu-link:hover {
+  background-color: #4b5563; /* gray-600 */
+  color: #fff;
+}
+
+/* Submenú de reportes con color especial */
+.submenu-item.reporte .submenu-link {
+  color: #f97316; /* orange-500 */
+}
+
+/* === Logout === */
+.sidebar-item.logout .sidebar-link {
+  color: #ef4444; /* red-500 */
+}
+
+.sidebar-item.logout .sidebar-link:hover {
+  background-color: #7f1d1d; /* red-900 */
+  color: white;
 }
