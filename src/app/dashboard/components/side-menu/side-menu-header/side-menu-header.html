@@ -3,22 +3,26 @@
 
   <img src="logos/OneSite_HF_fondo_blanco.svg" alt="Logo" width="160" />
 </div>
-<div id="profile" class="px-4 flex items-center">
-  <a routerLink="/config/user" class="inline-flex items-center space-x-2">
-    <!-- Imagen con tamaño fijo -->
-    <span class="flex-shrink-0">
-      <img class="rounded-full w-10 h-10 object-cover" [src]="conFoto() ? user().photoUrl || 'images/default-user.png' : 'images/default-user.png'" alt="Usuario" />
-    </span>
-    <br>
-  </a>
-</div>
-
-<div class="px-4 flex flex-col items-start">
-  <a routerLink="/config/user"
-      class="font-bold text-sm truncate sm:whitespace-normal sm:break-words pt-2"
-      [style]="{ 'font-size': user().name1.length > 20 ? '0.75rem' : '', }">
-      {{ user().name1 || 'Usuario' }} {{ user().lastName1 || '' }}
+<div class="flex flex-col items-center justify-center text-center">
+  <div id="profile" class="mb-2">
+    <a routerLink="/config/user">
+      <img
+        class="rounded-full w-14 h-14 max-w-14 object-cover"
+        [src]="conFoto() ? user().photoUrl || 'images/default-user.png' : 'images/default-user.png'"
+        alt="Usuario"
+      />
     </a>
-  <!-- Nombre adaptable -->
-  <p class="text-slate-700 truncate text-xs">{{ user().rol.name || 'Rol desconocido' }}</p>
+  </div>
+
+  <a
+    routerLink="/config/user"
+    class="font-bold text-sm truncate sm:whitespace-normal sm:break-words"
+    [style]="{ 'font-size': user().name1.length > 20 ? '0.75rem' : '' }"
+  >
+    {{ user().name1 || 'Usuario' }} {{ user().lastName1 || '' }}
+  </a>
+
+  <p class="text-slate-700 truncate text-xs">
+    {{ user().rol.name || 'Rol desconocido' }}
+  </p>
 </div>
