@@ -35,7 +35,6 @@ Sidebar
   height: 100%;
   top: 0;
   overflow: hidden;
-  background-color: white;
   transform: translateZ(0);
   visibility: visible;
   backface-visibility: hidden;
@@ -54,7 +53,6 @@ Sidebar Nav
 ----------------*/
 .sidebar-nav {
   position: fixed;
-  background-color: white;
   height: 100%;
   font-weight: 400;
   font-size: 1.2em;

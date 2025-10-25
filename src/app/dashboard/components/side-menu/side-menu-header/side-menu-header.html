@@ -3,7 +3,7 @@
 
   <img src="logos/OneSite_HF_fondo_blanco.svg" alt="Logo" width="160" />
 </div>
-<div class="flex flex-col items-center justify-center text-center">
+<div class="flex flex-col items-center justify-center text-center border-b-2 mb-2">
   <div id="profile" class="mb-2">
     <a routerLink="/config/user">
       <img
@@ -22,7 +22,7 @@
     {{ user().name1 || 'Usuario' }} {{ user().lastName1 || '' }}
   </a>
 
-  <p class="text-slate-700 truncate text-xs">
+  <p class="text-custom-sidebar truncate text-xs">
     {{ user().rol.name || 'Rol desconocido' }}
   </p>
 </div>
