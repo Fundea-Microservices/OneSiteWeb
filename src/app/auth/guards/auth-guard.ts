@@ -12,6 +12,7 @@ export class AuthGuard implements CanActivate {
   if (this.authService.isAuthenticated()) {
     return true;
   }
-  return this.router.createUrlTree(['/']);
+  // Si no está autenticado, envía al login de Fundea
+  return this.router.createUrlTree(['/fundea/login']);
 }
 };

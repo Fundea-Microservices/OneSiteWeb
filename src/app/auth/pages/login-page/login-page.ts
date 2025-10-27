@@ -103,7 +103,7 @@ export default class LoginPageComponent {
           }
         }
         this.loading.set(false);
-        this.router.navigate(['/home']);
+        this.router.navigate(['/fundea']);
       } else {
         this.loading.set(false);
         this.errorObj.set({

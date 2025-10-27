@@ -5,7 +5,9 @@ import { AccessGuard } from './auth/guards/access-guard';
 export const routes: Routes = [
     {
         path: '',
-        loadComponent: () => import('./shared/pages/home-page/home-page.component'),
+        // loadComponent: () => import('./shared/pages/home-page/home-page.component'),
+        redirectTo: '/fundea',
+        pathMatch: 'full',
     },
     {
         path: 'fundea/login',
@@ -21,7 +23,7 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
         children: [
             {
-                path: 'home',
+                path: 'fundea',
                 loadComponent: () => import('./dashboard/pages/dashboard-page/dashboard-page'),
             },
             {
