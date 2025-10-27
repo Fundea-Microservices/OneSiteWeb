@@ -3,10 +3,12 @@ import { AuthService } from '../../../../services/auth.service';
 import { Router } from '@angular/router';
 import { IMenu } from '../../../../interfaces/auth';
 import { AccesoService } from '../../../../services/acceso.service';
+import { UpperCasePipe } from '@angular/common';
+import { ConfiguracionService } from '../../../../services/configuracion.service';
 
 @Component({
   selector: 'app-login-page',
-  imports: [],
+  imports: [UpperCasePipe],
   templateUrl: './login-page.html',
   styleUrl: './login-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -14,6 +16,7 @@ import { AccesoService } from '../../../../services/acceso.service';
 export default class LoginPageComponent {
 
   public authService = inject(AuthService)
+  public configService = inject(ConfiguracionService)
   public accesoService = inject(AccesoService)
   public router = inject(Router)
 
@@ -26,6 +29,44 @@ export default class LoginPageComponent {
     code: 0,
     isError: false
   });
+
+  entorno = signal({
+    ambiente: 'SIN DEFINIR',
+    version: '1.0.0',
+    textColor: '#3c5ce8',
+    bgColor: '#d1d6f0'
+  });
+
+  ngOnInit() {
+    this.fetchData();
+  }
+
+  async fetchData() {
+    // Buscamos los parámetros de configuración inicial si es que hay
+    let entornoAmbiente = await this.configService.getConfigByKey('entorno_ambiente');
+    let entornoColor = await this.configService.getConfigByKey('entorno_color');
+    let entornoColorFondo = await this.configService.getConfigByKey('entorno_color_fondo');
+
+    if(entornoAmbiente && entornoAmbiente.data) {
+      this.entorno.set({
+        ...this.entorno(),
+        ambiente: String(entornoAmbiente.data.value)
+      });
+    }
+    if(entornoColor && entornoColor.data) {
+      this.entorno.set({
+        ...this.entorno(),
+        textColor: String(entornoColor.data.value)
+      });
+    }
+    if(entornoColorFondo && entornoColorFondo.data) {
+      this.entorno.set({
+        ...this.entorno(),
+        bgColor: String(entornoColorFondo.data.value)
+      });
+    }
+    
+  }
 
   loading = signal(false);
 
