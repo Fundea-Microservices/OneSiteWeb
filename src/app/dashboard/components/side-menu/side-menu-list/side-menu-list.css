@@ -2,7 +2,7 @@
 :host .side-menu {
 	/* Reference colors from styles.css */
 	--sidebar-bg: #2b3747;        /* .bg-custom-sidebar */
-	--sidebar-text: #ced4df;      /* .text-custom-sidebar */
+	--sidebar-text: #d7d7d7;      /* .text-custom-sidebar */
 	--sidebar-hover: #36465c;     /* hover shade */
 	--sidebar-active: #41556f;    /* active shade */
 }

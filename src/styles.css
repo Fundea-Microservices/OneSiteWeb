@@ -9,7 +9,11 @@
 }
 
 .text-custom-sidebar {
-    color: #c9ced7;
+    color: #636467;
+}
+
+.bg-custom-sidebar-header {
+    background-color: #f2f2f2;
 }
 
 

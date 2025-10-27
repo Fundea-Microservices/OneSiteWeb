@@ -25,22 +25,22 @@
                 @if(submenu.showWeb && submenu.menu.active && submenu.active) {
                 @if(!submenu.menu.reporteId) {
                 <li class="text-sm">
-                  <a class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md"
+                  <span class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md cursor-pointer"
                     [routerLink]="[submenu.menu.pathWeb]" routerLinkActive="is-active"
                     [routerLinkActiveOptions]="{ exact: true }">
                     <ion-icon [name]="submenu.menu.icon"></ion-icon>
                     <span class="ml-2">{{submenu.menu.label}}</span>
-                  </a>
+                  </span>
                 </li>
                 }
                 @else {
                 <li class="text-sm">
-                  <a class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md"
+                  <span class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md cursor-pointer"
                     [routerLink]="['/','reportes', 'ejecutar', submenu.menu.reporteId]" routerLinkActive="is-active"
                     [routerLinkActiveOptions]="{ exact: true }">
                     <ion-icon [name]="submenu.menu.icon"></ion-icon>
                     <span class="ml-2">{{submenu.menu.label}}</span>
-                  </a>
+                  </span>
                 </li>
                 }
                 }
