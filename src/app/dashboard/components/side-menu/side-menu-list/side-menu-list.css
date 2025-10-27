@@ -12,6 +12,8 @@
 	color: var(--sidebar-text);
 }
 :host .menu-toggle:hover {
+  border: solid 0px var(--sidebar-hover);
+  border-radius: 8px;
 	background-color: var(--sidebar-hover);
 }
 

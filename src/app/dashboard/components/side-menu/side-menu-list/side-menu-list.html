@@ -2,63 +2,63 @@
   <section class="app">
     <div class="sidebar">
       <nav class="sidebar-nav">
-  <ul class="flex flex-col mx-1 px-1 side-menu">
+        <ul class="flex flex-col mx-1 px-1 side-menu">
           @for (acceso of accesos; track acceso.accesoId) {
-            @if(acceso.showWeb && acceso.menu.active && acceso.active) {
-              <li class="mb-1 rounded-xl">
-                <button type="button"
-                        class="menu-toggle w-full flex items-center gap-2 py-2 px-2.5 text-left rounded-lg"
-                        (click)="toggle(acceso.accesoId)"
-                        [style]="{color: acceso.menu.color || 'black'}">
-                  <ion-icon [name]="acceso.menu.icon"></ion-icon>
-                  <span class="ml-2">{{acceso.menu.label}}</span>
-                  <svg class="ml-auto size-4 transition-transform duration-200 text-custom-sidebar"
-                       [class.rotate-180]="isOpen(acceso.accesoId)"
-                       xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m6 9 6 6 6-6"/>
-                  </svg>
-                </button>
+          @if(acceso.showWeb && acceso.menu.active && acceso.active) {
+          <li class="mb-1 rounded-xl">
+            <button type="button" class="menu-toggle w-full flex items-center gap-2 py-2 px-2.5 text-left rounded-lg"
+              (click)="toggle(acceso.accesoId)" [style]="{color: acceso.menu.color || 'black'}">
+              <ion-icon [name]="acceso.menu.icon"></ion-icon>
+              <span class="ml-2">{{acceso.menu.label}}</span>
+              <svg class="ml-auto size-4 transition-transform duration-200 text-custom-sidebar"
+                [class.rotate-180]="isOpen(acceso.accesoId)" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
 
-                @if (acceso.subMenus.length > 0) {
-            <div class="ps-1 overflow-hidden"
-                       [@expandCollapse]="isOpen(acceso.accesoId) ? 'expanded' : 'collapsed'">
-                    <ul class="flex flex-col">
-                      @for (submenu of acceso.subMenus; track submenu.accesoId) {
-                        @if(submenu.showWeb && submenu.menu.active && submenu.active) {
-                          @if(!submenu.menu.reporteId) {
-                            <li class="text-sm">
-                              <a class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md"
-                                 [routerLink]="[submenu.menu.pathWeb]"
-                                 routerLinkActive="is-active"
-                                 [routerLinkActiveOptions]="{ exact: true }">
-                                <ion-icon [name]="submenu.menu.icon"></ion-icon>
-                                <span class="ml-2">{{submenu.menu.label}}</span>
-                              </a>
-                            </li>
-                          }
-                          @else {
-                            <li class="text-sm">
-                              <a class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md"
-                                 [routerLink]="['/','reportes', 'ejecutar', submenu.menu.reporteId]"
-                                 routerLinkActive="is-active"
-                                 [routerLinkActiveOptions]="{ exact: true }">
-                                <ion-icon [name]="submenu.menu.icon"></ion-icon>
-                                <span class="ml-2">{{submenu.menu.label}}</span>
-                              </a>
-                            </li>
-                          }
-                        }
-                      }
-                    </ul>
-                  </div>
+            @if (acceso.subMenus.length > 0) {
+            <div class="ps-1 overflow-hidden" [@expandCollapse]="isOpen(acceso.accesoId) ? 'expanded' : 'collapsed'">
+              <ul class="flex flex-col">
+                @for (submenu of acceso.subMenus; track submenu.accesoId) {
+                @if(submenu.showWeb && submenu.menu.active && submenu.active) {
+                @if(!submenu.menu.reporteId) {
+                <li class="text-sm">
+                  <a class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md"
+                    [routerLink]="[submenu.menu.pathWeb]" routerLinkActive="is-active"
+                    [routerLinkActiveOptions]="{ exact: true }">
+                    <ion-icon [name]="submenu.menu.icon"></ion-icon>
+                    <span class="ml-2">{{submenu.menu.label}}</span>
+                  </a>
+                </li>
                 }
-              </li>
+                @else {
+                <li class="text-sm">
+                  <a class="menu-link flex items-center py-2 px-2 text-custom-sidebar rounded-md"
+                    [routerLink]="['/','reportes', 'ejecutar', submenu.menu.reporteId]" routerLinkActive="is-active"
+                    [routerLinkActiveOptions]="{ exact: true }">
+                    <ion-icon [name]="submenu.menu.icon"></ion-icon>
+                    <span class="ml-2">{{submenu.menu.label}}</span>
+                  </a>
+                </li>
+                }
+                }
+                }
+              </ul>
+            </div>
             }
+          </li>
+          }
           }
 
+          <div class="border-b-1 border-gray-400 mt-3">
+
+          </div>
           <!-- Otros -->
           <li class="mt-3 rounded-lg hover:bg-gray-700">
-            <button type="button" (click)="logout()" class="w-full flex items-center gap-2 py-2 px-2.5 text-left text-red-600">
+            <button type="button" (click)="logout()"
+              class="w-full flex items-center gap-2 py-2 px-2.5 text-left text-red-300">
               <ion-icon name="log-out-outline"></ion-icon>
               <span class="ml-2">Cerrar Sesión</span>
             </button>
