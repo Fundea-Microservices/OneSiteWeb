@@ -4,7 +4,7 @@
   width: 21cm;
   /* Tamaño carta */
   min-height: 13.5cm;
-  margin: 0 auto 10mm;
+  margin: 10mm auto 2mm;
   padding: 8mm;
   background-color: white;
   /* Cambiado de #e8e8e8 a blanco */
@@ -394,7 +394,7 @@
 }
 
 .tipo-copia {
-  padding: 0 4mm;
+  padding: 0 0;
   font-size: 10px;
   font-weight: bold;
   color: #000;

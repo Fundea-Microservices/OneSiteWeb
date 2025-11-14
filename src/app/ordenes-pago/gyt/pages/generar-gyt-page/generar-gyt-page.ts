@@ -48,33 +48,38 @@ export default class GenerarGytPage {
 
   async buscarCliente() {
     if (!this.formularioValido) {
-      this.toastr.warning('Complete todos los campos requeridos', 'Advertencia');
+      this.toastr.warning('Por favor complete todos los campos', 'Datos incompletos');
       return;
     }
 
     this.cargandoCliente.set(true);
     
-    // Simulación de API
-    setTimeout(() => {
-      // Datos simulados del cliente
-      const clienteSimulado: Cliente = {
+    try {
+      // Simular búsqueda del cliente
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const clienteData: Cliente = {
         nombres: 'Juan Carlos',
         apellidos: 'García López',
         tipoIdentificacion: 'DPI',
         numeroIdentificacion: this.documentoCliente(),
-        telefono: '+502 1234 5678',
+        telefono: '+502 5555-1234',
         correo: 'juan.garcia@email.com',
-        montoPrestamo: 25000,
+        montoPrestamo: 25000.00,
         numeroOperacion: this.numeroOperacion()
       };
-
-      this.cliente.set(clienteSimulado);
+      
+      this.cliente.set(clienteData);
+      this.toastr.success('Cliente encontrado exitosamente', 'Búsqueda completada');
+      
+    } catch (error) {
+      this.toastr.error('No se pudo encontrar el cliente', 'Error de búsqueda');
+    } finally {
       this.cargandoCliente.set(false);
-      this.toastr.success('Cliente encontrado correctamente', 'Éxito');
-    }, 1500);
+    }
   }
 
-  async generarOrdenPago() {
+  async procesarOrden() {
     const clienteData = this.cliente();
     if (!clienteData) return;
 
@@ -142,62 +147,81 @@ export default class GenerarGytPage {
       
       // Esperar un momento para que se renderice completamente
       setTimeout(() => {
-        // Obtener el HTML renderizado del componente
-        const elementoHTML = componentRef.location.nativeElement;
-        let htmlContent = elementoHTML.outerHTML;
+        try {
+          // Obtener el HTML renderizado del componente
+          const elementoHTML = componentRef.location.nativeElement;
+          let htmlContent = elementoHTML.outerHTML;
+          
+          // Obtener la URL base para corregir las rutas de las imágenes
+          const baseUrl = window.location.origin;
         
-        // Obtener la URL base para corregir las rutas de las imágenes
-        const baseUrl = window.location.origin;
-        
-        // Reemplazar las rutas relativas de las imágenes con rutas absolutas
-        htmlContent = htmlContent.replace(/src="logos\//g, `src="${baseUrl}/logos/`);
-        
-        // Abrir ventana nueva solo con el componente
-        this.abrirVentanaImpresion(htmlContent, orden.id);
-        
-        // Limpiar el componente temporal
-        componentRef.destroy();
-        
-        this.toastr.success('Ventana de impresión abierta. Use Ctrl+P para imprimir', 'Listo');
+          // Reemplazar las rutas relativas de las imágenes con rutas absolutas
+          const htmlContentWithImages = htmlContent.replace(/src="logos\//g, `src="${baseUrl}/logos/`);
+          
+          this.abrirVentanaImpresion(htmlContentWithImages);
+          
+          // Limpiar el componente temporal
+          componentRef.destroy();
+          
+        } catch (error) {
+          this.toastr.error('Error al generar la boleta', 'Error');
+          console.error('Error:', error);
+        }
       }, 500);
       
     } catch (error) {
-      console.error('Error abriendo ventana de impresión:', error);
-      this.toastr.error('Error al abrir la ventana de impresión', 'Error');
+      this.toastr.error('Error al crear el componente', 'Error');
+      console.error('Error:', error);
     }
   }
 
-  private abrirVentanaImpresion(htmlContent: string, ordenId: string) {
-    const ventana = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
+  private abrirVentanaImpresion(htmlContentWithImages: string) {
+    const ventana = window.open('', '_blank', 'width=800,height=600');
+    
     if (ventana) {
-      // Obtener la URL base para las rutas de assets
-      const baseUrl = window.location.origin;
-      
-      // Reemplazar las rutas relativas de las imágenes con rutas absolutas
-      const htmlContentWithImages = htmlContent.replace(/src="logos\//g, `src="${baseUrl}/logos/`);
-      
       ventana.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Boleta GYT - Orden ${ordenId}</title>
-          <meta charset="utf-8">
+          <meta charset="UTF-8">
+          <title>Boleta de Orden de Pago</title>
           <style>
-            /* Estilos exactos para replicar la imagen de la boleta GYT */
+            @page {
+              size: A4;
+              margin: 0cm; /* Sin márgenes de página - cada boleta controla sus márgenes */
+            }
+            
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 0; /* Sin padding - cada boleta tiene su margen */
+              background: white;
+              font-size: 9px;
+              line-height: 1.2;
+            }
 
+            /* Estilos exactos del componente orden-gyt.component.css con escala 80% */
+            
             .boleta-container {
               width: 21cm;
-              /* Tamaño carta */
               min-height: 13.5cm;
-              margin: 0 auto 10mm;
+              margin: 3cm auto 2mm; /* 3cm margen superior para cada boleta */
               padding: 8mm;
               background-color: white;
-              /* Cambiado de #e8e8e8 a blanco */
               border: 2px solid #000;
               font-family: Arial, sans-serif;
               font-size: 9px;
               color: #000;
               position: relative;
+              transform: scale(0.8);
+              transform-origin: top center;
+              page-break-inside: avoid;
+              page-break-before: always; /* Forzar nueva página para cada boleta */
+            }
+
+            /* Primera boleta sin salto de página */
+            .boleta-container:first-of-type {
+              page-break-before: auto; /* La primera boleta no necesita salto */
             }
 
             /* Header con logos */
@@ -220,20 +244,13 @@ export default class GenerarGytPage {
               width: 15mm;
               height: 15mm;
               background-color: #666;
-              /* Placeholder para logo del banco */
               border: 1px solid #333;
               border-radius: 6px;
-              /* Bordes redondeados */
               display: flex;
               align-items: center;
               justify-content: center;
               font-size: 6px;
               color: white;
-            }
-
-            .logo-placeholder::before {
-              text-align: center;
-              line-height: 1.2;
             }
 
             .banco-text {
@@ -263,9 +280,7 @@ export default class GenerarGytPage {
               background-color: #000;
               color: white;
               padding: 2.5mm 6mm;
-              /* Reducido de 3mm 8mm */
               border-radius: 18px;
-              /* Aumentado para mantener la forma ovalada */
               display: flex;
               align-items: center;
               gap: 3mm;
@@ -285,10 +300,6 @@ export default class GenerarGytPage {
               font-weight: bold;
             }
 
-            .fundea-logo-placeholder::before {
-              content: "F";
-            }
-
             .fundea-text {
               font-size: 12px;
               font-weight: bold;
@@ -300,7 +311,7 @@ export default class GenerarGytPage {
               margin-bottom: 4mm;
             }
 
-            /* Campos horizontales - Label a la izquierda, valor a la derecha como en la imagen */
+            /* Campos horizontales */
             .campo-horizontal {
               display: flex;
               margin-bottom: 1mm;
@@ -311,80 +322,64 @@ export default class GenerarGytPage {
               background-color: #000;
               color: white;
               padding: 1mm 1.5mm;
-              /* Reducido de 1.5mm 2mm */
               font-size: 9px;
-              /* Aumentado de 7px */
               font-weight: bold;
               text-transform: uppercase;
               margin: 0;
               border: 1px solid #000;
               border-right: none;
               border-radius: 6px 0 0 6px;
-              /* Bordes redondeados solo a la izquierda */
               letter-spacing: 0.3px;
               white-space: nowrap;
               display: flex;
               align-items: center;
               min-width: 25%;
-              /* Ancho fijo para los labels */
             }
 
             .campo-horizontal .campo-value {
               border: 1px solid #000;
               padding: 1.5mm;
-              /* Reducido de 2mm */
               background-color: white;
               font-size: 11px;
-              /* Aumentado de 9px */
               color: #000;
               display: flex;
               align-items: center;
               margin: 0;
               font-weight: normal;
               border-radius: 0 4px 4px 0;
-              /* Bordes redondeados solo a la derecha */
               flex: 1;
-              /* Toma el resto del espacio */
             }
 
             .campo-horizontal .campo-value-2 {
               border: 1px solid #000;
               padding: 1.5mm;
-              /* Reducido de 2mm */
               background-color: white;
               font-size: 11px;
-              /* Aumentado de 9px */
               color: #000;
               display: flex;
               align-items: center;
               margin: 0;
               font-weight: normal;
               border-radius: 0 4px 4px 0;
-              /* Bordes redondeados solo a la derecha */
               flex: 1;
-              /* Toma el resto del espacio */
             }
 
             .campo-horizontal .campo-label-2 {
               background-color: #000;
               color: white;
               padding: 1mm 1.5mm;
-              /* Reducido de 1.5mm 2mm */
               font-size: 9px;
-              /* Aumentado de 7px */
               font-weight: bold;
               text-transform: uppercase;
               margin: 0;
               border: 1px solid #000;
               border-right: none;
               border-radius: 6px 0 0 6px;
-              /* Bordes redondeados solo a la izquierda */
               letter-spacing: 0.3px;
               white-space: nowrap;
               display: flex;
               align-items: center;
               min-width: 12%;
-              /* Ancho fijo para los labels */
             }
 
             /* Filas que contienen múltiples campos */
@@ -404,11 +399,8 @@ export default class GenerarGytPage {
               background-color: white;
               border: 1px solid #000;
               border-radius: 6px;
-              /* Bordes redondeados */
               padding: 2.5mm;
-              /* Reducido de 3mm */
               font-size: 10px;
-              /* Aumentado de 8px */
               line-height: 1.3;
               margin-bottom: 4mm;
               text-align: justify;
@@ -429,30 +421,19 @@ export default class GenerarGytPage {
               flex-direction: column;
               border: 1px solid #000;
               border-radius: 6px;
-              /* Bordes redondeados */
               background-color: white;
               min-height: 25mm;
               overflow: hidden;
-              /* Para que los elementos internos respeten el border-radius */
             }
 
             .huella-box {
               flex: 0.45;
-              /* Más pequeño que las firmas */
             }
 
             .testigo-box {
               flex: 1.3;
-              display: flex;
-              flex-direction: column;
-              /* Bordes redondeados */
-              background-color: white;
-              min-height: 25mm;
-              overflow: hidden;
-              /* Para que los elementos internos respeten el border-radius */
             }
 
-            /* DPI Testigo como campo horizontal */
             .testigo-dpi-horizontal {
               display: flex;
               align-items: stretch;
@@ -462,32 +443,26 @@ export default class GenerarGytPage {
               background-color: #000;
               color: white;
               padding: 1mm 1.5mm;
-              /* Reducido de 1.5mm 2mm */
               font-size: 8px;
-              /* Un poco más pequeño que los campos normales */
               font-weight: bold;
               text-transform: uppercase;
               margin: 0;
               border: 1px solid #000;
               border-right: none;
               border-radius: 4px 0 0 4px;
-              /* Bordes redondeados solo a la izquierda */
               letter-spacing: 0.3px;
               white-space: nowrap;
               display: flex;
               align-items: center;
               min-width: 30%;
-              /* Un poco más ancho para "DPI TESTIGO:" */
             }
 
             .testigo-dpi-area {
               border: 1px solid #000;
               background-color: white;
               border-radius: 0 4px 4px 0;
-              /* Bordes redondeados solo a la derecha */
               flex: 1;
               min-height: 6mm;
-              /* Altura específica para el DPI */
               margin: 0;
             }
 
@@ -506,32 +481,19 @@ export default class GenerarGytPage {
 
             .firma-label {
               font-size: 9px;
-              /* Aumentado de 7px */
               font-weight: bold;
               text-align: center;
               color: white;
               background-color: #000;
               padding: 1mm;
-              /* Reducido de 1.5mm */
               margin: 0;
               text-transform: uppercase;
               letter-spacing: 0.3px;
             }
 
-            .firma-box-testigo {
-              flex: 1.3;
-              display: flex;
-              flex-direction: column;
-              border: 1px solid #000;
-              border-radius: 6px;
-              /* Bordes redondeados */
-              background-color: white;
-              min-height: 25mm; /* Igualado con las otras cajas de firma */
-            }
-
             .firma-area-testigo {
               flex: 1;
-              min-height: 18mm; /* Reducido para hacer espacio al margen superior */
+              min-height: 18mm;
               background-color: white;
               border: 1px solid #000;
               border-radius: 6px 6px 0 0;
@@ -540,12 +502,11 @@ export default class GenerarGytPage {
               justify-content: center;
               color: #999;
               font-size: 6px;
-              margin-top: 1mm; /* Espacio entre DPI TESTIGO y FIRMA TESTIGO */
+              margin-top: 1mm;
             }
 
             .firma-label-testigo {
               font-size: 9px;
-              /* Aumentado de 7px */
               font-weight: bold;
               text-align: center;
               color: white;
@@ -553,7 +514,6 @@ export default class GenerarGytPage {
               border: 1px solid #000;
               border-radius: 0 0 6px 6px;
               padding: 1mm;
-              /* Reducido de 1.5mm */
               margin: 0;
               text-transform: uppercase;
               letter-spacing: 0.3px;
@@ -579,106 +539,67 @@ export default class GenerarGytPage {
             }
 
             .tipo-copia {
-              padding: 0 4mm;
+              padding: 0 0;
               font-size: 10px;
               font-weight: bold;
               color: #000;
               background-color: white;
-              /* Cambiado de #e8e8e8 a blanco */
               text-align: center;
             }
 
-            /* Estilos para impresión */
+            /* Estilos para impresión con márgenes correctos y escala 80% */
             @media print {
+              body {
+                font-size: 9px !important;
+                padding: 0 !important; /* Sin padding - cada boleta tiene su margen */
+                margin: 0 !important;
+              }
+
               .boleta-container {
-                margin: 0;
-                padding: 6mm;
-                border: 1px solid #000;
-                page-break-after: always;
-                background-color: white;
-                /* Cambiado de #e8e8e8 a blanco */
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                width: 100% !important;
+                margin: 3cm auto 8mm !important; /* 3cm margen superior para cada boleta */
+                padding: 8mm !important;
+                border: 2px solid #000 !important;
+                page-break-before: always !important; /* Forzar nueva página */
+                page-break-inside: avoid !important;
+                background-color: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                min-height: 13.5cm !important;
+                box-sizing: border-box !important;
+                transform: scale(0.8) !important;
+                transform-origin: top center !important;
               }
 
-              .header-logos,
-              .info-principal,
-              .seccion-firmas {
-                break-inside: avoid;
+              /* Primera boleta sin salto de página */
+              .boleta-container:first-of-type {
+                page-break-before: auto !important;
               }
 
-              .separador-copia {
-                break-inside: avoid;
-                page-break-before: avoid;
-              }
-
-              /* Asegurar que los colores se impriman correctamente */
-              .campo-horizontal .campo-label,
-              .logo-fundea,
-              .firma-label,
-              .logo-placeholder {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-
-              /* Ocultar elementos que no deben imprimirse */
-              .no-print {
-                display: none !important;
-              }
-            }
-
-            /* Estilos para impresión - Forzar una página */
-            @media print {
-              @page {
-                size: A4;
-                margin: 8mm;
-              }
-              
-              body { 
-                margin: 0; 
-                padding: 0; 
-                background: white;
-                font-size: 7px; /* Aún más pequeño para impresión */
-              }
-              
-              .boleta-container {
-                margin: 0 0 3mm 0; /* Espacio mínimo entre boletas */
-                padding: 3mm;
-                border: 1px solid #000;
-                page-break-inside: avoid;
-                background-color: white;
-                box-sizing: border-box;
-                width: 100%;
-                max-height: none;
-              }
-              
-              /* Evitar saltos de página innecesarios */
+              /* Evitar saltos de página */
               .header-logos,
               .info-principal,
               .seccion-firmas,
-              .separador-copia {
-                break-inside: avoid;
-                page-break-inside: avoid;
+              .separador-copia,
+              .campo-horizontal,
+              .campo-row {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
               }
-              
-              /* La primera boleta y separador juntos */
-              .boleta-container:first-of-type + .separador-copia {
-                page-break-before: avoid;
-              }
-              
-              /* La segunda boleta y separador juntos */
-              .boleta-container:last-of-type + .separador-copia {
-                page-break-before: avoid;
-              }
-              
-              /* Asegurar que los colores se impriman correctamente */
+
+              /* Asegurar colores en impresión */
               .campo-horizontal .campo-label,
+              .campo-horizontal .campo-label-2,
               .logo-fundea,
               .firma-label,
               .firma-label-testigo,
               .testigo-dpi-label {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+
+              .no-print {
+                display: none !important;
               }
             }
           </style>
@@ -686,7 +607,6 @@ export default class GenerarGytPage {
         <body>
           ${htmlContentWithImages}
           <script>
-            // Enfocar la ventana
             window.focus();
             
             // Mensaje para el usuario
@@ -694,7 +614,7 @@ export default class GenerarGytPage {
             
             // Agregar mensaje informativo
             const mensaje = document.createElement('div');
-            mensaje.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #333; color: white; padding: 10px; border-radius: 5px; z-index: 1000; font-size: 12px;';
+            mensaje.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #333; color: white; padding: 10px; border-radius: 5px; z-index: 1000; font-size: 12px; font-family: Arial;';
             mensaje.innerHTML = 'Presione <strong>Ctrl+P</strong> para imprimir';
             document.body.appendChild(mensaje);
             
