@@ -1,0 +1,211 @@
+<!-- Boleta estilo G&T/FUNDEA con títulos a la izquierda como en la imagen -->
+<div class="boleta-container">
+  <!-- Header con logos -->
+  <div class="header-logos">
+    <div class="logo-banco">
+      <div class="logo-placeholder">
+        <img src="logos/gyt_gris.png" style="height: 9em;" alt="">
+      </div>
+      <div class="banco-text">
+        <div class="banco-nombre">BANCO</div>
+        <div class="banco-continental">G&T CONTINENTAL</div>
+      </div>
+    </div>
+    <div class="logo-fundea">
+      <div class="fundea-text">
+        <img src="logos/fundea_qbi_blanco.png" style="height: 4em;" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- Información principal -->
+  <div class="info-principal">
+    <!-- Número de orden de pago -->
+    <div class="campo-horizontal">
+      <label class="campo-label">NÚMERO DE ORDEN DE PAGO:</label>
+      <span class="campo-value">{{ ordenData.ordenId }}</span>
+    </div>
+
+    
+    <div style="height: 2em;"> </div>
+
+    <!-- Nombre -->
+    <div class="campo-horizontal">
+      <label class="campo-label-2">NOMBRE:</label>
+      <span class="campo-value-2">{{ ordenData.cliente.nombres }} {{ ordenData.cliente.apellidos }}</span>
+    </div>
+
+    <!-- DPI -->
+    <div class="campo-horizontal">
+      <label class="campo-label-2">DPI:</label>
+      <span class="campo-value-2">{{ ordenData.cliente.numeroIdentificacion }}</span>
+    </div>
+
+    <div style="height: 2em;"> </div>
+
+    <!-- Fila: Valor desembolso y Fecha emisión -->
+    <div class="campo-row">
+      <div class="campo-horizontal campo-row-item">
+        <label class="campo-label">VALOR DESEMBOLSO (QUETZALES):</label>
+        <span class="campo-value">{{ ordenData.monto.toLocaleString('es-GT', {minimumFractionDigits: 2}) }}</span>
+      </div>
+      <div class="campo-horizontal campo-row-item">
+        <label class="campo-label">FECHA EMISIÓN BOLETA:</label>
+        <span class="campo-value">{{ fechaFormateada }} {{ horaFormateada }}</span>
+      </div>
+    </div>
+
+    <!-- Fila: Fecha desembolso y Usuario -->
+    <div class="campo-row">
+      <div class="campo-horizontal campo-row-item">
+        <label class="campo-label">FECHA DESEMBOLSO:</label>
+        <span class="campo-value">{{ fechaFormateada }}</span>
+      </div>
+      <div class="campo-horizontal campo-row-item">
+        <label class="campo-label">USUARIO EMISIÓN BOLETA:</label>
+        <span class="campo-value">IEJC</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Texto legal -->
+  <div class="texto-legal">
+    Al recibir esta boleta acepta que a partir de la presente fecha adquiere la obligación de pago de capital, interés, recargos y
+    comisiones, según lo establecido en mi Plan de Pagos.
+  </div>
+
+  <!-- Firmas -->
+  <div class="seccion-firmas">
+    <div class="firma-box">
+      <div class="firma-area"></div>
+      <div class="firma-label">FIRMA CLIENTE</div>
+    </div>
+    
+    <div class="firma-box huella-box">
+      <div class="huella-area"></div>
+      <div class="firma-label">HUELLA</div>
+    </div>
+
+    <div class="huella-box">
+      
+    </div>
+    
+    <div class="testigo-box">
+      <div class="testigo-dpi-horizontal">
+        <label class="campo-label testigo-dpi-label">DPI TESTIGO:</label>
+        <div class="campo-value testigo-dpi-area"></div>
+      </div>
+      <div class="firma-area-testigo"></div>
+      <div class="firma-label-testigo">FIRMA TESTIGO A RUEGO</div>
+    </div>
+  </div>
+</div>
+
+<!-- Separador para copia -->
+<div class="separador-copia">
+  <div class="linea-puntos"></div>
+  <div class="tipo-copia">ORIGINAL CLIENTE</div>
+  <div class="linea-puntos"></div>
+</div>
+
+<!-- Copia exacta -->
+<div class="boleta-container">
+  <!-- Header con logos -->
+  <div class="header-logos">
+    <div class="logo-banco">
+      <div class="logo-placeholder">
+        <img src="logos/gyt_gris.png" style="height: 9em;" alt="">
+      </div>
+      <div class="banco-text">
+        <div class="banco-nombre">BANCO</div>
+        <div class="banco-continental">G&T CONTINENTAL</div>
+      </div>
+    </div>
+    <div class="logo-fundea">
+      <div class="fundea-text">
+        <img src="logos/fundea_qbi_blanco.png" style="height: 4em;" alt="">
+      </div>
+    </div>
+  </div>
+
+  <!-- Información principal -->
+  <div class="info-principal">
+    <!-- Número de orden de pago -->
+    <div class="campo-horizontal">
+      <label class="campo-label">NÚMERO DE ORDEN DE PAGO:</label>
+      <span class="campo-value">{{ ordenData.ordenId }}</span>
+    </div>
+
+
+    <!-- Nombre -->
+    <div class="campo-horizontal">
+      <label class="campo-label">NOMBRE:</label>
+      <span class="campo-value">{{ ordenData.cliente.nombres }} {{ ordenData.cliente.apellidos }}</span>
+    </div>
+
+    <!-- DPI -->
+    <div class="campo-horizontal">
+      <label class="campo-label">DPI:</label>
+      <span class="campo-value">{{ ordenData.cliente.numeroIdentificacion }}</span>
+    </div>
+
+    <!-- Fila: Valor desembolso y Fecha emisión -->
+    <div class="campo-row">
+      <div class="campo-horizontal campo-row-item">
+        <label class="campo-label">VALOR DESEMBOLSO (QUETZALES):</label>
+        <span class="campo-value">{{ ordenData.monto.toLocaleString('es-GT', {minimumFractionDigits: 2}) }}</span>
+      </div>
+      <div class="campo-horizontal campo-row-item">
+        <label class="campo-label">FECHA EMISIÓN BOLETA:</label>
+        <span class="campo-value">{{ fechaFormateada }} {{ horaFormateada }}</span>
+      </div>
+    </div>
+
+    <!-- Fila: Fecha desembolso y Usuario -->
+    <div class="campo-row">
+      <div class="campo-horizontal campo-row-item">
+        <label class="campo-label">FECHA DESEMBOLSO:</label>
+        <span class="campo-value">{{ fechaFormateada }}</span>
+      </div>
+      <div class="campo-horizontal campo-row-item">
+        <label class="campo-label">USUARIO EMISIÓN BOLETA:</label>
+        <span class="campo-value">IEJC</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Texto legal -->
+  <div class="texto-legal">
+    Al recibir esta boleta acepta que a partir de la presente fecha adquiere la obligación de pago de capital, interés, recargos y
+    comisiones, según lo establecido en mi Plan de Pagos.
+  </div>
+
+  <!-- Firmas -->
+  <div class="seccion-firmas">
+    <div class="firma-box">
+      <div class="firma-area"></div>
+      <div class="firma-label">FIRMA CLIENTE</div>
+    </div>
+    
+    <div class="firma-box huella-box">
+      <div class="huella-area"></div>
+      <div class="firma-label">HUELLA</div>
+    </div>
+    
+    <div class="testigo-box">
+      <div class="testigo-dpi-horizontal">
+        <label class="campo-label testigo-dpi-label">DPI TESTIGO:</label>
+        <div class="campo-value testigo-dpi-area"></div>
+      </div>
+      <div class="firma-area-testigo"></div>
+      <div class="firma-label-testigo">FIRMA TESTIGO A RUEGO</div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer de archivo -->
+<div class="separador-copia">
+  <div class="linea-puntos"></div>
+  <div class="tipo-copia">COPIA ARCHIVO</div>
+  <div class="linea-puntos"></div>
+</div>

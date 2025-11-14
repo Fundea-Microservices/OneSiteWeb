@@ -1,0 +1,465 @@
+/* Estilos exactos para replicar la imagen de la boleta GYT */
+
+.boleta-container {
+  width: 21cm;
+  /* Tamaño carta */
+  min-height: 13.5cm;
+  margin: 0 auto 10mm;
+  padding: 8mm;
+  background-color: white;
+  /* Cambiado de #e8e8e8 a blanco */
+  border: 2px solid #000;
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+  color: #000;
+  position: relative;
+}
+
+/* Header con logos */
+.header-logos {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid #333;
+}
+
+.logo-banco {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+}
+
+.logo-placeholder {
+  width: 15mm;
+  height: 15mm;
+  background-color: #666;
+  /* Placeholder para logo del banco */
+  border: 1px solid #333;
+  border-radius: 6px;
+  /* Bordes redondeados */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6px;
+  color: white;
+}
+
+.logo-placeholder::before {
+  text-align: center;
+  line-height: 1.2;
+}
+
+.banco-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.banco-nombre {
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.banco-continental {
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.logo-fundea {
+  background-color: #000;
+  color: white;
+  padding: 2.5mm 6mm;
+  /* Reducido de 3mm 8mm */
+  border-radius: 18px;
+  /* Aumentado para mantener la forma ovalada */
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  font-weight: bold;
+}
+
+.fundea-logo-placeholder {
+  width: 8mm;
+  height: 8mm;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-size: 6px;
+  font-weight: bold;
+}
+
+.fundea-logo-placeholder::before {
+  content: "F";
+}
+
+.fundea-text {
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Información principal */
+.info-principal {
+  margin-bottom: 4mm;
+}
+
+/* Campos horizontales - Label a la izquierda, valor a la derecha como en la imagen */
+.campo-horizontal {
+  display: flex;
+  margin-bottom: 1mm;
+  align-items: stretch;
+}
+
+.campo-horizontal .campo-label {
+  background-color: #000;
+  color: white;
+  padding: 1mm 1.5mm;
+  /* Reducido de 1.5mm 2mm */
+  font-size: 9px;
+  /* Aumentado de 7px */
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 0;
+  border: 1px solid #000;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  /* Bordes redondeados solo a la izquierda */
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  min-width: 25%;
+  /* Ancho fijo para los labels */
+}
+
+
+
+.campo-horizontal .campo-value {
+  border: 1px solid #000;
+  padding: 1.5mm;
+  /* Reducido de 2mm */
+  background-color: white;
+  font-size: 11px;
+  /* Aumentado de 9px */
+  color: #000;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font-weight: normal;
+  border-radius: 0 4px 4px 0;
+  /* Bordes redondeados solo a la derecha */
+  flex: 1;
+  /* Toma el resto del espacio */
+}
+
+.campo-horizontal .campo-value-2 {
+  border: 1px solid #000;
+  padding: 1.5mm;
+  /* Reducido de 2mm */
+  background-color: white;
+  font-size: 11px;
+  /* Aumentado de 9px */
+  color: #000;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font-weight: normal;
+  border-radius: 0 4px 4px 0;
+  /* Bordes redondeados solo a la derecha */
+  flex: 1;
+  /* Toma el resto del espacio */
+}
+
+
+.campo-horizontal .campo-label-2 {
+  background-color: #000;
+  color: white;
+  padding: 1mm 1.5mm;
+  /* Reducido de 1.5mm 2mm */
+  font-size: 9px;
+  /* Aumentado de 7px */
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 0;
+  border: 1px solid #000;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  /* Bordes redondeados solo a la izquierda */
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  min-width: 12%;
+  /* Ancho fijo para los labels */
+}
+
+/* Filas que contienen múltiples campos */
+.campo-row {
+  display: flex;
+  gap: 2mm;
+  margin-bottom: 1mm;
+  align-items: stretch;
+}
+
+.campo-row-item {
+  flex: 1;
+}
+
+/* Texto legal */
+.texto-legal {
+  background-color: white;
+  border: 1px solid #000;
+  border-radius: 6px;
+  /* Bordes redondeados */
+  padding: 2.5mm;
+  /* Reducido de 3mm */
+  font-size: 10px;
+  /* Aumentado de 8px */
+  line-height: 1.3;
+  margin-bottom: 4mm;
+  text-align: justify;
+  color: #000;
+}
+
+/* Sección de firmas */
+.seccion-firmas {
+  display: flex;
+  gap: 2mm;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.firma-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #000;
+  border-radius: 6px;
+  /* Bordes redondeados */
+  background-color: white;
+  min-height: 25mm;
+  overflow: hidden;
+  /* Para que los elementos internos respeten el border-radius */
+}
+
+
+.huella-box {
+  flex: 0.45;
+  /* Más pequeño que las firmas */
+}
+
+.testigo-box {
+  flex: 1.3;
+  /* Más grande para incluir el DPI */
+}
+
+/* DPI Testigo como campo horizontal */
+.testigo-dpi-horizontal {
+  display: flex;
+  align-items: stretch;
+}
+
+.testigo-dpi-label {
+  background-color: #000;
+  color: white;
+  padding: 1mm 1.5mm;
+  /* Reducido de 1.5mm 2mm */
+  font-size: 8px;
+  /* Un poco más pequeño que los campos normales */
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 0;
+  border: 1px solid #000;
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  /* Bordes redondeados solo a la izquierda */
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  min-width: 30%;
+  /* Un poco más ancho para "DPI TESTIGO:" */
+}
+
+.testigo-dpi-area {
+  border: 1px solid #000;
+  background-color: white;
+  border-radius: 0 4px 4px 0;
+  /* Bordes redondeados solo a la derecha */
+  flex: 1;
+  min-height: 6mm;
+  /* Altura específica para el DPI */
+  margin: 0;
+}
+
+.firma-area,
+.huella-area {
+  flex: 1;
+  min-height: 18mm;
+  background-color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 6px;
+}
+
+
+.firma-label {
+  font-size: 9px;
+  /* Aumentado de 7px */
+  font-weight: bold;
+  text-align: center;
+  color: white;
+  background-color: #000;
+  padding: 1mm;
+  /* Reducido de 1.5mm */
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+
+.firma-box-testigo {
+  flex: 1.3
+;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #000;
+  border-radius: 6px;
+  /* Bordes redondeados */
+  background-color: white;
+  min-height: 25mm; /* Igualado con las otras cajas de firma */
+}
+.firma-area-testigo {
+  flex: 1;
+  min-height: 18mm; /* Reducido para hacer espacio al margen superior */
+  background-color: white;
+  border: 1px solid #000;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 6px;
+  margin-top: 1mm; /* Espacio entre DPI TESTIGO y FIRMA TESTIGO */
+}
+.firma-label-testigo {
+  font-size: 9px;
+  /* Aumentado de 7px */
+  font-weight: bold;
+  text-align: center;
+  color: white;
+  background-color: #000;
+  border: 1px solid #000;
+  border-radius: 0 0 6px 6px;
+  padding: 1mm;
+  /* Reducido de 1.5mm */
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+
+/* Separadores para copias */
+.separador-copia {
+  display: flex;
+  align-items: center;
+  margin: 5mm 0;
+  page-break-inside: avoid;
+}
+
+.linea-puntos {
+  flex: 1;
+  height: 1px;
+  background-image: repeating-linear-gradient(to right,
+      #000 0,
+      #000 2px,
+      transparent 2px,
+      transparent 4px);
+  margin: 0 2mm;
+}
+
+.tipo-copia {
+  padding: 0 4mm;
+  font-size: 10px;
+  font-weight: bold;
+  color: #000;
+  background-color: white;
+  /* Cambiado de #e8e8e8 a blanco */
+  text-align: center;
+}
+
+/* Estilos para impresión */
+@media print {
+  .boleta-container {
+    margin: 0;
+    padding: 6mm;
+    border: 1px solid #000;
+    page-break-after: always;
+    background-color: white;
+    /* Cambiado de #e8e8e8 a blanco */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .header-logos,
+  .info-principal,
+  .seccion-firmas {
+    break-inside: avoid;
+  }
+
+  .separador-copia {
+    break-inside: avoid;
+    page-break-before: avoid;
+  }
+
+  /* Asegurar que los colores se impriman correctamente */
+  .campo-horizontal .campo-label,
+  .logo-fundea,
+  .firma-label,
+  .logo-placeholder {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ocultar elementos que no deben imprimirse */
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Responsive para vista previa */
+@media screen and (max-width: 768px) {
+  .boleta-container {
+    width: 95vw;
+    font-size: 8px;
+  }
+
+  .header-logos {
+    flex-direction: column;
+    gap: 2mm;
+    text-align: center;
+  }
+
+  .campo-row {
+    flex-direction: column;
+  }
+
+  .seccion-firmas {
+    flex-direction: column;
+    gap: 2mm;
+  }
+}

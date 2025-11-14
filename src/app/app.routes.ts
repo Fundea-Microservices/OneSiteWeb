@@ -18,6 +18,16 @@ export const routes: Routes = [
         loadComponent: () => import('./aliado/pages/login-aliado/login-aliado.component'),
     },
     {
+        path: 'imprimir',
+        canActivate: [AuthGuard],
+        children: [
+            {
+                path: 'orden-gyt',
+                loadComponent: () => import('./ordenes-pago/gyt/components/orden-gyt/orden-gyt.component').then(m => m.OrdenGytComponent),
+            }
+        ]
+    },
+    {
         path: '',
         loadComponent: () => import('./dashboard/pages/dashboard-page/dashboard-page'),
         canActivate: [AuthGuard],
@@ -141,6 +151,19 @@ export const routes: Routes = [
                         path: '**',
                         redirectTo: '',
                     }
+                ]
+            },
+            {
+                path: 'ordenes-pago',
+                children: [                    
+                    {
+                        path: 'generar-gyt',
+                        loadComponent: () => import('./ordenes-pago/gyt/pages/generar-gyt-page/generar-gyt-page'),
+                    },  
+                    // {
+                    //     path: 'aprobar-gyt',
+                    //     loadComponent: () => import('./ordenes-pago/gyt/pages/aprobar-gyt/aprobar-gyt-page.component'),
+                    // }, 
                 ]
             },
 

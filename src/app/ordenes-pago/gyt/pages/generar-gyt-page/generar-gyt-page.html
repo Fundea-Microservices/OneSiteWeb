@@ -1,0 +1,215 @@
+<!-- Breadcrumb -->
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/fundea">Inicio</a></li>
+    <li class="breadcrumb-item"><a href="/ordenes-pago">Órdenes de Pago</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Generar GYT</li>
+  </ol>
+</nav>
+
+<!-- Card principal -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Generar Orden de Pago GYT</h5>
+    <button 
+      class="btn btn-outline-secondary btn-sm" 
+      (click)="limpiarFormulario()"
+      [disabled]="cargandoCliente() || procesandoOrden()">
+      <ion-icon name="refresh-outline"></ion-icon> Limpiar
+    </button>
+  </div>
+  
+  <div class="card-body">
+    <!-- Formulario de búsqueda -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h6 class="border-bottom pb-2">Búsqueda de Cliente</h6>
+      </div>
+    </div>
+    
+    <form class="row g-3 mb-4">
+      <div class="col-md-6">
+        <label for="numeroOperacion" class="form-label">Número de Operación *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="numeroOperacion"
+          placeholder="Ingrese número de operación"
+          [(ngModel)]="numeroOperacion"
+          name="numeroOperacion"
+          [disabled]="cargandoCliente() || procesandoOrden()"
+          required>
+      </div>
+      
+      <div class="col-md-6">
+        <label for="documentoCliente" class="form-label">Documento del Cliente *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="documentoCliente"
+          placeholder="Ingrese documento del cliente"
+          [(ngModel)]="documentoCliente"
+          name="documentoCliente"
+          [disabled]="cargandoCliente() || procesandoOrden()"
+          required>
+      </div>
+      
+      <div class="col-12">
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          (click)="buscarCliente()"
+          [disabled]="!formularioValido || cargandoCliente() || procesandoOrden()">
+          @if (cargandoCliente()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Buscando...
+          } @else {
+            <ion-icon name="search-outline" class="me-2"></ion-icon>
+            Buscar Cliente
+          }
+        </button>
+      </div>
+    </form>
+
+    <!-- Información del Cliente -->
+    @if (cliente()) {
+    <div class="row mb-4">
+      <div class="col-12">
+        <h6 class="border-bottom pb-2 text-success">
+          <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+          Información del Cliente
+        </h6>
+      </div>
+    </div>
+    
+    <div class="card bg-light mb-4">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <p class="mb-2"><strong>Nombres:</strong> {{ cliente()!.nombres }}</p>
+            <p class="mb-2"><strong>Apellidos:</strong> {{ cliente()!.apellidos }}</p>
+            <p class="mb-2"><strong>Tipo Identificación:</strong> {{ cliente()!.tipoIdentificacion }}</p>
+            <p class="mb-2"><strong>Número Identificación:</strong> {{ cliente()!.numeroIdentificacion }}</p>
+          </div>
+          <div class="col-md-6">
+            <p class="mb-2"><strong>Teléfono:</strong> {{ cliente()!.telefono }}</p>
+            <p class="mb-2"><strong>Correo:</strong> {{ cliente()!.correo }}</p>
+            <p class="mb-2"><strong>Número Operación:</strong> {{ cliente()!.numeroOperacion }}</p>
+            <p class="mb-2"><strong>Monto Préstamo:</strong> 
+              <span class="text-primary fw-bold"> Q {{ cliente()!.montoPrestamo.toLocaleString() }}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <button 
+            class="btn btn-primary btn-lg"
+            (click)="generarPDF()">
+            <ion-icon name="print-outline" class="me-2"></ion-icon>
+            Abrir Ventana de Impresión
+          </button>
+    </div>
+
+    <!-- Botón generar orden -->
+    @if (!ordenPago()) {
+    <div class="d-grid gap-2 mb-4">
+      <button 
+        class="btn btn-success btn-lg"
+        (click)="generarOrdenPago()"
+        [disabled]="procesandoOrden()">
+        @if (procesandoOrden()) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+          Procesando...
+        } @else {
+          <ion-icon name="card-outline" class="me-2"></ion-icon>
+          Generar Orden de Pago
+        }
+      </button>
+    </div>
+    }
+    }
+
+    <!-- Estado de la Orden de Pago -->
+    @if (ordenPago()) {
+    <div class="row mb-4">
+      <div class="col-12">
+        <h6 class="border-bottom pb-2">
+          <ion-icon name="document-text-outline" class="me-2"></ion-icon>
+          Estado de la Orden: {{ ordenPago()!.id }}
+        </h6>
+      </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="text-center">
+            <div class="badge {{ ordenPago()!.estado === 'preparar' ? 'bg-warning' : 'bg-success' }} mb-2">
+              @if (ordenPago()!.estado === 'preparar') {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+              } @else {
+                <ion-icon name="checkmark-outline"></ion-icon>
+              }
+            </div>
+            <br><small>Preparar</small>
+          </div>
+          
+          <div class="text-center">
+            <div class="badge {{ 
+              ordenPago()!.estado === 'revisar' ? 'bg-warning' : 
+              (ordenPago()!.estado === 'preparar' ? 'bg-secondary' : 'bg-success') 
+            }} mb-2">
+              @if (ordenPago()!.estado === 'revisar') {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+              } @else if (ordenPago()!.estado !== 'preparar') {
+                <ion-icon name="checkmark-outline"></ion-icon>
+              }
+            </div>
+            <br><small>Revisar</small>
+          </div>
+          
+          <div class="text-center">
+            <div class="badge {{ 
+              ordenPago()!.estado === 'pagar' ? 'bg-warning' : 
+              (ordenPago()!.estado === 'preparar' || ordenPago()!.estado === 'revisar' ? 'bg-secondary' : 'bg-success') 
+            }} mb-2">
+              @if (ordenPago()!.estado === 'pagar') {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+              } @else if (ordenPago()!.estado !== 'preparar' && ordenPago()!.estado !== 'revisar') {
+                <ion-icon name="checkmark-outline"></ion-icon>
+              }
+            </div>
+            <br><small>Pagar</small>
+          </div>
+          
+          <div class="text-center">
+            <div class="badge {{ !procesandoOrden() && ordenPago()!.estado === 'pagar' ? 'bg-success' : 'bg-secondary' }} mb-2">
+              @if (!procesandoOrden() && ordenPago()!.estado === 'pagar') {
+                <ion-icon name="checkmark-outline"></ion-icon>
+              }
+            </div>
+            <br><small>Completado</small>
+          </div>
+        </div>
+        
+        @if (!procesandoOrden()) {
+        <div class="text-center mt-4">
+          <div class="alert alert-success" role="alert">
+            <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+            <strong>¡Orden de pago procesada exitosamente!</strong>
+            <br>La orden {{ ordenPago()!.id }} ha sido completada.
+          </div>
+          
+          <button 
+            class="btn btn-primary btn-lg"
+            (click)="generarPDF()">
+            <ion-icon name="print-outline" class="me-2"></ion-icon>
+            Abrir Ventana de Impresión
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</div>
