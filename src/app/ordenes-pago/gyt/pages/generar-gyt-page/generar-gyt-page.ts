@@ -183,62 +183,57 @@ export default class GenerarGytPage {
           <title>Boleta GYT - Orden ${ordenId}</title>
           <meta charset="utf-8">
           <style>
-            @page {
-              size: A4;
-              margin: 10mm;
-            }
-            
-            body { 
-              margin: 0; 
-              padding: 0;
-              font-family: Arial, sans-serif;
-              background: white;
-              font-size: 8px; /* Reducido para que quepa mejor */
-            }
-            
-            /* Contenedor principal optimizado para una página */
+            /* Estilos exactos para replicar la imagen de la boleta GYT */
+
             .boleta-container {
-              width: 100%;
-              max-width: 19cm;
-              margin: 0 auto 5mm;
-              padding: 4mm; /* Reducido de 8mm */
+              width: 21cm;
+              /* Tamaño carta */
+              min-height: 13.5cm;
+              margin: 0 auto 10mm;
+              padding: 8mm;
               background-color: white;
-              border: 1px solid #000;
+              /* Cambiado de #e8e8e8 a blanco */
+              border: 2px solid #000;
               font-family: Arial, sans-serif;
-              font-size: 8px; /* Reducido */
+              font-size: 9px;
               color: #000;
               position: relative;
-              page-break-inside: avoid;
-              box-sizing: border-box;
             }
 
-            /* Header compacto */
+            /* Header con logos */
             .header-logos {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-bottom: 3mm; /* Reducido de 6mm */
-              padding-bottom: 1mm; /* Reducido de 2mm */
+              margin-bottom: 6mm;
+              padding-bottom: 2mm;
               border-bottom: 1px solid #333;
             }
 
             .logo-banco {
               display: flex;
               align-items: center;
-              gap: 3mm; /* Reducido de 5mm */
+              gap: 5mm;
             }
 
             .logo-placeholder {
-              width: 12mm; /* Reducido de 15mm */
-              height: 12mm; /* Reducido de 15mm */
+              width: 15mm;
+              height: 15mm;
               background-color: #666;
+              /* Placeholder para logo del banco */
               border: 1px solid #333;
-              border-radius: 4px;
+              border-radius: 6px;
+              /* Bordes redondeados */
               display: flex;
               align-items: center;
               justify-content: center;
-              font-size: 5px;
+              font-size: 6px;
               color: white;
+            }
+
+            .logo-placeholder::before {
+              text-align: center;
+              line-height: 1.2;
             }
 
             .banco-text {
@@ -247,80 +242,156 @@ export default class GenerarGytPage {
               line-height: 1.1;
             }
 
-            .banco-nombre, .banco-continental {
-              font-size: 11px; /* Reducido de 14px */
+            .banco-nombre {
+              font-size: 17px;
               font-weight: bold;
               color: #000;
               margin: 0;
-              letter-spacing: 0.3px;
+              letter-spacing: 0.5px;
+              text-align: center;
+            }
+
+            .banco-continental {
+              font-size: 20px;
+              font-weight: bold;
+              color: #000;
+              margin: 0;
+              letter-spacing: 0.5px;
             }
 
             .logo-fundea {
               background-color: #000;
               color: white;
-              padding: 1.5mm 4mm; /* Reducido */
-              border-radius: 10px;
+              padding: 2.5mm 6mm;
+              /* Reducido de 3mm 8mm */
+              border-radius: 18px;
+              /* Aumentado para mantener la forma ovalada */
               display: flex;
               align-items: center;
-              gap: 2mm;
+              gap: 3mm;
               font-weight: bold;
+            }
+
+            .fundea-logo-placeholder {
+              width: 8mm;
+              height: 8mm;
+              background-color: white;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #000;
+              font-size: 6px;
+              font-weight: bold;
+            }
+
+            .fundea-logo-placeholder::before {
+              content: "F";
             }
 
             .fundea-text {
-              font-size: 10px; /* Reducido de 12px */
+              font-size: 12px;
               font-weight: bold;
-              letter-spacing: 0.5px;
+              letter-spacing: 1px;
             }
 
-            /* Información principal compacta */
+            /* Información principal */
             .info-principal {
-              margin-bottom: 2mm; /* Reducido de 4mm */
+              margin-bottom: 4mm;
             }
 
-            /* Campos horizontales compactos */
+            /* Campos horizontales - Label a la izquierda, valor a la derecha como en la imagen */
             .campo-horizontal {
               display: flex;
-              margin-bottom: 0.5mm; /* Reducido de 1mm */
+              margin-bottom: 1mm;
               align-items: stretch;
             }
 
             .campo-horizontal .campo-label {
               background-color: #000;
               color: white;
-              padding: 0.5mm 1mm; /* Reducido */
-              font-size: 7px; /* Reducido */
+              padding: 1mm 1.5mm;
+              /* Reducido de 1.5mm 2mm */
+              font-size: 9px;
+              /* Aumentado de 7px */
               font-weight: bold;
               text-transform: uppercase;
               margin: 0;
               border: 1px solid #000;
               border-right: none;
-              border-radius: 3px 0 0 3px;
-              letter-spacing: 0.2px;
+              border-radius: 6px 0 0 6px;
+              /* Bordes redondeados solo a la izquierda */
+              letter-spacing: 0.3px;
               white-space: nowrap;
               display: flex;
               align-items: center;
-              min-width: 35%;
+              min-width: 25%;
+              /* Ancho fijo para los labels */
             }
 
             .campo-horizontal .campo-value {
               border: 1px solid #000;
-              padding: 0.5mm 1mm; /* Reducido */
+              padding: 1.5mm;
+              /* Reducido de 2mm */
               background-color: white;
-              font-size: 8px; /* Reducido */
+              font-size: 11px;
+              /* Aumentado de 9px */
               color: #000;
               display: flex;
               align-items: center;
               margin: 0;
               font-weight: normal;
-              border-radius: 0 3px 3px 0;
+              border-radius: 0 4px 4px 0;
+              /* Bordes redondeados solo a la derecha */
               flex: 1;
+              /* Toma el resto del espacio */
             }
 
-            /* Filas de campos compactas */
+            .campo-horizontal .campo-value-2 {
+              border: 1px solid #000;
+              padding: 1.5mm;
+              /* Reducido de 2mm */
+              background-color: white;
+              font-size: 11px;
+              /* Aumentado de 9px */
+              color: #000;
+              display: flex;
+              align-items: center;
+              margin: 0;
+              font-weight: normal;
+              border-radius: 0 4px 4px 0;
+              /* Bordes redondeados solo a la derecha */
+              flex: 1;
+              /* Toma el resto del espacio */
+            }
+
+            .campo-horizontal .campo-label-2 {
+              background-color: #000;
+              color: white;
+              padding: 1mm 1.5mm;
+              /* Reducido de 1.5mm 2mm */
+              font-size: 9px;
+              /* Aumentado de 7px */
+              font-weight: bold;
+              text-transform: uppercase;
+              margin: 0;
+              border: 1px solid #000;
+              border-right: none;
+              border-radius: 6px 0 0 6px;
+              /* Bordes redondeados solo a la izquierda */
+              letter-spacing: 0.3px;
+              white-space: nowrap;
+              display: flex;
+              align-items: center;
+              min-width: 12%;
+              /* Ancho fijo para los labels */
+            }
+
+            /* Filas que contienen múltiples campos */
             .campo-row {
               display: flex;
-              gap: 1mm; /* Reducido de 2mm */
-              margin-bottom: 0.5mm; /* Reducido de 1mm */
+              gap: 2mm;
+              margin-bottom: 1mm;
               align-items: stretch;
             }
 
@@ -328,47 +399,60 @@ export default class GenerarGytPage {
               flex: 1;
             }
 
-            /* Texto legal compacto */
+            /* Texto legal */
             .texto-legal {
               background-color: white;
               border: 1px solid #000;
-              border-radius: 4px;
-              padding: 1.5mm; /* Reducido */
-              font-size: 7px; /* Reducido */
-              line-height: 1.2;
-              margin-bottom: 2mm; /* Reducido */
+              border-radius: 6px;
+              /* Bordes redondeados */
+              padding: 2.5mm;
+              /* Reducido de 3mm */
+              font-size: 10px;
+              /* Aumentado de 8px */
+              line-height: 1.3;
+              margin-bottom: 4mm;
               text-align: justify;
               color: #000;
             }
 
-            /* Sección de firmas compacta */
+            /* Sección de firmas */
             .seccion-firmas {
               display: flex;
-              gap: 1mm; /* Reducido de 2mm */
+              gap: 2mm;
               justify-content: space-between;
               align-items: flex-end;
             }
 
-            .firma-box, .testigo-box {
+            .firma-box {
               flex: 1;
               display: flex;
               flex-direction: column;
               border: 1px solid #000;
-              border-radius: 4px;
+              border-radius: 6px;
+              /* Bordes redondeados */
               background-color: white;
-              min-height: 15mm; /* Reducido de 25mm */
+              min-height: 25mm;
               overflow: hidden;
+              /* Para que los elementos internos respeten el border-radius */
             }
 
             .huella-box {
-              flex: 0.6; /* Más compacto */
+              flex: 0.45;
+              /* Más pequeño que las firmas */
             }
 
             .testigo-box {
-              flex: 1.2; /* Reducido */
+              flex: 1.3;
+              display: flex;
+              flex-direction: column;
+              /* Bordes redondeados */
+              background-color: white;
+              min-height: 25mm;
+              overflow: hidden;
+              /* Para que los elementos internos respeten el border-radius */
             }
 
-            /* DPI Testigo compacto */
+            /* DPI Testigo como campo horizontal */
             .testigo-dpi-horizontal {
               display: flex;
               align-items: stretch;
@@ -377,77 +461,170 @@ export default class GenerarGytPage {
             .testigo-dpi-label {
               background-color: #000;
               color: white;
-              padding: 0.5mm 1mm; /* Reducido */
-              font-size: 6px; /* Reducido */
+              padding: 1mm 1.5mm;
+              /* Reducido de 1.5mm 2mm */
+              font-size: 8px;
+              /* Un poco más pequeño que los campos normales */
               font-weight: bold;
               text-transform: uppercase;
               margin: 0;
               border: 1px solid #000;
               border-right: none;
-              border-radius: 3px 0 0 3px;
-              letter-spacing: 0.2px;
+              border-radius: 4px 0 0 4px;
+              /* Bordes redondeados solo a la izquierda */
+              letter-spacing: 0.3px;
               white-space: nowrap;
               display: flex;
               align-items: center;
-              min-width: 35%;
+              min-width: 30%;
+              /* Un poco más ancho para "DPI TESTIGO:" */
             }
 
             .testigo-dpi-area {
               border: 1px solid #000;
               background-color: white;
-              border-radius: 0 3px 3px 0;
+              border-radius: 0 4px 4px 0;
+              /* Bordes redondeados solo a la derecha */
               flex: 1;
-              min-height: 4mm; /* Reducido */
+              min-height: 6mm;
+              /* Altura específica para el DPI */
               margin: 0;
             }
 
-            .firma-area, .huella-area, .firma-area-testigo {
+            .firma-area,
+            .huella-area {
               flex: 1;
-              min-height: 10mm; /* Reducido de 18mm */
+              min-height: 18mm;
               background-color: white;
               border: none;
               display: flex;
               align-items: center;
               justify-content: center;
               color: #999;
-              font-size: 5px;
-              margin-top: 1mm; /* Para testigo */
+              font-size: 6px;
             }
 
-            .firma-label, .firma-label-testigo {
-              font-size: 7px; /* Reducido */
+            .firma-label {
+              font-size: 9px;
+              /* Aumentado de 7px */
               font-weight: bold;
               text-align: center;
               color: white;
               background-color: #000;
-              padding: 0.5mm; /* Reducido */
+              padding: 1mm;
+              /* Reducido de 1.5mm */
               margin: 0;
               text-transform: uppercase;
-              letter-spacing: 0.2px;
+              letter-spacing: 0.3px;
             }
 
-            /* Separadores compactos */
+            .firma-box-testigo {
+              flex: 1.3;
+              display: flex;
+              flex-direction: column;
+              border: 1px solid #000;
+              border-radius: 6px;
+              /* Bordes redondeados */
+              background-color: white;
+              min-height: 25mm; /* Igualado con las otras cajas de firma */
+            }
+
+            .firma-area-testigo {
+              flex: 1;
+              min-height: 18mm; /* Reducido para hacer espacio al margen superior */
+              background-color: white;
+              border: 1px solid #000;
+              border-radius: 6px 6px 0 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #999;
+              font-size: 6px;
+              margin-top: 1mm; /* Espacio entre DPI TESTIGO y FIRMA TESTIGO */
+            }
+
+            .firma-label-testigo {
+              font-size: 9px;
+              /* Aumentado de 7px */
+              font-weight: bold;
+              text-align: center;
+              color: white;
+              background-color: #000;
+              border: 1px solid #000;
+              border-radius: 0 0 6px 6px;
+              padding: 1mm;
+              /* Reducido de 1.5mm */
+              margin: 0;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            }
+
+            /* Separadores para copias */
             .separador-copia {
               display: flex;
               align-items: center;
-              margin: 2mm 0; /* Reducido de 5mm */
+              margin: 5mm 0;
               page-break-inside: avoid;
             }
 
             .linea-puntos {
               flex: 1;
               height: 1px;
-              background-image: repeating-linear-gradient(to right, #000 0, #000 1px, transparent 1px, transparent 2px);
-              margin: 0 1mm;
+              background-image: repeating-linear-gradient(to right,
+                  #000 0,
+                  #000 2px,
+                  transparent 2px,
+                  transparent 4px);
+              margin: 0 2mm;
             }
 
             .tipo-copia {
-              padding: 0 2mm;
-              font-size: 8px; /* Reducido */
+              padding: 0 4mm;
+              font-size: 10px;
               font-weight: bold;
               color: #000;
               background-color: white;
+              /* Cambiado de #e8e8e8 a blanco */
               text-align: center;
+            }
+
+            /* Estilos para impresión */
+            @media print {
+              .boleta-container {
+                margin: 0;
+                padding: 6mm;
+                border: 1px solid #000;
+                page-break-after: always;
+                background-color: white;
+                /* Cambiado de #e8e8e8 a blanco */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+
+              .header-logos,
+              .info-principal,
+              .seccion-firmas {
+                break-inside: avoid;
+              }
+
+              .separador-copia {
+                break-inside: avoid;
+                page-break-before: avoid;
+              }
+
+              /* Asegurar que los colores se impriman correctamente */
+              .campo-horizontal .campo-label,
+              .logo-fundea,
+              .firma-label,
+              .logo-placeholder {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+
+              /* Ocultar elementos que no deben imprimirse */
+              .no-print {
+                display: none !important;
+              }
             }
 
             /* Estilos para impresión - Forzar una página */

@@ -58,15 +58,16 @@
 }
 
 .banco-nombre {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: bold;
   color: #000;
   margin: 0;
   letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .banco-continental {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: bold;
   color: #000;
   margin: 0;

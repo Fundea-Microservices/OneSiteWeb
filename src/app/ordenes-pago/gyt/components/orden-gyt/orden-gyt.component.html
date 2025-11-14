@@ -26,7 +26,6 @@
       <span class="campo-value">{{ ordenData.ordenId }}</span>
     </div>
 
-    
     <div style="height: 2em;"> </div>
 
     <!-- Nombre -->
@@ -70,7 +69,8 @@
 
   <!-- Texto legal -->
   <div class="texto-legal">
-    Al recibir esta boleta acepta que a partir de la presente fecha adquiere la obligación de pago de capital, interés, recargos y
+    Al recibir esta boleta acepta que a partir de la presente fecha adquiere la obligación de pago de capital, interés,
+    recargos y
     comisiones, según lo establecido en mi Plan de Pagos.
   </div>
 
@@ -80,16 +80,14 @@
       <div class="firma-area"></div>
       <div class="firma-label">FIRMA CLIENTE</div>
     </div>
-    
+
     <div class="firma-box huella-box">
       <div class="huella-area"></div>
       <div class="firma-label">HUELLA</div>
     </div>
 
-    <div class="huella-box">
-      
-    </div>
-    
+    <div class="huella-box"></div>
+
     <div class="testigo-box">
       <div class="testigo-dpi-horizontal">
         <label class="campo-label testigo-dpi-label">DPI TESTIGO:</label>
@@ -99,6 +97,7 @@
       <div class="firma-label-testigo">FIRMA TESTIGO A RUEGO</div>
     </div>
   </div>
+
 </div>
 
 <!-- Separador para copia -->
@@ -136,18 +135,21 @@
       <span class="campo-value">{{ ordenData.ordenId }}</span>
     </div>
 
+    <div style="height: 2em;"> </div>
 
     <!-- Nombre -->
     <div class="campo-horizontal">
-      <label class="campo-label">NOMBRE:</label>
-      <span class="campo-value">{{ ordenData.cliente.nombres }} {{ ordenData.cliente.apellidos }}</span>
+      <label class="campo-label-2">NOMBRE:</label>
+      <span class="campo-value-2">{{ ordenData.cliente.nombres }} {{ ordenData.cliente.apellidos }}</span>
     </div>
 
     <!-- DPI -->
     <div class="campo-horizontal">
-      <label class="campo-label">DPI:</label>
-      <span class="campo-value">{{ ordenData.cliente.numeroIdentificacion }}</span>
+      <label class="campo-label-2">DPI:</label>
+      <span class="campo-value-2">{{ ordenData.cliente.numeroIdentificacion }}</span>
     </div>
+
+    <div style="height: 2em;"> </div>
 
     <!-- Fila: Valor desembolso y Fecha emisión -->
     <div class="campo-row">
@@ -176,7 +178,8 @@
 
   <!-- Texto legal -->
   <div class="texto-legal">
-    Al recibir esta boleta acepta que a partir de la presente fecha adquiere la obligación de pago de capital, interés, recargos y
+    Al recibir esta boleta acepta que a partir de la presente fecha adquiere la obligación de pago de capital, interés,
+    recargos y
     comisiones, según lo establecido en mi Plan de Pagos.
   </div>
 
@@ -186,12 +189,14 @@
       <div class="firma-area"></div>
       <div class="firma-label">FIRMA CLIENTE</div>
     </div>
-    
+
     <div class="firma-box huella-box">
       <div class="huella-area"></div>
       <div class="firma-label">HUELLA</div>
     </div>
-    
+
+    <div class="huella-box"></div>
+
     <div class="testigo-box">
       <div class="testigo-dpi-horizontal">
         <label class="campo-label testigo-dpi-label">DPI TESTIGO:</label>
@@ -201,6 +206,7 @@
       <div class="firma-label-testigo">FIRMA TESTIGO A RUEGO</div>
     </div>
   </div>
+
 </div>
 
 <!-- Footer de archivo -->
