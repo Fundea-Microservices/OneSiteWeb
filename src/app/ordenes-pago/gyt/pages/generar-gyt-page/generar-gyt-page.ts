@@ -231,6 +231,11 @@ export default class GenerarGytPage {
               /* Sin page-break-before para permitir dos en una página */
             }
 
+            /* Segunda boleta en vista normal - mayor separación */
+            .boleta-container:nth-child(2) {
+              margin-top: 6cm; /* Mayor separación para vista normal */
+            }
+
             /* Ya no necesitamos la regla para la primera boleta */
 
             /* Header con logos */
@@ -583,9 +588,14 @@ export default class GenerarGytPage {
                 transform-origin: top center !important;
               }
 
+              /* Primera boleta - margen superior para separar de borde de página */
+              .boleta-container:first-child {
+                margin-top: 1cm !important; /* Margen superior para la primera boleta */
+              }
+
               /* Segunda boleta - desplazar hacia abajo para evitar superposición */
               .boleta-container:nth-child(2) {
-                margin-top: 3cm !important; /* Desplazar 4cm hacia abajo */
+                margin-top: 2.5cm !important; /* Desplazar 2.5cm hacia abajo */
               }
 
               /* Evitar saltos de página */
