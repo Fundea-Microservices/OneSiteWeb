@@ -176,6 +176,9 @@ export default class GenerarGytPage {
   }
 
   private abrirVentanaImpresion(htmlContentWithImages: string) {
+    // Obtener el ID de la orden para el nombre del archivo
+    const ordenId = this.ordenPago()?.id || 'ORDEN-PAGO';
+    
     const ventana = window.open('', '_blank', 'width=800,height=600');
     
     if (ventana) {
@@ -184,7 +187,7 @@ export default class GenerarGytPage {
         <html>
         <head>
           <meta charset="UTF-8">
-          <title>Boleta de Orden de Pago</title>
+          <title>Boleta ${ordenId}</title>
           <style>
             @page {
               size: letter portrait;
@@ -649,6 +652,19 @@ export default class GenerarGytPage {
             window.addEventListener('beforeprint', () => {
               mensaje.style.display = 'none';
             });
+          </script>
+          
+          <script>
+            // Establecer el nombre del archivo para descarga
+            document.title = 'Boleta_${ordenId}';
+            
+            // Opcional: intentar establecer el nombre para el guardado
+            if (window.chrome) {
+              // Para Chrome, el título se usa como nombre sugerido
+              setTimeout(function() {
+                document.title = 'Boleta_${ordenId}';
+              }, 100);
+            }
           </script>
         </body>
         </html>
