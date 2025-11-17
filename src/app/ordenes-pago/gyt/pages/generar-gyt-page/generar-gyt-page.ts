@@ -187,8 +187,8 @@ export default class GenerarGytPage {
           <title>Boleta de Orden de Pago</title>
           <style>
             @page {
-              size: A4;
-              margin: 0cm; /* Sin márgenes de página - cada boleta controla sus márgenes */
+              size: letter portrait;
+              margin: 0.3cm; /* Márgenes muy pequeños para maximizar espacio */
             }
             
             body {
@@ -198,31 +198,40 @@ export default class GenerarGytPage {
               background: white;
               font-size: 9px;
               line-height: 1.2;
+              page-break-inside: avoid;
+              max-height: 25cm; /* Forzar altura máxima para una página carta */
+              overflow: hidden;
+            }
+
+            /* Contenedor que force todo en una página */
+            .page-container {
+              height: 100vh;
+              max-height: 25cm;
+              page-break-inside: avoid;
+              overflow: hidden;
             }
 
             /* Estilos exactos del componente orden-gyt.component.css con escala 80% */
             
             .boleta-container {
-              width: 21cm;
-              min-height: 13.5cm;
-              margin: 3cm auto 2mm; /* 3cm margen superior para cada boleta */
-              padding: 8mm;
+              width: 19cm; /* Ancho más apropiado para carta */
+              min-height: 4cm; /* Altura muy reducida para que quepan dos */
+              max-height: 10cm; /* Altura máxima controlada */
+              margin: 0.2cm auto 0.5mm; /* Márgenes muy pequeños */
+              padding: 2mm; /* Padding muy reducido */
               background-color: white;
-              border: 2px solid #000;
               font-family: Arial, sans-serif;
               font-size: 9px;
               color: #000;
               position: relative;
-              transform: scale(0.8);
+              transform: scale(0.8); /* Escala que mantiene legibilidad pero es más compacta */
               transform-origin: top center;
               page-break-inside: avoid;
-              page-break-before: always; /* Forzar nueva página para cada boleta */
+              border: none; /* Sin bordes */
+              /* Sin page-break-before para permitir dos en una página */
             }
 
-            /* Primera boleta sin salto de página */
-            .boleta-container:first-of-type {
-              page-break-before: auto; /* La primera boleta no necesita salto */
-            }
+            /* Ya no necesitamos la regla para la primera boleta */
 
             /* Header con logos */
             .header-logos {
@@ -539,12 +548,14 @@ export default class GenerarGytPage {
             }
 
             .tipo-copia {
-              padding: 0 0;
-              font-size: 10px;
+              padding: 10px 0; /* Padding muy reducido */
+              font-size: 9px; /* Tamaño de fuente reducido */
               font-weight: bold;
               color: #000;
               background-color: white;
               text-align: center;
+              margin-top: 15px; 
+              page-break-inside: avoid;
             }
 
             /* Estilos para impresión con márgenes correctos y escala 80% */
@@ -556,24 +567,25 @@ export default class GenerarGytPage {
               }
 
               .boleta-container {
-                width: 100% !important;
-                margin: 3cm auto 8mm !important; /* 3cm margen superior para cada boleta */
-                padding: 8mm !important;
-                border: 2px solid #000 !important;
-                page-break-before: always !important; /* Forzar nueva página */
+                width: 19cm !important; /* Ancho más apropiado para carta */
+                margin: 0.2cm auto 0.5mm !important; /* Márgenes muy pequeños */
+                padding: 2mm !important;
+                border: none !important; /* Sin bordes */
+                /* ELIMINADO page-break-before para permitir dos boletas en una página */
                 page-break-inside: avoid !important;
                 background-color: white !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                min-height: 13.5cm !important;
+                min-height: 4cm !important; /* Altura muy reducida para que quepan dos */
+                max-height: 10cm !important; /* Altura máxima controlada */
                 box-sizing: border-box !important;
-                transform: scale(0.8) !important;
+                transform: scale(0.8) !important; /* Escala que mantiene legibilidad pero es más compacta */
                 transform-origin: top center !important;
               }
 
-              /* Primera boleta sin salto de página */
-              .boleta-container:first-of-type {
-                page-break-before: auto !important;
+              /* Segunda boleta - desplazar hacia abajo para evitar superposición */
+              .boleta-container:nth-child(2) {
+                margin-top: 3cm !important; /* Desplazar 4cm hacia abajo */
               }
 
               /* Evitar saltos de página */
