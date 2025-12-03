@@ -1,0 +1,223 @@
+<!-- Breadcrumb -->
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/fundea">Inicio</a></li>
+    <li class="breadcrumb-item"><a href="/ordenes-pago">Órdenes de Pago</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Aprobar GYT</li>
+  </ol>
+</nav>
+
+<!-- Card principal -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Aprobar Orden de Pago GYT</h5>
+  </div>
+  
+  <div class="card-body">
+    <!-- Formulario de búsqueda -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h6 class="border-bottom pb-2">Búsqueda de Orden</h6>
+      </div>
+    </div>
+    
+    <form class="row g-3 mb-4">
+      <div class="col-md-8">
+        <label for="numeroOrden" class="form-label">Número de Orden de Pago *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="numeroOrden"
+          placeholder="Ej: OP-1732000001"
+          [(ngModel)]="numeroOrdenBuscar"
+          (keypress)="onEnterBuscar($event)"
+          (ngModelChange)="onInputChange()"
+          name="numeroOrden"
+          [disabled]="buscando()"
+          required>
+      </div>
+      
+      <div class="col-md-4 d-flex align-items-end">
+        <button 
+          type="button" 
+          class="btn btn-primary w-100"
+          (click)="buscarOrden()"
+          [disabled]="!puedesBuscar || buscando()">
+          @if (buscando()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Buscando...
+          } @else {
+            <ion-icon name="search-outline" class="me-2"></ion-icon>
+            Buscar Orden
+          }
+        </button>
+      </div>
+    </form>
+
+    <!-- Mensaje de no encontrada -->
+    @if (noEncontrada()) {
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="alert alert-warning" role="alert">
+          <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+          <strong>Orden no encontrada</strong>
+          <br>No se encontró ninguna orden con el número: <strong>{{ numeroOrdenBuscar() }}</strong>
+          <br><small>Verifica que el número de orden sea correcto y que esté en estado pendiente.</small>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Detalles de la orden encontrada -->
+    @if (ordenEncontrada()) {
+    <div class="row mb-4">
+      <div class="col-12">
+        <h6 class="border-bottom pb-2 text-success">
+          <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+          Detalles de la Orden
+        </h6>
+      </div>
+    </div>
+    
+    <div class="card bg-light mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0">
+            <ion-icon name="document-text-outline" class="me-2"></ion-icon>
+            Información de la Orden
+          </h6>
+          <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning' : (ordenEncontrada()!.estado === 'aprobado' ? 'success' : 'danger') }}">
+            {{ ordenEncontrada()!.estado | uppercase }}
+          </span>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <p class="mb-2">
+              <strong><ion-icon name="business-outline"></ion-icon> Banco:</strong> 
+              {{ ordenEncontrada()!.banco }}
+            </p>
+            <p class="mb-2">
+              <strong><ion-icon name="document-outline"></ion-icon> Número de Orden:</strong> 
+              <span class="text-primary">{{ ordenEncontrada()!.numeroOrden }}</span>
+            </p>
+            <p class="mb-2">
+              <strong><ion-icon name="person-outline"></ion-icon> Cliente:</strong> 
+              {{ ordenEncontrada()!.nombreCliente }}
+            </p>
+            <p class="mb-2">
+              <strong><ion-icon name="card-outline"></ion-icon> Tipo de Documento:</strong> 
+              {{ ordenEncontrada()!.tipoDocumento }}
+            </p>
+          </div>
+          <div class="col-md-6">
+            <p class="mb-2">
+              <strong><ion-icon name="keypad-outline"></ion-icon> Número de Documento:</strong> 
+              {{ ordenEncontrada()!.numeroDocumento }}
+            </p>
+            <p class="mb-2">
+              <strong><ion-icon name="cash-outline"></ion-icon> Monto:</strong> 
+              <span class="text-primary fw-bold">Q {{ ordenEncontrada()!.monto | number:'1.2-2' }}</span>
+            </p>
+            <p class="mb-2">
+              <strong><ion-icon name="calendar-outline"></ion-icon> Fecha de Creación:</strong> 
+              {{ ordenEncontrada()!.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+            </p>
+            <p class="mb-2">
+              <strong><ion-icon name="stats-chart-outline"></ion-icon> Estado:</strong> 
+              <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning' : (ordenEncontrada()!.estado === 'aprobado' ? 'success' : 'danger') }}">
+                {{ ordenEncontrada()!.estado | uppercase }}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    @if (ordenEncontrada()!.estado === 'pendiente') {
+      <div class="d-grid gap-2 mb-4">
+        <button 
+          class="btn btn-success btn-lg"
+          (click)="abrirModalConfirmacion()">
+          <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+          Aprobar Orden
+        </button>
+      </div>
+    } @else {
+      <div class="alert alert-info" role="alert">
+        <ion-icon name="information-circle-outline" class="me-2"></ion-icon>
+        <strong>Orden ya procesada</strong>
+        <br>Esta orden ya fue procesada y no puede ser aprobada nuevamente.
+      </div>
+    }
+    }
+  </div>
+</div>
+
+<!-- Modal de confirmación -->
+@if (mostrarModal()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+            Confirmar Aprobación
+          </h5>
+          <button type="button" class="btn-close" (click)="cerrarModal()" [disabled]="procesandoAprobacion()"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>¿Estás seguro que deseas aprobar la siguiente orden de pago?</p>
+          
+          <div class="card bg-light">
+            <div class="card-body">
+              <p class="mb-2">
+                <strong><ion-icon name="document-outline"></ion-icon> Número de Orden:</strong>
+                <span class="text-primary ms-2">{{ ordenEncontrada()!.numeroOrden }}</span>
+              </p>
+              <p class="mb-2">
+                <strong><ion-icon name="person-outline"></ion-icon> Cliente:</strong>
+                <span class="ms-2">{{ ordenEncontrada()!.nombreCliente }}</span>
+              </p>
+              <p class="mb-0">
+                <strong><ion-icon name="cash-outline"></ion-icon> Monto:</strong>
+                <span class="text-primary fw-bold ms-2">Q {{ ordenEncontrada()!.monto | number:'1.2-2' }}</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="alert alert-warning mt-3 mb-0" role="alert">
+            <ion-icon name="warning-outline" class="me-2"></ion-icon>
+            <small><strong>Advertencia:</strong> Esta acción no se puede deshacer. Una vez aprobada, la orden será procesada.</small>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cerrarModal()"
+            [disabled]="procesandoAprobacion()">
+            <ion-icon name="close-outline" class="me-2"></ion-icon>
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-success"
+            (click)="confirmarAprobacion()"
+            [disabled]="procesandoAprobacion()">
+            @if (procesandoAprobacion()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Procesando...
+            } @else {
+              <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+              Confirmar Aprobación
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

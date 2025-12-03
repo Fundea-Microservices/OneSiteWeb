@@ -157,13 +157,17 @@ export const routes: Routes = [
                 path: 'ordenes-pago',
                 children: [                    
                     {
+                        path: 'generar-orden',
+                        loadComponent: () => import('./ordenes-pago/pages/generar-orden-page/generar-orden-page'),
+                    },
+                    {
                         path: 'generar-gyt',
                         loadComponent: () => import('./ordenes-pago/gyt/pages/generar-gyt-page/generar-gyt-page'),
-                    },  
-                    // {
-                    //     path: 'aprobar-gyt',
-                    //     loadComponent: () => import('./ordenes-pago/gyt/pages/aprobar-gyt/aprobar-gyt-page.component'),
-                    // }, 
+                    },
+                    {
+                        path: 'aprobar-gyt',
+                        loadComponent: () => import('./ordenes-pago/gyt/pages/aprobar-gyt-page/aprobar-gyt-page'),
+                    },
                 ]
             },
 
