@@ -29,12 +29,12 @@
     
     <form class="row g-3 mb-4">
       <div class="col-md-6">
-        <label for="numeroOperacion" class="form-label">Número de Operación *</label>
+        <label for="numeroOperacion" class="form-label">Número de Préstamo *</label>
         <input 
           type="text" 
           class="form-control" 
           id="numeroOperacion"
-          placeholder="Ingrese número de operación"
+          placeholder="Ingrese número de préstamo"
           [(ngModel)]="numeroOperacion"
           name="numeroOperacion"
           [disabled]="cargandoCliente() || procesandoOrden()"
@@ -42,16 +42,38 @@
       </div>
       
       <div class="col-md-6">
-        <label for="documentoCliente" class="form-label">Documento del Cliente *</label>
+        <label for="documentoCliente" class="form-label">
+          Documento del Cliente (DPI) *
+          <small class="text-muted">(13 dígitos)</small>
+        </label>
         <input 
           type="text" 
           class="form-control" 
           id="documentoCliente"
-          placeholder="Ingrese documento del cliente"
+          placeholder="Ej: 2547896320101"
           [(ngModel)]="documentoCliente"
           name="documentoCliente"
+          maxlength="13"
+          pattern="[0-9]{13}"
+          [class.is-invalid]="esDocumentoInvalido()"
+          [class.is-valid]="esDocumentoValido()"
           [disabled]="cargandoCliente() || procesandoOrden()"
           required>
+        @if (tieneLogitudIncorrecta()) {
+          <div class="invalid-feedback">
+            El documento debe tener exactamente 13 dígitos (actual: {{ documentoCliente().length }})
+          </div>
+        }
+        @if (tieneCaracteresInvalidos()) {
+          <div class="invalid-feedback">
+            El documento debe contener solo números
+          </div>
+        }
+        @if (esDocumentoValido()) {
+          <div class="valid-feedback">
+            <ion-icon name="checkmark-circle-outline"></ion-icon> Documento válido
+          </div>
+        }
       </div>
       
       <div class="col-12">
@@ -96,7 +118,7 @@
             <p class="mb-2"><strong>Correo:</strong> {{ cliente()!.correo }}</p>
             <p class="mb-2"><strong>Número Operación:</strong> {{ cliente()!.numeroOperacion }}</p>
             <p class="mb-2"><strong>Monto Préstamo:</strong> 
-              <span class="text-primary fw-bold"> Q {{ cliente()!.montoPrestamo.toLocaleString() }}</span>
+              <span class="text-primary fw-bold"> Q {{ cliente()!.montoPrestamo.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
             </p>
           </div>
         </div>

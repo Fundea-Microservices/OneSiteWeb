@@ -75,7 +75,6 @@
 }
 
 .logo-fundea {
-  background-color: #000;
   color: white;
   padding: 2.5mm 6mm;
   /* Reducido de 3mm 8mm */
@@ -95,7 +94,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000;
   font-size: 6px;
   font-weight: bold;
 }

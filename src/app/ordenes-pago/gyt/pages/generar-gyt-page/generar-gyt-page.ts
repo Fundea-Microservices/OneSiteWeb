@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, signal, CUSTOM_ELEMENTS_SCHEMA, ViewContainerRef, ComponentRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { OrdenGytComponent } from '../../components/orden-gyt/orden-gyt.component';
+import { PrestamosBantotalService } from '../../../../../services/api-bantotal/prestamo.service';
+import { BuscarPrestamoPorDocumentoResponse } from '../../../../../interfaces/api-bantotal/prestamo';
 
 interface Cliente {
   nombres: string;
@@ -23,7 +26,8 @@ interface OrdenPago {
 
 @Component({
   selector: 'app-generar-gyt-page',
-  imports: [FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './generar-gyt-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,44 +40,181 @@ export default class GenerarGytPage {
   
   // Estado de la aplicación
   cliente = signal<Cliente | null>(null);
+  prestamoInfo = signal<BuscarPrestamoPorDocumentoResponse | null>(null); // Datos completos del préstamo
   ordenPago = signal<OrdenPago | null>(null);
   cargandoCliente = signal(false);
   procesandoOrden = signal(false);
 
-  constructor(private toastr: ToastrService, private viewContainerRef: ViewContainerRef) {}
+  constructor(
+    private toastr: ToastrService, 
+    private viewContainerRef: ViewContainerRef,
+    private prestamosService: PrestamosBantotalService
+  ) {}
 
   get formularioValido(): boolean {
     return this.numeroOperacion().trim() !== '' && this.documentoCliente().trim() !== '';
   }
 
+  /**
+   * Valida que el documento tenga exactamente 13 dígitos
+   */
+  validarDocumento(): boolean {
+    const documento = this.documentoCliente().trim();
+    
+    // Verificar que tenga exactamente 13 caracteres
+    if (documento.length !== 13) {
+      this.toastr.warning('El documento debe tener exactamente 13 dígitos', 'Documento inválido');
+      return false;
+    }
+    
+    // Verificar que todos sean números
+    if (!/^\d{13}$/.test(documento)) {
+      this.toastr.warning('El documento debe contener solo números', 'Documento inválido');
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Verifica si el documento es válido para mostrar en el template
+   */
+  esDocumentoValido(): boolean {
+    const documento = this.documentoCliente().trim();
+    return documento.length === 13 && /^\d{13}$/.test(documento);
+  }
+
+  /**
+   * Verifica si el documento tiene contenido pero no es válido
+   */
+  esDocumentoInvalido(): boolean {
+    const documento = this.documentoCliente().trim();
+    return documento.length > 0 && !this.esDocumentoValido();
+  }
+
+  /**
+   * Verifica si el documento tiene longitud incorrecta
+   */
+  tieneLogitudIncorrecta(): boolean {
+    const documento = this.documentoCliente().trim();
+    return documento.length > 0 && documento.length !== 13;
+  }
+
+  /**
+   * Verifica si el documento tiene 13 dígitos pero contiene caracteres no numéricos
+   */
+  tieneCaracteresInvalidos(): boolean {
+    const documento = this.documentoCliente().trim();
+    return documento.length === 13 && !/^\d{13}$/.test(documento);
+  }
+
   async buscarCliente() {
+    // Validar que los campos estén completos
     if (!this.formularioValido) {
       this.toastr.warning('Por favor complete todos los campos', 'Datos incompletos');
+      return;
+    }
+
+    // Validar que el documento tenga 13 dígitos
+    if (!this.validarDocumento()) {
       return;
     }
 
     this.cargandoCliente.set(true);
     
     try {
-      // Simular búsqueda del cliente
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Buscar préstamo en API Bantotal
+      const prestamoData = await new Promise<BuscarPrestamoPorDocumentoResponse>((resolve, reject) => {
+        this.prestamosService.buscarPrestamoPorDocumento({
+          documento: this.documentoCliente(),
+          prestamo: this.numeroOperacion(),
+          pais: 320,
+          tipoDoc: 1
+        }).subscribe({
+          next: resolve,
+          error: reject
+        });
+      });
       
+      console.log("🚀 ~ GenerarGytPage ~ buscarCliente ~ prestamoData:", prestamoData);
+      
+      // Guardar datos completos del préstamo
+      this.prestamoInfo.set(prestamoData);
+      
+      // Extraer información de la persona y préstamo
+      const persona = prestamoData.persona;
+      const prestamo = prestamoData.prestamo;
+      
+      // Mapear datos al formato Cliente
       const clienteData: Cliente = {
-        nombres: 'Juan Carlos',
-        apellidos: 'García López',
-        tipoIdentificacion: 'DPI',
-        numeroIdentificacion: this.documentoCliente(),
-        telefono: '+502 5555-1234',
-        correo: 'juan.garcia@email.com',
-        montoPrestamo: 25000.00,
-        numeroOperacion: this.numeroOperacion()
+        nombres: `${persona.primerNombre} ${persona.segundoNombre || ''}`.trim(),
+        apellidos: `${persona.primerApellido} ${persona.segundoApellido || ''}`.trim(),
+        tipoIdentificacion: persona.tipoDocumento,
+        numeroIdentificacion: persona.numeroDocumento,
+        telefono: 'N/A', // No viene en la respuesta de préstamo
+        correo: 'N/A', // No viene en la respuesta de préstamo
+        montoPrestamo: prestamo.saldo, // Usar el saldo del préstamo
+        numeroOperacion: prestamo.idOperacionFmt // Usar el ID formateado del préstamo
       };
       
       this.cliente.set(clienteData);
-      this.toastr.success('Cliente encontrado exitosamente', 'Búsqueda completada');
       
-    } catch (error) {
-      this.toastr.error('No se pudo encontrar el cliente', 'Error de búsqueda');
+      // Mensaje de éxito con información del préstamo
+      const nombreCompleto = `${persona.primerNombre} ${persona.primerApellido}`;
+      this.toastr.success(
+        `Préstamo: ${prestamo.idOperacionFmt} - Saldo: Q${prestamo.saldo.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Cliente: ${nombreCompleto}`
+      );
+      
+    } catch (error: any) {
+      console.error('Error al buscar préstamo:', error);
+      
+      // Extraer el mensaje de error del backend
+      let errorMessage = 'Error al buscar el préstamo';
+      let errorTitle = 'Error';
+      
+      if (error.error?.data?.message) {
+        // Mensaje detallado del backend (estructura: error.error.data.message)
+        errorMessage = error.error.data.message;
+        
+        // Personalizar el título según el código de error
+        if (errorMessage.includes('No se encontró el préstamo')) {
+          errorTitle = 'Préstamo no encontrado';
+        } else if (errorMessage.includes('No se encontró la persona')) {
+          errorTitle = 'Cliente no encontrado';
+        } else if (errorMessage.includes('No se encontró el cliente')) {
+          errorTitle = 'Cliente no asociado';
+        }
+      } else if (error.error?.message) {
+        // Mensaje alternativo (estructura: error.error.message)
+        errorMessage = error.error.message;
+      } else if (error.message) {
+        // Mensaje HTTP genérico
+        errorMessage = error.message;
+      }
+      
+      // Mostrar mensaje específico según el status
+      if (error.status === 404) {
+        this.toastr.error(
+          errorMessage || 'No se encontró el préstamo para el documento ingresado', 
+          errorTitle || 'No encontrado'
+        );
+      } else if (error.status === 400) {
+        this.toastr.error(
+          errorMessage || 'Datos inválidos o parámetros incorrectos', 
+          errorTitle || 'Error de validación'
+        );
+      } else if (error.status === 0) {
+        this.toastr.error(
+          'No se pudo conectar con el servidor. Verifique su conexión.', 
+          'Error de conexión'
+        );
+      } else {
+        this.toastr.error(
+          errorMessage || 'Error al conectar con el servidor Bantotal', 
+          errorTitle || 'Error de búsqueda'
+        );
+      }
     } finally {
       this.cargandoCliente.set(false);
     }
@@ -294,7 +435,6 @@ export default class GenerarGytPage {
             }
 
             .logo-fundea {
-              background-color: #000;
               color: white;
               padding: 2.5mm 6mm;
               border-radius: 18px;
@@ -677,6 +817,7 @@ export default class GenerarGytPage {
     this.numeroOperacion.set('');
     this.documentoCliente.set('');
     this.cliente.set(null);
+    this.prestamoInfo.set(null);
     this.ordenPago.set(null);
   }
 }
