@@ -5,6 +5,8 @@ import { ToastrService } from 'ngx-toastr';
 import { OrdenGytComponent } from '../../components/orden-gyt/orden-gyt.component';
 import { PrestamosBantotalService } from '../../../../../services/api-bantotal/prestamo.service';
 import { BuscarPrestamoPorDocumentoResponse } from '../../../../../interfaces/api-bantotal/prestamo';
+import { OrdenesGytService } from '../../../../../services/ordenes-gyt/ordenes-gyt.service';
+import { OrdenGyt } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
 
 interface Cliente {
   nombres: string;
@@ -42,13 +44,15 @@ export default class GenerarGytPage {
   cliente = signal<Cliente | null>(null);
   prestamoInfo = signal<BuscarPrestamoPorDocumentoResponse | null>(null); // Datos completos del préstamo
   ordenPago = signal<OrdenPago | null>(null);
+  ordenGytGenerada = signal<OrdenGyt | null>(null); // Orden guardada en el sistema
   cargandoCliente = signal(false);
   procesandoOrden = signal(false);
 
   constructor(
     private toastr: ToastrService, 
     private viewContainerRef: ViewContainerRef,
-    private prestamosService: PrestamosBantotalService
+    private prestamosService: PrestamosBantotalService,
+    private ordenesGytService: OrdenesGytService
   ) {}
 
   get formularioValido(): boolean {
@@ -222,12 +226,43 @@ export default class GenerarGytPage {
 
   async procesarOrden() {
     const clienteData = this.cliente();
-    if (!clienteData) return;
+    const prestamoData = this.prestamoInfo();
+    
+    if (!clienteData || !prestamoData) {
+      this.toastr.error('No hay datos del cliente o préstamo', 'Error');
+      return;
+    }
 
     this.procesandoOrden.set(true);
     
+    // Crear y guardar la orden en el sistema
+    const ordenGyt = this.ordenesGytService.crearOrden(
+      {
+        nombres: clienteData.nombres,
+        apellidos: clienteData.apellidos,
+        tipoIdentificacion: clienteData.tipoIdentificacion,
+        numeroIdentificacion: clienteData.numeroIdentificacion,
+        telefono: clienteData.telefono,
+        correo: clienteData.correo
+      },
+      {
+        numeroOperacion: prestamoData.prestamo.idOperacionFmt,
+        idOperacionFmt: prestamoData.prestamo.idOperacionFmt,
+        operacionUId: prestamoData.prestamo.operacionUId,
+        saldo: prestamoData.prestamo.saldo,
+        producto: prestamoData.prestamo.producto.nombre,
+        sucursal: prestamoData.prestamo.sucursal,
+        estado: prestamoData.prestamo.estado
+      },
+      prestamoData.prestamo.saldo,
+      'SYSTEM' // Aquí podrías poner el usuario logueado
+    );
+    
+    this.ordenGytGenerada.set(ordenGyt);
+    
+    // Crear orden temporal para el proceso visual
     const nuevaOrden: OrdenPago = {
-      id: 'OP-' + Date.now(),
+      id: ordenGyt.id, // Usar el ID de la orden real
       estado: 'preparar',
       cliente: clienteData,
       fechaCreacion: new Date()
@@ -241,7 +276,10 @@ export default class GenerarGytPage {
     await this.procesarEstadoOrden('pagar');
     
     this.procesandoOrden.set(false);
-    this.toastr.success('Orden de pago completada exitosamente', 'Proceso Finalizado');
+    this.toastr.success(
+      `Orden ${ordenGyt.id} completada exitosamente`, 
+      'Proceso Finalizado'
+    );
   }
 
   private async procesarEstadoOrden(estado: 'preparar' | 'revisar' | 'pagar') {
@@ -819,5 +857,6 @@ export default class GenerarGytPage {
     this.cliente.set(null);
     this.prestamoInfo.set(null);
     this.ordenPago.set(null);
+    this.ordenGytGenerada.set(null);
   }
 }

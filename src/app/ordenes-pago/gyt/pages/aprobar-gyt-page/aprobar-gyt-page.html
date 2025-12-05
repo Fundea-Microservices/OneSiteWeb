@@ -86,7 +86,7 @@
             <ion-icon name="document-text-outline" class="me-2"></ion-icon>
             Información de la Orden
           </h6>
-          <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning' : (ordenEncontrada()!.estado === 'aprobado' ? 'success' : 'danger') }}">
+          <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning' : (ordenEncontrada()!.estado === 'aprobada' ? 'success' : 'danger') }}">
             {{ ordenEncontrada()!.estado | uppercase }}
           </span>
         </div>
@@ -94,30 +94,30 @@
         <div class="row">
           <div class="col-md-6">
             <p class="mb-2">
-              <strong><ion-icon name="business-outline"></ion-icon> Banco:</strong> 
-              {{ ordenEncontrada()!.banco }}
+              <strong><ion-icon name="business-outline"></ion-icon> Sucursal:</strong> 
+              {{ ordenEncontrada()!.prestamo.sucursal }}
             </p>
             <p class="mb-2">
               <strong><ion-icon name="document-outline"></ion-icon> Número de Orden:</strong> 
-              <span class="text-primary">{{ ordenEncontrada()!.numeroOrden }}</span>
+              <span class="text-primary">{{ ordenEncontrada()!.id }}</span>
             </p>
             <p class="mb-2">
               <strong><ion-icon name="person-outline"></ion-icon> Cliente:</strong> 
-              {{ ordenEncontrada()!.nombreCliente }}
+              {{ ordenEncontrada()!.cliente.nombres }} {{ ordenEncontrada()!.cliente.apellidos }}
             </p>
             <p class="mb-2">
               <strong><ion-icon name="card-outline"></ion-icon> Tipo de Documento:</strong> 
-              {{ ordenEncontrada()!.tipoDocumento }}
+              {{ ordenEncontrada()!.cliente.tipoIdentificacion }}
             </p>
           </div>
           <div class="col-md-6">
             <p class="mb-2">
               <strong><ion-icon name="keypad-outline"></ion-icon> Número de Documento:</strong> 
-              {{ ordenEncontrada()!.numeroDocumento }}
+              {{ ordenEncontrada()!.cliente.numeroIdentificacion }}
             </p>
             <p class="mb-2">
               <strong><ion-icon name="cash-outline"></ion-icon> Monto:</strong> 
-              <span class="text-primary fw-bold">Q {{ ordenEncontrada()!.monto | number:'1.2-2' }}</span>
+              <span class="text-primary fw-bold">Q {{ ordenEncontrada()!.montoDesembolso | number:'1.2-2' }}</span>
             </p>
             <p class="mb-2">
               <strong><ion-icon name="calendar-outline"></ion-icon> Fecha de Creación:</strong> 
@@ -125,7 +125,7 @@
             </p>
             <p class="mb-2">
               <strong><ion-icon name="stats-chart-outline"></ion-icon> Estado:</strong> 
-              <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning' : (ordenEncontrada()!.estado === 'aprobado' ? 'success' : 'danger') }}">
+              <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning' : (ordenEncontrada()!.estado === 'aprobada' ? 'success' : 'danger') }}">
                 {{ ordenEncontrada()!.estado | uppercase }}
               </span>
             </p>
@@ -175,15 +175,15 @@
             <div class="card-body">
               <p class="mb-2">
                 <strong><ion-icon name="document-outline"></ion-icon> Número de Orden:</strong>
-                <span class="text-primary ms-2">{{ ordenEncontrada()!.numeroOrden }}</span>
+                <span class="text-primary ms-2">{{ ordenEncontrada()!.id }}</span>
               </p>
               <p class="mb-2">
                 <strong><ion-icon name="person-outline"></ion-icon> Cliente:</strong>
-                <span class="ms-2">{{ ordenEncontrada()!.nombreCliente }}</span>
+                <span class="ms-2">{{ ordenEncontrada()!.cliente.nombres }} {{ ordenEncontrada()!.cliente.apellidos }}</span>
               </p>
               <p class="mb-0">
                 <strong><ion-icon name="cash-outline"></ion-icon> Monto:</strong>
-                <span class="text-primary fw-bold ms-2">Q {{ ordenEncontrada()!.monto | number:'1.2-2' }}</span>
+                <span class="text-primary fw-bold ms-2">Q {{ ordenEncontrada()!.montoDesembolso | number:'1.2-2' }}</span>
               </p>
             </div>
           </div>

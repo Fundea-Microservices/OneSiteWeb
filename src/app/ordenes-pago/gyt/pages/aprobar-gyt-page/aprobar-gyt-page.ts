@@ -1,17 +1,9 @@
 import { Component, signal, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface OrdenParaAprobar {
-  numeroOrden: string;
-  banco: string;
-  nombreCliente: string;
-  tipoDocumento: string;
-  numeroDocumento: string;
-  monto: number;
-  fechaCreacion: Date;
-  estado: 'pendiente' | 'aprobado' | 'rechazado';
-}
+import { ToastrService } from 'ngx-toastr';
+import { OrdenesGytService } from '../../../../../services/ordenes-gyt/ordenes-gyt.service';
+import { OrdenGyt, EstadoOrdenGyt } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
 
 @Component({
   selector: 'app-aprobar-gyt-page',
@@ -26,7 +18,7 @@ export default class AprobarGytPageComponent {
   numeroOrdenBuscar = signal('');
   
   // Señal para la orden encontrada
-  ordenEncontrada = signal<OrdenParaAprobar | null>(null);
+  ordenEncontrada = signal<OrdenGyt | null>(null);
   
   // Señal para indicar si se está buscando
   buscando = signal(false);
@@ -39,40 +31,44 @@ export default class AprobarGytPageComponent {
   
   // Señal para indicar si se está procesando la aprobación
   procesandoAprobacion = signal(false);
+  
+  // Señal para órdenes pendientes
+  ordenesPendientes = signal<OrdenGyt[]>([]);
+  
+  // Estadísticas
+  estadisticas = signal({
+    total: 0,
+    pendientes: 0,
+    aprobadas: 0,
+    rechazadas: 0,
+    pagadas: 0
+  });
 
-  // Datos mock para pruebas (simula órdenes en el sistema)
-  private ordenesMock: OrdenParaAprobar[] = [
-    {
-      numeroOrden: 'OP-1732000001',
-      banco: 'BANCO G&T CONTINENTAL',
-      nombreCliente: 'Juan Carlos García López',
-      tipoDocumento: 'DPI',
-      numeroDocumento: '2345678901234',
-      monto: 25000.00,
-      fechaCreacion: new Date('2025-11-17'),
-      estado: 'pendiente'
-    },
-    {
-      numeroOrden: 'OP-1732000002',
-      banco: 'BANCO G&T CONTINENTAL',
-      nombreCliente: 'María Fernanda Rodríguez',
-      tipoDocumento: 'DPI',
-      numeroDocumento: '3456789012345',
-      monto: 15000.00,
-      fechaCreacion: new Date('2025-11-18'),
-      estado: 'pendiente'
-    },
-    {
-      numeroOrden: 'OP-1732000003',
-      banco: 'BANCO G&T CONTINENTAL',
-      nombreCliente: 'Pedro Antonio Méndez',
-      tipoDocumento: 'DPI',
-      numeroDocumento: '4567890123456',
-      monto: 30000.00,
-      fechaCreacion: new Date('2025-11-19'),
-      estado: 'pendiente'
-    }
-  ];
+  constructor(
+    private ordenesGytService: OrdenesGytService,
+    private toastr: ToastrService
+  ) {
+    this.cargarEstadisticas();
+    this.cargarOrdenesPendientes();
+  }
+
+  /**
+   * Cargar estadísticas
+   */
+  cargarEstadisticas(): void {
+    this.ordenesGytService.obtenerEstadisticas().subscribe(stats => {
+      this.estadisticas.set(stats);
+    });
+  }
+
+  /**
+   * Cargar órdenes pendientes
+   */
+  cargarOrdenesPendientes(): void {
+    this.ordenesGytService.obtenerOrdenesPorEstado('pendiente').subscribe(ordenes => {
+      this.ordenesPendientes.set(ordenes);
+    });
+  }
 
   // Computed para validar si se puede buscar
   get puedesBuscar(): boolean {
@@ -89,21 +85,20 @@ export default class AprobarGytPageComponent {
     this.noEncontrada.set(false);
     this.ordenEncontrada.set(null);
 
-    // Simular búsqueda con delay
-    setTimeout(() => {
-      const ordenBuscada = this.numeroOrdenBuscar().trim();
-      const orden = this.ordenesMock.find(o => o.numeroOrden === ordenBuscada);
-
+    const ordenBuscada = this.numeroOrdenBuscar().trim();
+    
+    this.ordenesGytService.obtenerOrdenPorId(ordenBuscada).subscribe(orden => {
       if (orden) {
         this.ordenEncontrada.set(orden);
         this.noEncontrada.set(false);
+        this.toastr.success('Orden encontrada', 'Búsqueda exitosa');
       } else {
         this.ordenEncontrada.set(null);
         this.noEncontrada.set(true);
+        this.toastr.warning('No se encontró la orden', 'Orden no encontrada');
       }
-
       this.buscando.set(false);
-    }, 500);
+    });
   }
 
   // Método para abrir el modal de confirmación
@@ -120,18 +115,47 @@ export default class AprobarGytPageComponent {
   confirmarAprobacion() {
     this.procesandoAprobacion.set(true);
 
-    // Simular aprobación con delay
-    setTimeout(() => {
-      const orden = this.ordenEncontrada();
-      if (orden) {
-        orden.estado = 'aprobado';
-        alert(`✅ Orden ${orden.numeroOrden} aprobada exitosamente`);
+    const orden = this.ordenEncontrada();
+    if (orden) {
+      const exito = this.ordenesGytService.aprobarOrden(orden.id, 'ADMIN', 'Aprobada desde interfaz');
+      
+      if (exito) {
+        this.toastr.success(`Orden ${orden.id} aprobada exitosamente`, 'Aprobación exitosa');
+        this.numeroOrdenBuscar.set('');
+        this.ordenEncontrada.set(null);
+        this.cargarEstadisticas();
+        this.cargarOrdenesPendientes();
+      } else {
+        this.toastr.error('Error al aprobar la orden', 'Error');
       }
+    }
 
-      this.procesandoAprobacion.set(false);
-      this.cerrarModal();
-      this.limpiarBusqueda();
-    }, 1000);
+    this.procesandoAprobacion.set(false);
+    this.cerrarModal();
+  }
+
+  // Método para rechazar orden
+  rechazarOrden() {
+    const motivo = prompt('Ingrese el motivo del rechazo:');
+    
+    if (!motivo || motivo.trim() === '') {
+      this.toastr.warning('Debe ingresar un motivo de rechazo', 'Rechazo');
+      return;
+    }
+
+    const orden = this.ordenEncontrada();
+    if (orden) {
+      const exito = this.ordenesGytService.rechazarOrden(orden.id, 'ADMIN', motivo);
+      
+      if (exito) {
+        this.toastr.success(`Orden ${orden.id} rechazada`, 'Rechazo');
+        this.limpiarBusqueda();
+        this.cargarEstadisticas();
+        this.cargarOrdenesPendientes();
+      } else {
+        this.toastr.error('Error al rechazar la orden', 'Error');
+      }
+    }
   }
 
   // Método para limpiar la búsqueda
@@ -151,10 +175,28 @@ export default class AprobarGytPageComponent {
 
   // Método para limpiar resultados cuando se modifica el input
   onInputChange() {
-    // Si hay resultados previos, limpiarlos cuando el usuario modifica el input
     if (this.ordenEncontrada() || this.noEncontrada()) {
       this.ordenEncontrada.set(null);
       this.noEncontrada.set(false);
     }
   }
+
+  // Método para obtener clase de badge según estado
+  getEstadoBadgeClass(estado: EstadoOrdenGyt): string {
+    switch (estado) {
+      case 'pendiente': return 'bg-warning text-dark';
+      case 'aprobada': return 'bg-success';
+      case 'rechazada': return 'bg-danger';
+      case 'pagada': return 'bg-info';
+      default: return 'bg-secondary';
+    }
+  }
+
+  // Método para seleccionar una orden de la lista
+  seleccionarOrden(orden: OrdenGyt): void {
+    this.ordenEncontrada.set(orden);
+    this.numeroOrdenBuscar.set(orden.id);
+    this.noEncontrada.set(false);
+  }
 }
+

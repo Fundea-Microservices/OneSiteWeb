@@ -100,6 +100,9 @@
         <h6 class="border-bottom pb-2 text-success">
           <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
           Información del Cliente
+          <!-- @if (ordenGytGenerada()) {
+            <span class="badge bg-success ms-2">Orden: {{ ordenGytGenerada()!.id }}</span>
+          } -->
         </h6>
       </div>
     </div>
@@ -123,12 +126,6 @@
           </div>
         </div>
       </div>
-      <button 
-            class="btn btn-primary btn-lg"
-            (click)="generarPDF()">
-            <ion-icon name="print-outline" class="me-2"></ion-icon>
-            Abrir Ventana de Impresión
-          </button>
     </div>
 
     <!-- Botón generar orden -->
