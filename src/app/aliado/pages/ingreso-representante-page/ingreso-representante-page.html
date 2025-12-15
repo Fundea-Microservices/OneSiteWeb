@@ -1,0 +1,43 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Aliados</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Ingreso Representante</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header">
+        Administrar Representantes de empresas
+        <button class="btn btn-primary btn-sm float-end" 
+        
+        >Crear
+            nuevo representante</button>
+    </div>
+    <div class="card-body">
+        
+
+    </div>
+
+    <!-- Modal Crear/Editar Representante Usuario-->
+    <div #upsertRepresentanteModal class="modal fade" id="upsertRepresentanteModal" tabindex="-1"
+        aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!-- <h1 class="modal-title fs-5" id="titleUpsertModal">{{modal().titulo}}</h1> -->
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+
+
+</div>

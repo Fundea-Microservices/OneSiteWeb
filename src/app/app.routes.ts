@@ -13,10 +13,10 @@ export const routes: Routes = [
         path: 'fundea/login',
         loadComponent: () => import('./auth/pages/login-page/login-page'),
     },
-    {
-        path: 'aliado/login',
-        loadComponent: () => import('./aliado/pages/login-aliado/login-aliado.component'),
-    },
+    // {
+    //     path: 'aliado/login',
+    //     loadComponent: () => import('./aliado/pages/login-aliado/login-aliado.component'),
+    // },
     {
         path: 'imprimir',
         canActivate: [AuthGuard],
@@ -191,44 +191,48 @@ export const routes: Routes = [
         ]
     },
     {
-        path: 'aliados-fundea',
+        path: 'aliado',
         loadComponent: () => import('./dashboard/pages/dashboard-page/dashboard-page'),
         canActivate: [AuthGuard],
         children: [
             {
-                path: 'empresas',
-                loadComponent: () => import('./aliado/pages/empresa-page/empresa-page.component'),
+                path: 'ingreso-representante',
+                loadComponent: () => import('./aliado/pages/ingreso-representante-page/ingreso-representante-page'),
             },
             {
                 path: 'usuarios',
                 loadComponent: () => import('./aliado/pages/usuarios-page/usuarios-page.component'),
             },
+            {
+                path: 'empresas',
+                loadComponent: () => import('./aliado/pages/empresa-page/empresa-page.component'),
+            },
         ]
     },
-    {
-        path: 'aliado',
-        loadComponent: () => import('./aliado/pages/dashboard-aliado/dashboard-aliado.component'),
-        canActivate: [AuthGuard],
-        children: [
-            {
-                path: 'home',
-                loadComponent: () => import('./aliado/pages/home-aliado/home-aliado.component'),
-            },
-            {
-                path: 'referido/create',
-                loadComponent: () => import('./aliado/pages/ingresar-referido/ingresar-referido.component'),
-            },
-            {
-                path: 'referido/list',
-                loadComponent: () => import('./aliado/pages/referidos-usuario/referidos-usuario.component'),
-            },
+    // {
+    //     path: 'aliado',
+    //     loadComponent: () => import('./aliado/pages/dashboard-aliado/dashboard-aliado.component'),
+    //     canActivate: [AuthGuard],
+    //     children: [
+    //         {
+    //             path: 'home',
+    //             loadComponent: () => import('./aliado/pages/home-aliado/home-aliado.component'),
+    //         },
+    //         {
+    //             path: 'referido/create',
+    //             loadComponent: () => import('./aliado/pages/ingresar-referido/ingresar-referido.component'),
+    //         },
+    //         {
+    //             path: 'referido/list',
+    //             loadComponent: () => import('./aliado/pages/referidos-usuario/referidos-usuario.component'),
+    //         },
 
-            {
-                path: '**',
-                redirectTo: 'home',
-            }
-        ]
-    },
+    //         {
+    //             path: '**',
+    //             redirectTo: 'home',
+    //         }
+    //     ]
+    // },
     {
         path: '404',
         loadComponent: () => import('./shared/pages/404-page/404-page'),
