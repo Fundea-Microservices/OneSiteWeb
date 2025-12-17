@@ -124,14 +124,20 @@ export default class GenerarGytPage {
       return;
     }
 
+    // Limpiar datos de búsqueda anterior
+    this.cliente.set(null);
+    this.prestamoInfo.set(null);
+    this.ordenGytGenerada.set(null);
+    this.ordenPago.set(null);
+
     this.cargandoCliente.set(true);
     
     try {
       // Buscar préstamo en API Bantotal
       const prestamoData = await new Promise<BuscarPrestamoPorDocumentoResponse>((resolve, reject) => {
         this.prestamosService.buscarPrestamoPorDocumento({
-          documento: this.documentoCliente(),
-          prestamo: this.numeroOperacion(),
+          documento: this.documentoCliente().trim(),
+          prestamo: this.numeroOperacion().trim(),
           pais: 320,
           tipoDoc: 1
         }).subscribe({
@@ -149,6 +155,16 @@ export default class GenerarGytPage {
       const persona = prestamoData.persona;
       const prestamo = prestamoData.prestamo;
       
+      // Validar que existan detalles del préstamo
+      if (!prestamo.detalles || prestamo.detalles.length === 0) {
+        this.cargandoCliente.set(false);
+        this.toastr.error(
+          'No se encontró información del monto para este préstamo y cliente',
+          'Información incompleta'
+        );
+        return;
+      }
+      
       // Mapear datos al formato Cliente
       const clienteData: Cliente = {
         nombres: `${persona.primerNombre} ${persona.segundoNombre || ''}`.trim(),
@@ -157,7 +173,7 @@ export default class GenerarGytPage {
         numeroIdentificacion: persona.numeroDocumento,
         telefono: 'N/A', // No viene en la respuesta de préstamo
         correo: 'N/A', // No viene en la respuesta de préstamo
-        montoPrestamo: prestamo.saldo, // Usar el saldo del préstamo
+        montoPrestamo: prestamo.detalles[0].Valor, // Usar el valor del primer detalle
         numeroOperacion: prestamo.idOperacionFmt // Usar el ID formateado del préstamo
       };
       
@@ -165,8 +181,9 @@ export default class GenerarGytPage {
       
       // Mensaje de éxito con información del préstamo
       const nombreCompleto = `${persona.primerNombre} ${persona.primerApellido}`;
+      const montoDesembolso = prestamo.detalles[0].Valor;
       this.toastr.success(
-        `Préstamo: ${prestamo.idOperacionFmt} - Saldo: Q${prestamo.saldo.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `Préstamo: ${prestamo.idOperacionFmt} - Monto: Q${montoDesembolso.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Cliente: ${nombreCompleto}`
       );
       
@@ -254,7 +271,7 @@ export default class GenerarGytPage {
         sucursal: prestamoData.prestamo.sucursal,
         estado: prestamoData.prestamo.estado
       },
-      prestamoData.prestamo.saldo,
+      prestamoData.prestamo.detalles[0].Valor,
       'SYSTEM' // Aquí podrías poner el usuario logueado
     );
     

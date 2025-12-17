@@ -63,6 +63,31 @@ export interface ProductoPrestamo {
 }
 
 /**
+ * Detalle del préstamo (desembolso)
+ */
+export interface DetallePrestamo {
+  Codigo_barras: string;
+  Cuenta_Cliente: number;
+  Fecha: string;
+  ID_Agencia: number;
+  Id_Transaccion: string;
+  Itmod: number;
+  Itnrel: number;
+  Itsuc: number;
+  Ittran: number;
+  Numero_Operacion: number;
+  Referencia: string;
+  Sub_Operacion: number;
+  Valor: number;
+  cam_carga_tipo: number;
+  codigo: number;
+  codigo_cuenta_destino: number;
+  id_banco_destino: number;
+  moneda: number;
+  numero_de_cuenta: string;
+}
+
+/**
  * Información del préstamo
  */
 export interface PrestamoInfo {
@@ -73,6 +98,7 @@ export interface PrestamoInfo {
   sucursal: string;
   saldo: number;
   estado: string;
+  detalles: DetallePrestamo[];
 }
 
 /**
