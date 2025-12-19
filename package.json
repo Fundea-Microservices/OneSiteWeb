@@ -24,6 +24,7 @@
     "@preline/overlay": "^3.2.3",
     "@tailwindcss/postcss": "^4.1.10",
     "bootstrap": "^5.3.6",
+    "flowbite": "^4.0.1",
     "lucide-angular": "^0.548.0",
     "ngx-toastr": "^19.0.0",
     "postcss": "^8.5.5",
