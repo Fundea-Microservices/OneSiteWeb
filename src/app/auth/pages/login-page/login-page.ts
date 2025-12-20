@@ -5,10 +5,12 @@ import { IMenu } from '../../../../interfaces/auth';
 import { AccesoService } from '../../../../services/acceso.service';
 import { UpperCasePipe } from '@angular/common';
 import { ConfiguracionService } from '../../../../services/configuracion.service';
+import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
+import { LoadingScreenComponent } from '../../../shared/components/loading-screen/loading-screen.component';
 
 @Component({
   selector: 'app-login-page',
-  imports: [UpperCasePipe],
+  imports: [UpperCasePipe, LoadingScreenComponent],
   templateUrl: './login-page.html',
   styleUrl: './login-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,6 +20,7 @@ export default class LoginPageComponent {
   public authService = inject(AuthService)
   public configService = inject(ConfiguracionService)
   public accesoService = inject(AccesoService)
+  public catalogosService = inject(CatalogosBantotalService)
   public router = inject(Router)
 
   public user = this.authService.getUserStorage();
@@ -69,11 +72,15 @@ export default class LoginPageComponent {
   }
 
   loading = signal(false);
+  loadingMessage = signal('Cargando...');
+  loadingSubtitle = signal('');
 
   async login() {
 
     try {
       this.loading.set(true);
+      this.loadingMessage.set('Iniciando sesión...');
+      this.loadingSubtitle.set('');
       this.errorObj.set({
         message: '',
         code: 0,
@@ -92,16 +99,45 @@ export default class LoginPageComponent {
         });
 
         if (authData?.data.user.rolId) {
+          this.loadingMessage.set('Cargando permisos...');
           let accesosData = await this.accesoService.getAccesosByRol(authData?.data.user.rolId);
           if( accesosData) {
             localStorage.setItem('accesos', JSON.stringify(accesosData.body?.data.accesos || []));
             if(accesosData.body?.data.accesos.length == 0) {
               this.authService.logout('No hay configurados accesos para su rol');
+              this.loading.set(false);
+              return;
             }
           } else {
             this.authService.logout('No se encontraron accesos para el rol');
+            this.loading.set(false);
+            return;
           }
         }
+
+        // Cargar catálogos antes de navegar
+        this.loadingMessage.set('Cargando catálogos...');
+        this.loadingSubtitle.set('Esto puede tomar unos segundos');
+        try {
+          await this.catalogosService.actualizarCatalogos();
+          console.log('✅ Catálogos cargados exitosamente');
+        } catch (error) {
+          console.error('❌ Error al cargar catálogos:', error);
+          // Continuar aunque falle la carga de catálogos
+        }
+
+        this.loading.set(false);
+        // Cargar catálogos antes de navegar
+        this.loadingMessage.set('Cargando catálogos...');
+        this.loadingSubtitle.set('Esto puede tomar unos segundos');
+        try {
+          await this.catalogosService.actualizarCatalogos();
+          console.log('✅ Catálogos cargados exitosamente');
+        } catch (error) {
+          console.error('❌ Error al cargar catálogos:', error);
+          // Continuar aunque falle la carga de catálogos
+        }
+
         this.loading.set(false);
         this.router.navigate(['/fundea']);
       } else {

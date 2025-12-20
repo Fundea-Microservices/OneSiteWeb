@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
-import { Observable, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable, throwError, firstValueFrom } from 'rxjs';
+import { map, catchError, take } from 'rxjs/operators';
 import {
   ListarCatalogosParams,
   ListarCatalogosResponse,
@@ -28,7 +28,7 @@ export class CatalogosBantotalService extends HttpService {
   };
 
   private readonly configEndpoints = {
-    configuracion: '/api/configuracion'
+    configuracion: '/config/general'
   };
 
   constructor(http: HttpClient) {
@@ -75,7 +75,7 @@ export class CatalogosBantotalService extends HttpService {
   listarCatalogos(params?: ListarCatalogosParams): Observable<ListarCatalogosResponse> {
     console.log('🔍 Listando catálogos con parámetros:', params);
 
-    // Construir query params
+    // Construir query params como objeto plano
     const queryParams: any = {};
     
     if (params) {
@@ -87,9 +87,10 @@ export class CatalogosBantotalService extends HttpService {
       if (params.limit) queryParams.limit = params.limit;
     }
 
+    // Pasar queryParams directamente, no dentro de otro objeto
     return this.get<ListarCatalogosResponse>(
       this.endpoints.listar,
-      { params: queryParams }
+      queryParams
     ).pipe(
       map((response) => {
         // Extraer el cuerpo de la respuesta si es un HttpResponse
@@ -209,7 +210,9 @@ export class CatalogosBantotalService extends HttpService {
 
     try {
       // 1. Obtener la lista de grupos de catálogos
-      const httpResponse = await this.get<ConfiguracionCatalogosResponse>(`${this.configEndpoints.configuracion}/catalogos`).toPromise();
+      const httpResponse = await firstValueFrom(
+        this.get<ConfiguracionCatalogosResponse>(`${this.configEndpoints.configuracion}/catalogos`)
+      );
       
       const configBody = httpResponse ? httpResponse.body : null;
 
@@ -221,32 +224,56 @@ export class CatalogosBantotalService extends HttpService {
       console.log('📋 Grupos de catálogos a obtener:', grupos);
 
       // 2. Preparar todas las peticiones en paralelo
-      const promesas = grupos.map(grupo =>
-        this.listarCatalogos({ grupo, all: true, activo: true }).toPromise()
-      );
+      // Usamos el get directo sin pasar por listarCatalogos para evitar el catchError
+      const promesas = grupos.map(grupo => {
+        const queryParams: any = {
+          grupo,
+          all: true,
+          activo: true
+        };
+        
+        return firstValueFrom(
+          this.get<any>(this.endpoints.listar, queryParams).pipe(
+            map((response) => {
+              const body = 'body' in response ? response.body : response;
+              if (!body) {
+                throw new Error(`No hay respuesta para el grupo: ${grupo}`);
+              }
+              
+              // La respuesta tiene doble anidamiento: body.data.data.catalogos
+              const catalogosData = body.data?.data?.catalogos;
+              
+              if (!catalogosData || !Array.isArray(catalogosData)) {
+                console.error(`⚠️ Estructura inválida para grupo "${grupo}":`, body);
+                throw new Error(`Estructura de respuesta inválida para el grupo: ${grupo}`);
+              }
+              
+              console.log(`✅ Grupo "${grupo}": ${catalogosData.length} catálogos`);
+              return { grupo, catalogos: catalogosData };
+            })
+          )
+        );
+      });
 
       const resultados = await Promise.all(promesas);
 
       // 3. Procesar y estructurar los resultados
       const catalogosParaStorage: { [key: string]: CatalogoSimple[] } = {};
 
-      resultados.forEach((response, index) => {
-        if (response && response.data && response.data.catalogos) {
-          const grupo = grupos[index];
-          console.log(`📦 Procesando ${response.data.catalogos.length} catálogos para el grupo: ${grupo}`);
-          
-          // Mapear a la interfaz simplificada
-          catalogosParaStorage[grupo] = response.data.catalogos.map(c => ({
-            catalogoId: c.catalogoId,
-            grupo: c.grupo,
-            nombre: c.nombre,
-            valorCore: c.valorCore,
-            padreId: c.padreId,
-            padreValorCore: c.padreValorCore,
-            activo: c.activo,
-            orden: c.orden,
-          }));
-        }
+      resultados.forEach(({ grupo, catalogos }) => {
+        console.log(`📦 Procesando ${catalogos.length} catálogos para el grupo: ${grupo}`);
+        
+        // Mapear a la interfaz simplificada
+        catalogosParaStorage[grupo] = catalogos.map((c: any) => ({
+          catalogoId: c.catalogoId,
+          grupo: c.grupo,
+          nombre: c.nombre,
+          valorCore: c.valorCore,
+          padreId: c.padreId,
+          padreValorCore: c.padreValorCore,
+          activo: c.activo,
+          orden: c.orden,
+        }));
       });
 
       // 4. Guardar en localStorage
