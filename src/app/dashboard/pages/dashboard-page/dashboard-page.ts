@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, inject, viewChild } from '@angular/core';
 import { SideMenuComponent } from "../../components/side-menu/side-menu.component";
 import { RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../services/auth.service';
@@ -12,7 +12,12 @@ import { AuthService } from '../../../../services/auth.service';
 export default class DashboardPageComponent {
 
   public authService = inject(AuthService)
+  public sideMenu = viewChild(SideMenuComponent);
 
   public user = this.authService.getUserStorage();
+
+  toggleMenu() {
+    this.sideMenu()?.toggleMenu();
+  }
 
 }
