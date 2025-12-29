@@ -196,8 +196,12 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
         children: [
             {
-                path: 'ingreso-representante',
-                loadComponent: () => import('./aliado/pages/ingreso-representante-page/ingreso-representante-page'),
+                path: 'listado-representante',
+                loadComponent: () => import('./aliado/pages/listado-representante-page/listado-representante-page'),
+            },
+            {
+                path: 'crear-representante',
+                loadComponent: () => import('./aliado/pages/crear-representante-page/crear-representante-page'),
             },
             {
                 path: 'usuarios',

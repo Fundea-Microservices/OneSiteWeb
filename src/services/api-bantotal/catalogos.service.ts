@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { Observable, throwError, firstValueFrom } from 'rxjs';
 import { map, catchError, take } from 'rxjs/operators';
+import { signal } from '@angular/core';
 import {
   ListarCatalogosParams,
   ListarCatalogosResponse,
@@ -30,6 +31,9 @@ export class CatalogosBantotalService extends HttpService {
   private readonly configEndpoints = {
     configuracion: '/config/general'
   };
+
+  // Signal público para controlar el estado de carga
+  actualizandoCatalogos = signal(false);
 
   constructor(http: HttpClient) {
     super(http);
@@ -73,11 +77,9 @@ export class CatalogosBantotalService extends HttpService {
    * ```
    */
   listarCatalogos(params?: ListarCatalogosParams): Observable<ListarCatalogosResponse> {
-    console.log('🔍 Listando catálogos con parámetros:', params);
-
     // Construir query params como objeto plano
     const queryParams: any = {};
-    
+
     if (params) {
       if (params.activo !== undefined) queryParams.activo = params.activo;
       if (params.grupo) queryParams.grupo = params.grupo;
@@ -98,10 +100,6 @@ export class CatalogosBantotalService extends HttpService {
         if (!body) {
           throw new Error('La respuesta no tiene cuerpo (body)');
         }
-        
-        console.log('✅ Catálogos listados exitosamente');
-        console.log('📦 Total de catálogos:', body.data.catalogos.length);
-        console.log('📋 Metadata:', body.metadata);
         return body;
       }),
       catchError((error) => {
@@ -149,8 +147,7 @@ export class CatalogosBantotalService extends HttpService {
    * ```
    */
   obtenerPorGrupo(grupo: string, activo: boolean = true): Observable<ListarCatalogosResponse> {
-    console.log(`🔍 Obteniendo catálogos del grupo: ${grupo}, activo: ${activo}`);
-    
+
     return this.listarCatalogos({
       grupo,
       activo,
@@ -179,8 +176,7 @@ export class CatalogosBantotalService extends HttpService {
    * ```
    */
   buscar(busqueda: string, grupo?: string): Observable<ListarCatalogosResponse> {
-    console.log(`🔍 Buscando catálogos con texto: "${busqueda}"${grupo ? `, grupo: ${grupo}` : ''}`);
-    
+
     return this.listarCatalogos({
       busqueda,
       grupo,
@@ -206,14 +202,15 @@ export class CatalogosBantotalService extends HttpService {
    * ```
    */
   async actualizarCatalogos(): Promise<void> {
-    console.log('🚀 Iniciando actualización de catálogos en localStorage...');
+    // Activar el estado de carga
+    this.actualizandoCatalogos.set(true);
 
     try {
       // 1. Obtener la lista de grupos de catálogos
       const httpResponse = await firstValueFrom(
         this.get<ConfiguracionCatalogosResponse>(`${this.configEndpoints.configuracion}/catalogos`)
       );
-      
+
       const configBody = httpResponse ? httpResponse.body : null;
 
       if (!configBody || !configBody.data || !configBody.data.value) {
@@ -221,7 +218,6 @@ export class CatalogosBantotalService extends HttpService {
       }
 
       const grupos: string[] = JSON.parse(configBody.data.value);
-      console.log('📋 Grupos de catálogos a obtener:', grupos);
 
       // 2. Preparar todas las peticiones en paralelo
       // Usamos el get directo sin pasar por listarCatalogos para evitar el catchError
@@ -231,7 +227,7 @@ export class CatalogosBantotalService extends HttpService {
           all: true,
           activo: true
         };
-        
+
         return firstValueFrom(
           this.get<any>(this.endpoints.listar, queryParams).pipe(
             map((response) => {
@@ -239,16 +235,15 @@ export class CatalogosBantotalService extends HttpService {
               if (!body) {
                 throw new Error(`No hay respuesta para el grupo: ${grupo}`);
               }
-              
+
               // La respuesta tiene doble anidamiento: body.data.data.catalogos
               const catalogosData = body.data?.data?.catalogos;
-              
+
               if (!catalogosData || !Array.isArray(catalogosData)) {
                 console.error(`⚠️ Estructura inválida para grupo "${grupo}":`, body);
                 throw new Error(`Estructura de respuesta inválida para el grupo: ${grupo}`);
               }
-              
-              console.log(`✅ Grupo "${grupo}": ${catalogosData.length} catálogos`);
+
               return { grupo, catalogos: catalogosData };
             })
           )
@@ -261,8 +256,6 @@ export class CatalogosBantotalService extends HttpService {
       const catalogosParaStorage: { [key: string]: CatalogoSimple[] } = {};
 
       resultados.forEach(({ grupo, catalogos }) => {
-        console.log(`📦 Procesando ${catalogos.length} catálogos para el grupo: ${grupo}`);
-        
         // Mapear a la interfaz simplificada
         catalogosParaStorage[grupo] = catalogos.map((c: any) => ({
           catalogoId: c.catalogoId,
@@ -278,32 +271,37 @@ export class CatalogosBantotalService extends HttpService {
 
       // 4. Guardar en localStorage
       localStorage.setItem('BANTOTAL_CATALOGOS', JSON.stringify(catalogosParaStorage));
-      console.log('✅ Catálogos guardados exitosamente en localStorage.');
+      
+      // Desactivar el estado de carga
+      this.actualizandoCatalogos.set(false);
 
     } catch (error) {
       console.error('❌ Error fatal durante la actualización de catálogos:', error);
+
+      // Desactivar el estado de carga incluso si hay error
+      this.actualizandoCatalogos.set(false);
+
       // Opcional: limpiar localStorage si falla
       // localStorage.removeItem('BANTOTAL_CATALOGOS');
       throw error; // Re-lanzar el error para que el llamador pueda manejarlo
     }
   }
 
-    /**
-   * Obtiene un grupo de catálogos desde el localStorage.
-   * 
-   * @param grupo - El nombre del grupo a obtener (ej: 'pais', 'departamento').
-   * @returns Un array de `CatalogoSimple` o `null` si no se encuentra.
-   * 
-   * @example
-   * ```typescript
-   * const paises = this.catalogosService.obtenerLocal('pais');
-   * if (paises) {
-   *   console.log('Países desde localStorage:', paises);
-   * }
-   * ```
-   */
+  /**
+ * Obtiene un grupo de catálogos desde el localStorage.
+ * 
+ * @param grupo - El nombre del grupo a obtener (ej: 'pais', 'departamento').
+ * @returns Un array de `CatalogoSimple` o `null` si no se encuentra.
+ * 
+ * @example
+ * ```typescript
+ * const paises = this.catalogosService.obtenerLocal('pais');
+ * if (paises) {
+ *   console.log('Países desde localStorage:', paises);
+ * }
+ * ```
+ */
   obtenerLocal(grupo: string): CatalogoSimple[] | null {
-    console.log(`📚 Obteniendo catálogos locales para el grupo: ${grupo}`);
     const catalogosStorage = localStorage.getItem('BANTOTAL_CATALOGOS');
 
     if (!catalogosStorage) {
@@ -316,7 +314,6 @@ export class CatalogosBantotalService extends HttpService {
       const grupoSolicitado = todosLosCatalogos[grupo];
 
       if (grupoSolicitado) {
-        console.log(`✅ Encontrados ${grupoSolicitado.length} catálogos para el grupo "${grupo}" en localStorage.`);
         return grupoSolicitado;
       } else {
         console.warn(`🟡 No se encontró el grupo "${grupo}" en los catálogos de localStorage.`);

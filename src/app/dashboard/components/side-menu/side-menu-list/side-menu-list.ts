@@ -5,12 +5,11 @@ import { SideMenuListItemComponent } from '../side-menu-list-item/side-menu-list
 import { AccesoService } from '../../../../../services/acceso.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
-import { LoadingScreenComponent } from '../../../../shared/components/loading-screen/loading-screen.component';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-side-menu-list',
-  imports: [RouterLink, RouterLinkActive, LoadingScreenComponent],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './side-menu-list.html',
   styleUrl: './side-menu-list.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -38,11 +37,6 @@ export class SideMenuListComponent {
   // Control de menús abiertos por id
   private openSet = new Set<string>();
 
-  // Control de actualización de catálogos
-  actualizandoCatalogos = signal(false);
-  loadingMessage = signal('Actualizando catálogos...');
-  loadingSubtitle = signal('Por favor espere');
-
   ngOnInit(): void {
     this.accesos = this.accesoService.getAccesosStorage() || [];
     
@@ -67,27 +61,16 @@ export class SideMenuListComponent {
 
   async actualizarCatalogos() {
     try {
-      this.actualizandoCatalogos.set(true);
-      this.loadingMessage.set('Actualizando catálogos...');
-      this.loadingSubtitle.set('Esto puede tomar unos segundos');
-      this.cdr.markForCheck();
-
       await this.catalogosService.actualizarCatalogos();
       
       console.log('✅ Catálogos actualizados exitosamente desde el menú');
       this.toastr.success('Catálogos actualizados correctamente', '¡Éxito!');
-      
-      this.actualizandoCatalogos.set(false);
-      this.cdr.markForCheck();
       
     } catch (error: any) {
       console.error('❌ Error al actualizar catálogos:', error);
       
       const errorMsg = error?.message || 'No se pudieron actualizar los catálogos';
       this.toastr.error(errorMsg, 'Error');
-      
-      this.actualizandoCatalogos.set(false);
-      this.cdr.markForCheck();
     }
   }
 

@@ -2,15 +2,14 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a [routerLink]="['/home']">Inicio</a></li>
         <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Aliados</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Ingreso Representante</li>
+        <li class="breadcrumb-item active" aria-current="page">Listado Representante</li>
     </ol>
 </nav>
 
 <div class="card">
     <div class="card-header">
         Administrar Representantes de empresas
-        <button class="btn btn-primary btn-sm float-end" (click)="openModal(true)">Crear
-            nuevo representante</button>
+        <button class="btn btn-primary btn-sm float-end" [routerLink]="['/aliado/crear-representante']">Crear nuevo representante</button>
     </div>
     <div class="card-body">
 
@@ -52,19 +51,23 @@
                         <!-- Tipo Documento -->
                         <div class="min-w-[200px] flex-1">
                             <label class="block mb-2 text-sm font-medium text-gray-900">Tipo Documento</label>
-                            <select id="tipo" name="tipo"
+                            <select id="tipo" name="tipo" #selectTipo
+                                (change)="tipoDocumento.set(+selectTipo.value)"
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5">
                                 <option value="">Seleccione un tipo</option>
-                                <option value="dpi">DPI</option>
-                                <option value="nit">NIT</option>
+                                <option value="1">DPI</option>
+                                <option value="2">NIT</option>
                             </select>
                         </div>
 
                         <!-- Número de Documento -->
                         <div class="min-w-[200px] flex-1">
                             <label class="block mb-2 text-sm font-medium text-gray-900">Documento</label>
-                            <input type="number" id="documento"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
+                            <input type="text" id="documento" #inputDocumento
+                                (input)="nroDocumento.set(inputDocumento.value)"
+                                (keyup.enter)="fetchData()"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" 
+                                placeholder="Número de documento" />
                         </div>
                     </div>
                     }
@@ -86,26 +89,46 @@
                 <thead>
                     <tr>
                         <th class="text-center" scope="col">#</th>
-                        <th class="text-center" scope="col">Nombre</th>
+                        <th class="text-center" scope="col">Nombre Completo</th>
                         <th class="text-center" scope="col">Documento</th>
-                        <th class="text-center" scope="col">Tipo</th>
+                        <th class="text-center" scope="col">Fecha Nacimiento</th>
+                        <th class="text-center" scope="col">Teléfono</th>
                         <th class="text-center" scope="col">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="text-[0.85em]">
-                    @for (item of empresasList(); track item.empresaId; let i = $index) {
+                    @if (isLoading()) {
                     <tr>
-                        <th scope="row">{{ i + 1 }}</th>
-                        <td>{{ item.nombre }}</td>
-                        <td>{{ item.direccion }}</td>
-                        <td>{{ item.nit }}</td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-success mx-1"
-                                (click)="openModal()">
-                                <ion-icon name="create-outline"></ion-icon>
-                            </button>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <span class="ms-2">Buscando representantes...</span>
                         </td>
                     </tr>
+                    } @else if (representantesList().length === 0) {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-gray-500">
+                            No se encontraron representantes
+                        </td>
+                    </tr>
+                    } @else {
+                        @for (item of representantesList(); track item.idRepresentante; let i = $index) {
+                        <tr>
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td>{{ item.primerNombre }} {{ item.segundoNombre || '' }} {{ item.primerApellido }} {{ item.segundoApellido || '' }}</td>
+                            <td>{{ item.nroDocumento }}</td>
+                            <td>{{ item.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
+                            <td>{{ item.telefonoCelular }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-success mx-1"
+                                    (click)="openModal(false, item)"
+                                    title="Editar representante">
+                                    <ion-icon name="create-outline"></ion-icon>
+                                </button>
+                            </td>
+                        </tr>
+                        }
                     }
                 </tbody>
             </table>

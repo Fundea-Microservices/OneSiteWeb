@@ -1,19 +1,22 @@
-import { ChangeDetectionStrategy, Component, type OnInit, ViewChild, ElementRef, ChangeDetectorRef  } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, ViewChild, ElementRef, ChangeDetectorRef, signal, inject  } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
+import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos';
 
 @Component({
   selector: 'app-upsert-documentos-archivos',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './upsert-documentos-archivos.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UpsertDocumentosArchivos implements OnInit {
 
-    @ViewChild('fileIn') fileInput!: ElementRef;
+@ViewChild('fileIn') fileInput!: ElementRef;
 @ViewChild('fileInputFront') fileInputFront!: ElementRef;
 @ViewChild('fileInputBack') fileInputBack!: ElementRef;
+
+private catalogosService = inject(CatalogosBantotalService);
 
 frontPreview: string | ArrayBuffer | null = null;
 backPreview: string | ArrayBuffer | null = null;
@@ -21,11 +24,46 @@ backPreview: string | ArrayBuffer | null = null;
      estadoCivil: string = "";
      mostrarConyuge: boolean = false;
 
+     // Catálogos
+     paises = signal<CatalogoSimple[]>([]);
+     selectedPaisId = signal<string>('');
+
+     // Campos requeridos
+     tipoDocumento = signal<string>('');
+     numeroDocumento = signal<string>('');
+     vencimientoDocumento = signal<string>('');
+
   ngOnInit(): void { 
     initFlowbite();
+    this.cargarCatalogos();
+  }
+
+  // Método para validar si todos los campos requeridos están completos
+  isValid(): boolean {
+    return !!(
+      this.selectedPaisId() &&
+      this.tipoDocumento() &&
+      this.numeroDocumento() &&
+      this.vencimientoDocumento() &&
+      this.frontPreview &&
+      this.backPreview
+    );
   }
 
 constructor(private cdr: ChangeDetectorRef) {}
+
+  cargarCatalogos() {
+    const paises = this.catalogosService.obtenerLocal('pais');
+    if (paises) {
+      this.paises.set(paises);
+      
+      // Seleccionar automáticamente Guatemala (valorCore = 320)
+      const guatemala = paises.find(p => p.valorCore === '320');
+      if (guatemala) {
+        this.selectedPaisId.set(guatemala.catalogoId);
+      }
+    }
+  }
 
   onEstadoCivilChange() {
     const civ = this.estadoCivil;

@@ -1,0 +1,248 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Aliados</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado/listado-representante']">Listado Representante</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Crear Representante</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header">
+        Crear Representantes de empresas
+    </div>
+    <div class="card-body">
+
+
+        <div class="grid gap-6 mt-4 mb-4 sm:grid-cols-2">
+            <!-- FOTO FRONTAL -->
+            <div class="flex flex-col items-center">
+                <label class="block text-sm font-medium text-gray-700 mb-2 w-full text-center">
+                    Foto frontal DPI<span class="text-red-600">*</span>
+                </label>
+
+                <input type="file" id="frontDpiInput" accept="image/*" (change)="onFrontImageSelected($event)"
+                    class="hidden" />
+
+                <div onclick="document.getElementById('frontDpiInput').click()"
+                    class="w-4/5 h-40 sm:h-72 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition shadow-sm hover:shadow-md p-4 overflow-hidden relative">
+
+                    <!-- Overlay de validación -->
+                    @if (validandoFront()) {
+                    <div
+                        class="absolute inset-0 bg-white bg-opacity-60 flex flex-col items-center justify-center z-10 rounded-xl">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-3 border-black mb-3"></div>
+                        <p class="text-black text-sm font-medium text-center px-4">Analizando documento con herramientas
+                            de Inteligencia Artificial. Por favor espere un momento.</p>
+                    </div>
+                    }
+
+                    <!-- Mostrar imagen cuando ya se seleccionó -->
+                    @if (frontPreview) {
+                    <img [src]="frontPreview" class="w-full h-full object-cover rounded-xl" />
+                    }
+
+                    <!-- Mostrar placeholder si NO hay imagen -->
+                    @if (!frontPreview) {
+                    <div class="flex flex-col items-center text-center text-gray-500">
+                        <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span>Clic para subir Foto Frontal</span>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- FOTO REVERSO -->
+            <div class="flex flex-col items-center">
+                <label class="block text-sm font-medium text-gray-700 mb-2 w-full text-center">
+                    Foto reverso DPI<span class="text-red-600">*</span>
+                </label>
+
+                <input type="file" id="backDpiInput" accept="image/*" (change)="onBackImageSelected($event)"
+                    class="hidden" />
+
+                <div onclick="document.getElementById('backDpiInput').click()"
+                    class="w-4/5 h-40 sm:h-72 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition shadow-sm hover:shadow-md p-4 overflow-hidden relative">
+
+                    <!-- Overlay de validación -->
+                    @if (validandoBack()) {
+                    <div
+                        class="absolute inset-0 bg-white bg-opacity-60 flex flex-col items-center justify-center z-10 rounded-xl">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-3 border-black mb-3"></div>
+                        <p class="text-black text-sm font-medium text-center px-4">Analizando documento con herramientas
+                            de Inteligencia Artificial. Por favor espere un momento.</p>
+                    </div>
+                    }
+
+                    <!-- Imagen si existe -->
+                    @if (backPreview) {
+                    <img [src]="backPreview" class="w-full h-full object-cover rounded-xl" />
+                    }
+
+                    <!-- Placeholder -->
+                    @if (!backPreview) {
+                    <div class="flex flex-col items-center text-center text-gray-500">
+                        <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span>Clic para subir Foto Reverso</span>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if(dpiValidado()){
+        <div class="w-11/12 mx-auto" style="margin-left:10%;margin-right:10%;">
+
+            <!-- Datos Personales y Demográficos -->
+            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
+                (mouseenter)="onMouseEnter('datos')" (mouseleave)="onMouseLeave()">
+                <div class="px-6 py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                    [class.bg-blue-50]="activeSection() === 'datos'" [class.bg-white]="activeSection() !== 'datos'">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-6 h-6" [class.text-blue-600]="activeSection() === 'datos'"
+                            [class.text-gray-500]="activeSection() !== 'datos'" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        <h4 class="text-lg font-semibold transition-colors duration-200"
+                            [class.text-blue-700]="activeSection() === 'datos'"
+                            [class.text-gray-800]="activeSection() !== 'datos'">
+                            Datos Personales
+                        </h4>
+                    </div>
+
+                    <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
+                        [class.rotate-180]="activeSection() === 'datos'"
+                        [class.text-blue-600]="activeSection() === 'datos'"
+                        [class.text-gray-400]="activeSection() !== 'datos'" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+
+                <div class="overflow-hidden transition-all duration-500 ease-in-out"
+                    [style.max-height]="activeSection() === 'datos' ? '1000px' : '0px'"
+                    [style.opacity]="activeSection() === 'datos' ? '1' : '0'">
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <app-upsert-datos-aliado-02
+                            [datosExtraidos]="datosRepresentante()"></app-upsert-datos-aliado-02>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contacto y Domicilio (Detalle Geográfico) -->
+            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
+                (mouseenter)="onMouseEnter('contacto')" (mouseleave)="onMouseLeave()">
+                <div class="px-6 py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                    [class.bg-blue-50]="activeSection() === 'contacto'"
+                    [class.bg-white]="activeSection() !== 'contacto'">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-6 h-6" [class.text-blue-600]="activeSection() === 'contacto'"
+                            [class.text-gray-500]="activeSection() !== 'contacto'" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                            </path>
+                        </svg>
+                        <h4 class="text-lg font-semibold transition-colors duration-200"
+                            [class.text-blue-700]="activeSection() === 'contacto'"
+                            [class.text-gray-800]="activeSection() !== 'contacto'">
+                            Contacto y Domicilio
+                        </h4>
+                    </div>
+
+                    <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
+                        [class.rotate-180]="activeSection() === 'contacto'"
+                        [class.text-blue-600]="activeSection() === 'contacto'"
+                        [class.text-gray-400]="activeSection() !== 'contacto'" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+
+                <div class="overflow-hidden transition-all duration-500 ease-in-out"
+                    [style.max-height]="activeSection() === 'contacto' ? '1000px' : '0px'"
+                    [style.opacity]="activeSection() === 'contacto' ? '1' : '0'">
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+
+                        <app-upsert-contacto [datosExtraidos]="datosRepresentante()"></app-upsert-contacto>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actividad Laboral, Financiero y Regulatorio -->
+            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
+                (mouseenter)="onMouseEnter('actividad')" (mouseleave)="onMouseLeave()">
+                <div class="px-6 py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                    [class.bg-blue-50]="activeSection() === 'actividad'"
+                    [class.bg-white]="activeSection() !== 'actividad'">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-6 h-6" [class.text-blue-600]="activeSection() === 'actividad'"
+                            [class.text-gray-500]="activeSection() !== 'actividad'" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <h4 class="text-lg font-semibold transition-colors duration-200"
+                            [class.text-blue-700]="activeSection() === 'actividad'"
+                            [class.text-gray-800]="activeSection() !== 'actividad'">
+                            Actividad Laboral
+                        </h4>
+                    </div>
+
+                    <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
+                        [class.rotate-180]="activeSection() === 'actividad'"
+                        [class.text-blue-600]="activeSection() === 'actividad'"
+                        [class.text-gray-400]="activeSection() !== 'actividad'" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+
+                <div class="overflow-hidden transition-all duration-500 ease-in-out"
+                    [style.max-height]="activeSection() === 'actividad' ? '1000px' : '0px'"
+                    [style.opacity]="activeSection() === 'actividad' ? '1' : '0'">
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <!-- Aquí va el formulario de direcciones -->
+                        <app-upsert-actividad-laboral-financiera
+                            [datosExtraidos]="datosRepresentante()"></app-upsert-actividad-laboral-financiera>
+                    </div>
+                </div>
+            </div>
+
+
+            <div>
+                <div class="flex justify-end gap-2 my-4">
+                    <button type="button"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors"
+                        onclick="document.getElementById('empresaForm').reset();">
+                        Cancelar
+                    </button>
+                    <button type="button"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
+                        (click)="onGuardar()">
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        }
+
+
+    </div>
+
+
+
+</div>

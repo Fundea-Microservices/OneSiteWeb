@@ -17,7 +17,7 @@ import { CrearRepresentanteDto, Representante, RepresentanteResponse, ListarRepr
 export class RepresentanteService extends HttpService {
 
   private readonly endpoints = {
-    representante: '/representante',
+    representante: '/api-bantotal/representante',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
@@ -134,16 +134,42 @@ export class RepresentanteService extends HttpService {
       if (params.activo !== undefined) queryParams.activo = params.activo;
 
       const resp = await firstValueFrom(
-        this.get<RepresentanteResponse>(this.endpoints.representante, queryParams)
+        this.get<any>(this.endpoints.representante, queryParams)
       );
 
       if (resp.body?.success) {
-        const total = resp.body.data?.representantes?.length || 0;
-        console.log(`✅ ${total} representante(s) encontrado(s)`);
-        if (resp.body.metadata) {
-          console.log('📋 Metadata:', resp.body.metadata);
+        // La respuesta tiene doble anidamiento: body.data.data
+        const representantesData = resp.body.data?.data;
+        const metadata = resp.body.data?.metadata;
+
+        if (representantesData && Array.isArray(representantesData)) {
+          console.log(`✅ ${representantesData.length} representante(s) encontrado(s)`);
+          if (metadata) {
+            console.log('📋 Metadata:', metadata);
+          }
+
+          // Retornar en el formato esperado por la interfaz
+          return {
+            success: true,
+            statusCode: resp.body.statusCode,
+            message: resp.body.message,
+            data: {
+              representantes: representantesData
+            },
+            metadata: metadata
+          };
         }
-        return resp.body;
+
+        console.warn('⚠️ No se encontraron representantes en la respuesta');
+        return {
+          success: true,
+          statusCode: resp.body.statusCode,
+          message: resp.body.message,
+          data: {
+            representantes: []
+          },
+          metadata: metadata
+        };
       }
 
       console.warn('⚠️ Respuesta no exitosa:', resp.body);

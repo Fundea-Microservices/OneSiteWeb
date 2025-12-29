@@ -4,6 +4,7 @@
 export interface CrearRepresentanteDto {
   primerNombre: string;
   segundoNombre?: string;
+  tercerNombre?: string;
   primerApellido: string;
   segundoApellido?: string;
   nroDocumento: string;
@@ -11,6 +12,7 @@ export interface CrearRepresentanteDto {
   paisDocumentoId: number;
   fechaNacimiento: string; // formato: "YYYY-MM-DD"
   sexo: 'M' | 'F';
+  nit?: string;
   correoElectronico: string;
   telefonoCelular: number;
   direccionRepresentante: string;
@@ -41,32 +43,49 @@ export interface ListarRepresentantesParams {
  * Interface para el representante completo retornado por el backend
  */
 export interface Representante {
-  representanteId: string;
+  idRepresentante: string;
   primerNombre: string;
   segundoNombre?: string;
+  tercerNombre?: string;
   primerApellido: string;
   segundoApellido?: string;
   nroDocumento: string;
   tipoDocumentoId: number;
   paisDocumentoId: number;
   fechaNacimiento: string;
+  fechaVencimiento?: string;
+  nit: string;
   sexo: string;
   correoElectronico: string;
   telefonoCelular: number;
+  telefonoFijo?: number;
   direccionRepresentante: string;
   codigoPostal?: number;
   estadoCivilId: number;
   ocupacionId: number;
+  nombreEmpresa?: string;
   actividadLaboralId: number;
+  fechaInicioActividad?: string;
   ingresos: number;
   paisDomicilioId: number;
   departamentoId: number;
   localidadId: number;
-  activo: boolean;
-  created_at: string;
-  updated_at: string;
+  barrioId?: number;
+  profesionId?: number;
+  etniaId?: number;
+  sabeLeer?: boolean;
+  sabeEscribir?: boolean;
+  idNacionalidad?: number;
+  sectorId?: number;
+  clasificacionInternaId?: number;
+  asesorId?: string;
+  cuentabanTotal?: string;
+  fotoFrontalDpi?: string;
+  fotoReversoDpi?: string;
   usrIngreso: string;
-  usrModifica?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string;
 }
 
 /**

@@ -3,21 +3,24 @@
 
   <div class="mt-2 grid gap-4 mb-4 sm:grid-cols-3">
     <div>
-      <label class="block h-10 flex items-end text-sm font-medium text-gray-700" for="nombre">
+      <label class="block h-10 items-end text-sm font-medium text-gray-700" for="nombre">
         Teléfono Celular <span class="text-red-600">*</span>
       </label>
       <input
+        [value]="telefonoCelular()"
+        (input)="telefonoCelular.set($any($event.target).value)"
         id="nombre"
         name="nombre"
         type="number"
         class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder="Número de teléfono"
+        min="1"
         required
       />
     </div>
 
     <div>
-      <label class="block h-10 flex items-end text-sm font-medium text-gray-700" for="nombre">
+      <label class="block h-10 items-end text-sm font-medium text-gray-700" for="nombre">
         Teléfono Fijo
       </label>
       <input
@@ -31,7 +34,7 @@
     </div>
 
     <div>
-      <label class="block h-10 flex items-end text-sm font-medium text-gray-700" for="nombre">
+      <label class="block h-10 items-end text-sm font-medium text-gray-700" for="nombre">
         Correo Electrónico
       </label>
       <input
@@ -47,57 +50,69 @@
 
   <h3 class="section-title">Datos del Domicilio</h3>
 
-  <div class="mt-2 grid gap-4 mb-4 sm:grid-cols-4">
+  <div class="mt-2 grid gap-4 mb-4 sm:grid-cols-3">
     <div>
-      <label class="block h-10 flex items-end text-sm font-medium text-gray-900" for="pais">
+      <label class="block h-10 items-end text-sm font-medium text-gray-900" for="pais">
         País Domicilio <span class="text-red-600">*</span>
       </label>
       <select
         id="pais"
         name="pais"
+        [value]="selectedPaisCode()"
+        disabled
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5"
       >
-        <option value="">País</option>
-        <option value="GT">Guatemala</option>
+        <option value="">Seleccione país</option>
+        @for (pais of paises(); track pais.catalogoId) {
+          <option 
+            [value]="pais.valorCore"
+            [selected]="pais.valorCore === selectedPaisCode()">
+          {{ pais.nombre }}</option>
+        }
       </select>
     </div>
 
     <div>
-      <label class="block h-10 flex items-end text-sm font-medium text-gray-900" for="departamento">
+      <label class="block h-10 items-end text-sm font-medium text-gray-900" for="departamento">
         Departamento <span class="text-red-600">*</span>
       </label>
       <select
         id="departamento"
         name="departamento"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5"
+        [value]="selectedDepartamentoCode()"
+        (change)="selectedDepartamentoCode.set($any($event.target).value); onDepartamentoChange()"
+        [disabled]="!selectedPaisCode()"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <option value="">Departamento</option>
-        <option>Chimaltenango</option>
-        <option>Sacatepéquez</option>
-        <option>Escuintla</option>
-        <option>Cobán</option>
+        <option value="">Seleccione departamento</option>
+        @for (depto of departamentosFiltrados(); track depto.catalogoId) {
+          <option [value]="depto.valorCore">{{ depto.nombre }}</option>
+        }
       </select>
     </div>
 
     <div>
-      <label class="block h-10 flex items-end text-sm font-medium text-gray-900" for="municipio">
+      <label class="block h-10 items-end text-sm font-medium text-gray-900" for="municipio">
         Municipio<span class="text-red-600">*</span>
       </label>
       <select
         id="municipio"
         name="municipio"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5"
+        [value]="selectedMunicipioId()"
+        (change)="selectedMunicipioId.set($any($event.target).value)"
+        [disabled]="!selectedDepartamentoCode()"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <option value="">Municipio</option>
-        <option>Chimaltenango</option>
-        <option>Tecpán</option>
-        <option>Parramos</option>
-        <option>Acatenango</option>
+        <option value="">Seleccione municipio</option>
+        @for (municipio of municipiosFiltrados(); track municipio.catalogoId) {
+          <option 
+            [value]="municipio.valorCore">{{ municipio.nombre }}</option>
+        }
       </select>
     </div>
 
-    <div>
-      <label class="block h-10 flex items-end text-sm font-medium text-gray-900" for="zona">
+    <!-- <div>
+      <label class="block h-10 items-end text-sm font-medium text-gray-900" for="zona">
         Zona
       </label>
       <select
@@ -111,15 +126,17 @@
         <option>Zona 3</option>
         <option>Zona 4</option>
       </select>
-    </div>
+    </div> -->
   </div>
 
   <div class="mt-0 grid gap-4 mb-4 sm:grid-cols-1">
     <div>
-      <label class="block h-10 flex items-end text-sm font-medium text-gray-700" for="direccion">
+      <label class="block h-10 items-end text-sm font-medium text-gray-700" for="direccion">
         Dirección Completa <span class="text-red-600">*</span>
       </label>
       <input
+        [value]="direccionCompleta()"
+        (input)="direccionCompleta.set($any($event.target).value)"
         id="direccion"
         name="direccion"
         type="text"

@@ -75,11 +75,3 @@
     </div>
   </section>
 </div>
-
-<!-- Pantalla de carga para actualización de catálogos -->
-@if (actualizandoCatalogos()) {
-  <app-loading-screen 
-    [message]="loadingMessage()" 
-    [subtitle]="loadingSubtitle()">
-  </app-loading-screen>
-}

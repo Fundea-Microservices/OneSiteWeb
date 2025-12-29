@@ -16,4 +16,15 @@
     background-color: #f2f2f2;
 }
 
+/* Estilos para campos deshabilitados y habilitados */
+input:disabled, select:disabled, textarea:disabled {
+  background-color: #e5e7eb !important; /* gris más oscuro */
+  color: #a1a1aa !important;
+  cursor: not-allowed;
+}
+input:not(:disabled), select:not(:disabled), textarea:not(:disabled) {
+  background-color: #fff !important; /* blanco */
+  color: #111827;
+}
+
 
