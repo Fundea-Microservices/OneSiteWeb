@@ -2,7 +2,7 @@
 const API_URL = 'http://172.25.5.11:3000/'
 
 const AGENTE = {
-    endpoint: 'https://9f7132d7fb6b.ngrok-free.app/webhook/file/v1/analisis',
+    endpoint: 'https://b4a8c899f08a.ngrok-free.app/webhook/file/v1/analisis',
     apiKey: '1234567890'
 }
 
