@@ -91,8 +91,7 @@
                         <th class="text-center" scope="col">#</th>
                         <th class="text-center" scope="col">Nombre Completo</th>
                         <th class="text-center" scope="col">Documento</th>
-                        <th class="text-center" scope="col">Fecha Nacimiento</th>
-                        <th class="text-center" scope="col">NIT</th>
+                        <th class="text-center" scope="col">Dirección</th>
                         <th class="text-center" scope="col">Teléfono</th>
                         <th class="text-center" scope="col">Acciones</th>
                     </tr>
@@ -119,7 +118,8 @@
                             <th scope="row">{{ i + 1 }}</th>
                             <td>{{ item.primerNombre }} {{ item.segundoNombre || '' }} {{ item.primerApellido }} {{ item.segundoApellido || '' }}</td>
                             <td>{{ item.documento }}</td>
-                            <td>{{ item.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
+                            <!-- <td>{{ item.fechaNacimiento | date:'dd/MM/yyyy' }}</td> -->
+                            <td>{{ item.direccion}}</td>
                             <td>{{ item.nit }}</td>
                             <td>{{ item.telefonoCelular }}</td>
                             <td class="text-center">

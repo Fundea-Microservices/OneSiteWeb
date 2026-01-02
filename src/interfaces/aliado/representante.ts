@@ -5,8 +5,9 @@ export interface ListarRepresentantesParams {
   page?: number;
   limit?: number;
   busqueda?: string;
-  nroDocumento?: string;
-  tipoDocumentoId?: number;
+  documento?: string;
+  nit?: string;
+  tipoDocumento?: number;
   activo?: boolean;
 }
 

@@ -91,6 +91,9 @@ export default class ListadoRepresentantePage {
     try {
       let resultado;
 
+      // Normalizar número (quita espacios en blanco)
+      const numeroDoc = (this.nroDocumento() || '').replace(/\s+/g, '');
+
       if (this.searchMode === 'nombre') {
         // Búsqueda por nombre/apellido
         resultado = await this.representanteService.listarRepresentantes({
@@ -102,9 +105,11 @@ export default class ListadoRepresentantePage {
       } else {
         // Búsqueda por documento
         resultado = await this.representanteService.listarRepresentantes({
-          nroDocumento: this.nroDocumento() || undefined,
-          tipoDocumentoId: this.tipoDocumento(),
+          documento: numeroDoc || undefined,
+          tipoDocumento: this.tipoDocumento(),
           activo: true,
+          // Si es NIT (2), envía también el nit normalizado
+          nit: this.tipoDocumento() === 2 ? numeroDoc || undefined : undefined,
           page: 1,
           limit: 50
         });

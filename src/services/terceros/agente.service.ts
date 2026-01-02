@@ -113,31 +113,38 @@ export class AgenteService {
    * @returns true si fue aprobado
    */
   isDocumentoAprobado(response: ValidarDocumentoResponse): boolean {
-    // Intentar obtener decision_ia de ambas estructuras posibles
-    const decision = response.resumen_ejecutivo?.decision_ia 
-      || response.documento?.resumen_ejecutivo?.decision_ia;
-    
-    // Verificar success en metadata
+    // Verificar success en metadata (prioritario)
     const success = response.metadata?.success 
       || response.documento?.metadata?.success;
     
-    // Si hay decision_ia, verificar que sea APROBADO
+    // Si success es false, rechazar directamente
+    if (success === false) {
+      return false;
+    }
+    
+    // Obtener decision_ia de ambas estructuras posibles
+    const decision = response.resumen_ejecutivo?.decision_ia 
+      || response.documento?.resumen_ejecutivo?.decision_ia;
+    
+    // Si success es true, verificar que no sea RECHAZADO explícitamente
+    if (success === true) {
+      // Aceptar APROBADO, REVISION, o cualquier otra decision que no sea RECHAZADO
+      return decision !== 'RECHAZADO';
+    }
+    
+    // Si success es undefined, usar decision_ia como fallback
     if (decision) {
-      return decision === 'APROBADO';
+      return decision !== 'RECHAZADO';
     }
     
-    // Si no hay decision_ia pero success es true y no hay mensaje de error crítico, aprobar
-    if (success) {
-      const mensaje = this.getMensajeUsuario(response).toLowerCase();
-      // Si el mensaje NO indica error o rechazo, considerar aprobado
-      const esError = mensaje.includes('error') || 
-                      mensaje.includes('rechazado') || 
-                      mensaje.includes('inválido') ||
-                      mensaje.includes('fallido');
-      return !esError;
-    }
+    // Como último recurso, verificar si el mensaje NO indica error crítico
+    const mensaje = this.getMensajeUsuario(response).toLowerCase();
+    const esError = mensaje.includes('error') || 
+                    mensaje.includes('rechazado') || 
+                    mensaje.includes('inválido') ||
+                    mensaje.includes('fallido');
     
-    return false;
+    return !esError;
   }
 
 }
