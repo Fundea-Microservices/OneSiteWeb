@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, type OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UpsertDatosAliado02 } from '../upsert-datos-aliado-02/upsert-datos-aliado-02';
 import { UpsertContacto } from '../upsert-contacto/upsert-contacto';
 import { UpsertDocumentosArchivos } from '../upsert-documentos-archivos/upsert-documentos-archivos';
 import { UpsertActividadLaboralFinanciera } from '../upsert-actividad-laboral-financiera/upsert-actividad-laboral-financiera';
+import { UpsertDatosGenerales } from '../upsert-datos-generales/upsert-datos-generales';
 
 @Component({
   selector: 'app-gestion-representante-accordion',
-  imports: [CommonModule, UpsertDatosAliado02, UpsertDocumentosArchivos, UpsertContacto, UpsertActividadLaboralFinanciera],
+  imports: [CommonModule, UpsertDatosGenerales, UpsertDocumentosArchivos, UpsertContacto, UpsertActividadLaboralFinanciera],
   templateUrl: './gestion-representante-accordion.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

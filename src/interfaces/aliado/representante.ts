@@ -1,33 +1,4 @@
 /**
- * Interface para crear un nuevo representante
- */
-export interface CrearRepresentanteDto {
-  primerNombre: string;
-  segundoNombre?: string;
-  tercerNombre?: string;
-  primerApellido: string;
-  segundoApellido?: string;
-  nroDocumento: string;
-  tipoDocumentoId: number;
-  paisDocumentoId: number;
-  fechaNacimiento: string; // formato: "YYYY-MM-DD"
-  sexo: 'M' | 'F';
-  nit?: string;
-  correoElectronico: string;
-  telefonoCelular: number;
-  direccionRepresentante: string;
-  codigoPostal?: number;
-  estadoCivilId: number;
-  ocupacionId: number;
-  actividadLaboralId: number;
-  ingresos: number;
-  paisDomicilioId: number;
-  departamentoId: number;
-  localidadId: number;
-  usrIngreso: string;
-}
-
-/**
  * Interface para filtrar representantes en el listado
  */
 export interface ListarRepresentantesParams {
@@ -43,51 +14,62 @@ export interface ListarRepresentantesParams {
  * Interface para el representante completo retornado por el backend
  */
 export interface Representante {
-  idRepresentante: string;
+  representanteId: string; // uniqueidentifier se maneja como string
+  direccion: string;
+  nit: string,
+  codigoPostal?: string;   // Ahora es string para no perder ceros
+  telefonoFijo?: string;   // String para evitar desbordamiento de int
+  telefonoCelular?: string;
+  correoElectronico: string;
+  asesorId?: number;
+  paisDocumento: number;
+  tipoDocumento: number;
+  documento?: string;
+  fechaVencimiento?: Date; // O string, dependiendo de tu config JSON
+  
+  primerApellido: string;
+  segundoApellido?: string;
   primerNombre: string;
   segundoNombre?: string;
   tercerNombre?: string;
-  primerApellido: string;
-  segundoApellido?: string;
-  nroDocumento: string;
-  tipoDocumentoId: number;
-  paisDocumentoId: number;
-  fechaNacimiento: string;
-  fechaVencimiento?: string;
-  nit: string;
+  
+  fechaNacimiento?: Date;
   sexo: string;
-  correoElectronico: string;
-  telefonoCelular: number;
-  telefonoFijo?: number;
-  direccionRepresentante: string;
-  codigoPostal?: number;
-  estadoCivilId: number;
-  ocupacionId: number;
+  
+  profesion?: number;
+  etnia?: number;
+  
+  // BIT en SQL se mapea a boolean en TypeORM/JS
+  sabeLeer?: boolean;     
+  sabeEscribir?: boolean; 
+  
+  estadoCivil?: number;
+  nacionalidad?: number;
+  ocupacion?: number;
   nombreEmpresa?: string;
-  actividadLaboralId: number;
-  fechaInicioActividad?: string;
-  ingresos: number;
-  paisDomicilioId: number;
-  departamentoId: number;
-  localidadId: number;
-  barrioId?: number;
-  profesionId?: number;
-  etniaId?: number;
-  sabeLeer?: boolean;
-  sabeEscribir?: boolean;
-  idNacionalidad?: number;
+  actividadLaboral?: number;
+  fechaInicioActividad?: Date;
+  
+  ingresos?: number; // JS usa number para decimales
+  
   sectorId?: number;
-  clasificacionInternaId?: number;
-  asesorId?: string;
-  cuentabanTotal?: string;
-  fotoFrontalDpi?: string;
-  fotoReversoDpi?: string;
-  usrIngreso: string;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string;
+  clasificacionInterna?: number;
+  paisDomicilio: number;
+  departamentoDomicilio: number;
+  localidad?: number;
+  barrio?: number;
+  
+  cuentabanTotal?: string; // String para cuentas bancarias
+  
+  fotoFrontalDpi?: string; // URL o Path
+  fotoReversoDpi?: string; // URL o Path
+  
+  usuarioIngreso?: string;
+  
+  createdAt?: Date; // Mapeo de created_at
+  updatedAt?: Date; // Mapeo de updated_at
+  deletedAt?: Date; // Mapeo de deleted_at
 }
-
 /**
  * Respuesta del backend para operaciones con representantes
  */

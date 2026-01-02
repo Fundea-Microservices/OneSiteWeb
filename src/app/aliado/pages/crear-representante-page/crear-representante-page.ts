@@ -1,16 +1,19 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { UpsertDatosAliado02 } from '../../components/representante/upsert-datos-aliado-02/upsert-datos-aliado-02';
 import { UpsertContacto } from '../../components/representante/upsert-contacto/upsert-contacto';
 import { UpsertActividadLaboralFinanciera } from '../../components/representante/upsert-actividad-laboral-financiera/upsert-actividad-laboral-financiera';
 import { AgenteService } from '../../../../services/terceros/agente.service';
 import { ToastrService } from 'ngx-toastr';
 import { ValidarDocumentoResponse } from '../../../../interfaces/terceros/agente';
 import { RepresentanteService } from '../../../../services/aliado/representante.service';
+import { CustomIconComponent } from '../../../shared/components/custom-icon/custom-icon.component';
+import { Representante } from '../../../../interfaces/aliado/representante';
+import { UpsertDatosGenerales } from '../../components/representante/upsert-datos-generales/upsert-datos-generales';
 
 @Component({
   selector: 'app-crear-representante-page',
-  imports: [RouterLink, UpsertDatosAliado02, UpsertContacto, UpsertActividadLaboralFinanciera],
+  imports: [CommonModule, RouterLink, UpsertDatosGenerales, UpsertContacto, UpsertActividadLaboralFinanciera],
   templateUrl: './crear-representante-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -23,9 +26,9 @@ export default class CrearRepresentantePage {
   frontPreview: string | ArrayBuffer | null = null;
   backPreview: string | ArrayBuffer | null = null;
 
-  dpfFrontValidado = signal(false);
-  dpfBackValidado = signal(false)
-  dpiValidado = signal(true);
+  dpiFrontValidado = signal(false);
+  dpiBackValidado = signal(false)
+  dpiValidado = signal(false);
 
   // Archivos originales para enviar al servicio
   frontFile: File | null = null;
@@ -38,43 +41,8 @@ export default class CrearRepresentantePage {
   // Datos extraídos del documento
   datosFrontalDPI = signal<ValidarDocumentoResponse | null>(null);
   datosReversoDPI = signal<ValidarDocumentoResponse | null>(null);
-
-  // Objeto representante con datos extraídos
-  datosRepresentante = signal({
-    // Datos del frontal
-    primerNombre: '',
-    segundoNombre: '',
-    tercerNombre: '',
-    primerApellido: '',
-    segundoApellido: '',
-    apellidoCasada: '',
-    nroDocumento: '',
-    cuiVisual: '',
-    fechaNacimiento: '',
-    fechaEmision: '',
-    sexo: '',
-    nacionalidad: '',
-    
-    // Datos del reverso
-    estadoCivil: '',
-    profesion: '',
-    pueblo: '',
-    comunidadLinguistica: '',
-    lugarNacimiento: '',
-    municipioNacimiento: '',
-    departamentoNacimiento: '',
-    lugarVecindad: '',
-    municipioVecindad: '',
-    departamentoVecindad: '',
-    numeroSerie: '',
-    
-    // Campos de validación
-    camposBloqueados: false
-  });
-
-  // Efecto para dpiValidado si los dos previews están listos
-
-
+  camposBloqueados = signal(false);
+  representante = signal<any>({});
   activeSection = signal<'datos' | 'contacto' | 'actividad' | null>('datos');
 
   constructor(private cdr: ChangeDetectorRef) { }
@@ -109,7 +77,7 @@ export default class CrearRepresentantePage {
 
   validarDocumentoFrontal(file: File) {
     this.validandoFront.set(true);
-    this.dpfFrontValidado.set(false);
+    this.dpiFrontValidado.set(false);
     
     console.log('🔍 Validando DPI frontal...');
     
@@ -126,13 +94,13 @@ export default class CrearRepresentantePage {
         console.log('🔍 Mensaje:', this.agenteService.getMensajeUsuario(response));
         
         if (this.agenteService.isDocumentoAprobado(response)) {
-          this.dpfFrontValidado.set(true);
+          this.dpiFrontValidado.set(true);
           this.datosFrontalDPI.set(response);
           this.extraerDatosFrontales(response);
-          this.toastr.success('DPI frontal validado correctamente', 'Éxito');
+          this.toastr.success('DPI frontal validado correctamente',this.agenteService.getMensajeUsuario(response));
           console.log('✅ DPI frontal aprobado');
         } else {
-          this.dpfFrontValidado.set(false);
+          this.dpiFrontValidado.set(false);
           const mensaje = this.agenteService.getMensajeUsuario(response);
           this.toastr.error(mensaje, 'Error de validación');
           console.log('❌ DPI frontal rechazado:', mensaje);
@@ -144,7 +112,7 @@ export default class CrearRepresentantePage {
       },
       error: (error) => {
         this.validandoFront.set(false);
-        this.dpfFrontValidado.set(false);
+        this.dpiFrontValidado.set(false);
         this.toastr.error('Error al validar el documento', 'Error');
         console.error('❌ Error en validación frontal:', error);
         this.cdr.markForCheck();
@@ -157,8 +125,12 @@ export default class CrearRepresentantePage {
     const desglose = datos?.desglose_nombre;
     
     if (datos && desglose) {
-      this.datosRepresentante.update(current => ({
+      this.camposBloqueados.set(true);
+      this.dpiFrontValidado.set(true);
+      this.dpiValidado.set(this.dpiFrontValidado() && this.dpiBackValidado());
+      this.representante.update(current => ({
         ...current,
+        documento: datos.cui_numero,
         primerNombre: desglose.nombre_1 || '',
         segundoNombre: desglose.nombre_2 || '',
         tercerNombre: desglose.nombre_3 || '',
@@ -167,14 +139,13 @@ export default class CrearRepresentantePage {
         apellidoCasada: desglose.apellido_casada || '',
         nroDocumento: datos.cui_numero || '',
         cuiVisual: datos.cui_visual || '',
-        fechaNacimiento: datos.fecha_nacimiento || '',
+        fechaNacimiento: new Date(datos.fecha_nacimiento || ''),
         fechaEmision: datos.fecha_de_emision || '',
         sexo: datos.sexo_codigo || '',
-        nacionalidad: datos.nacionalidad_pais || '',
+        nacionalidad: Number(datos.nacionalidad_pais || ''),
         camposBloqueados: true
       }));
       
-      console.log('📋 Datos frontales extraídos:', this.datosRepresentante());
     }
   }
 
@@ -200,7 +171,7 @@ export default class CrearRepresentantePage {
 
   validarDocumentoReverso(file: File) {
     this.validandoBack.set(true);
-    this.dpfBackValidado.set(false);
+    this.dpiBackValidado.set(false);
     
     console.log('🔍 Validando DPI reverso...');
     
@@ -217,13 +188,13 @@ export default class CrearRepresentantePage {
         console.log('🔍 Mensaje:', this.agenteService.getMensajeUsuario(response));
         
         if (this.agenteService.isDocumentoAprobado(response)) {
-          this.dpfBackValidado.set(true);
+          this.dpiBackValidado.set(true);
           this.datosReversoDPI.set(response);
           this.extraerDatosReverso(response);
           this.toastr.success('DPI reverso validado correctamente', 'Éxito');
           console.log('✅ DPI reverso aprobado');
         } else {
-          this.dpfBackValidado.set(false);
+          this.dpiBackValidado.set(false);
           const mensaje = this.agenteService.getMensajeUsuario(response);
           this.toastr.error(mensaje, 'Error de validación');
           console.log('❌ DPI reverso rechazado:', mensaje);
@@ -235,7 +206,7 @@ export default class CrearRepresentantePage {
       },
       error: (error) => {
         this.validandoBack.set(false);
-        this.dpfBackValidado.set(false);
+        this.dpiBackValidado.set(false);
         this.toastr.error('Error al validar el documento', 'Error');
         console.error('❌ Error en validación reverso:', error);
         this.cdr.markForCheck();
@@ -250,10 +221,13 @@ export default class CrearRepresentantePage {
     const seguridad = datos?.datos_seguridad;
     
     if (datos) {
-      this.datosRepresentante.update(current => ({
+      this.camposBloqueados.set(true);
+      this.dpiBackValidado.set(true);
+      this.dpiValidado.set(this.dpiFrontValidado() && this.dpiBackValidado());
+      this.representante.update(current => ({
         ...current,
-        estadoCivil: demografia?.estado_civil || '',
-        profesion: demografia?.profesion_oficio || '',
+        estadoCivil: Number(demografia?.estado_civil),
+        profesion: Number(demografia?.profesion_oficio || ''),
         pueblo: demografia?.pueblo || '',
         comunidadLinguistica: demografia?.comunidad_linguistica || '',
         lugarNacimiento: geografia?.nacimiento_completo || '',
@@ -265,29 +239,35 @@ export default class CrearRepresentantePage {
         numeroSerie: seguridad?.numero_de_serie || ''
       }));
       
-      console.log('📋 Datos reverso extraídos:', this.datosRepresentante());
+      console.log('📋 Datos reverso extraídos:', this.representante());
     }
   }
 
   async onGuardar() {
     try {
-      // Aquí deberías recolectar todos los datos de los formularios hijos y las imágenes
-      // Ejemplo simple: solo datos extraídos y fotos
-      const datos = this.datosRepresentante();
-      console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ datos:", datos)
-      const representante: any = {
-        ...datos,
-        fotoFrontalDpi: null,
-        fotoReversoDpi: null
-      };
-      const resp = await this.representanteService.crearRepresentante(representante);
+      // Recolectar todos los datos del signal representante
+      const datos = this.representante();
+      console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ datos:", datos);
+      
+      // Validar que tengamos datos básicos
+      if (!datos.documento || !datos.primerNombre || !datos.primerApellido) {
+        this.toastr.error('Por favor completa los campos requeridos', 'Campos incompletos');
+        return;
+      }
+
+      // Llamar al servicio con el valor del signal (no el signal mismo)
+      const resp = await this.representanteService.crearRepresentante(datos);
+      
       if (resp?.success) {
         this.toastr.success('Representante creado correctamente', 'Éxito');
-        // Redirigir o limpiar formulario si es necesario
+        // Limpiar formulario
+        this.representante.set({} as Representante);
+        // Redirigir si es necesario
       } else {
         this.toastr.error(resp?.message || 'Error al crear representante', 'Error');
       }
     } catch (error: any) {
+      console.error('❌ Error en onGuardar:', error);
       this.toastr.error(error?.message || 'Error inesperado', 'Error');
     }
   }

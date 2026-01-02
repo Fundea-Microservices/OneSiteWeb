@@ -1,9 +1,10 @@
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { CrearRepresentanteDto, Representante, RepresentanteResponse, ListarRepresentantesParams } from '../../interfaces/aliado/representante';
+import { Representante, RepresentanteResponse, ListarRepresentantesParams } from '../../interfaces/aliado/representante';
 
 /**
  * Servicio para gestionar representantes de empresas aliadas
@@ -24,47 +25,54 @@ export class RepresentanteService extends HttpService {
     super(http);
   }
 
+    /**
+   * Obtener un representante por su ID
+   * @param representanteId - ID del representante
+   * @returns Promise con la respuesta del backend o null en caso de error
+   *
+   * @example
+   * const resultado = await this.representanteService.byId('9F228DCB-D54C-4984-89F9-FB3D55E37687');
+   * if (resultado) {
+   *   console.log('Representante:', resultado.data?.representante);
+   * }
+   */
+  async byId(representanteId: string): Promise<RepresentanteResponse | null> {
+    console.log(`🔎 Buscando representante por ID: ${representanteId}`);
+    try {
+      const resp = await firstValueFrom(
+        this.get<any>(`${this.endpoints.representante}/${representanteId}`)
+      );
+      if (resp.body?.success) {
+        // El backend retorna la data anidada en body.data.data
+        const representante = resp.body.data?.data;
+        return {
+          success: true,
+          statusCode: Number(resp.body.statusCode),
+          message: resp.body.message,
+          data: {
+            representante: representante
+          },
+          metadata: resp.body.data?.metadata
+        };
+      }
+      console.warn('⚠️ Respuesta no exitosa:', resp.body);
+      return null;
+    } catch (error: any) {
+      console.error('❌ Error al obtener representante:', error);
+      this.toastr.error(error?.error?.message || 'Error al obtener el representante', 'Error');
+      return null;
+    }
+  }
+
   /**
    * Crear un nuevo representante
    * 
    * @param representante - Datos del representante a crear
-   * @returns Promise con la respuesta del backend o null en caso de error
-   * 
-   * @example
-   * ```typescript
-   * const nuevoRepresentante: CrearRepresentanteDto = {
-   *   primerNombre: "Juan",
-   *   segundoNombre: "Carlos",
-   *   primerApellido: "Pérez",
-   *   segundoApellido: "García",
-   *   nroDocumento: "1234567890123",
-   *   tipoDocumentoId: 1,
-   *   paisDocumentoId: 320,
-   *   fechaNacimiento: "1985-05-15",
-   *   sexo: "M",
-   *   correoElectronico: "juan.perez@example.com",
-   *   telefonoCelular: 12345678,
-   *   direccionRepresentante: "Zona 10, Ciudad de Guatemala",
-   *   codigoPostal: 1010,
-   *   estadoCivilId: 1,
-   *   ocupacionId: 5,
-   *   actividadLaboralId: 3,
-   *   ingresos: 5000,
-   *   paisDomicilioId: 320,
-   *   departamentoId: 1,
-   *   localidadId: 1,
-   *   usrIngreso: "admin"
-   * };
-   * 
-   * const resultado = await this.representanteService.crearRepresentante(nuevoRepresentante);
-   * if (resultado) {
-   *   console.log('Representante creado:', resultado.data?.representante);
-   * }
-   * ```
+   * @returns Promise con la respuesta del backend o null en caso de error   * 
    */
-  async crearRepresentante(representante: CrearRepresentanteDto): Promise<RepresentanteResponse | null> {
+  async crearRepresentante(representante: Representante): Promise<RepresentanteResponse | null> {
     console.log('🚀 Creando nuevo representante...');
-    console.log('📋 Datos:', representante);
+    console.log('📋 Datos:', representante);   
 
     try {
       const resp = await firstValueFrom(
@@ -189,7 +197,7 @@ export class RepresentanteService extends HttpService {
    * @param representante - Datos del representante a actualizar
    * @returns Promise con la respuesta del backend o null en caso de error
    */
-  async actualizarRepresentante(representanteId: string, representante: Partial<CrearRepresentanteDto>): Promise<RepresentanteResponse | null> {
+  async actualizarRepresentante(representanteId: string, representante: Partial<Representante>): Promise<RepresentanteResponse | null> {
     console.log(`🔄 Actualizando representante ${representanteId}...`);
 
     try {

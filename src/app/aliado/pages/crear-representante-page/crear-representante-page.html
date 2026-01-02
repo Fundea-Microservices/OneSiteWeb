@@ -118,7 +118,6 @@
                             Datos Personales
                         </h4>
                     </div>
-
                     <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
                         [class.rotate-180]="activeSection() === 'datos'"
                         [class.text-blue-600]="activeSection() === 'datos'"
@@ -132,8 +131,8 @@
                     [style.max-height]="activeSection() === 'datos' ? '1000px' : '0px'"
                     [style.opacity]="activeSection() === 'datos' ? '1' : '0'">
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <app-upsert-datos-aliado-02
-                            [datosExtraidos]="datosRepresentante()"></app-upsert-datos-aliado-02>
+                        <app-upsert-datos-generales
+                            [(representante)]="representante" [camposBloqueados]="camposBloqueados()"></app-upsert-datos-generales>
                     </div>
                 </div>
             </div>
@@ -173,7 +172,7 @@
                     [style.opacity]="activeSection() === 'contacto' ? '1' : '0'">
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
 
-                        <app-upsert-contacto [datosExtraidos]="datosRepresentante()"></app-upsert-contacto>
+                        <app-upsert-contacto [(representante)]="representante" [camposBloqueados]="camposBloqueados()"></app-upsert-contacto>
                     </div>
                 </div>
             </div>
@@ -216,7 +215,7 @@
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                         <!-- Aquí va el formulario de direcciones -->
                         <app-upsert-actividad-laboral-financiera
-                            [datosExtraidos]="datosRepresentante()"></app-upsert-actividad-laboral-financiera>
+                            [(representante)]="representante" [camposBloqueados]="camposBloqueados()"></app-upsert-actividad-laboral-financiera>
                     </div>
                 </div>
             </div>

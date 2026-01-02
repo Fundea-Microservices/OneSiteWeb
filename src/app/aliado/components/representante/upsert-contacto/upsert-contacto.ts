@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, type OnInit, signal, inject, computed, input, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, signal, inject, computed, input, effect, model, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos';
+import { Representante } from '../../../../../interfaces/aliado/representante';
 
 @Component({
   selector: 'app-upsert-contacto',
@@ -12,6 +13,8 @@ import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos
 export class UpsertContacto implements OnInit {
 
   private catalogosService = inject(CatalogosBantotalService);
+  representante = model<Representante | null>(null);
+  camposBloqueados = input<boolean>(false);
 
   // Catálogos
   paises = signal<CatalogoSimple[]>([]);
@@ -35,20 +38,20 @@ export class UpsertContacto implements OnInit {
   departamentosFiltrados = computed(() => {
     const paisId = (this.paises().find(p => p.valorCore === this.selectedPaisCode()))?.catalogoId;
     if (!paisId) return [];
-    
+
     const pais = this.paises().find(p => p.catalogoId === paisId);
     if (!pais) return [];
-    
+
     return this.departamentos().filter(d => d.padreValorCore === pais.valorCore);
   });
 
   municipiosFiltrados = computed(() => {
     const deptoId = (this.departamentos().find(p => p.valorCore === this.selectedDepartamentoCode()))?.catalogoId;
     if (!deptoId) return [];
-    
+
     const depto = this.departamentos().find(d => d.catalogoId === deptoId);
     if (!depto) return [];
-    
+
     return this.municipios().filter(m => m.padreValorCore === depto.valorCore);
   });
 
@@ -57,33 +60,63 @@ export class UpsertContacto implements OnInit {
   }
 
   constructor() {
+    // Effect para sincronizar cambios del representante al componente
+    effect(() => {
+      const rep = this.representante();
+      if (rep) {
+        this.telefonoCelular.set(rep.telefonoCelular?.toString() || '');
+        this.correoElectronico.set(rep.correoElectronico || '');
+        this.direccionCompleta.set(rep.direccion || '');
+        this.selectedPaisCode.set(rep.paisDomicilio?.toString() || '320');
+        this.selectedDepartamentoCode.set(rep.departamentoDomicilio?.toString() || '1');
+        this.selectedMunicipioId.set(rep.localidad?.toString() || '');
+      }
+    });
+
+    // Effect para sincronizar cambios del componente al representante
+      // Effect para sincronizar cambios del componente al representante sin ciclar
+      effect(() => {
+        const rep = untracked(() => this.representante());
+        if (rep) {
+          this.representante.set({
+            ...rep,
+            telefonoCelular: this.telefonoCelular(),
+            correoElectronico: this.correoElectronico(),
+            direccion: this.direccionCompleta(),
+            paisDomicilio: Number(this.selectedPaisCode()),
+            departamentoDomicilio: Number(this.selectedDepartamentoCode()),
+            localidad: Number(this.selectedMunicipioId())
+          });
+        }
+      });
+
     // Effect para mapear geografía cuando llegan datos extraídos
     effect(() => {
       const datos = this.datosExtraidos();
       if (datos && datos.departamentoVecindad) {
         // Buscar departamento por nombre
-        const depto = this.departamentos().find(d => 
+        const depto = this.departamentos().find(d =>
           d.nombre.toLowerCase().includes(datos.departamentoVecindad.toLowerCase())
         );
-        
+
         if (depto) {
           this.selectedDepartamentoCode.set(depto.valorCore);
-          
+
           // Buscar municipio después de seleccionar departamento
           setTimeout(() => {
             if (datos.municipioVecindad) {
-              const muni = this.municipios().find(m => 
+              const muni = this.municipios().find(m =>
                 m.nombre.toLowerCase().includes(datos.municipioVecindad.toLowerCase()) &&
                 m.padreValorCore === depto.valorCore
               );
-              
+
               if (muni) {
                 this.selectedMunicipioId.set(muni.catalogoId);
               }
             }
           }, 100);
         }
-        
+
         console.log('📍 Datos de ubicación cargados automáticamente');
       }
     });
@@ -96,18 +129,18 @@ export class UpsertContacto implements OnInit {
 
     if (paises) {
       this.paises.set(paises);
-      
+
       // Seleccionar automáticamente Guatemala (valorCore = 320)
       const guatemala = paises.find(p => p.valorCore === '320');
       if (guatemala) {
         this.selectedPaisCode.set(guatemala.valorCore);
       }
     }
-    
+
     if (departamentos) this.departamentos.set(departamentos);
     if (municipios) this.municipios.set(municipios);
     console.log("PAIS SELECTED: ", this.selectedPaisCode());
-    
+
   }
 
   onPaisChange() {

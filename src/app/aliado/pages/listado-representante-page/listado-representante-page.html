@@ -92,6 +92,7 @@
                         <th class="text-center" scope="col">Nombre Completo</th>
                         <th class="text-center" scope="col">Documento</th>
                         <th class="text-center" scope="col">Fecha Nacimiento</th>
+                        <th class="text-center" scope="col">NIT</th>
                         <th class="text-center" scope="col">Teléfono</th>
                         <th class="text-center" scope="col">Acciones</th>
                     </tr>
@@ -113,18 +114,24 @@
                         </td>
                     </tr>
                     } @else {
-                        @for (item of representantesList(); track item.idRepresentante; let i = $index) {
+                        @for (item of representantesList(); track item.representanteId; let i = $index) {
                         <tr>
                             <th scope="row">{{ i + 1 }}</th>
                             <td>{{ item.primerNombre }} {{ item.segundoNombre || '' }} {{ item.primerApellido }} {{ item.segundoApellido || '' }}</td>
-                            <td>{{ item.nroDocumento }}</td>
+                            <td>{{ item.documento }}</td>
                             <td>{{ item.fechaNacimiento | date:'dd/MM/yyyy' }}</td>
+                            <td>{{ item.nit }}</td>
                             <td>{{ item.telefonoCelular }}</td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-success mx-1"
                                     (click)="openModal(false, item)"
                                     title="Editar representante">
                                     <ion-icon name="create-outline"></ion-icon>
+                                </button>
+                                <button class="btn btn-sm btn-primary mx-1"
+                                    [routerLink]="['/aliado/empresas-representante', item.representanteId]"
+                                    title="Editar representante">
+                                    <ion-icon name="business-outline"></ion-icon>
                                 </button>
                             </td>
                         </tr>

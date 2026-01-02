@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, type OnInit, signal, inject, input, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, signal, inject, input, effect, model, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { initFlowbite } from 'flowbite';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos';
+import { Representante } from '../../../../../interfaces/aliado/representante';
 
 @Component({
   selector: 'app-upsert-actividad-laboral-financiera',
@@ -13,6 +14,8 @@ import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos
 export class UpsertActividadLaboralFinanciera implements OnInit {
 
   private catalogosService = inject(CatalogosBantotalService);
+  representante = model<Representante | null>(null);
+  camposBloqueados = input<boolean>(false);
 
   // Catálogos
   ocupaciones = signal<CatalogoSimple[]>([]);
@@ -24,7 +27,7 @@ export class UpsertActividadLaboralFinanciera implements OnInit {
 
   // Campos
   profesion = signal<string>('');
-  actividadLaboralId = signal<string>('');
+  actividadLaboral = signal<string>('');
 
   // Input de datos extraídos
   datosExtraidos = input<any>();
@@ -35,6 +38,31 @@ export class UpsertActividadLaboralFinanciera implements OnInit {
    }
 
   constructor() {
+    // Effect para sincronizar cambios del representante al componente
+    effect(() => {
+      const rep = this.representante();
+      if (rep) {
+        this.selectedOcupacionId.set(rep.ocupacion?.toString() || '');
+        this.actividadLaboral.set(rep.actividadLaboral?.toString() || '');
+        this.selectedSectorId.set(rep.sectorId?.toString() || '');
+        this.profesion.set(rep.profesion?.toString() || '');
+      }
+    });
+
+    // Effect para sincronizar cambios del componente al representante sin ciclar
+    effect(() => {
+      const rep = untracked(() => this.representante());
+      if (rep) {
+        this.representante.set({
+          ...rep,
+          ocupacion: this.selectedOcupacionId() ? Number(this.selectedOcupacionId()) : undefined,
+          actividadLaboral: this.actividadLaboral() ? Number(this.actividadLaboral()) : undefined,
+          sectorId: this.selectedSectorId() ? Number(this.selectedSectorId()) : undefined,
+          profesion: this.profesion() ? Number(this.profesion()) : undefined
+        });
+      }
+    });
+
     // Effect para llenar profesión si está disponible en datos extraídos
     effect(() => {
       const datos = this.datosExtraidos();
@@ -66,7 +94,7 @@ export class UpsertActividadLaboralFinanciera implements OnInit {
   isValid(): boolean {
     return !!(
       this.selectedOcupacionId() &&
-      this.actividadLaboralId()
+      this.actividadLaboral()
     );
   }
 
