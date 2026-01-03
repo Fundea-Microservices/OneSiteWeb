@@ -27,7 +27,7 @@ const emptyEmpresa: IEmpresa = {
 
 @Component({
   selector: 'app-listado-representante-page',
-  imports: [RouterLink, GestionRepresentanteAccordion, DatePipe, RouterLink],
+  imports: [RouterLink, GestionRepresentanteAccordion, RouterLink],
   templateUrl: './listado-representante-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,

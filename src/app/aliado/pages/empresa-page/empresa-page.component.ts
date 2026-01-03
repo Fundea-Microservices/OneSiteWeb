@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa';
-import { EmpresaAliadoService } from '../../../../services/aliado/empresa.service';
+import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa-aliado';
 import { Modal } from 'bootstrap';
 import { DatePipe } from '@angular/common';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
@@ -33,7 +32,6 @@ const emptyEmpresa: IEmpresaAliado = {
 })
 export default class EmpresaPageComponent {
 
-  empresaService = inject(EmpresaAliadoService);
   empresasList = signal<IEmpresaAliado[]>([]);
   metadata = signal({})// Cambia el tipo según tu modelo de datos
   nuevoEmpresa = signal(true)
@@ -76,28 +74,27 @@ export default class EmpresaPageComponent {
   async fetchData() {
     if (this.isLoading()) return;
     this.isLoading.set(true);
-    let resp = await this.empresaService.getEmpresas({ page: this.pagination().page, limit: this.pagination().pageSize, search: this.buscador() });
-    if (resp) {
-      let { empresas, metadata } = resp.data;
-      this.empresasList.set(empresas);
-      this.metadata.set(metadata);
-      this.pagination.set({
-        page: metadata.page,
-        pageSize: metadata.limit,
-        totalItems: metadata.total
-      });
-    }
+    // let resp = await this.empresaService.getEmpresas({ page: this.pagination().page, limit: this.pagination().pageSize, search: this.buscador() });
+    // if (resp) {
+    //   let { empresas, metadata } = resp.data;
+    //   this.empresasList.set(empresas);
+    //   this.metadata.set(metadata);
+    //   this.pagination.set({
+    //     page: metadata.page,
+    //     pageSize: metadata.limit,
+    //     totalItems: metadata.total
+    //   });
+    // }
     this.isLoading.set(false);
   }
 
   async deleteEmpresa(empresa: IEmpresaAliado) {
-    let resp = await this.empresaService.deleteEmpresa(empresa);
-    if (resp?.success) {
-      this.fetchData();
-      if (this.modalDeleteInstance) {
-        this.modalDeleteInstance.hide();
-      }
-    }
+    // let resp = await this.empresaService.deleteEmpresa(empresa);
+    // if (resp?.success) {
+    //   this.fetchData();
+    //   if (this.modalDeleteInstance) {
+    //     this.modalDeleteInstance.hide();
+    //   }    
   }
 
   changeActive(empresa: IEmpresaAliado, checked: boolean) {
@@ -106,21 +103,21 @@ export default class EmpresaPageComponent {
   }
 
   async createEmpresa(empresa: IEmpresaAliado) {
-    let resp = await this.empresaService.createEmpresa(empresa)
-    if (resp?.success) {
-      this.fetchData()
-      this.closeModal();
-      this.empresaEdit.set(emptyEmpresa);
-      this.nuevoEmpresa.set(true); // Reseteamos el estado de nuevo empresa
-    }
+    // let resp = await this.empresaService.createEmpresa(empresa)
+    // if (resp?.success) {
+    //   this.fetchData()
+    //   this.closeModal();
+    //   this.empresaEdit.set(emptyEmpresa);
+    //   this.nuevoEmpresa.set(true); // Reseteamos el estado de nuevo empresa
+    // }
   }
 
   async updateEmpresa(empresa: IEmpresaAliado) {
-    let resp = await this.empresaService.updateEmpresa(empresa)
-    if (resp?.success) {
-      this.fetchData()
-      this.closeModal();
-    }
+    // let resp = await this.empresaService.updateEmpresa(empresa)
+    // if (resp?.success) {
+    //   this.fetchData()
+    //   this.closeModal();
+    // }
   }
 
   onChangePage(newPagination: IPagination) {

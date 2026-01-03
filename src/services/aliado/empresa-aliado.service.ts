@@ -3,12 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { EmpresaAliadoResponse, IEmpresaAliado } from '../../interfaces/aliado/empresa';
+import { EmpresaAliadoResponse, IEmpresaAliado } from '../../interfaces/aliado/empresa-aliado';
 
 @Injectable({
   providedIn: 'root'
 })
-export class EmpresaAliadoService extends HttpService {
+export class EmpresaOldAliadoService extends HttpService {
 
   private readonly endpoints = {
     empresa: '/aliado/empresa',

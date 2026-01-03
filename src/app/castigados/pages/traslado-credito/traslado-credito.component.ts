@@ -6,7 +6,7 @@ import { CreditosCastigadosService } from '../../../../services/castigados/credi
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { DatePipe } from '@angular/common';
 import { EmpresaCastigadosService } from '../../../../services/castigados/empresa.service';
-import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa';
+import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa-aliado';
 import { ToastrService } from 'ngx-toastr';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 

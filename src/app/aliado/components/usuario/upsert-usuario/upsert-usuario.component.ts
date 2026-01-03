@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, effect, EventEmitter, inject, input, Output, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IUsuarioAliado } from '../../../../../interfaces/aliado/usuario-aliado';
-import { IEmpresaAliado } from '../../../../../interfaces/aliado/empresa';
+import { IEmpresaAliado } from '../../../../../interfaces/aliado/empresa-aliado';
 import { active } from 'sortablejs';
 
 @Component({

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { EmpresaAliadoResponse, IEmpresaAliado } from '../../interfaces/aliado/empresa';
+import { EmpresaAliadoResponse, IEmpresaAliado } from '../../interfaces/aliado/empresa-aliado';
 
 @Injectable({
   providedIn: 'root'

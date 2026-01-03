@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { EmpresaAliadoResponse, IEmpresaAliado } from '../../interfaces/aliado/empresa';
 import { CreditoCastigadoResponse, CreditoCastigadoView } from '../../interfaces/castigados/credito-view';
 
 @Injectable({

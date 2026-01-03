@@ -1,15 +1,17 @@
 
-import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa';
-  
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { RepresentanteService } from '../../../../services/aliado/representante.service';
 import { Representante } from '../../../../interfaces/aliado/representante';
+import { EmpresaRepresentanteService } from '../../../../services/aliado/empresa-representante.service';
+import { IEmpresaRepresentante } from '../../../../interfaces/aliado/empresa-representante';
+import { UpsertEmpresaRepresentanteComponent } from '../../../aliado/components/representante/upsert-empresa-representante/upsert-empresa-representante';
+import { CommonModule } from '@angular/common';
 
 
 @Component({
   selector: 'app-empresas-representante-page',
-  imports: [RouterLink],
+  imports: [RouterLink, UpsertEmpresaRepresentanteComponent, CommonModule],
   templateUrl: './empresas-representante-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -17,84 +19,18 @@ import { Representante } from '../../../../interfaces/aliado/representante';
 export default class EmpresasRepresentantePage {
   private route = inject(ActivatedRoute);
   private representanteService = inject(RepresentanteService);
+  private empresaService = inject(EmpresaRepresentanteService);
   representanteId = signal('');
   representante = signal<Representante | null>(null);
 
-  
-  empresasFicticias: (IEmpresaAliado & { open?: boolean })[] = [
-    {
-      empresaId: '1',
-      name: 'Empresa Alpha',
-      description: 'Empresa de tecnología',
-      pathImg: null,
-      address: 'Av. Reforma 123',
-      latitud: null,
-      longitud: null,
-      phone: '555-1234',
-      phone2: null,
-      email: 'contacto@alpha.com',
-      active: true,
-      created_at: new Date(),
-      updated_at: null,
-      deleted_at: null,
-      open: false
-    },
-    {
-      empresaId: '2',
-      name: 'Empresa Beta',
-      description: 'Servicios financieros',
-      pathImg: null,
-      address: 'Calle 45 Zona 10',
-      latitud: null,
-      longitud: null,
-      phone: '555-5678',
-      phone2: null,
-      email: 'info@beta.com',
-      active: true,
-      created_at: new Date(),
-      updated_at: null,
-      deleted_at: null,
-      open: false
-    }
-  ];
+  // Estado del modal
+  showModal = signal(false);
+  empresaSeleccionada = signal<IEmpresaRepresentante | null>(null);
+  esNuevaEmpresa = signal(true);
+  modalKey = signal(0);
 
-    cuentasBancariasFicticias: Record<string, Array<{
-    idCuentaBancaria: string;
-    banco: string;
-    numeroCuenta: string;
-    tipoCuenta: string;
-    moneda: string;
-    indActivo: boolean;
-  }>> = {
-    '1': [
-      {
-        idCuentaBancaria: 'cb1',
-        banco: 'Banco Industrial',
-        numeroCuenta: '1234567890',
-        tipoCuenta: 'Ahorro',
-        moneda: 'GTQ',
-        indActivo: true
-      },
-      {
-        idCuentaBancaria: 'cb2',
-        banco: 'Banrural',
-        numeroCuenta: '9876543210',
-        tipoCuenta: 'Corriente',
-        moneda: 'USD',
-        indActivo: false
-      }
-    ],
-    '2': [
-      {
-        idCuentaBancaria: 'cb3',
-        banco: 'G&T Continental',
-        numeroCuenta: '5555555555',
-        tipoCuenta: 'Ahorro',
-        moneda: 'GTQ',
-        indActivo: true
-      }
-    ]
-  };
+  // Lista de empresas reales
+  empresas = signal<(IEmpresaRepresentante & { open?: boolean })[]>([]);
 
   async ngOnInit() {
     // Obtener el representanteId de la URL
@@ -105,6 +41,76 @@ export default class EmpresasRepresentantePage {
       const resp = await this.representanteService.byId(id);
       console.log("🚀 ~ EmpresasRepresentantePage ~ ngOnInit ~ resp:", resp)
       this.representante.set(resp?.data?.representante || null);
+      
+      // Cargar empresas del representante
+      await this.cargarEmpresas();
+    }
+  }
+
+  async cargarEmpresas() {
+    const id = this.representanteId();
+    if (!id) return;
+
+    const resp = await this.empresaService.obtenerEmpresasPorRepresentante(id, 1, 100);
+    if (resp?.data && Array.isArray(resp.data)) {
+      this.empresas.set(resp.data.map(e => ({ ...e, open: false })));
+    }
+  }
+
+  abrirModalNuevaEmpresa() {
+    this.esNuevaEmpresa.set(true);
+    this.empresaSeleccionada.set({
+      empresaId: '',
+      representanteId: this.representanteId(),
+      nombreEmpresa: '',
+      nit: '',
+      telefono: '',
+      departamento: 1,
+      municipio: 1,
+      direccion: '',
+      tipoActividad: '',
+      actividad: '',
+      detalleActividad: '',
+      fechaInicioActividad: '',
+    });
+    this.modalKey.set(this.modalKey() + 1);
+    this.showModal.set(true);
+  }
+
+  abrirModalEditarEmpresa(empresa: IEmpresaRepresentante) {
+    this.esNuevaEmpresa.set(false);
+    this.empresaSeleccionada.set({ ...empresa });
+    this.modalKey.set(this.modalKey() + 1);
+    this.showModal.set(true);
+  }
+
+  cerrarModal() {
+    this.showModal.set(false);
+    this.empresaSeleccionada.set(null);
+  }
+
+  async onGuardarEmpresa(empresa: IEmpresaRepresentante) {
+    if (this.esNuevaEmpresa()) {
+      const resp = await this.empresaService.crearEmpresa(empresa);
+      if (resp?.success) {
+        await this.cargarEmpresas();
+        this.cerrarModal();
+      }
+    } else {
+      const resp = await this.empresaService.actualizarEmpresa(empresa.empresaId, empresa);
+      if (resp?.success) {
+        await this.cargarEmpresas();
+        this.cerrarModal();
+      }
+    }
+  }
+
+  async eliminarEmpresa(empresaId: string) {
+    if (confirm('¿Está seguro de eliminar esta empresa?')) {
+      const resp = await this.empresaService.eliminarEmpresa(empresaId);
+      if (resp?.success) {
+        await this.cargarEmpresas();
+      }
     }
   }
 }

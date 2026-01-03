@@ -11,7 +11,7 @@ export interface Data {
 }
 
 export interface IEmpresaAliado {
-    empresaId?:   string;
+    empresaId:   string;
     name:        string;
     description: string;
     pathImg:     null;

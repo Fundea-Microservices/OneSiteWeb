@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { IEmpresaAliado } from '../../../../../interfaces/aliado/empresa';
+import { IEmpresaAliado } from '../../../../../interfaces/aliado/empresa-aliado';
 
 export interface EmpresaValidationRules {
   name?: any[];

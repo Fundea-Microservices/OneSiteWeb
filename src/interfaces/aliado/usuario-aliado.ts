@@ -1,4 +1,4 @@
-import { IEmpresaAliado } from "./empresa";
+import { IEmpresaAliado } from "./empresa-aliado";
 
 export interface UsuarioAliadoResponse {
     success:    boolean;

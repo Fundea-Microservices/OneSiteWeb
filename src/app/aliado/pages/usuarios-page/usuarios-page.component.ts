@@ -2,9 +2,8 @@ import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef,
 import { RouterLink } from '@angular/router';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { IUsuarioAliado } from '../../../../interfaces/aliado/usuario-aliado';
-import { EmpresaAliadoService } from '../../../../services/aliado/empresa.service';
 import { Modal } from 'bootstrap';
-import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa';
+import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa-aliado';
 import { UsuarioAliadoService } from '../../../../services/aliado/usuario-aliado.service';
 import { UpsertUsuarioAliadoComponent } from '../../components/usuario/upsert-usuario/upsert-usuario.component';
 
@@ -27,7 +26,6 @@ const emptyUser: IUsuarioAliado = {
 })
 export default class UsuariosPageComponent {
 
-  empresaService = inject(EmpresaAliadoService);
   usuarioService = inject(UsuarioAliadoService);
   empresasList = signal<IEmpresaAliado[]>([]);
   usuariosList = signal<IUsuarioAliado[]>([]);
@@ -73,10 +71,10 @@ export default class UsuariosPageComponent {
   }
 
   async loadFilters() {
-    let resp = await this.empresaService.getEmpresas({ all: true });
-    if (resp) {
-      this.empresasList.set(resp.data.empresas);
-    }
+    // let resp = await this.empresaService.getEmpresas({ all: true });
+    // if (resp) {
+    //   this.empresasList.set(resp.data.empresas);
+    // }
   }
 
   async fetchData() {

@@ -15,21 +15,68 @@
     </div>
     <div class="card-body">
 
-        <div class="row">
-            <div class="col-12 mb-3">
+        <!-- Información del Representante -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 md:p-6 mb-4 shadow-sm border border-blue-100">
+            <div class="flex items-center mb-3">
+                
+                <h5 class="text-lg md:text-xl font-semibold text-gray-800 mb-0">Información del Representante</h5>
             </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                <div class="bg-white rounded-md p-3 shadow-sm">
+                    <p class="text-xs text-gray-500 mb-1 font-medium">Nombre Completo</p>
+                    <p class="text-sm md:text-base font-semibold text-gray-800 truncate">
+                        {{ representante()?.primerNombre || '' }} 
+                        {{ representante()?.segundoNombre || '' }} 
+                        {{ representante()?.primerApellido || '' }} 
+                        {{ representante()?.segundoApellido || '' }}
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-md p-3 shadow-sm">
+                    <p class="text-xs text-gray-500 mb-1 font-medium">Documento</p>
+                    <p class="text-sm md:text-base font-semibold text-gray-800">
+                        {{ representante()?.documento || 'N/A' }}
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-md p-3 shadow-sm">
+                    <p class="text-xs text-gray-500 mb-1 font-medium">NIT</p>
+                    <p class="text-sm md:text-base font-semibold text-gray-800">
+                        {{ representante()?.nit || 'N/A' }}
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-md p-3 shadow-sm">
+                    <p class="text-xs text-gray-500 mb-1 font-medium">Teléfono</p>
+                    <p class="text-sm md:text-base font-semibold text-gray-800">
+                        {{ representante()?.telefonoCelular || 'N/A' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end mb-3">
+            <button 
+                type="button" 
+                (click)="abrirModalNuevaEmpresa()"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow transition-colors duration-200"
+            >
+                <i class="bi bi-plus-circle me-2"></i>
+                Nueva Empresa
+            </button>
         </div>
 
         <div class="mt-4">
             <h6>Empresas asignadas</h6>
             <div class="space-y-4">
-                @for (empresa of empresasFicticias; track empresa.empresaId) {
+                @for (empresa of empresas(); track empresa.empresaId) {
                 <div class="border rounded-lg shadow">
                     <button type="button"
                         class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-t-lg focus:outline-none"
                         (click)="empresa.open = !empresa.open">
-                        <span class="font-semibold">{{ empresa.name }}</span>
-                        <span class="text-sm text-gray-500">{{ empresa.email }}</span>
+                        <span class="font-semibold">{{ empresa.nombreEmpresa }}</span>
+                        <span class="text-sm text-gray-500">NIT: {{ empresa.nit }}</span>
                         <svg class="w-5 h-5 ml-2 transition-transform" [class.rotate-180]="empresa.open" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -39,53 +86,61 @@
                     <div class="px-4 py-3 bg-white rounded-b-lg">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                             <div>
-                                <span class="font-medium">Dirección:</span> {{ empresa.address }}<br>
-                                <span class="font-medium">Teléfono:</span> {{ empresa.phone }}<br>
-                                <span class="font-medium">Rol:</span> Administrador<br>
+                                <span class="font-medium">Dirección:</span> {{ empresa.direccion }}<br>
+                                <span class="font-medium">Teléfono:</span> {{ empresa.telefono || 'N/A' }}<br>
+                                <span class="font-medium">Departamento:</span> {{ empresa.departamento }}<br>
+                                <span class="font-medium">Municipio:</span> {{ empresa.municipio }}<br>
                             </div>
                             <div>
-                                <span class="font-medium">Descripción:</span> {{ empresa.description }}<br>
-                                <span class="font-medium">Estado:</span> <span
-                                    class="{{empresa.active ? 'text-green-600' : 'text-red-600'}}">{{ empresa.active ?
-                                    'Activa' : 'Inactiva' }}</span>
+                                <span class="font-medium">Detalle Actividad:</span> {{ empresa.detalleActividad || 'N/A' }}<br>
+                                <span class="font-medium">Fecha Inicio:</span> {{ empresa.fechaInicioActividad || 'N/A' }}
                             </div>
                         </div>
-                        <h6 class="mt-3 font-semibold">Cuentas bancarias</h6>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full text-sm text-left border">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-2 py-1 border">Banco</th>
-                                        <th class="px-2 py-1 border">Número de cuenta</th>
-                                        <th class="px-2 py-1 border">Tipo de cuenta</th>
-                                        <th class="px-2 py-1 border">Moneda</th>
-                                        <th class="px-2 py-1 border">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @for (cuenta of cuentasBancariasFicticias[empresa.empresaId]; track
-                                    cuenta.idCuentaBancaria) {
-                                    <tr>
-                                        <td class="px-2 py-1 border">{{ cuenta.banco }}</td>
-                                        <td class="px-2 py-1 border">{{ cuenta.numeroCuenta }}</td>
-                                        <td class="px-2 py-1 border">{{ cuenta.tipoCuenta }}</td>
-                                        <td class="px-2 py-1 border">{{ cuenta.moneda }}</td>
-                                        <td class="px-2 py-1 border">{{ cuenta.indActivo ? 'Activa' : 'Inactiva' }}</td>
-                                    </tr>
-                                    }
-                                </tbody>
-                            </table>
+                        <div class="flex gap-2 mt-3">
+                            <button
+                                type="button"
+                                (click)="abrirModalEditarEmpresa(empresa)"
+                                class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm"
+                            >
+                                <i class="bi bi-pencil me-1"></i> Editar
+                            </button>
+                            <button
+                                type="button"
+                                (click)="eliminarEmpresa(empresa.empresaId)"
+                                class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm"
+                            >
+                                <i class="bi bi-trash me-1"></i> Eliminar
+                            </button>
                         </div>
                     </div>
                 }
                 </div>
+                }
+                @empty {
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="bi bi-building text-4xl"></i>
+                        <p class="mt-2">No hay empresas registradas para este representante</p>
+                    </div>
                 }
             </div>
         </div>
 
     </div>
 
-
-
-
 </div>
+
+<!-- Modal -->
+@if (showModal()) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <app-upsert-empresa-representante
+            [empresa]="empresaSeleccionada()!"
+            [representanteId]="representanteId()"
+            [nuevo]="esNuevaEmpresa()"
+            [key]="modalKey()"
+            (save)="onGuardarEmpresa($event)"
+            (cancel)="cerrarModal()"
+        />
+    </div>
+</div>
+}
