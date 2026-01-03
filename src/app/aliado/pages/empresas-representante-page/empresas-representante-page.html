@@ -1,0 +1,91 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Aliados</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado/listado-representante']">Aliados</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Detalle empresas</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header">
+        Administrar empresas de representante - {{ representante()?.primerNombre }} {{ representante()?.primerApellido
+        }}
+
+    </div>
+    <div class="card-body">
+
+        <div class="row">
+            <div class="col-12 mb-3">
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h6>Empresas asignadas</h6>
+            <div class="space-y-4">
+                @for (empresa of empresasFicticias; track empresa.empresaId) {
+                <div class="border rounded-lg shadow">
+                    <button type="button"
+                        class="w-full flex justify-between items-center px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-t-lg focus:outline-none"
+                        (click)="empresa.open = !empresa.open">
+                        <span class="font-semibold">{{ empresa.name }}</span>
+                        <span class="text-sm text-gray-500">{{ empresa.email }}</span>
+                        <svg class="w-5 h-5 ml-2 transition-transform" [class.rotate-180]="empresa.open" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    @if (empresa.open) {
+                    <div class="px-4 py-3 bg-white rounded-b-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                            <div>
+                                <span class="font-medium">Dirección:</span> {{ empresa.address }}<br>
+                                <span class="font-medium">Teléfono:</span> {{ empresa.phone }}<br>
+                                <span class="font-medium">Rol:</span> Administrador<br>
+                            </div>
+                            <div>
+                                <span class="font-medium">Descripción:</span> {{ empresa.description }}<br>
+                                <span class="font-medium">Estado:</span> <span
+                                    class="{{empresa.active ? 'text-green-600' : 'text-red-600'}}">{{ empresa.active ?
+                                    'Activa' : 'Inactiva' }}</span>
+                            </div>
+                        </div>
+                        <h6 class="mt-3 font-semibold">Cuentas bancarias</h6>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm text-left border">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-2 py-1 border">Banco</th>
+                                        <th class="px-2 py-1 border">Número de cuenta</th>
+                                        <th class="px-2 py-1 border">Tipo de cuenta</th>
+                                        <th class="px-2 py-1 border">Moneda</th>
+                                        <th class="px-2 py-1 border">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (cuenta of cuentasBancariasFicticias[empresa.empresaId]; track
+                                    cuenta.idCuentaBancaria) {
+                                    <tr>
+                                        <td class="px-2 py-1 border">{{ cuenta.banco }}</td>
+                                        <td class="px-2 py-1 border">{{ cuenta.numeroCuenta }}</td>
+                                        <td class="px-2 py-1 border">{{ cuenta.tipoCuenta }}</td>
+                                        <td class="px-2 py-1 border">{{ cuenta.moneda }}</td>
+                                        <td class="px-2 py-1 border">{{ cuenta.indActivo ? 'Activa' : 'Inactiva' }}</td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                </div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+</div>

@@ -11,6 +11,7 @@ import { CustomIconComponent } from '../../../shared/components/custom-icon/cust
 import { Representante } from '../../../../interfaces/aliado/representante';
 import { UpsertDatosGenerales } from '../../components/representante/upsert-datos-generales/upsert-datos-generales';
 
+
 @Component({
   selector: 'app-crear-representante-page',
   imports: [CommonModule, RouterLink, UpsertDatosGenerales, UpsertContacto, UpsertActividadLaboralFinanciera],
@@ -28,7 +29,8 @@ export default class CrearRepresentantePage {
 
   dpiFrontValidado = signal(false);
   dpiBackValidado = signal(false)
-  dpiValidado = signal(false);
+  dpiValidado = signal(true);
+  intentosFallidos = signal(0);
 
   // Archivos originales para enviar al servicio
   frontFile: File | null = null;
@@ -42,8 +44,29 @@ export default class CrearRepresentantePage {
   datosFrontalDPI = signal<ValidarDocumentoResponse | null>(null);
   datosReversoDPI = signal<ValidarDocumentoResponse | null>(null);
   camposBloqueados = signal(false);
-  representante = signal<any>({});
   activeSection = signal<'datos' | 'contacto' | 'actividad' | null>('datos');
+
+  
+  representante = signal<Representante>({
+    representanteId: '',
+    documento: '2600300150901',
+    direccion: '27 Avenida Zona 3',
+    nit: '99416239',
+    correoElectronico: 'ivanestarchila@gmail.com',
+    paisDocumento: 320,
+    tipoDocumento: 1,
+    primerApellido: 'Esteban',
+    segundoApellido: 'Archila',
+    primerNombre: 'Iván',
+    segundoNombre: 'Alejandro',
+    sexo: 'M',
+    etnia: 6,
+    nacionalidad: 320,
+    paisDomicilio: 320,
+    departamentoDomicilio: 1,
+    telefonoCelular: '35413357',
+    telefonoFijo: '77636642',
+  });
 
   constructor(private cdr: ChangeDetectorRef) { }
 
@@ -101,9 +124,17 @@ export default class CrearRepresentantePage {
           console.log('✅ DPI frontal aprobado');
         } else {
           this.dpiFrontValidado.set(false);
+          this.intentosFallidos.update(count => count + 1);
           const mensaje = this.agenteService.getMensajeUsuario(response);
           this.toastr.error(mensaje, 'Error de validación');
           console.log('❌ DPI frontal rechazado:', mensaje);
+          
+          // Si ya hay 3 intentos fallidos, habilitar entrada manual
+          if (this.intentosFallidos() >= 3) {
+            this.dpiValidado.set(true);
+            this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
+            console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
+          }
         }
         
         // Actualizar estado global
@@ -113,8 +144,17 @@ export default class CrearRepresentantePage {
       error: (error) => {
         this.validandoFront.set(false);
         this.dpiFrontValidado.set(false);
+        this.intentosFallidos.update(count => count + 1);
         this.toastr.error('Error al validar el documento', 'Error');
         console.error('❌ Error en validación frontal:', error);
+        
+        // Si ya hay 3 intentos fallidos, habilitar entrada manual
+        if (this.intentosFallidos() >= 3) {
+          this.dpiValidado.set(true);
+          this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
+          console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
+        }
+        
         this.cdr.markForCheck();
       }
     });
@@ -139,7 +179,7 @@ export default class CrearRepresentantePage {
         apellidoCasada: desglose.apellido_casada || '',
         nroDocumento: datos.cui_numero || '',
         cuiVisual: datos.cui_visual || '',
-        fechaNacimiento: new Date(datos.fecha_nacimiento || ''),
+        fechaNacimiento: datos.fecha_nacimiento || '',
         fechaEmision: datos.fecha_de_emision || '',
         sexo: datos.sexo_codigo || '',
         nacionalidad: Number(datos.nacionalidad_pais || ''),
@@ -195,9 +235,17 @@ export default class CrearRepresentantePage {
           console.log('✅ DPI reverso aprobado');
         } else {
           this.dpiBackValidado.set(false);
+          this.intentosFallidos.update(count => count + 1);
           const mensaje = this.agenteService.getMensajeUsuario(response);
           this.toastr.error(mensaje, 'Error de validación');
           console.log('❌ DPI reverso rechazado:', mensaje);
+          
+          // Si ya hay 3 intentos fallidos, habilitar entrada manual
+          if (this.intentosFallidos() >= 3) {
+            this.dpiValidado.set(true);
+            this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
+            console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
+          }
         }
         
         // Actualizar estado global
@@ -207,8 +255,17 @@ export default class CrearRepresentantePage {
       error: (error) => {
         this.validandoBack.set(false);
         this.dpiBackValidado.set(false);
+        this.intentosFallidos.update(count => count + 1);
         this.toastr.error('Error al validar el documento', 'Error');
         console.error('❌ Error en validación reverso:', error);
+        
+        // Si ya hay 3 intentos fallidos, habilitar entrada manual
+        if (this.intentosFallidos() >= 3) {
+          this.dpiValidado.set(true);
+          this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
+          console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
+        }
+        
         this.cdr.markForCheck();
       }
     });
@@ -247,6 +304,14 @@ export default class CrearRepresentantePage {
     try {
       // Recolectar todos los datos del signal representante
       const datos = this.representante();
+
+      // Normalizar documento: eliminar todos los espacios en blanco
+      const documentoLimpio = (datos.documento || '').replace(/\s+/g, '');
+      console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ datos.documento:", datos.documento)
+      this.representante.update(curr => ({ ...curr, documento: documentoLimpio }));
+
+      // Usar la versión normalizada para validación y envío
+      datos.documento = documentoLimpio;
       console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ datos:", datos);
       
       // Validar que tengamos datos básicos

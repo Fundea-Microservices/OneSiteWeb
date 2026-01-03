@@ -73,10 +73,11 @@ export class RepresentanteService extends HttpService {
   async crearRepresentante(representante: Representante): Promise<RepresentanteResponse | null> {
     console.log('🚀 Creando nuevo representante...');
     console.log('📋 Datos:', representante);   
+    const {representanteId, created_at, updated_at, deleted_at,...representanteDTO} = representante
 
     try {
       const resp = await firstValueFrom(
-        this.post<RepresentanteResponse>(this.endpoints.representante, representante)
+        this.post<RepresentanteResponse>(this.endpoints.representante, representanteDTO)
       );
 
       if (resp.body?.success) {
@@ -141,7 +142,6 @@ export class RepresentanteService extends HttpService {
       if (params.tipoDocumento !== undefined) queryParams.tipoDocumento = params.tipoDocumento;
       if (params.nit) queryParams.nit = params.nit;
       if (params.activo !== undefined) queryParams.activo = params.activo;
-      console.log("🚀 ~ RepresentanteService ~ listarRepresentantes ~ queryParams:", queryParams)
 
       const resp = await firstValueFrom(
         this.get<any>(this.endpoints.representante, queryParams)

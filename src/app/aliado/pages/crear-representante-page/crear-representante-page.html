@@ -14,7 +14,7 @@
     <div class="card-body">
 
 
-        <div class="grid gap-6 mt-4 mb-4 sm:grid-cols-2">
+        <div class="grid gap-4 mt-4 mb-4 grid-cols-1 lg:grid-cols-2">
             <!-- FOTO FRONTAL -->
             <div class="flex flex-col items-center">
                 <label class="block text-sm font-medium text-gray-700 mb-2 w-full text-center">
@@ -25,7 +25,7 @@
                     class="hidden" />
 
                 <div onclick="document.getElementById('frontDpiInput').click()"
-                    class="w-4/5 h-40 sm:h-72 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition shadow-sm hover:shadow-md p-4 overflow-hidden relative">
+                    class="w-full md:w-4/5 h-48 md:h-64 lg:h-72 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition shadow-sm hover:shadow-md p-4 overflow-hidden relative">
 
                     <!-- Overlay de validación -->
                     @if (validandoFront()) {
@@ -65,7 +65,7 @@
                     class="hidden" />
 
                 <div onclick="document.getElementById('backDpiInput').click()"
-                    class="w-4/5 h-40 sm:h-72 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition shadow-sm hover:shadow-md p-4 overflow-hidden relative">
+                    class="w-full md:w-4/5 h-48 md:h-64 lg:h-72 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition shadow-sm hover:shadow-md p-4 overflow-hidden relative">
 
                     <!-- Overlay de validación -->
                     @if (validandoBack()) {
@@ -97,22 +97,22 @@
         </div>
 
         @if(dpiValidado()){
-        <div class="w-11/12 mx-auto" style="margin-left:10%;margin-right:10%;">
+        <div class="w-full px-2 md:w-11/12 mx-auto md:px-0">
 
             <!-- Datos Personales y Demográficos -->
             <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
                 (mouseenter)="onMouseEnter('datos')" (mouseleave)="onMouseLeave()">
-                <div class="px-6 py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
                     [class.bg-blue-50]="activeSection() === 'datos'" [class.bg-white]="activeSection() !== 'datos'">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-6 h-6" [class.text-blue-600]="activeSection() === 'datos'"
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" [class.text-blue-600]="activeSection() === 'datos'"
                             [class.text-gray-500]="activeSection() !== 'datos'" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
                             </path>
                         </svg>
-                        <h4 class="text-lg font-semibold transition-colors duration-200"
+                        <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
                             [class.text-blue-700]="activeSection() === 'datos'"
                             [class.text-gray-800]="activeSection() !== 'datos'">
                             Datos Personales
@@ -128,9 +128,9 @@
                 </div>
 
                 <div class="overflow-hidden transition-all duration-500 ease-in-out"
-                    [style.max-height]="activeSection() === 'datos' ? '1000px' : '0px'"
+                    [style.max-height]="activeSection() === 'datos' ? '2000px' : '0px'"
                     [style.opacity]="activeSection() === 'datos' ? '1' : '0'">
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
                         <app-upsert-datos-generales
                             [(representante)]="representante" [camposBloqueados]="camposBloqueados()"></app-upsert-datos-generales>
                     </div>
@@ -140,18 +140,18 @@
             <!-- Contacto y Domicilio (Detalle Geográfico) -->
             <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
                 (mouseenter)="onMouseEnter('contacto')" (mouseleave)="onMouseLeave()">
-                <div class="px-6 py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
                     [class.bg-blue-50]="activeSection() === 'contacto'"
                     [class.bg-white]="activeSection() !== 'contacto'">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-6 h-6" [class.text-blue-600]="activeSection() === 'contacto'"
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" [class.text-blue-600]="activeSection() === 'contacto'"
                             [class.text-gray-500]="activeSection() !== 'contacto'" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
                             </path>
                         </svg>
-                        <h4 class="text-lg font-semibold transition-colors duration-200"
+                        <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
                             [class.text-blue-700]="activeSection() === 'contacto'"
                             [class.text-gray-800]="activeSection() !== 'contacto'">
                             Contacto y Domicilio
@@ -168,9 +168,9 @@
                 </div>
 
                 <div class="overflow-hidden transition-all duration-500 ease-in-out"
-                    [style.max-height]="activeSection() === 'contacto' ? '1000px' : '0px'"
+                    [style.max-height]="activeSection() === 'contacto' ? '2000px' : '0px'"
                     [style.opacity]="activeSection() === 'contacto' ? '1' : '0'">
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
 
                         <app-upsert-contacto [(representante)]="representante" [camposBloqueados]="camposBloqueados()"></app-upsert-contacto>
                     </div>
@@ -180,11 +180,11 @@
             <!-- Actividad Laboral, Financiero y Regulatorio -->
             <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
                 (mouseenter)="onMouseEnter('actividad')" (mouseleave)="onMouseLeave()">
-                <div class="px-6 py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
                     [class.bg-blue-50]="activeSection() === 'actividad'"
                     [class.bg-white]="activeSection() !== 'actividad'">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-6 h-6" [class.text-blue-600]="activeSection() === 'actividad'"
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" [class.text-blue-600]="activeSection() === 'actividad'"
                             [class.text-gray-500]="activeSection() !== 'actividad'" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -193,7 +193,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <h4 class="text-lg font-semibold transition-colors duration-200"
+                        <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
                             [class.text-blue-700]="activeSection() === 'actividad'"
                             [class.text-gray-800]="activeSection() !== 'actividad'">
                             Actividad Laboral
@@ -210,9 +210,9 @@
                 </div>
 
                 <div class="overflow-hidden transition-all duration-500 ease-in-out"
-                    [style.max-height]="activeSection() === 'actividad' ? '1000px' : '0px'"
+                    [style.max-height]="activeSection() === 'actividad' ? '2000px' : '0px'"
                     [style.opacity]="activeSection() === 'actividad' ? '1' : '0'">
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
                         <!-- Aquí va el formulario de direcciones -->
                         <app-upsert-actividad-laboral-financiera
                             [(representante)]="representante" [camposBloqueados]="camposBloqueados()"></app-upsert-actividad-laboral-financiera>
@@ -222,14 +222,14 @@
 
 
             <div>
-                <div class="flex justify-end gap-2 my-4">
+                <div class="flex flex-col md:flex-row justify-end gap-2 my-4">
                     <button type="button"
-                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2.5 rounded transition-colors w-full md:w-auto"
                         onclick="document.getElementById('empresaForm').reset();">
                         Cancelar
                     </button>
                     <button type="button"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded transition-colors w-full md:w-auto"
                         (click)="onGuardar()">
                         Guardar
                     </button>

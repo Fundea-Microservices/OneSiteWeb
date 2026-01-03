@@ -163,7 +163,9 @@
       >
         <option value="">Estado Civil</option>
         @for (estado of estadosCiviles(); track estado.catalogoId) {
-          <option [value]="estado.valorCore">{{ estado.nombre }}</option>
+          <option 
+            [selected]="estado.valorCore === estadoCivilId().toString()"
+            [value]="estado.valorCore">{{ estado.nombre }}</option>
         }
       </select>
     </div>
@@ -179,7 +181,7 @@
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 h-12 w-full"
       >
         <option value="">Nacionalidad</option>
-        <option value="GT" selected>Guatemalteca</option>
+        <option value="320" selected>Guatemalteca</option>
       </select>
     </div>
   </div>
@@ -197,7 +199,10 @@
       >
         <option value="">Seleccione Etnia</option>
         @for (etniaItem of etnias(); track etniaItem.catalogoId) {
-          <option [value]="etniaItem.valorCore">{{ etniaItem.nombre }}</option>
+          <option 
+            [value]="etniaItem.valorCore"
+            [selected]="etniaItem.valorCore === etnia().toString()">  
+            {{ etniaItem.nombre }}</option>
         }
       </select>
     </div>

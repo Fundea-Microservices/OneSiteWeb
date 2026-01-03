@@ -35,6 +35,7 @@ export class UpsertEmpresaComponent {
   fb = inject(FormBuilder);
 
   empresa = input<IEmpresaAliado>({
+    empresaId: '',
     name: '',
     description: '',
     pathImg: null,

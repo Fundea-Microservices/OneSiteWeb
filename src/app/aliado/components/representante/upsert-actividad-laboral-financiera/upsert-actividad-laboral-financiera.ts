@@ -21,10 +21,14 @@ export class UpsertActividadLaboralFinanciera implements OnInit {
   ocupaciones = signal<CatalogoSimple[]>([]);
   actividadesLaborales = signal<CatalogoSimple[]>([]);
   sectores = signal<CatalogoSimple[]>([]);
+  profesiones = signal<CatalogoSimple[]>([]);
   
   selectedOcupacionId = signal<string>('');
   selectedSectorId = signal<string>('');
-
+  nombreEmpresa = signal<string>('');
+  fechaInicioActividad = signal<string>('');
+  ingresos = signal<number>(0);
+  
   // Campos
   profesion = signal<string>('');
   actividadLaboral = signal<string>('');
@@ -46,6 +50,9 @@ export class UpsertActividadLaboralFinanciera implements OnInit {
         this.actividadLaboral.set(rep.actividadLaboral?.toString() || '');
         this.selectedSectorId.set(rep.sectorId?.toString() || '');
         this.profesion.set(rep.profesion?.toString() || '');
+        this.nombreEmpresa.set(rep.nombreEmpresa?.toString() || '');
+        this.ingresos.set(rep.ingresos || 0);
+        this.fechaInicioActividad.set(rep.fechaInicioActividad || '');
       }
     });
 
@@ -58,7 +65,10 @@ export class UpsertActividadLaboralFinanciera implements OnInit {
           ocupacion: this.selectedOcupacionId() ? Number(this.selectedOcupacionId()) : undefined,
           actividadLaboral: this.actividadLaboral() ? Number(this.actividadLaboral()) : undefined,
           sectorId: this.selectedSectorId() ? Number(this.selectedSectorId()) : undefined,
-          profesion: this.profesion() ? Number(this.profesion()) : undefined
+          profesion: this.profesion() ? Number(this.profesion()) : undefined,
+          nombreEmpresa: this.nombreEmpresa() ? this.nombreEmpresa() : undefined,
+          fechaInicioActividad:this.fechaInicioActividad() || '',
+          ingresos: this.ingresos() ? this.ingresos() : 0
         });
       }
     });
@@ -87,6 +97,11 @@ export class UpsertActividadLaboralFinanciera implements OnInit {
     const sectores = this.catalogosService.obtenerLocal('sector');
     if (sectores) {
       this.sectores.set(sectores);
+    }
+    
+    const profesiones = this.catalogosService.obtenerLocal('profesion');
+    if (profesiones) {
+      this.profesiones.set(profesiones);
     }
   }
 

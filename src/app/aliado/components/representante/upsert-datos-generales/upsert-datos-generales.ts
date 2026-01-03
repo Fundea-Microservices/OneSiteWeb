@@ -65,8 +65,8 @@ export class UpsertDatosGenerales implements OnInit {
   nit = signal<string>('');
   sexo = signal<string>('');
   estadoCivilId = signal<string>('');
-  nacionalidad = signal<string>('GT');
-  etnia = signal<string>('');
+  nacionalidad = signal<number>(320);
+  etnia = signal<number>(6);
   fechaVencimiento = signal<string>('');
 
   paisDocumento = signal<number>(320)
@@ -87,10 +87,21 @@ export class UpsertDatosGenerales implements OnInit {
         this.tercerNombre.set(rep.tercerNombre || '');
         this.primerApellido.set(rep.primerApellido || '');
         this.segundoApellido.set(rep.segundoApellido || '');
-        this.fechaNacimiento.set(rep.fechaNacimiento ? rep.fechaNacimiento.toISOString().split('T')[0] : '');
+        this.fechaNacimiento.set(rep.fechaNacimiento || '');
+        this.fechaVencimiento.set(rep.fechaVencimiento || '');
         this.nit.set(rep.nit || '');
         this.sexo.set(rep.sexo || '');
-        this.estadoCivilId.set(rep.estadoCivil?.toString() || '');
+        this.etnia.set(rep.etnia || 6);
+        this.nacionalidad.set(rep.nacionalidad || 320);
+        if(rep.estadoCivil?.toString()){
+          if(rep.estadoCivil.toString() == "CASADO" || rep.estadoCivil.toString() == "CASADA"){
+            this.estadoCivilId.set("2")
+          }
+          if(rep.estadoCivil.toString() == "SOLTERO" || rep.estadoCivil.toString() == "SOLTERA"){
+            this.estadoCivilId.set("1")
+          }
+
+        }
         this.paisDocumento.set(rep.paisDocumento || 320);
         this.tipoDocumento.set(rep.tipoDocumento || 1);
       }
@@ -108,9 +119,12 @@ export class UpsertDatosGenerales implements OnInit {
           tercerNombre: this.tercerNombre(),
           primerApellido: this.primerApellido(),
           segundoApellido: this.segundoApellido(),
-          fechaNacimiento: this.fechaNacimiento() ? new Date(this.fechaNacimiento()) : undefined,
+          fechaNacimiento: this.fechaNacimiento() || '',
+          fechaVencimiento: this.fechaVencimiento() || '',
           nit: this.nit(),
           sexo: this.sexo(),
+          etnia: this.etnia(),
+          nacionalidad: this.nacionalidad(),
           estadoCivil: this.estadoCivilId() ? Number(this.estadoCivilId()) : undefined,
           paisDocumento: this.paisDocumento(),
           tipoDocumento: this.tipoDocumento()

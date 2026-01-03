@@ -28,6 +28,7 @@ export class UpsertContacto implements OnInit {
 
   // Campos requeridos
   telefonoCelular = signal<string>('');
+  telefonoFijo = signal<string>('');
   correoElectronico = signal<string>('');
   direccionCompleta = signal<string>('');
 
@@ -65,6 +66,7 @@ export class UpsertContacto implements OnInit {
       const rep = this.representante();
       if (rep) {
         this.telefonoCelular.set(rep.telefonoCelular?.toString() || '');
+        this.telefonoFijo.set(rep.telefonoFijo?.toString() || '');
         this.correoElectronico.set(rep.correoElectronico || '');
         this.direccionCompleta.set(rep.direccion || '');
         this.selectedPaisCode.set(rep.paisDomicilio?.toString() || '320');

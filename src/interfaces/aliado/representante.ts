@@ -26,7 +26,7 @@ export interface Representante {
   paisDocumento: number;
   tipoDocumento: number;
   documento?: string;
-  fechaVencimiento?: Date; // O string, dependiendo de tu config JSON
+  fechaVencimiento?: string; // O string, dependiendo de tu config JSON
   
   primerApellido: string;
   segundoApellido?: string;
@@ -34,7 +34,7 @@ export interface Representante {
   segundoNombre?: string;
   tercerNombre?: string;
   
-  fechaNacimiento?: Date;
+  fechaNacimiento?: string;
   sexo: string;
   
   profesion?: number;
@@ -49,7 +49,7 @@ export interface Representante {
   ocupacion?: number;
   nombreEmpresa?: string;
   actividadLaboral?: number;
-  fechaInicioActividad?: Date;
+  fechaInicioActividad?: string;
   
   ingresos?: number; // JS usa number para decimales
   
@@ -67,9 +67,9 @@ export interface Representante {
   
   usuarioIngreso?: string;
   
-  createdAt?: Date; // Mapeo de created_at
-  updatedAt?: Date; // Mapeo de updated_at
-  deletedAt?: Date; // Mapeo de deleted_at
+  created_at?: Date; // Mapeo de created_at
+  updated_at?: Date; // Mapeo de updated_at
+  deleted_at?: Date; // Mapeo de deleted_at
 }
 /**
  * Respuesta del backend para operaciones con representantes
