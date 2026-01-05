@@ -29,7 +29,7 @@ export default class CrearRepresentantePage {
 
   dpiFrontValidado = signal(false);
   dpiBackValidado = signal(false)
-  dpiValidado = signal(true);
+  dpiValidado = signal(false);
   intentosFallidos = signal(0);
 
   // Archivos originales para enviar al servicio
