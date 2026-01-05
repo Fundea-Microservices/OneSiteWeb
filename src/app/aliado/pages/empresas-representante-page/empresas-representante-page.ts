@@ -7,6 +7,8 @@ import { EmpresaRepresentanteService } from '../../../../services/aliado/empresa
 import { IEmpresaRepresentante } from '../../../../interfaces/aliado/empresa-representante';
 import { UpsertEmpresaRepresentanteComponent } from '../../../aliado/components/representante/upsert-empresa-representante/upsert-empresa-representante';
 import { CommonModule } from '@angular/common';
+import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
+import { CatalogoSimple } from '../../../../interfaces/api-bantotal/catalogos';
 
 
 @Component({
@@ -20,6 +22,7 @@ export default class EmpresasRepresentantePage {
   private route = inject(ActivatedRoute);
   private representanteService = inject(RepresentanteService);
   private empresaService = inject(EmpresaRepresentanteService);
+  private catalogosService = inject(CatalogosBantotalService);
   representanteId = signal('');
   representante = signal<Representante | null>(null);
 
@@ -32,7 +35,14 @@ export default class EmpresasRepresentantePage {
   // Lista de empresas reales
   empresas = signal<(IEmpresaRepresentante & { open?: boolean })[]>([]);
 
+  // Catálogos
+  departamentos = signal<CatalogoSimple[]>([]);
+  municipios = signal<CatalogoSimple[]>([]);
+
   async ngOnInit() {
+    // Cargar catálogos
+    this.cargarCatalogos();
+    
     // Obtener el representanteId de la URL
     const id = this.route.snapshot.paramMap.get('representanteId') || '';
     console.log("🚀 ~ EmpresasRepresentantePage ~ ngOnInit ~ id:", id)
@@ -52,8 +62,11 @@ export default class EmpresasRepresentantePage {
     if (!id) return;
 
     const resp = await this.empresaService.obtenerEmpresasPorRepresentante(id, 1, 100);
-    if (resp?.data && Array.isArray(resp.data)) {
-      this.empresas.set(resp.data.map(e => ({ ...e, open: false })));
+    console.log('🚀 ~ cargarEmpresas ~ resp:', resp);
+    
+    // La respuesta tiene doble anidamiento: resp.data.data
+    if (resp?.data && (resp.data as any).data && Array.isArray((resp.data as any).data)) {
+      this.empresas.set((resp.data as any).data.map((e: any) => ({ ...e, open: false })));
     }
   }
 
@@ -112,5 +125,27 @@ export default class EmpresasRepresentantePage {
         await this.cargarEmpresas();
       }
     }
+  }
+
+  private cargarCatalogos() {
+    const deptos = this.catalogosService.obtenerLocal('departamento');
+    if (deptos) {
+      this.departamentos.set(deptos);
+    }
+
+    const munis = this.catalogosService.obtenerLocal('municipio');
+    if (munis) {
+      this.municipios.set(munis);
+    }
+  }
+
+  obtenerNombreDepartamento(codigo: number): string {
+    const depto = this.departamentos().find(d => d.valorCore === codigo.toString());
+    return depto ? depto.nombre : `Código: ${codigo}`;
+  }
+
+  obtenerNombreMunicipio(codigo: number): string {
+    const muni = this.municipios().find(m => m.valorCore === codigo.toString());
+    return muni ? muni.nombre : `Código: ${codigo}`;
   }
 }

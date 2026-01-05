@@ -204,6 +204,10 @@ export const routes: Routes = [
                 loadComponent: () => import('./aliado/pages/crear-representante-page/crear-representante-page'),
             },
             {
+                path: 'empresas-representante/:representanteId',
+                loadComponent: () => import('./aliado/pages/empresas-representante-page/empresas-representante-page'),
+            },
+            {
                 path: 'usuarios',
                 loadComponent: () => import('./aliado/pages/usuarios-page/usuarios-page.component'),
             },
