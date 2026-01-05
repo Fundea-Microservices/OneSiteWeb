@@ -7,7 +7,6 @@ import { AgenteService } from '../../../../services/terceros/agente.service';
 import { ToastrService } from 'ngx-toastr';
 import { ValidarDocumentoResponse } from '../../../../interfaces/terceros/agente';
 import { RepresentanteService } from '../../../../services/aliado/representante.service';
-import { CustomIconComponent } from '../../../shared/components/custom-icon/custom-icon.component';
 import { Representante } from '../../../../interfaces/aliado/representante';
 import { UpsertDatosGenerales } from '../../components/representante/upsert-datos-generales/upsert-datos-generales';
 
