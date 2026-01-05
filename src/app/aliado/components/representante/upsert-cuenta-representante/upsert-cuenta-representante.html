@@ -1,0 +1,124 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()" class="p-4">
+  <h5 class="mb-4">{{ nuevo() ? 'Nueva Cuenta Bancaria' : 'Editar Cuenta Bancaria' }}</h5>
+
+  <!-- Banco -->
+  <div class="mb-3">
+    <label class="form-label">Banco <span class="text-danger">*</span></label>
+    <select class="form-select form-select-sm" formControlName="bancoId">
+      <option value="">Seleccione un banco</option>
+      @for (banco of bancos(); track banco.bancoId) {
+        <option [value]="banco.bancoId">{{ banco.nombreBanco }}</option>
+      }
+    </select>
+    @if (form().get('bancoId')?.touched && form().get('bancoId')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('bancoId')?.errors?.['required']) {
+          <div>Banco es requerido</div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Tipo de Cuenta -->
+  <div class="mb-3">
+    <label class="form-label">Tipo de Cuenta <span class="text-danger">*</span></label>
+    <select class="form-select form-select-sm" formControlName="tipoCuentaId">
+      <option value="">Seleccione tipo de cuenta</option>
+      @for (tipo of tiposCuenta(); track tipo.tipoCuentaId) {
+        <option [value]="tipo.tipoCuentaId">{{ tipo.nombre }}</option>
+      }
+    </select>
+    @if (form().get('tipoCuentaId')?.touched && form().get('tipoCuentaId')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('tipoCuentaId')?.errors?.['required']) {
+          <div>Tipo de cuenta es requerido</div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Moneda -->
+  <div class="mb-3">
+    <label class="form-label">Moneda <span class="text-danger">*</span></label>
+    <select class="form-select form-select-sm" formControlName="monedaId">
+      <option value="">Seleccione moneda</option>
+      @for (moneda of monedas; track moneda.id) {
+        <option [value]="moneda.id">{{ moneda.simbolo }} - {{ moneda.nombre }}</option>
+      }
+    </select>
+    @if (form().get('monedaId')?.touched && form().get('monedaId')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('monedaId')?.errors?.['required']) {
+          <div>Moneda es requerida</div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Número de Cuenta -->
+  <div class="mb-3">
+    <label class="form-label">Número de Cuenta <span class="text-danger">*</span></label>
+    <input 
+      type="text" 
+      class="form-control form-control-sm" 
+      formControlName="numeroCuenta"
+      maxlength="30"
+    />
+    @if (form().get('numeroCuenta')?.touched && form().get('numeroCuenta')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('numeroCuenta')?.errors?.['required']) {
+          <div>Número de cuenta es requerido</div>
+        }
+        @if (form().get('numeroCuenta')?.errors?.['maxlength']) {
+          <div>Máximo 30 caracteres</div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Nombre de Cuenta -->
+  <div class="mb-3">
+    <label class="form-label">Nombre de la Cuenta <span class="text-danger">*</span></label>
+    <input 
+      type="text" 
+      class="form-control form-control-sm" 
+      formControlName="nombreCuenta"
+      maxlength="150"
+    />
+    @if (form().get('nombreCuenta')?.touched && form().get('nombreCuenta')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('nombreCuenta')?.errors?.['required']) {
+          <div>Nombre de cuenta es requerido</div>
+        }
+        @if (form().get('nombreCuenta')?.errors?.['maxlength']) {
+          <div>Máximo 150 caracteres</div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Switch Activo -->
+  <div class="mb-3">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" formControlName="activo" />
+      <label class="form-check-label">Asignado</label>
+    </div>
+  </div>
+
+  <!-- Botones -->
+  <div class="row justify-content-end">
+    <div class="col-auto">
+      <button type="button" class="btn btn-secondary btn-sm m-2" (click)="onCancel()" [disabled]="guardando()">
+        Cancelar
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm m-2" [disabled]="form().invalid || guardando()">
+        @if (guardando()) {
+          <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          Guardando...
+        } @else {
+          {{ btnText }}
+        }
+      </button>
+    </div>
+  </div>
+</form>

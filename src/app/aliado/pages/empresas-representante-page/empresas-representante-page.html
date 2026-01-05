@@ -16,7 +16,7 @@
     <div class="card-body">
 
         <!-- Información del Representante -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 md:p-6 mb-4 shadow-sm border border-blue-100">
+        <div class="from-blue-50 to-indigo-50 rounded-lg p-4 md:p-6 mb-4 shadow-sm border border-blue-100">
             <div class="flex items-center mb-3">
                 
                 <h5 class="text-lg md:text-xl font-semibold text-gray-800 mb-0">Información del Representante</h5>
@@ -74,10 +74,10 @@
                 <div class="border border-gray-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                     <!-- Header del acordeón -->
                     <button type="button"
-                        class="w-full flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        (click)="empresa.open = !empresa.open">
+                        class="w-full flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 md:py-4 from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        (click)="toggleEmpresa(empresa)">
                         <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
                             </svg>
                             <div class="text-left min-w-0 flex-1">
@@ -85,7 +85,7 @@
                                 <p class="text-xs md:text-sm text-gray-600 truncate">NIT: {{ empresa.nit }}</p>
                             </div>
                         </div>
-                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-600 transition-transform duration-300 flex-shrink-0 ml-2" 
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-600 transition-transform duration-300 ml-2" 
                              [class.rotate-180]="empresa.open" 
                              fill="none"
                              stroke="currentColor" 
@@ -103,6 +103,15 @@
                             <div class="flex flex-col gap-4">
                                 <!-- Botones de acción - Mobile: horizontal arriba, Desktop: vertical derecha -->
                                 <div class="flex lg:hidden gap-2 pb-3 border-b border-gray-200">
+                                    <button
+                                        type="button"
+                                        (click)="abrirModalNuevaCuenta(empresa.empresaId)"
+                                        class="flex-1 flex items-center justify-center gap-2 h-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
+                                        title="Añadir cuenta bancaria"
+                                    >
+                                        <ion-icon name="card-outline" class="text-lg"></ion-icon>
+                                        <span>Cuenta</span>
+                                    </button>
                                     <button
                                         type="button"
                                         (click)="abrirModalEditarEmpresa(empresa)"
@@ -132,7 +141,7 @@
                                                 <i class="bi bi-geo-alt text-blue-600 mr-2 mt-1 text-sm sm:text-base"></i>
                                                 <div class="min-w-0 flex-1">
                                                     <span class="text-xs text-gray-500 block">Dirección</span>
-                                                    <span class="text-sm font-medium text-gray-800 break-words">{{ empresa.direccion }}</span>
+                                                    <span class="text-sm font-medium text-gray-800">{{ empresa.direccion }}</span>
                                                 </div>
                                             </div>
                                             <div class="flex items-start">
@@ -146,7 +155,7 @@
                                                 <i class="bi bi-pin-map text-blue-600 mr-2 mt-1 text-sm sm:text-base"></i>
                                                 <div class="min-w-0 flex-1">
                                                     <span class="text-xs text-gray-500 block">Ubicación</span>
-                                                    <span class="text-sm font-medium text-gray-800 break-words">Depto: {{ obtenerNombreDepartamento(empresa.departamento) }}, Municipio: {{ obtenerNombreMunicipio(empresa.municipio) }}</span>
+                                                    <span class="text-sm font-medium text-gray-800">Depto: {{ obtenerNombreDepartamento(empresa.departamento) }}, Municipio: {{ obtenerNombreMunicipio(empresa.municipio) }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -156,7 +165,7 @@
                                                 <i class="bi bi-briefcase text-blue-600 mr-2 mt-1 text-sm sm:text-base"></i>
                                                 <div class="min-w-0 flex-1">
                                                     <span class="text-xs text-gray-500 block">Detalle de Actividad</span>
-                                                    <span class="text-sm font-medium text-gray-800 break-words">{{ empresa.detalleActividad || 'N/A' }}</span>
+                                                    <span class="text-sm font-medium text-gray-800">{{ empresa.detalleActividad || 'N/A' }}</span>
                                                 </div>
                                             </div>
                                             <div class="flex items-start">
@@ -171,6 +180,14 @@
                                     
                                     <!-- Botones de acción - Desktop: vertical al lado -->
                                     <div class="hidden lg:flex lg:flex-col gap-2 lg:justify-center lg:items-center lg:border-l lg:pl-4">
+                                        <button
+                                            type="button"
+                                            (click)="abrirModalNuevaCuenta(empresa.empresaId)"
+                                            class="flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors duration-200 shadow-sm"
+                                            title="Añadir cuenta bancaria"
+                                        >
+                                            <ion-icon name="card-outline" class="text-xl"></ion-icon>
+                                        </button>
                                         <button
                                             type="button"
                                             (click)="abrirModalEditarEmpresa(empresa)"
@@ -188,6 +205,124 @@
                                             <ion-icon name="trash-outline" class="text-xl"></ion-icon>
                                         </button>
                                     </div>
+                                </div>
+
+                                <!-- Tabla de Cuentas Bancarias -->
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <h6 class="text-base font-semibold mb-3 text-gray-800">Cuentas Bancarias</h6>
+                                    
+                                    @if (estaCargandoCuentas(empresa.empresaId)) {
+                                        <div class="text-center py-4">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <p class="text-sm text-gray-500 mt-2">Cargando cuentas bancarias...</p>
+                                        </div>
+                                    } @else if (obtenerCuentasEmpresa(empresa.empresaId).length === 0) {
+                                        <div class="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
+                                            <i class="bi bi-credit-card text-4xl text-gray-400"></i>
+                                            <p class="mt-2 text-sm text-gray-600">No hay cuentas bancarias registradas</p>
+                                            <button
+                                                type="button"
+                                                (click)="abrirModalNuevaCuenta(empresa.empresaId)"
+                                                class="mt-2 btn btn-sm btn-primary"
+                                            >
+                                                <i class="bi bi-plus-circle me-1"></i>
+                                                Agregar primera cuenta
+                                            </button>
+                                        </div>
+                                    } @else {
+                                        <!-- Vista de Tabla para Desktop -->
+                                        <div class="d-none d-md-block table-responsive">
+                                            <table class="table table-striped table-sm table-bordered table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-center">#</th>
+                                                        <th class="text-center">Banco</th>
+                                                        <th class="text-center">Tipo</th>
+                                                        <th class="text-center">Número de Cuenta</th>
+                                                        <th class="text-center">Nombre de Cuenta</th>
+                                                        <th class="text-center">Moneda</th>
+                                                        <th class="text-center">Asignado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @for (cuenta of obtenerCuentasEmpresa(empresa.empresaId); track cuenta.cuentaBancariaId; let i = $index) {
+                                                        <tr>
+                                                            <td class="text-center">{{ i + 1 }}</td>
+                                                            <td>{{ obtenerNombreBanco(cuenta.bancoId) }}</td>
+                                                            <td>{{ obtenerNombreTipoCuenta(cuenta.tipoCuentaId) }}</td>
+                                                            <td class="text-center">{{ cuenta.numeroCuenta }}</td>
+                                                            <td>{{ cuenta.nombreCuenta }}</td>
+                                                            <td class="text-center">{{ obtenerNombreMoneda(cuenta.monedaId) }}</td>
+                                                            <td class="text-center">
+                                                                <div class="form-check form-switch d-flex justify-content-center">
+                                                                    <input 
+                                                                        class="form-check-input" 
+                                                                        type="checkbox" 
+                                                                        role="switch" 
+                                                                        id="switchCuentaDesktop{{empresa.empresaId}}_{{i}}"
+                                                                        [checked]="cuenta.activo"
+                                                                        (change)="cambiarEstadoCuenta(cuenta, empresa.empresaId, switchCuenta.checked)"
+                                                                        #switchCuenta
+                                                                    >
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Vista de Cards para Mobile -->
+                                        <div class="d-md-none">
+                                            @for (cuenta of obtenerCuentasEmpresa(empresa.empresaId); track cuenta.cuentaBancariaId; let i = $index) {
+                                                <div class="card mb-3 shadow-sm">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                                            <h6 class="card-title text-primary mb-0">
+                                                                <i class="bi bi-bank2 me-2"></i>
+                                                                {{ obtenerNombreBanco(cuenta.bancoId) }}
+                                                            </h6>
+                                                            <div class="form-check form-switch">
+                                                                <input 
+                                                                    class="form-check-input" 
+                                                                    type="checkbox" 
+                                                                    role="switch" 
+                                                                    id="switchCuentaMobile{{empresa.empresaId}}_{{i}}"
+                                                                    [checked]="cuenta.activo"
+                                                                    (change)="cambiarEstadoCuenta(cuenta, empresa.empresaId, switchCuentaMobile.checked)"
+                                                                    #switchCuentaMobile
+                                                                >
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="row g-2">
+                                                            <div class="col-12">
+                                                                <small class="text-muted d-block">Tipo de Cuenta</small>
+                                                                <span class="fw-semibold">{{ obtenerNombreTipoCuenta(cuenta.tipoCuentaId) }}</span>
+                                                            </div>
+                                                            
+                                                            <div class="col-6">
+                                                                <small class="text-muted d-block">Número de Cuenta</small>
+                                                                <span class="fw-semibold">{{ cuenta.numeroCuenta }}</span>
+                                                            </div>
+                                                            
+                                                            <div class="col-6">
+                                                                <small class="text-muted d-block">Moneda</small>
+                                                                <span class="fw-semibold">{{ obtenerNombreMoneda(cuenta.monedaId) }}</span>
+                                                            </div>
+                                                            
+                                                            <div class="col-12">
+                                                                <small class="text-muted d-block">Nombre de la Cuenta</small>
+                                                                <span class="fw-semibold">{{ cuenta.nombreCuenta }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -219,6 +354,22 @@
             [key]="modalKey()"
             (save)="onGuardarEmpresa($event)"
             (cancel)="cerrarModal()"
+        />
+    </div>
+</div>
+}
+
+<!-- Modal Cuenta Bancaria -->
+@if (showModalCuenta()) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <app-upsert-cuenta-representante
+            [cuenta]="cuentaSeleccionada()!"
+            [empresaId]="empresaIdCuenta()"
+            [nuevo]="true"
+            [key]="modalKeyCuenta()"
+            (save)="onGuardarCuenta($event)"
+            (cancel)="cerrarModalCuenta()"
         />
     </div>
 </div>

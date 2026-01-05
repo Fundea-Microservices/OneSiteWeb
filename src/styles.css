@@ -22,9 +22,30 @@ input:disabled, select:disabled, textarea:disabled {
   color: #a1a1aa !important;
   cursor: not-allowed;
 }
-input:not(:disabled), select:not(:disabled), textarea:not(:disabled) {
+
+/* Excluir switches y checkboxes del estilo de fondo */
+input:not(:disabled):not([type="checkbox"]):not([type="radio"]), 
+select:not(:disabled), 
+textarea:not(:disabled) {
   background-color: #fff !important; /* blanco */
   color: #111827;
+}
+
+/* Estilos específicos para switches de Bootstrap */
+.form-switch .form-check-input {
+  background-color: #dee2e6 !important;
+  border: 1px solid #dee2e6 !important;
+  cursor: pointer;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+}
+
+.form-switch .form-check-input:focus {
+  border-color: #86b7fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
 }
 
 

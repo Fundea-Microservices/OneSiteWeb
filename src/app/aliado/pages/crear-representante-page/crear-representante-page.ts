@@ -49,23 +49,23 @@ export default class CrearRepresentantePage {
   
   representante = signal<Representante>({
     representanteId: '',
-    documento: '2600300150901',
-    direccion: '27 Avenida Zona 3',
-    nit: '99416239',
-    correoElectronico: 'ivanestarchila@gmail.com',
+    documento: '',
+    direccion: '',
+    nit: '',
+    correoElectronico: '',
     paisDocumento: 320,
     tipoDocumento: 1,
-    primerApellido: 'Esteban',
-    segundoApellido: 'Archila',
-    primerNombre: 'Iván',
-    segundoNombre: 'Alejandro',
+    primerApellido: '',
+    segundoApellido: '',
+    primerNombre: '',
+    segundoNombre: '',
     sexo: 'M',
     etnia: 6,
     nacionalidad: 320,
     paisDomicilio: 320,
     departamentoDomicilio: 1,
-    telefonoCelular: '35413357',
-    telefonoFijo: '77636642',
+    telefonoCelular: '',
+    telefonoFijo: '',
   });
 
   constructor(private cdr: ChangeDetectorRef) { }

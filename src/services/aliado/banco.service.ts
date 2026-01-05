@@ -9,14 +9,34 @@ export interface BancosResponse {
   success: boolean;
   message: string;
   statusCode: number;
-  data?: IBancoRepresentante[];
+  data?: {
+    success: boolean;
+    statusCode: string;
+    path: string;
+    timestamp: string;
+    message: string;
+    data: IBancoRepresentante[];
+    metadata: {
+      total: number;
+    };
+  };
 }
 
 export interface TiposCuentaResponse {
   success: boolean;
   message: string;
   statusCode: number;
-  data?: ITipoCuentaRepresentante[];
+  data?: {
+    success: boolean;
+    statusCode: string;
+    path: string;
+    timestamp: string;
+    message: string;
+    data: ITipoCuentaRepresentante[];
+    metadata: {
+      total: number;
+    };
+  };
 }
 
 @Injectable({
@@ -25,8 +45,8 @@ export interface TiposCuentaResponse {
 export class BancoService extends HttpService {
 
   private readonly endpoints = {
-    bancos: '-bantotal/banco/bancos',
-    tiposCuenta: '-bantotal/banco/tipo-cuentas',
+    bancos: '/api-bantotal/banco/bancos',
+    tiposCuenta: '/api-bantotal/banco/tipo-cuentas',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
@@ -42,10 +62,13 @@ export class BancoService extends HttpService {
         this.get<BancosResponse>(this.endpoints.bancos)
       );
       
-      if (resp.body?.success && resp.body.data) {
-        return resp.body.data;
+      // La respuesta tiene doble anidamiento: resp.body.data.data
+      if (resp.body?.success && resp.body.data?.data && Array.isArray(resp.body.data.data)) {
+        console.log('🏦 Bancos cargados:', resp.body.data.data);
+        return resp.body.data.data;
       }
       
+      console.warn('⚠️ Estructura de respuesta de bancos inesperada:', resp.body);
       return [];
     } catch (error: any) {
       console.error('🚀 ~ BancoService ~ obtenerBancos ~ error:', error);
@@ -63,10 +86,13 @@ export class BancoService extends HttpService {
         this.get<TiposCuentaResponse>(this.endpoints.tiposCuenta)
       );
       
-      if (resp.body?.success && resp.body.data) {
-        return resp.body.data;
+      // La respuesta tiene doble anidamiento: resp.body.data.data
+      if (resp.body?.success && resp.body.data?.data && Array.isArray(resp.body.data.data)) {
+        console.log('💳 Tipos de cuenta cargados:', resp.body.data.data);
+        return resp.body.data.data;
       }
       
+      console.warn('⚠️ Estructura de respuesta de tipos de cuenta inesperada:', resp.body);
       return [];
     } catch (error: any) {
       console.error('🚀 ~ BancoService ~ obtenerTiposCuenta ~ error:', error);
