@@ -29,12 +29,12 @@
     
     <form class="row g-3 mb-4">
       <div class="col-md-6">
-        <label for="numeroOperacion" class="form-label">Número de Préstamo *</label>
+        <label for="numeroOperacion" class="form-label">Número de operacion *</label>
         <input 
           type="text" 
           class="form-control" 
           id="numeroOperacion"
-          placeholder="Ingrese número de préstamo"
+          placeholder="Ingrese número de operacion"
           [(ngModel)]="numeroOperacion"
           name="numeroOperacion"
           [disabled]="cargandoCliente() || procesandoOrden()"

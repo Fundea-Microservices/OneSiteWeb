@@ -159,8 +159,8 @@ export default class GenerarGytPage {
       if (!prestamo.detalles || prestamo.detalles.length === 0) {
         this.cargandoCliente.set(false);
         this.toastr.error(
-          'No se encontró información del monto para este préstamo y cliente',
-          'Información incompleta'
+          'La operación tiene que estar en la etapa de desembolso para generar la orden',
+          'Proceso incompleto'
         );
         return;
       }
