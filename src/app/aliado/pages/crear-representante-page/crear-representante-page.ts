@@ -299,28 +299,88 @@ export default class CrearRepresentantePage {
     }
   }
 
+  private isValidEmail(email: string | undefined | null): boolean {
+    if (!email) return false;
+    const trimmed = String(email).trim();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(trimmed);
+  }
+
+  private sanitizeRepresentante(input: any): Representante {
+    // Normalizar y seleccionar solo las propiedades válidas de la interfaz Representante
+    const documento = String(input?.documento || '').replace(/\s+/g, '');
+    const correo = String(input?.correoElectronico || '').trim();
+
+    const payload: Representante = {
+      representanteId: String(input?.representanteId || ''),
+      direccion: String(input?.direccion || ''),
+      nit: String(input?.nit || ''),
+      codigoPostal: input?.codigoPostal ? String(input.codigoPostal) : undefined,
+      telefonoFijo: input?.telefonoFijo ? String(input.telefonoFijo) : undefined,
+      telefonoCelular: input?.telefonoCelular ? String(input.telefonoCelular) : undefined,
+      correoElectronico: correo,
+      asesorId: typeof input?.asesorId === 'number' ? input.asesorId : undefined,
+      paisDocumento: Number(input?.paisDocumento ?? 320),
+      tipoDocumento: Number(input?.tipoDocumento ?? 1),
+      documento: documento || undefined,
+      fechaVencimiento: input?.fechaVencimiento ? String(input.fechaVencimiento) : undefined,
+      primerApellido: String(input?.primerApellido || ''),
+      segundoApellido: input?.segundoApellido ? String(input.segundoApellido) : undefined,
+      primerNombre: String(input?.primerNombre || ''),
+      segundoNombre: input?.segundoNombre ? String(input.segundoNombre) : undefined,
+      tercerNombre: input?.tercerNombre ? String(input.tercerNombre) : undefined,
+      fechaNacimiento: input?.fechaNacimiento ? String(input.fechaNacimiento) : undefined,
+      sexo: String(input?.sexo || 'M'),
+      profesion: input?.profesion != null ? Number(input.profesion) : undefined,
+      etnia: input?.etnia != null ? Number(input.etnia) : undefined,
+      sabeLeer: typeof input?.sabeLeer === 'boolean' ? input.sabeLeer : undefined,
+      sabeEscribir: typeof input?.sabeEscribir === 'boolean' ? input.sabeEscribir : undefined,
+      estadoCivil: input?.estadoCivil != null ? Number(input.estadoCivil) : undefined,
+      nacionalidad: input?.nacionalidad != null ? Number(input.nacionalidad) : undefined,
+      ocupacion: input?.ocupacion != null ? Number(input.ocupacion) : undefined,
+      nombreEmpresa: input?.nombreEmpresa ? String(input.nombreEmpresa) : undefined,
+      actividadLaboral: input?.actividadLaboral != null ? Number(input.actividadLaboral) : undefined,
+      fechaInicioActividad: input?.fechaInicioActividad ? String(input.fechaInicioActividad) : undefined,
+      ingresos: input?.ingresos != null ? Number(input.ingresos) : undefined,
+      sectorId: input?.sectorId != null ? Number(input.sectorId) : undefined,
+      clasificacionInterna: input?.clasificacionInterna != null ? Number(input.clasificacionInterna) : undefined,
+      paisDomicilio: Number(input?.paisDomicilio ?? 320),
+      departamentoDomicilio: Number(input?.departamentoDomicilio ?? 1),
+      localidad: input?.localidad != null ? Number(input.localidad) : undefined,
+      barrio: input?.barrio != null ? Number(input.barrio) : undefined,
+      cuentabanTotal: input?.cuentabanTotal ? String(input.cuentabanTotal) : undefined,
+      fotoFrontalDpi: input?.fotoFrontalDpi ? String(input.fotoFrontalDpi) : undefined,
+      fotoReversoDpi: input?.fotoReversoDpi ? String(input.fotoReversoDpi) : undefined,
+      usuarioIngreso: input?.usuarioIngreso ? String(input.usuarioIngreso) : undefined,
+      created_at: input?.created_at ?? undefined,
+      updated_at: input?.updated_at ?? undefined,
+      deleted_at: input?.deleted_at ?? undefined,
+    };
+
+    return payload;
+  }
+
   async onGuardar() {
     try {
-      // Recolectar todos los datos del signal representante
-      const datos = this.representante();
-
-      // Normalizar documento: eliminar todos los espacios en blanco
-      const documentoLimpio = (datos.documento || '').replace(/\s+/g, '');
-      console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ datos.documento:", datos.documento)
-      this.representante.update(curr => ({ ...curr, documento: documentoLimpio }));
-
-      // Usar la versión normalizada para validación y envío
-      datos.documento = documentoLimpio;
-      console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ datos:", datos);
+      // Recolectar y sanitizar el payload según la interfaz Representante
+      const datosCrudos = this.representante();
+      const payload = this.sanitizeRepresentante(datosCrudos);
+      console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ payload listo:", payload);
       
       // Validar que tengamos datos básicos
-      if (!datos.documento || !datos.primerNombre || !datos.primerApellido) {
+      if (!payload.documento || !payload.primerNombre || !payload.primerApellido) {
         this.toastr.error('Por favor completa los campos requeridos', 'Campos incompletos');
         return;
       }
 
+      // Validar email
+      if (!this.isValidEmail(payload.correoElectronico)) {
+        this.toastr.error('Correo electrónico inválido', 'Validación');
+        return;
+      }
+
       // Llamar al servicio con el valor del signal (no el signal mismo)
-      const resp = await this.representanteService.crearRepresentante(datos);
+      const resp = await this.representanteService.crearRepresentante(payload);
       
       if (resp?.success) {
         this.toastr.success('Representante creado correctamente', 'Éxito');

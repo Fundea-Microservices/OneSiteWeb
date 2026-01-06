@@ -83,6 +83,7 @@ export class UpsertContacto implements OnInit {
           this.representante.set({
             ...rep,
             telefonoCelular: this.telefonoCelular(),
+            telefonoFijo: this.telefonoFijo(),
             correoElectronico: this.correoElectronico(),
             direccion: this.direccionCompleta(),
             paisDomicilio: Number(this.selectedPaisCode()),
