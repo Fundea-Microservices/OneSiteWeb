@@ -201,16 +201,21 @@ export default class EmpresasRepresentantePage {
   }
 
   async onGuardarCuenta(cuenta: ICuentaBancariaRepresentante) {
-    console.log('Cuenta guardada:', cuenta);
+    console.log('✅ Cuenta guardada:', cuenta);
     const empresaId = this.empresaIdCuenta();
+    console.log('🔍 ID de empresa para recargar:', empresaId);
     
-    // Cerrar el modal primero
-    this.cerrarModalCuenta();
-    
-    // Recargar las cuentas de la empresa
+    // Recargar las cuentas de la empresa primero
     if (empresaId) {
+      console.log('♻️ Recargando cuentas de la empresa...');
       await this.cargarCuentasEmpresa(empresaId);
+      console.log('✨ Cuentas recargadas completadas');
+    } else {
+      console.warn('⚠️ No hay ID de empresa para recargar');
     }
+    
+    // Cerrar el modal después
+    this.cerrarModalCuenta();
   }
 
   async cargarCuentasEmpresa(empresaId: string) {
@@ -269,8 +274,10 @@ export default class EmpresasRepresentantePage {
     }
   }
 
-  async cambiarEstadoCuenta(cuenta: ICuentaBancaria, empresaId: string, nuevoEstado: boolean) {
+  async cambiarEstadoCuenta(cuenta: ICuentaBancaria, empresaId: string, nuevoEstado: boolean, switchElement: HTMLInputElement) {
     if (!cuenta.cuentaBancariaId) return;
+
+    const estadoAnterior = cuenta.activo ?? false;
 
     try {
       const dto = {
@@ -282,9 +289,15 @@ export default class EmpresasRepresentantePage {
       if (resp?.success) {
         // Recargar las cuentas para asegurar que se actualice la vista
         await this.cargarCuentasEmpresa(empresaId);
+      } else {
+        // Si no fue exitoso, revertir el switch
+        switchElement.checked = estadoAnterior;
+        await this.cargarCuentasEmpresa(empresaId);
       }
     } catch (error) {
       console.error('❌ Error al cambiar estado de cuenta:', error);
+      // Revertir el switch al estado anterior
+      switchElement.checked = estadoAnterior;
       // Recargar las cuentas para asegurar consistencia
       await this.cargarCuentasEmpresa(empresaId);
     }

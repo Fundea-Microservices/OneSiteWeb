@@ -222,14 +222,14 @@
                                         <div class="text-center py-6 bg-gray-50 rounded-md border border-gray-200">
                                             <i class="bi bi-credit-card text-4xl text-gray-400"></i>
                                             <p class="mt-2 text-sm text-gray-600">No hay cuentas bancarias registradas</p>
-                                            <button
+                                            <!-- <button
                                                 type="button"
                                                 (click)="abrirModalNuevaCuenta(empresa.empresaId)"
                                                 class="mt-2 btn btn-sm btn-primary"
                                             >
                                                 <i class="bi bi-plus-circle me-1"></i>
                                                 Agregar primera cuenta
-                                            </button>
+                                            </button> -->
                                         </div>
                                     } @else {
                                         <!-- Vista de Tabla para Desktop -->
@@ -263,7 +263,7 @@
                                                                         role="switch" 
                                                                         id="switchCuentaDesktop{{empresa.empresaId}}_{{i}}"
                                                                         [checked]="cuenta.activo"
-                                                                        (change)="cambiarEstadoCuenta(cuenta, empresa.empresaId, switchCuenta.checked)"
+                                                                        (change)="cambiarEstadoCuenta(cuenta, empresa.empresaId, switchCuenta.checked, switchCuenta)"
                                                                         #switchCuenta
                                                                     >
                                                                 </div>
@@ -291,7 +291,7 @@
                                                                     role="switch" 
                                                                     id="switchCuentaMobile{{empresa.empresaId}}_{{i}}"
                                                                     [checked]="cuenta.activo"
-                                                                    (change)="cambiarEstadoCuenta(cuenta, empresa.empresaId, switchCuentaMobile.checked)"
+                                                                    (change)="cambiarEstadoCuenta(cuenta, empresa.empresaId, switchCuentaMobile.checked, switchCuentaMobile)"
                                                                     #switchCuentaMobile
                                                                 >
                                                             </div>
