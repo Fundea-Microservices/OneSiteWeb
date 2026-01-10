@@ -84,7 +84,7 @@
       >
         <option value="">Seleccione departamento</option>
         @for (depto of departamentosFiltrados(); track depto.catalogoId) {
-          <option [value]="depto.valorCore">{{ depto.nombre }}</option>
+          <option [selected]="depto.valorCore==selectedDepartamentoCode()" [value]="depto.valorCore">{{ depto.nombre }}</option>
         }
       </select>
     </div>
@@ -104,6 +104,7 @@
         <option value="">Seleccione municipio</option>
         @for (municipio of municipiosFiltrados(); track municipio.catalogoId) {
           <option 
+            [selected]="municipio.valorCore==selectedMunicipioId()"
             [value]="municipio.valorCore">{{ municipio.nombre }}</option>
         }
       </select>

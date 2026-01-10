@@ -18,7 +18,9 @@
       >
         <option value="">Seleccione Ocupación</option>
         @for (ocupacion of ocupaciones(); track ocupacion.catalogoId) {
-          <option [value]="ocupacion.valorCore">{{ ocupacion.nombre }}</option>
+          <option 
+            [selected]="ocupacion.valorCore==selectedOcupacionId()"
+            [value]="ocupacion.valorCore">{{ ocupacion.nombre }}</option>
         }
       </select>
     </div>
@@ -40,7 +42,9 @@
       >
         <option value="">Seleccione Profesión</option>
         @for (prof of profesiones(); track prof.catalogoId) {
-          <option [value]="prof.valorCore">{{ prof.nombre }}</option>
+          <option 
+            [selected]="prof.valorCore==profesion()"
+            [value]="prof.valorCore">{{ prof.nombre }}</option>
         }
       </select>
     </div>
@@ -81,7 +85,9 @@
       >
         <option value="">Seleccione Actividad</option>
         @for (actividad of actividadesLaborales(); track actividad.catalogoId) {
-          <option [value]="actividad.valorCore">{{ actividad.nombre }}</option>
+          <option 
+            [selected]="actividad.valorCore==actividadLaboral()"
+            [value]="actividad.valorCore">{{ actividad.nombre }}</option>
         }
       </select>
     </div>
@@ -152,7 +158,9 @@
       >
         <option value="">Seleccione</option>
         @for (sector of sectores(); track sector.catalogoId) {
-          <option [value]="sector.valorCore">{{ sector.nombre }}</option>
+          <option 
+            [selected]="sector.valorCore==selectedSectorId()"
+            [value]="sector.valorCore">{{ sector.nombre }}</option>
         }
       </select>
     </div>

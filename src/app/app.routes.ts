@@ -10,6 +10,11 @@ export const routes: Routes = [
         pathMatch: 'full',
     },
     {
+        path: 'test',
+        loadComponent: () => import('./test/test-page/test-page').then(m => m.TestPage),
+        
+    },
+    {
         path: 'fundea/login',
         loadComponent: () => import('./auth/pages/login-page/login-page'),
     },
@@ -202,6 +207,10 @@ export const routes: Routes = [
             {
                 path: 'crear-representante',
                 loadComponent: () => import('./aliado/pages/crear-representante-page/crear-representante-page'),
+            },
+            {
+                path: 'editar-representante/:representanteId',
+                loadComponent: () => import('./aliado/pages/editar-representante-page/editar-representante-page'),
             },
             {
                 path: 'empresas-representante/:representanteId',

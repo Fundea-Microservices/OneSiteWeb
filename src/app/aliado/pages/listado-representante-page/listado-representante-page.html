@@ -124,16 +124,16 @@
                                 <td>{{ item.nit }}</td>
                                 <td>{{ item.telefonoCelular }}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-success mx-1"
-                                        (click)="openModal(false, item)"
+                                    <a class="btn btn-sm btn-success mx-1"
+                                        [routerLink]="['/aliado/editar-representante', item.representanteId]"
                                         title="Editar representante">
                                         <ion-icon name="create-outline"></ion-icon>
-                                    </button>
-                                    <button class="btn btn-sm btn-primary mx-1"
+                                    </a>
+                                    <a class="btn btn-sm btn-primary mx-1"
                                         [routerLink]="['/aliado/empresas-representante', item.representanteId]"
                                         title="Ver empresas">
                                         <ion-icon name="business-outline"></ion-icon>
-                                    </button>
+                                    </a>
                                 </td>
                             </tr>
                             }
@@ -187,18 +187,18 @@
                     </div>
                     
                     <div class="flex gap-2 pt-3 border-t border-gray-200">
-                        <button class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                            (click)="openModal(false, item)"
+                        <a class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                            [routerLink]="['/aliado/editar-representante', item.representanteId]"
                             title="Editar representante">
                             <ion-icon name="create-outline" class="text-lg"></ion-icon>
                             Editar
-                        </button>
-                        <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        </a>
+                        <a class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
                             [routerLink]="['/aliado/empresas-representante', item.representanteId]"
                             title="Ver empresas">
                             <ion-icon name="business-outline" class="text-lg"></ion-icon>
                             Empresas
-                        </button>
+                        </a>
                     </div>
                 </div>
                 }
