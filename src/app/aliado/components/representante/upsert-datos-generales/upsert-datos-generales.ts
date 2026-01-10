@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnInit, ViewChild, ElementRef, ChangeDetectorRef, signal, inject, input, effect, model, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, ViewChild, ElementRef, ChangeDetectorRef, signal, inject, input, effect, model, untracked, AfterViewInit, output } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { CommonModule } from '@angular/common';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
@@ -10,11 +10,16 @@ import { Representante } from '../../../../../interfaces/aliado/representante';
   selector: 'app-upsert-datos-generales',
   imports: [CommonModule],
   templateUrl: './upsert-datos-generales.html',
-
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UpsertDatosGenerales implements OnInit {
+export class UpsertDatosGenerales implements OnInit, AfterViewInit {
   representante = model<Representante | null>(null);
   camposBloqueados = input<boolean>(false);
+  cuentaBT = input<number | null>(null);
+  buscandoCliente = input<boolean>(false);
+  
+  // Output para emitir cambios del documento sin formato
+  documentoSinFormatoChange = output<string>();
 
   // Formatea el documento en el formato #### ##### ####
   formatDocumento(value: string): string {
@@ -39,6 +44,10 @@ export class UpsertDatosGenerales implements OnInit {
     const input = (event.target as HTMLInputElement).value;
     const formatted = this.formatDocumento(input);
     this.documento.set(formatted);
+    
+    // Emitir el documento sin formato para búsqueda en Bantotal
+    const documentoSinFormato = formatted.replace(/\s/g, '');
+    this.documentoSinFormatoChange.emit(documentoSinFormato);
   }
 
   @ViewChild('fileIn') fileInput!: ElementRef;
@@ -136,6 +145,11 @@ export class UpsertDatosGenerales implements OnInit {
   ngOnInit(): void {
     initFlowbite();
     this.cargarCatalogos();
+  }
+
+  ngAfterViewInit(): void {
+    // Reinicializar Flowbite después de que la vista esté lista
+    initFlowbite();
   }
 
   // Método para validar si todos los campos requeridos están completos

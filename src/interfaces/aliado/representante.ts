@@ -65,6 +65,8 @@ export interface Representante {
   fotoFrontalDpi?: string; // URL o Path
   fotoReversoDpi?: string; // URL o Path
   
+  cuentaBT?: number; // Cuenta Bantotal del cliente
+  
   usuarioIngreso?: string;
   
   created_at?: Date; // Mapeo de created_at

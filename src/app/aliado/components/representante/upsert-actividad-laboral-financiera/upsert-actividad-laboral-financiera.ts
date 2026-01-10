@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnInit, signal, inject, input, effect, model, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, AfterViewInit, signal, inject, input, effect, model, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { initFlowbite } from 'flowbite';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
@@ -11,7 +11,7 @@ import { Representante } from '../../../../../interfaces/aliado/representante';
   templateUrl: './upsert-actividad-laboral-financiera.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UpsertActividadLaboralFinanciera implements OnInit {
+export class UpsertActividadLaboralFinanciera implements OnInit, AfterViewInit {
 
   private catalogosService = inject(CatalogosBantotalService);
   representante = model<Representante | null>(null);
@@ -40,6 +40,11 @@ export class UpsertActividadLaboralFinanciera implements OnInit {
      initFlowbite();
      this.cargarCatalogos();
    }
+
+  ngAfterViewInit(): void {
+    // Reinicializar Flowbite después de que la vista esté lista
+    initFlowbite();
+  }
 
   constructor() {
     // Effect para sincronizar cambios del representante al componente

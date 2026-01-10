@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type OnInit, ViewChild, ElementRef, ChangeDetectorRef, signal, inject  } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetectorRef, signal, inject  } from '@angular/core';
 import { initFlowbite } from 'flowbite';
 import { CommonModule } from '@angular/common';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
@@ -10,7 +10,7 @@ import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos
   templateUrl: './upsert-documentos-archivos.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UpsertDocumentosArchivos implements OnInit {
+export class UpsertDocumentosArchivos implements OnInit, AfterViewInit {
 
 @ViewChild('fileIn') fileInput!: ElementRef;
 @ViewChild('fileInputFront') fileInputFront!: ElementRef;
@@ -36,6 +36,11 @@ backPreview: string | ArrayBuffer | null = null;
   ngOnInit(): void { 
     initFlowbite();
     this.cargarCatalogos();
+  }
+
+  ngAfterViewInit(): void {
+    // Reinicializar Flowbite después de que la vista esté lista
+    initFlowbite();
   }
 
   // Método para validar si todos los campos requeridos están completos

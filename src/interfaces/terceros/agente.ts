@@ -32,6 +32,7 @@ export interface Demografia {
   profesion_oficio: string;
   pueblo: string;
   comunidad_linguistica: string;
+  fecha_de_vencimiento: string;
 }
 
 export interface Geografia {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { UpsertContacto } from '../../components/representante/upsert-contacto/upsert-contacto';
@@ -9,6 +9,8 @@ import { ValidarDocumentoResponse } from '../../../../interfaces/terceros/agente
 import { RepresentanteService } from '../../../../services/aliado/representante.service';
 import { Representante } from '../../../../interfaces/aliado/representante';
 import { UpsertDatosGenerales } from '../../components/representante/upsert-datos-generales/upsert-datos-generales';
+import { ClienteBantotalService } from '../../../../services/api-bantotal/cliente.service';
+import { initFlowbite } from 'flowbite';
 
 
 @Component({
@@ -17,11 +19,12 @@ import { UpsertDatosGenerales } from '../../components/representante/upsert-dato
   templateUrl: './crear-representante-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class CrearRepresentantePage {
+export default class CrearRepresentantePage implements AfterViewInit {
 
   private agenteService = inject(AgenteService);
   private toastr = inject(ToastrService);
   private representanteService = inject(RepresentanteService);
+  private clienteService = inject(ClienteBantotalService);
 
   frontPreview: string | ArrayBuffer | null = null;
   backPreview: string | ArrayBuffer | null = null;
@@ -44,6 +47,12 @@ export default class CrearRepresentantePage {
   datosReversoDPI = signal<ValidarDocumentoResponse | null>(null);
   camposBloqueados = signal(false);
   activeSection = signal<'datos' | 'contacto' | 'actividad' | null>('datos');
+  llenadorManualHabilitado = signal(false);
+  
+  // Datos de búsqueda Bantotal
+  cuentaBT = signal<number | null>(null);
+  buscandoCliente = signal(false);
+  private debounceTimeout: any = null;
 
   
   representante = signal<Representante>({
@@ -67,7 +76,22 @@ export default class CrearRepresentantePage {
     telefonoFijo: '',
   });
 
-  constructor(private cdr: ChangeDetectorRef) { }
+  constructor(private cdr: ChangeDetectorRef) {
+    // Effect para reinicializar Flowbite cuando se muestre el contenido
+    effect(() => {
+      if (this.dpiValidado() || this.llenadorManualHabilitado()) {
+        // Usar setTimeout para asegurar que el DOM esté actualizado
+        setTimeout(() => {
+          initFlowbite();
+        }, 100);
+      }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    // Inicializar Flowbite cuando la vista esté lista
+    initFlowbite();
+  }
 
   onMouseEnter(section: 'datos' | 'contacto' | 'actividad') {
     this.activeSection.set(section);
@@ -76,6 +100,115 @@ export default class CrearRepresentantePage {
   onMouseLeave() {
     // Opcional: descomentar si quieres que se cierre al salir el mouse
     // this.activeSection.set(null);
+  }
+
+  toggleLlenadoManual() {
+    this.llenadorManualHabilitado.update(value => !value);
+    
+    // Si se habilita el llenado manual, desbloqueamos los campos
+    if (this.llenadorManualHabilitado()) {
+      this.camposBloqueados.set(false);
+      // Reinicializar Flowbite después de mostrar los campos
+      setTimeout(() => {
+        initFlowbite();
+        this.cdr.detectChanges();
+      }, 100);
+    }
+  }
+
+  /**
+   * Buscar datos del cliente en Bantotal por documento
+   * Se ejecuta con debounce de 500ms cuando el documento tiene 13 dígitos
+   * Mapea automáticamente los datos obtenidos al representante
+   */
+  buscarClientePorDocumento(documentoSinFormato: string) {
+    // Limpiar el debounce anterior si existe
+    if (this.debounceTimeout) {
+      clearTimeout(this.debounceTimeout);
+    }
+
+    // Solo buscar si tiene exactamente 13 dígitos
+    if (documentoSinFormato.length !== 13) {
+      this.cuentaBT.set(null);
+      return;
+    }
+
+    // Establecer nuevo debounce de 500ms
+    this.debounceTimeout = setTimeout(() => {
+      this.buscandoCliente.set(true);
+      console.log('🔍 Buscando cliente con documento:', documentoSinFormato);
+
+      this.clienteService.obtenerDatosBantotal({
+        documento: documentoSinFormato,
+        pais: 320,
+        tipoDoc: 1
+      }).subscribe({
+        next: (datos) => {
+          console.log('✅ Datos de cliente encontrados:', datos);
+          
+          // Mapear datos de Bantotal al representante
+          this.representante.update(current => {
+            const datosActualizados = {
+              ...current,
+              // Datos básicos
+              documento: datos.nroDocumento || current.documento,
+              primerNombre: datos.primerNombre || current.primerNombre,
+              segundoNombre: datos.segundoNombre || current.segundoNombre,
+              primerApellido: datos.primerApellido || current.primerApellido,
+              segundoApellido: datos.segundoApellido || current.segundoApellido,
+              
+              // Datos personales
+              fechaNacimiento: datos.fechaNacimiento || current.fechaNacimiento,
+              sexo: datos.sexo || current.sexo,
+              nacionalidad: parseInt(datos.nacionalidadId || '320', 10),
+              
+              // Datos de contacto
+              correoElectronico: datos.correoElectronico || current.correoElectronico,
+              telefonoCelular: datos.telefonoCelular || current.telefonoCelular,
+              telefonoFijo: datos.telefonoFijo || current.telefonoFijo,
+              
+              // Datos de domicilio
+              direccion: datos.calle || current.direccion,
+              paisDomicilio: parseInt(datos.paisDomicilioId || '320', 10),
+              departamentoDomicilio: parseInt(datos.departamentoId || '1', 10),
+              
+              // Datos de documento
+              paisDocumento: parseInt(datos.paisDocumentoId || '320', 10),
+              tipoDocumento: parseInt(datos.tipoDocumentoId || '1', 10),
+              
+              // Datos laborales y financieros
+              ocupacion: datos.ocupacionId ? parseInt(datos.ocupacionId, 10) : current.ocupacion,
+              ingresos: datos.ingresos ? parseFloat(datos.ingresos) : current.ingresos,
+              fechaInicioActividad: datos.fechaInicioActividad || current.fechaInicioActividad,
+              fechaVencimiento: datos.fechaVencimiento || current.fechaVencimiento,
+              
+              // Estado civil (si aplica)
+              estadoCivil: datos.estadoCivilId ? parseInt(datos.estadoCivilId, 10) : current.estadoCivil,
+              
+              // Cuenta Bantotal
+              cuentaBT: datos.cuentaBT || current.cuentaBT,
+            };
+            
+            console.log('📝 Datos mapeados al representante:', datosActualizados);
+            return datosActualizados;
+          });
+          
+          if (datos.cuentaBT) {
+            this.cuentaBT.set(datos.cuentaBT);
+            console.log(`💳 Cuenta Bantotal encontrada: ${datos.cuentaBT}`);
+          }
+          
+          this.buscandoCliente.set(false);
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.log('⚠️ Cliente no encontrado en Bantotal o error en búsqueda:', error.message);
+          this.cuentaBT.set(null);
+          this.buscandoCliente.set(false);
+          this.cdr.detectChanges();
+        }
+      });
+    }, 500); // Esperar 500ms antes de hacer la búsqueda
   }
 
   onFrontImageSelected(event: any) {
@@ -292,7 +425,8 @@ export default class CrearRepresentantePage {
         lugarVecindad: geografia?.vecindad_completa || '',
         municipioVecindad: geografia?.vecindad_municipio || '',
         departamentoVecindad: geografia?.vecindad_departamento || '',
-        numeroSerie: seguridad?.numero_de_serie || ''
+        numeroSerie: seguridad?.numero_de_serie || '',
+        fechaVencimiento: demografia?.fecha_de_vencimiento || ''
       }));
       
       console.log('📋 Datos reverso extraídos:', this.representante());
