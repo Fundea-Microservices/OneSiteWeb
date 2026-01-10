@@ -1,5 +1,14 @@
-<form action="#">
+<form action="#" class="relative">
   <div class="fixed top-4 right-4 space-y-2 z-50" id="toast-container"></div>
+
+  <!-- Overlay de búsqueda en Bantotal -->
+  @if (buscandoCliente()) {
+    <div class="absolute inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center z-10 rounded-lg">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-3 border-blue-600 mb-3"></div>
+      <p class="text-blue-700 text-sm font-semibold">Buscando cliente en Bantotal...</p>
+      <p class="text-gray-600 text-xs mt-1">Por favor espere</p>
+    </div>
+  }
 
   <!-- FILA 0 -->
   <div class="mt-0.5 grid gap-2 mb-2 sm:grid-cols-2">
@@ -33,10 +42,6 @@
             </svg>
           }
           <span class="text-sm font-semibold text-blue-700">CUENTA: {{ cuentaBT() }}</span>
-        </div>
-      } @else {
-        <div class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 h-12 flex items-center">
-          <span class="text-sm text-gray-500">Ingresa documento para búsqueda</span>
         </div>
       }
     </div>
