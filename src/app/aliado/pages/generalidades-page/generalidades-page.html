@@ -1,0 +1,227 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/home']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Aliados</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Generalidades</li>
+    </ol>
+</nav>
+
+<div class="container-fluid px-2 md:px-4">
+    <!-- ==================== TIPO SOLICITUD ==================== -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Tipo Solicitud
+            <button 
+                (click)="openModal(true, 'tipoSolicitud')"
+                class="btn btn-primary btn-sm float-end">
+                Crear
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-sm table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-center" scope="col">#</th>
+                            <th class="text-center" scope="col">Nombre</th>
+                            <th class="text-center" scope="col">Mostrar Preguntas</th>
+                            <th class="text-center" scope="col">Activo</th>
+                            <th class="text-center" scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (item of tiposSolicitud(); track item.tipoSolicitudId; let i = $index) {
+                        <tr>
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td>{{ item.nombre }}</td>
+                            <td class="text-center">
+                                @if (item.mostrarPreguntas) {
+                                    <span class="badge bg-success">Sí</span>
+                                } @else {
+                                    <span class="badge bg-secondary">No</span>
+                                }
+                            </td>
+                            <td class="text-center align-middle">
+                                <div class="form-check form-switch d-inline-flex justify-content-center align-items-center">
+                                    <input class="form-check-input" type="checkbox" role="switch" 
+                                        id="switchTipoSolicitud{{i}}"
+                                        [checked]="item.activo" 
+                                        (change)="changeActiveTipoSolicitud(item, cbxActive.checked)"
+                                        [value]="item.activo" #cbxActive>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button 
+                                    (click)="openModal(false, 'tipoSolicitud', item)"
+                                    class="btn btn-sm btn-success mx-1"
+                                    title="Editar">
+                                    <ion-icon name="create-outline"></ion-icon>
+                                </button>
+                                <button 
+                                    (click)="openDeleteModal('tipoSolicitud', item)"
+                                    class="btn btn-sm btn-danger mx-1"
+                                    title="Eliminar">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ESTADO SOLICITUD ==================== -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Estado Solicitud
+            <button 
+                (click)="openModal(true, 'estadoSolicitud')"
+                class="btn btn-primary btn-sm float-end">
+                Crear
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-sm table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-center" scope="col">#</th>
+                            <th class="text-center" scope="col">Nombre</th>
+                            <th class="text-center" scope="col">Activo</th>
+                            <th class="text-center" scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (item of estadosSolicitud(); track item.estadoSolicitudId; let i = $index) {
+                        <tr>
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td>{{ item.nombre }}</td>
+                            <td class="text-center align-middle">
+                                <div class="form-check form-switch d-inline-flex justify-content-center align-items-center">
+                                    <input class="form-check-input" type="checkbox" role="switch" 
+                                        id="switchEstadoSolicitud{{i}}"
+                                        [checked]="item.activo" 
+                                        (change)="changeActiveEstadoSolicitud(item, cbxActive.checked)"
+                                        [value]="item.activo" #cbxActive>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button 
+                                    (click)="openModal(false, 'estadoSolicitud', item)"
+                                    class="btn btn-sm btn-success mx-1"
+                                    title="Editar">
+                                    <ion-icon name="create-outline"></ion-icon>
+                                </button>
+                                <button 
+                                    (click)="openDeleteModal('estadoSolicitud', item)"
+                                    class="btn btn-sm btn-danger mx-1"
+                                    title="Eliminar">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TIPO AFILIACIÓN ==================== -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Tipo Afiliación
+            <button 
+                (click)="openModal(true, 'tipoAfiliacion')"
+                class="btn btn-primary btn-sm float-end">
+                Crear
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-sm table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-center" scope="col">#</th>
+                            <th class="text-center" scope="col">Nombre</th>
+                            <th class="text-center" scope="col">Activo</th>
+                            <th class="text-center" scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (item of tiposAfiliacion(); track item.tipoAfiliacionId; let i = $index) {
+                        <tr>
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td>{{ item.nombre }}</td>
+                            <td class="text-center align-middle">
+                                <div class="form-check form-switch d-inline-flex justify-content-center align-items-center">
+                                    <input class="form-check-input" type="checkbox" role="switch" 
+                                        id="switchTipoAfiliacion{{i}}"
+                                        [checked]="item.activo" 
+                                        (change)="changeActiveTipoAfiliacion(item, cbxActive.checked)"
+                                        [value]="item.activo" #cbxActive>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button 
+                                    (click)="openModal(false, 'tipoAfiliacion', item)"
+                                    class="btn btn-sm btn-success mx-1"
+                                    title="Editar">
+                                    <ion-icon name="create-outline"></ion-icon>
+                                </button>
+                                <button 
+                                    (click)="openDeleteModal('tipoAfiliacion', item)"
+                                    class="btn btn-sm btn-danger mx-1"
+                                    title="Eliminar">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Upsert Generalidad-->
+    <div #upsertGeneralidadModal class="modal fade" id="upsertGeneralidadModal" tabindex="-1" aria-labelledby="titleUpsertGeneralidad" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertGeneralidad">{{ modalTitle() }}</h1>
+                    <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <app-upsert-generalidad 
+                        [generalidad]="generalidadEdit()" 
+                        [esTipo]="tipoSeleccionado() === 'tipoSolicitud'"
+                        (save)="upsertGeneralidad($event)"
+                        (cancel)="closeModal()" />
+                </div>
+                <div class="modal-footer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delete Generalidad-->
+    <div #deleteGeneralidadModal class="modal fade" id="deleteGeneralidadModal" tabindex="-1" aria-labelledby="titleDeleteGeneralidad" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 text-red" id="titleDeleteGeneralidad">Eliminar {{ getTipoLabel(tipoSeleccionado()) }}</h1>
+                    <button type="button" class="btn-close" aria-label="Close" (click)="closeDeleteModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar "{{ generalidadEdit()?.nombre }}"?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()">Cancelar</button>
+                    <button type="button" class="btn btn-danger" (click)="deleteGeneralidad()">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
