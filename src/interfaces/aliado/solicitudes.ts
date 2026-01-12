@@ -1,3 +1,4 @@
+import { CuentaBancaria, ICuentaBancaria } from "./cuenta-bancaria";
 import { EstadoSolicitud, TipoAfiliacion, TipoSolicitud } from "./generalidades";
 import { Representante } from "./representante";
 
@@ -55,6 +56,7 @@ export interface Solicitud {
   // --- Relaciones Opcionales (Si el backend hace 'populate' o 'eager loading') ---
   representante?: Representante;
   empresa?: Empresa;
+  cuentaBancaria?: ICuentaBancaria;
   tipoSolicitud?: TipoSolicitud;
   estadoSolicitud?: EstadoSolicitud;
   tipoAfiliacion?: TipoAfiliacion;
