@@ -1,0 +1,213 @@
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, inject, ChangeDetectorRef, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { Modal } from 'bootstrap';
+import { RepresentanteService } from '../../../../services/aliado/representante.service';
+import { Representante } from '../../../../interfaces/aliado/representante';
+import { Solicitud } from '../../../../interfaces/aliado/solicitudes';
+import { CommonModule } from '@angular/common';
+import { SolicitudesService } from '../../../../services/aliado/solicitudes.service';
+import { AgenciaRegionService, Region, Agencia } from '../../../../services/aliado/agencia-region.service';
+import { FormsModule } from '@angular/forms';
+
+export interface IEmpresa {
+	empresaId?: string;
+	nombre: string;
+	direccion: string;
+	nit: string;
+	telefono: string;
+	activo: boolean;
+}
+
+const emptyEmpresa: IEmpresa = {
+	empresaId: '',
+	nombre: '',
+	direccion: '',
+	nit: '',
+	telefono: '',
+	activo: true,
+}
+
+@Component({
+	selector: 'app-gestionar-solicitudes',
+	imports: [RouterLink, CommonModule, FormsModule],
+	templateUrl: './gestionar-solicitudes.html',
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
+	changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export default class GestionarSolicitudes {
+	private representanteService = inject(RepresentanteService);
+	private cdr = inject(ChangeDetectorRef);
+	private solicitudesService = inject(SolicitudesService);
+	private agenciaRegionService = inject(AgenciaRegionService);
+
+	searchMode: 'nombre' | 'documento' = 'nombre';
+	isLoading = signal(false);
+	formKey = signal(Date.now());
+	buscador = signal('');
+	nuevoRepresentante = signal(true);
+	representanteEdit = signal<Representante | null>(null);
+
+	// Signals para solicitudes
+	solicitudesList = signal<Solicitud[]>([]);
+	tipoDocumento = signal<number>(1); // 1 = DPI, 2 = NIT
+	nroDocumento = signal<string>('');
+
+	// Signals para filtros
+	regionSeleccionada = signal<string | null>(null);
+	agenciaSeleccionada = signal<string | null>(null);
+	regiones = signal<Region[]>([]);
+	agencias = signal<Agencia[]>([]);
+	agenciasFilterradas = signal<Agencia[]>([]);
+
+	@ViewChild('upsertRepresentanteModal') modalElementRef!: ElementRef;
+	private modalUpsertInstance!: Modal;
+
+	modal = signal({
+		titulo: 'Crear Representante',
+		visible: false,
+	});
+
+	empresasList = signal<IEmpresa[]>([
+		{
+			empresaId: '3',
+			nombre: 'Paola Citán',
+			direccion: '6543789210101',
+			nit: 'Individual',
+			telefono: '2456-7890',
+			activo: false
+		}
+	]);
+
+	ngOnInit() {
+		this.cargarFiltros();
+		// this.fetchData();
+	}
+
+	ngAfterViewInit() {
+		this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
+	}
+
+	private async cargarFiltros() {
+		try {
+			const [regiones, agencias] = await Promise.all([
+				this.agenciaRegionService.getRegiones(),
+				this.agenciaRegionService.getAgencias(),
+			]);
+
+			this.regiones.set(regiones ?? []);
+			this.agencias.set(agencias ?? []);
+		} catch (error) {
+			console.error('Error al cargar filtros:', error);
+		}
+	}
+
+onRegionChange(regionId: string | null): void {
+		this.regionSeleccionada.set(regionId);
+		this.agenciaSeleccionada.set(null);
+
+		if (regionId) {
+			this.agenciasFilterradas.set(
+				this.agencias().filter(a => a.regionId === regionId)
+			);
+		} else {
+			this.agenciasFilterradas.set([]);
+		}
+
+		this.fetchData();
+	}
+
+	onAgenciaChange(): void {
+		this.fetchData();
+	}
+
+	async fetchData() {
+		if (this.isLoading()) return;
+
+		this.isLoading.set(true);
+		console.log('🔍 Buscando solicitudes...', {
+			modo: this.searchMode,
+			busqueda: this.buscador(),
+			documento: this.nroDocumento(),
+			tipoDoc: this.tipoDocumento(),
+			region: this.regionSeleccionada(),
+			agencia: this.agenciaSeleccionada()
+		});
+
+		try {
+			let resultado;
+
+			// Normalizar número (quita espacios en blanco)
+			const numeroDoc = (this.nroDocumento() || '').replace(/\s+/g, '');
+
+			// Construir parámetros de búsqueda
+			const searchParams: any = {};
+
+			// Solo agregar región si no es null
+			if (this.regionSeleccionada()) {
+				searchParams.regionId = parseInt(this.regionSeleccionada()!);
+			}
+
+			// Solo agregar agencia si no es null
+			if (this.agenciaSeleccionada()) {
+				searchParams.agenciaId = parseInt(this.agenciaSeleccionada()!);
+			}
+
+			if (this.searchMode === 'nombre') {
+				// Búsqueda por nombre/apellido
+				if (this.buscador()) {
+					searchParams.nombreRepresentante = this.buscador();
+				}
+			} else {
+				// Búsqueda por documento
+				if (numeroDoc) {
+					searchParams.documento = numeroDoc;
+					searchParams.tipoDocumento = this.tipoDocumento();
+				}
+			}
+
+			// Realizar búsqueda
+			resultado = await this.solicitudesService.searchSolicitudes(searchParams);
+
+			if (resultado?.data && Array.isArray(resultado.data)) {
+				this.solicitudesList.set(resultado.data as Solicitud[]);
+				console.log(`✅ ${resultado.data.length} solicitud(es) encontrada(s)`);
+			} else {
+				this.solicitudesList.set([]);
+				console.warn('⚠️ No se encontraron solicitudes');
+			}
+
+			this.cdr.markForCheck();
+		} catch (error) {
+			console.error('❌ Error en fetchData:', error);
+			this.solicitudesList.set([]);
+		} finally {
+			this.isLoading.set(false);
+			this.cdr.markForCheck();
+		}
+	}
+
+	openModal(nuevo: boolean = true, representante?: Representante) {
+		this.nuevoRepresentante.set(nuevo);
+
+		if (nuevo) {
+			// Si es nuevo, reiniciamos con null
+			this.representanteEdit.set(null);
+		} else {
+			// Si es edición, usamos el objeto recibido
+			this.representanteEdit.set(representante || null);
+		}
+
+		this.formKey.set(Date.now()); // esto obliga al componente hijo a resetear
+		this.modal.set({ titulo: nuevo ? 'Crear Representante' : 'Actualizar Representante', visible: true });
+		if (!this.modalUpsertInstance) {
+			this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
+		}
+		this.modalUpsertInstance.show();
+	}
+
+	closeModal() {
+		if (this.modalUpsertInstance) {
+			this.modalUpsertInstance.hide();
+		}
+	}
+}
