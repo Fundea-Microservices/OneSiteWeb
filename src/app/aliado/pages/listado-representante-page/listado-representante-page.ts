@@ -5,6 +5,7 @@ import { GestionRepresentanteAccordion } from '../../components/representante/ge
 import { RepresentanteService } from '../../../../services/aliado/representante.service';
 import { Representante } from '../../../../interfaces/aliado/representante';
 import { DatePipe } from '@angular/common';
+import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 
 export interface IEmpresa {
   empresaId?: string;
@@ -27,7 +28,7 @@ const emptyEmpresa: IEmpresa = {
 
 @Component({
   selector: 'app-listado-representante-page',
-  imports: [RouterLink, GestionRepresentanteAccordion, RouterLink],
+  imports: [RouterLink, GestionRepresentanteAccordion, PaginationAllComponent],
   templateUrl: './listado-representante-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,6 +48,7 @@ export default class ListadoRepresentantePage {
   representantesList = signal<Representante[]>([]);
   tipoDocumento = signal<number>(1); // 1 = DPI, 2 = NIT
   nroDocumento = signal<string>('');
+  pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0 });
 
   @ViewChild('upsertRepresentanteModal') modalElementRef!: ElementRef;
   private modalUpsertInstance!: bootstrap.Modal;
@@ -99,8 +101,8 @@ export default class ListadoRepresentantePage {
         resultado = await this.representanteService.listarRepresentantes({
           busqueda: this.buscador() || undefined,
           activo: true,
-          page: 1,
-          limit: 50
+          page: this.pagination().page,
+          limit: this.pagination().pageSize
         });
       } else {
         // Búsqueda por documento
@@ -110,16 +112,27 @@ export default class ListadoRepresentantePage {
           activo: true,
           // Si es NIT (2), envía también el nit normalizado
           nit: this.tipoDocumento() === 2 ? numeroDoc || undefined : undefined,
-          page: 1,
-          limit: 50
+          page: this.pagination().page,
+          limit: this.pagination().pageSize
         });
       }
 
       if (resultado?.data?.representantes) {
         this.representantesList.set(resultado.data.representantes);
         console.log(`✅ ${resultado.data.representantes.length} representante(s) encontrado(s)`);
+        
+        // Actualizar metadata de paginación
+        if (resultado.data.metadata) {
+          const metadata = resultado.data.metadata;
+          this.pagination.set({
+            page: metadata.page || 1,
+            pageSize: metadata.limit || 10,
+            totalItems: metadata.total || 0
+          });
+        }
       } else {
         this.representantesList.set([]);
+        this.pagination.set({ page: 1, pageSize: 10, totalItems: 0 });
         console.warn('⚠️ No se encontraron representantes');
       }
 
@@ -156,5 +169,10 @@ export default class ListadoRepresentantePage {
     if (this.modalUpsertInstance) {
       this.modalUpsertInstance.hide();
     }
+  }
+
+  onChangePage(newPagination: IPagination) {
+    this.pagination.set(newPagination);
+    this.fetchData();
   }
 }

@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { SolicitudesService } from '../../../../services/aliado/solicitudes.service';
 import { AgenciaRegionService, Region, Agencia } from '../../../../services/aliado/agencia-region.service';
 import { FormsModule } from '@angular/forms';
+import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 
 export interface IEmpresa {
 	empresaId?: string;
@@ -29,7 +30,7 @@ const emptyEmpresa: IEmpresa = {
 
 @Component({
 	selector: 'app-gestionar-solicitudes',
-	imports: [RouterLink, CommonModule, FormsModule],
+	imports: [RouterLink, CommonModule, FormsModule, PaginationAllComponent],
 	templateUrl: './gestionar-solicitudes.html',
 	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,6 +59,7 @@ export default class GestionarSolicitudes {
 	regiones = signal<Region[]>([]);
 	agencias = signal<Agencia[]>([]);
 	agenciasFilterradas = signal<Agencia[]>([]);
+	pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0 });
 
 	@ViewChild('upsertRepresentanteModal') modalElementRef!: ElementRef;
 	private modalUpsertInstance!: Modal;
@@ -165,14 +167,29 @@ onRegionChange(regionId: string | null): void {
 				}
 			}
 
+			// Agregar paginación a los parámetros
+			searchParams.page = this.pagination().page;
+			searchParams.limit = this.pagination().pageSize;
+
 			// Realizar búsqueda
 			resultado = await this.solicitudesService.searchSolicitudes(searchParams);
 
 			if (resultado?.data && Array.isArray(resultado.data)) {
 				this.solicitudesList.set(resultado.data as Solicitud[]);
 				console.log(`✅ ${resultado.data.length} solicitud(es) encontrada(s)`);
+				
+				// Actualizar metadata de paginación si existe
+				if (resultado.metadata) {
+					const metadata = resultado.metadata;
+					this.pagination.set({
+						page: metadata.page || 1,
+						pageSize: metadata.limit || 10,
+						totalItems: metadata.total || 0
+					});
+				}
 			} else {
 				this.solicitudesList.set([]);
+				this.pagination.set({ page: 1, pageSize: 10, totalItems: 0 });
 				console.warn('⚠️ No se encontraron solicitudes');
 			}
 
@@ -209,5 +226,21 @@ onRegionChange(regionId: string | null): void {
 		if (this.modalUpsertInstance) {
 			this.modalUpsertInstance.hide();
 		}
+	}
+
+	onChangePage(newPagination: IPagination) {
+		this.pagination.set(newPagination);
+		this.fetchData();
+	}
+
+	/**
+	 * Obtiene el nombre de la agencia por su ID
+	 * @param agenciaId ID de la agencia
+	 * @returns Nombre de la agencia o 'N/A' si no se encuentra
+	 */
+	obtenerNombreAgencia(agenciaId: number | null | undefined): string {
+		if (!agenciaId) return 'N/A';
+		const agencia = this.agencias().find(a => a.agenciaId === agenciaId.toString());
+		return agencia?.nombre || 'N/A';
 	}
 }

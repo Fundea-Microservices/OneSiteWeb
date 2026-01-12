@@ -83,6 +83,12 @@ export interface RepresentanteResponse {
   data?: {
     representante?: Representante;
     representantes?: Representante[];
+    metadata?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
   };
   metadata?: {
     page: number;

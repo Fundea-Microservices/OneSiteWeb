@@ -117,6 +117,25 @@ export default class CrearRepresentantePage implements AfterViewInit {
   }
 
   /**
+   * Verifica si el DPI está vencido comparando la fecha de vencimiento con la fecha actual
+   * @returns true si la fecha de vencimiento es menor a la fecha actual
+   */
+  esDpiVencido(): boolean {
+    const fechaVencimiento = this.representante().fechaVencimiento;
+    if (!fechaVencimiento) {
+      return false;
+    }
+    
+    const fechaVenc = new Date(fechaVencimiento);
+    const hoy = new Date();
+    // Comparar solo fechas, sin horas
+    hoy.setHours(0, 0, 0, 0);
+    fechaVenc.setHours(0, 0, 0, 0);
+    
+    return fechaVenc < hoy;
+  }
+
+  /**
    * Buscar datos del cliente en Bantotal por documento
    * Se ejecuta con debounce de 500ms cuando el documento tiene 13 dígitos
    * Mapea automáticamente los datos obtenidos al representante

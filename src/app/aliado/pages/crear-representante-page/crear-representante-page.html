@@ -14,6 +14,7 @@
     <div class="card-body">
 
 
+        @if (!llenadorManualHabilitado()) {
         <div class="grid gap-4 mt-4 mb-4 grid-cols-1 lg:grid-cols-2">
             <!-- FOTO FRONTAL -->
             <div class="flex flex-col items-center">
@@ -95,32 +96,27 @@
                 </div>
             </div>
         </div>
+        }
 
         <!-- Switch para habilitar llenado manual -->
-        <div class="flex items-center justify-center mt-6 mb-4 p-4 w-full px-2 md:w-11/12 mx-auto md:px-0 bg-gray-50 rounded-lg border border-gray-200">
+        <div
+            class="flex items-center justify-center mt-6 mb-4 p-4 w-full px-2 md:w-11/12 mx-auto md:px-0 bg-gray-50 rounded-lg border border-gray-200">
             <label class="flex items-center cursor-pointer">
                 <span class="mr-3 text-sm font-medium text-gray-700">
                     Habilitar llenado manual de campos
                 </span>
                 <div class="relative">
-                    <input 
-                        type="checkbox" 
-                        class="sr-only" 
-                        [checked]="llenadorManualHabilitado()"
-                        (change)="toggleLlenadoManual()"
-                    />
-                    <div 
-                        class="block w-14 h-8 rounded-full transition-colors duration-200 ease-in-out"
+                    <input type="checkbox" class="sr-only" [checked]="llenadorManualHabilitado()"
+                        (change)="toggleLlenadoManual()" />
+                    <div class="block w-14 h-8 rounded-full transition-colors duration-200 ease-in-out"
                         [class.bg-blue-600]="llenadorManualHabilitado()"
-                        [class.bg-gray-300]="!llenadorManualHabilitado()"
-                    ></div>
-                    <div 
-                        class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-200 ease-in-out"
-                        [class.translate-x-6]="llenadorManualHabilitado()"
-                    ></div>
+                        [class.bg-gray-300]="!llenadorManualHabilitado()"></div>
+                    <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-200 ease-in-out"
+                        [class.translate-x-6]="llenadorManualHabilitado()"></div>
                 </div>
             </label>
         </div>
+
 
         @if(dpiValidado() || llenadorManualHabilitado()){
         <div class="w-full px-2 md:w-11/12 mx-auto md:px-0">
@@ -157,16 +153,49 @@
                     [style.max-height]="activeSection() === 'datos' ? '2000px' : '0px'"
                     [style.opacity]="activeSection() === 'datos' ? '1' : '0'">
                     <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
-                        <app-upsert-datos-generales
-                            [(representante)]="representante" 
-                            [camposBloqueados]="camposBloqueados()"
-                            [cuentaBT]="cuentaBT()"
+                        <app-upsert-datos-generales [(representante)]="representante"
+                            [camposBloqueados]="camposBloqueados()" [cuentaBT]="cuentaBT()"
                             [buscandoCliente]="buscandoCliente()"
                             (documentoSinFormatoChange)="buscarClientePorDocumento($event)">
                         </app-upsert-datos-generales>
                     </div>
                 </div>
+                <div class="my-2">
+                    <!-- Alerta de DPI Vencido -->
+                    @if ((dpiValidado() || llenadorManualHabilitado()) && esDpiVencido()) {
+                    <div class="w-full px-2 md:w-11/12 mx-auto md:px-0 mb-4">
+                        <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 shadow-md">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <h3 class="text-sm font-bold text-red-800">
+                                        DPI Vencido
+                                    </h3>
+                                    <div class="mt-2 text-sm text-red-700">
+                                        <p>El documento de identificación personal (DPI) ha vencido. La fecha de
+                                            vencimiento es:
+                                            <span class="font-semibold">{{ representante().fechaVencimiento |
+                                                date:'dd/MM/yyyy'
+                                                }}</span>
+                                        </p>
+                                        <!-- <p class="mt-1">Por favor, actualice el documento antes de continuar con el proceso.</p> -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
             </div>
+
+
 
             <!-- Contacto y Domicilio (Detalle Geográfico) -->
             <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
@@ -203,7 +232,8 @@
                     [style.opacity]="activeSection() === 'contacto' ? '1' : '0'">
                     <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
 
-                        <app-upsert-contacto [(representante)]="representante" [camposBloqueados]="camposBloqueados()"></app-upsert-contacto>
+                        <app-upsert-contacto [(representante)]="representante"
+                            [camposBloqueados]="camposBloqueados()"></app-upsert-contacto>
                     </div>
                 </div>
             </div>
@@ -245,8 +275,8 @@
                     [style.opacity]="activeSection() === 'actividad' ? '1' : '0'">
                     <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
                         <!-- Aquí va el formulario de direcciones -->
-                        <app-upsert-actividad-laboral-financiera
-                            [(representante)]="representante" [camposBloqueados]="camposBloqueados()"></app-upsert-actividad-laboral-financiera>
+                        <app-upsert-actividad-laboral-financiera [(representante)]="representante"
+                            [camposBloqueados]="camposBloqueados()"></app-upsert-actividad-laboral-financiera>
                     </div>
                 </div>
             </div>

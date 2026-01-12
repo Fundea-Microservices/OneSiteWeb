@@ -10,6 +10,7 @@ interface SolicitudResponse<T> {
   statusCode: number;
   message: string;
   data?: T | T[];
+  metadata?: any
 }
 
 @Injectable({ providedIn: 'root' })

@@ -2,15 +2,14 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
         <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Aliados</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Listado Representante</li>
+        <li class="breadcrumb-item active" aria-current="page">Busqueda de solicitudes</li>
     </ol>
 </nav>
 
 <div class="card">
     <div class="card-header">
-        Administrar Representantes de empresas
-        <button class="btn btn-primary btn-sm float-end" [routerLink]="['/aliado/crear-representante']">Crear nuevo
-            representante</button>
+        Administrar Solicitudes
+        
     </div>
     <div class="card-body">
 
@@ -122,6 +121,7 @@
                     <thead>
                         <tr>
                             <th class="text-center" scope="col">#</th>
+                            <!-- <th class="text-center" scope="col">Agencia</th> -->
                             <th class="text-center" scope="col">Representante</th>
                             <th class="text-center" scope="col">Documento</th>
                             <th class="text-center" scope="col">Tipo Solicitud</th>
@@ -133,7 +133,7 @@
                     <tbody class="text-[0.85em]">
                         @if (isLoading()) {
                         <tr>
-                            <td colspan="7" class="text-center py-4">
+                            <td colspan="8" class="text-center py-4">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                                     <span class="visually-hidden">Cargando...</span>
                                 </div>
@@ -142,14 +142,15 @@
                         </tr>
                         } @else if (solicitudesList().length === 0) {
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-gray-500">
+                            <td colspan="8" class="text-center py-4 text-gray-500">
                                 No se encontraron solicitudes
                             </td>
                         </tr>
                         } @else {
                         @for (item of solicitudesList(); track item.solicitudId; let i = $index) {
                         <tr>
-                            <th scope="row">{{ i + 1 }}</th>
+                            <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
+                            <!-- <td>{{ obtenerNombreAgencia(item.agenciaId) }}</td> -->
                             <td>
                                 @if (item.representante) {
                                     {{ item.representante.primerNombre }} 
@@ -179,6 +180,9 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Paginación -->
+            <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
         </div>
 
         <!-- VERSIÓN MÓVIL (CARDS) -->
@@ -204,10 +208,14 @@
                             {{ item.representante.primerApellido }} {{ item.representante.segundoApellido || '' }}
                         }
                     </h3>
-                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded">{{ i + 1 }}</span>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</span>
                 </div>
 
                 <div class="space-y-2 text-sm text-gray-700 mb-4">
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Agencia:</span>
+                        <span>{{ obtenerNombreAgencia(item.agenciaId) }}</span>
+                    </div>
                     <div class="flex justify-between">
                         <span class="font-medium text-gray-600">Documento:</span>
                         <span>{{ item.representante?.documento || 'N/A' }}</span>
@@ -238,6 +246,13 @@
                 </div>
             </div>
             }
+            }
+            
+            <!-- Paginación Mobile -->
+            @if (!isLoading() && solicitudesList().length > 0) {
+            <div class="mt-4">
+                <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+            </div>
             }
         </div>
 
