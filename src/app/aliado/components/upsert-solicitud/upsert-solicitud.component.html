@@ -1,15 +1,41 @@
 <form (ngSubmit)="onSubmit()" class="needs-validation">
+  <!-- Información del Solicitante y Entidad -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h6 class="card-title text-primary mb-2">
+            <i class="bi bi-person-circle me-2"></i>Solicitante
+          </h6>
+          <p class="card-text mb-0 fw-semibold">{{ getNombreCompleto() }}</p>
+          @if (representante()?.correoElectronico) {
+          <p class="card-text text-muted small mb-0">{{ representante()?.correoElectronico }}</p>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h6 class="card-title text-success mb-2">
+            <i class="bi bi-building me-2"></i>Entidad
+          </h6>
+          <p class="card-text mb-0 fw-semibold">{{ empresa()?.nombreEmpresa || 'Sin empresa' }}</p>
+          @if (cuentaBancaria()?.numeroCuenta) {
+          <p class="card-text text-muted small mb-0">
+            <i class="bi bi-bank2 me-1"></i>Cuenta: {{ cuentaBancaria()?.numeroCuenta }}
+          </p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row mb-3">
     <div class="col-md-6">
       <label for="tipoSolicitud" class="form-label">Tipo de Solicitud *</label>
-      <select
-        id="tipoSolicitud"
-        class="form-select"
-        [(ngModel)]="selectedTipoSolicitud"
-        name="tipoSolicitud"
-        required
-        [disabled]="isLoading()"
-      >
+      <select id="tipoSolicitud" class="form-select" [(ngModel)]="selectedTipoSolicitud" name="tipoSolicitud" required
+        [disabled]="isLoading()">
         <option value="">Selecciona un tipo de solicitud</option>
         @for (tipo of tiposSolicitud(); track tipo.tipoSolicitudId) {
         <option [value]="tipo.tipoSolicitudId">{{ tipo.nombre }}</option>
@@ -18,34 +44,9 @@
     </div>
 
     <div class="col-md-6">
-      <label for="estadoSolicitud" class="form-label">Estado de Solicitud *</label>
-      <select
-        id="estadoSolicitud"
-        class="form-select"
-        [(ngModel)]="selectedEstadoSolicitud"
-        name="estadoSolicitud"
-        required
-        [disabled]="isLoading()"
-      >
-        <option value="">Selecciona un estado de solicitud</option>
-        @for (estado of estadosSolicitud(); track estado.estadoSolicitudId) {
-        <option [value]="estado.estadoSolicitudId">{{ estado.nombre }}</option>
-        }
-      </select>
-    </div>
-  </div>
-
-  <div class="row mb-3">
-    <div class="col-md-6">
       <label for="tipoAfiliacion" class="form-label">Tipo de Afiliación *</label>
-      <select
-        id="tipoAfiliacion"
-        class="form-select"
-        [(ngModel)]="selectedTipoAfiliacion"
-        name="tipoAfiliacion"
-        required
-        [disabled]="isLoading()"
-      >
+      <select id="tipoAfiliacion" class="form-select" [(ngModel)]="selectedTipoAfiliacion" name="tipoAfiliacion"
+        required [disabled]="isLoading()">
         <option value="">Selecciona un tipo de afiliación</option>
         @for (tipo of tiposAfiliacion(); track tipo.tipoAfiliacionId) {
         <option [value]="tipo.tipoAfiliacionId">{{ tipo.nombre }}</option>
@@ -53,59 +54,70 @@
       </select>
     </div>
 
-    <div class="col-md-6">
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label for="estadoSolicitud" class="form-label">Estado de Solicitud *</label>
+      <select id="estadoSolicitud" class="form-select" [(ngModel)]="selectedEstadoSolicitud" name="estadoSolicitud"
+        required [disabled]="isLoading() || true">
+        <option value="">Selecciona un estado de solicitud</option>
+        @for (estado of estadosSolicitud(); track estado.estadoSolicitudId) {
+        <option [value]="estado.estadoSolicitudId">{{ estado.nombre }}</option>
+        }
+      </select>
+      @if (estadoDeshabilitado()) {
+      <small class="text-muted">Estado automático</small>
+      }
+    </div>
+
+    <div class="col-md-4">
       <label for="region" class="form-label">Región *</label>
-      <select
-        id="region"
-        class="form-select"
-        [(ngModel)]="selectedRegion"
-        name="region"
-        (change)="onRegionChange(selectedRegion())"
-        required
-        [disabled]="isLoading()"
-      >
+      <select id="region" class="form-select" [(ngModel)]="selectedRegion" name="region"
+        (change)="onRegionChange(selectedRegion())" required [disabled]="isLoading()">
         <option value="">Selecciona una región</option>
         @for (region of regiones(); track region.regionId) {
         <option [value]="region.regionId">{{ region.nombre }}</option>
         }
       </select>
     </div>
-  </div>
 
-  <div class="row mb-3">
-    <div class="col-md-6">
+    <div class="col-md-4">
       <label for="agencia" class="form-label">Agencia *</label>
-      <select
-        id="agencia"
-        class="form-select"
-        [(ngModel)]="selectedAgencia"
-        name="agencia"
-        required
-        [disabled]="isLoading() || selectedRegion() === ''"
-      >
+      <select id="agencia" class="form-select" [(ngModel)]="selectedAgencia" name="agencia" required
+        [disabled]="isLoading() || selectedRegion() === ''">
         <option value="">Selecciona una agencia</option>
         @for (agencia of agenciasFilterradas(); track agencia.agenciaId) {
         <option [value]="agencia.agenciaId">{{ agencia.nombre }}</option>
         }
       </select>
     </div>
+  </div>
 
-    <div class="col-md-6">
-      <label for="archivo" class="form-label">Archivo PDF *</label>
+  <div class="row mb-3">
+
+
+    <div class="col-md-12">
+      <label for="archivo" class="form-label">Documento</label>
       <div class="input-group">
-        <input
-          type="file"
-          id="archivo"
-          class="form-control"
-          accept=".pdf"
-          (change)="onArchivoSeleccionado($event)"
-          required
-          [disabled]="isLoading()"
-        />
+        <button type="button" class="btn btn-outline-info" (click)="generarDocumento()"
+          [disabled]="isLoading() || !representante()" title="Generar documento para imprimir y firmar">
+          <i class="bi bi-file-pdf me-2"></i>Generar Documento
+        </button>
+        <input type="file" id="archivo" class="form-control" accept=".pdf" (change)="onArchivoSeleccionado($event)"
+          [disabled]="isLoading()" />
         @if (nombreArchivo()) {
         <span class="input-group-text text-success">✓ {{ nombreArchivo() }}</span>
         }
       </div>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <label for="observaciones" class="form-label">Observaciones</label>
+      <textarea id="observaciones" class="form-control" [(ngModel)]="observaciones" name="observaciones" rows="3"
+        placeholder="Ingrese observaciones adicionales..." [disabled]="isLoading()"></textarea>
     </div>
   </div>
 
@@ -114,7 +126,7 @@
       <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
         @if (isLoading()) {
         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-        } {{ isNew ? 'Crear Solicitud' : 'Actualizar Solicitud' }}
+        } {{ nuevo() ? 'Crear Solicitud' : 'Actualizar Solicitud' }}
       </button>
       <button type="button" class="btn btn-secondary ms-2" (click)="onCancel()" [disabled]="isLoading()">
         Cancelar

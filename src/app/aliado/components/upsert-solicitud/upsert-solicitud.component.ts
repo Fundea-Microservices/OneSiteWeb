@@ -23,181 +23,7 @@ export interface SolicitudFormData {
   selector: 'app-upsert-solicitud',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <form (ngSubmit)="onSubmit()" class="needs-validation">
-      <!-- Información del Solicitante y Entidad -->
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <div class="card bg-light">
-            <div class="card-body">
-              <h6 class="card-title text-primary mb-2">
-                <i class="bi bi-person-circle me-2"></i>Solicitante
-              </h6>
-              <p class="card-text mb-0 fw-semibold">{{ getNombreCompleto() }}</p>
-              @if (representante()?.correoElectronico) {
-              <p class="card-text text-muted small mb-0">{{ representante()?.correoElectronico }}</p>
-              }
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card bg-light">
-            <div class="card-body">
-              <h6 class="card-title text-success mb-2">
-                <i class="bi bi-building me-2"></i>Entidad
-              </h6>
-              <p class="card-text mb-0 fw-semibold">{{ empresa()?.nombreEmpresa || 'Sin empresa' }}</p>
-              @if (cuentaBancaria()?.numeroCuenta) {
-              <p class="card-text text-muted small mb-0">
-                <i class="bi bi-bank2 me-1"></i>Cuenta: {{ cuentaBancaria()?.numeroCuenta }}
-              </p>
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="tipoSolicitud" class="form-label">Tipo de Solicitud *</label>
-          <select
-            id="tipoSolicitud"
-            class="form-select"
-            [(ngModel)]="selectedTipoSolicitud"
-            name="tipoSolicitud"
-            required
-            [disabled]="isLoading()"
-          >
-            <option value="">Selecciona un tipo de solicitud</option>
-            @for (tipo of tiposSolicitud(); track tipo.tipoSolicitudId) {
-            <option [value]="tipo.tipoSolicitudId">{{ tipo.nombre }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="col-md-6">
-          <label for="estadoSolicitud" class="form-label">Estado de Solicitud *</label>
-          <select
-            id="estadoSolicitud"
-            class="form-select"
-            [(ngModel)]="selectedEstadoSolicitud"
-            name="estadoSolicitud"
-            required
-            [disabled]="isLoading() || estadoDeshabilitado()"
-          >
-            <option value="">Selecciona un estado de solicitud</option>
-            @for (estado of estadosSolicitud(); track estado.estadoSolicitudId) {
-            <option [value]="estado.estadoSolicitudId">{{ estado.nombre }}</option>
-            }
-          </select>
-          @if (estadoDeshabilitado()) {
-          <small class="text-muted">Estado automático para nuevas solicitudes</small>
-          }
-        </div>
-      </div>
-
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="tipoAfiliacion" class="form-label">Tipo de Afiliación *</label>
-          <select
-            id="tipoAfiliacion"
-            class="form-select"
-            [(ngModel)]="selectedTipoAfiliacion"
-            name="tipoAfiliacion"
-            required
-            [disabled]="isLoading()"
-          >
-            <option value="">Selecciona un tipo de afiliación</option>
-            @for (tipo of tiposAfiliacion(); track tipo.tipoAfiliacionId) {
-            <option [value]="tipo.tipoAfiliacionId">{{ tipo.nombre }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="col-md-6">
-          <label for="region" class="form-label">Región *</label>
-          <select
-            id="region"
-            class="form-select"
-            [(ngModel)]="selectedRegion"
-            name="region"
-            (change)="onRegionChange(selectedRegion())"
-            required
-            [disabled]="isLoading()"
-          >
-            <option value="">Selecciona una región</option>
-            @for (region of regiones(); track region.regionId) {
-            <option [value]="region.regionId">{{ region.nombre }}</option>
-            }
-          </select>
-        </div>
-      </div>
-
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="agencia" class="form-label">Agencia *</label>
-          <select
-            id="agencia"
-            class="form-select"
-            [(ngModel)]="selectedAgencia"
-            name="agencia"
-            required
-            [disabled]="isLoading() || selectedRegion() === ''"
-          >
-            <option value="">Selecciona una agencia</option>
-            @for (agencia of agenciasFilterradas(); track agencia.agenciaId) {
-            <option [value]="agencia.agenciaId">{{ agencia.nombre }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="col-md-6">
-          <label for="archivo" class="form-label">Archivo PDF</label>
-          <div class="input-group">
-            <input
-              type="file"
-              id="archivo"
-              class="form-control"
-              accept=".pdf"
-              (change)="onArchivoSeleccionado($event)"
-              [disabled]="isLoading()"
-            />
-            @if (nombreArchivo()) {
-            <span class="input-group-text text-success">✓ {{ nombreArchivo() }}</span>
-            }
-          </div>
-        </div>
-      </div>
-
-      <div class="row mb-3">
-        <div class="col-12">
-          <label for="observaciones" class="form-label">Observaciones</label>
-          <textarea
-            id="observaciones"
-            class="form-control"
-            [(ngModel)]="observaciones"
-            name="observaciones"
-            rows="3"
-            placeholder="Ingrese observaciones adicionales..."
-            [disabled]="isLoading()"
-          ></textarea>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-12">
-          <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
-            @if (isLoading()) {
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            } {{ nuevo() ? 'Crear Solicitud' : 'Actualizar Solicitud' }}
-          </button>
-          <button type="button" class="btn btn-secondary ms-2" (click)="onCancel()" [disabled]="isLoading()">
-            Cancelar
-          </button>
-        </div>
-      </div>
-    </form>
-  `,
+  templateUrl: './upsert-solicitud.component.html',
   styles: [`
     .form-label {
       font-weight: 500;
@@ -417,5 +243,303 @@ export default class UpsertSolicitudComponent implements OnInit {
 
   getAgenciaNombre(id: string): string {
     return this.agencias().find((a) => a.agenciaId === id)?.nombre ?? '';
+  }
+
+  generarDocumento(): void {
+    const rep = this.representante();
+    if (!rep) return;
+
+    // Crear elemento temporal para generar el HTML
+    const htmlContent = this.crearHTMLDocumento(rep);
+    
+    // Crear iframe temporal para imprimir
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (iframeDoc) {
+      iframeDoc.write(htmlContent);
+      iframeDoc.close();
+      
+      // Esperar a que se cargue el contenido
+      setTimeout(() => {
+        iframe.contentWindow?.print();
+      }, 250);
+    }
+  }
+
+  private crearHTMLDocumento(rep: Representante): string {
+    const hoy = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    return `
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Solicitud de Afiliación</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 40px;
+          }
+          
+          .container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #000;
+            padding: 40px;
+            background: white;
+          }
+          
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+          }
+          
+          .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+          }
+          
+          .header p {
+            font-size: 12px;
+            color: #666;
+          }
+          
+          .section {
+            margin-bottom: 25px;
+          }
+          
+          .section-title {
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+          }
+          
+          .row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 10px;
+          }
+          
+          .col {
+            flex: 1;
+          }
+          
+          .field {
+            margin-bottom: 12px;
+          }
+          
+          .label {
+            font-weight: bold;
+            font-size: 11px;
+            color: #000;
+          }
+          
+          .value {
+            font-size: 11px;
+            color: #333;
+            padding: 4px 0;
+            border-bottom: 1px solid #ccc;
+            min-height: 18px;
+          }
+          
+          .signature-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #000;
+          }
+          
+          .signature-line {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 50px;
+          }
+          
+          .signature-box {
+            text-align: center;
+            width: 150px;
+          }
+          
+          .sig-line {
+            border-top: 1px solid #000;
+            margin-top: 30px;
+            padding-top: 5px;
+            font-size: 10px;
+          }
+          
+          .date-section {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 11px;
+          }
+          
+          @media print {
+            body {
+              padding: 0;
+            }
+            .container {
+              border: none;
+              max-width: 100%;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>SOLICITUD DE AFILIACIÓN</h1>
+            <p>Fundación para el Desarrollo Empresarial (FUNDEA)</p>
+          </div>
+          
+          <div class="date-section">
+            <strong>Fecha:</strong> ${hoy}
+          </div>
+          
+          <div class="section">
+            <div class="section-title">DATOS DEL REPRESENTANTE</div>
+            <div class="row">
+              <div class="col">
+                <div class="field">
+                  <span class="label">Nombre Completo:</span>
+                  <div class="value">${this.getNombreCompleto()}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="field">
+                  <span class="label">Documento:</span>
+                  <div class="value">${rep.documento || ''}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col">
+                <div class="field">
+                  <span class="label">NIT:</span>
+                  <div class="value">${rep.nit || ''}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="field">
+                  <span class="label">Teléfono Celular:</span>
+                  <div class="value">${rep.telefonoCelular || ''}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col">
+                <div class="field">
+                  <span class="label">Correo Electrónico:</span>
+                  <div class="value">${rep.correoElectronico || ''}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="field">
+                  <span class="label">Teléfono Fijo:</span>
+                  <div class="value">${rep.telefonoFijo || ''}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col">
+                <div class="field">
+                  <span class="label">Dirección:</span>
+                  <div class="value">${rep.direccion || ''}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col">
+                <div class="field">
+                  <span class="label">Fecha de Nacimiento:</span>
+                  <div class="value">${rep.fechaNacimiento ? new Date(rep.fechaNacimiento).toLocaleDateString('es-ES') : ''}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="field">
+                  <span class="label">Sexo:</span>
+                  <div class="value">${rep.sexo === 'M' ? 'Masculino' : rep.sexo === 'F' ? 'Femenino' : ''}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <div class="section-title">DATOS DE ACTIVIDAD LABORAL</div>
+            <div class="row">
+              <div class="col">
+                <div class="field">
+                  <span class="label">Nombre Empresa:</span>
+                  <div class="value">${rep.nombreEmpresa || ''}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="field">
+                  <span class="label">Ingresos Mensuales:</span>
+                  <div class="value">Q ${(rep.ingresos || 0).toLocaleString('es-ES')}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col">
+                <div class="field">
+                  <span class="label">Fecha Inicio Actividad:</span>
+                  <div class="value">${rep.fechaInicioActividad ? new Date(rep.fechaInicioActividad).toLocaleDateString('es-ES') : ''}</div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="field">
+                  <span class="label">Profesión/Ocupación:</span>
+                  <div class="value"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="signature-section">
+            <p style="font-size: 12px; margin-bottom: 10px;"><strong>Declaración:</strong></p>
+            <p style="font-size: 11px; line-height: 1.8; margin-bottom: 20px;">
+              Declaro bajo protesta de decir verdad que todos los datos e información proporcionada en este documento son correctos y verídicos. Autorizo a FUNDEA para que verifique la información contenida en esta solicitud.
+            </p>
+            
+            <div class="signature-line">
+              <div class="signature-box">
+                <div class="sig-line">
+                  <strong>${this.getNombreCompleto()}</strong><br>
+                  Firma del Representante
+                </div>
+              </div>
+              <div class="signature-box">
+                <div class="sig-line">Fecha</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
   }
 }

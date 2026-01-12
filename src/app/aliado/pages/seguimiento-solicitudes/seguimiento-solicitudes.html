@@ -157,8 +157,7 @@
              [style.opacity]="mostrarEmpresa() ? '1' : '0'">
             <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>ID Empresa:</strong> <span class="badge bg-secondary">{{ solicitud()?.empresa?.empresaId }}</span></p>
+                <div class="col-md-6 mb-3">                    
                     <p class="mb-2"><strong>Nombre:</strong> {{ solicitud()?.empresa?.nombreEmpresa || 'N/A' }}</p>
                     <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.empresa?.nit || 'N/A' }}</p>
                     <p class="mb-2"><strong>Teléfono:</strong> {{ solicitud()?.empresa?.telefono || 'N/A' }}</p>
@@ -174,7 +173,7 @@
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Tipo de Actividad:</strong> {{ solicitud()?.empresa?.tipoActividad || 'N/A' }}</p>
+                    <!-- <p class="mb-2"><strong>Tipo de Actividad:</strong> {{ solicitud()?.empresa?.tipoActividad || 'N/A' }}</p> -->
                     <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.actividad || 'N/A' }}</p>
                     <p class="mb-2"><strong>Detalle de Actividad:</strong> {{ solicitud()?.empresa?.detalleActividad || 'N/A' }}</p>
                 </div>
@@ -182,6 +181,60 @@
                     <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{ formatDate(solicitud()?.empresa?.fechaInicioActividad) }}</p>
                     <p class="mb-2"><strong>Usuario Ingreso:</strong> {{ solicitud()?.empresa?.usrIngreso || 'N/A' }}</p>
                     <p class="mb-2"><strong>Fecha Creación:</strong> {{ formatDate(solicitud()?.empresa?.created_at) }}</p>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Información de Cuenta Bancaria (Colapsable) -->
+    @if (solicitud()?.cuentaBancaria) {
+    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+        <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-purple-50"
+             (click)="mostrarCuentaBancaria.set(!mostrarCuentaBancaria())">
+            <div class="flex items-center gap-2 md:gap-3">
+                <svg class="w-5 h-5 md:w-6 md:h-6 transition-colors duration-200"
+                     [class.text-purple-600]="mostrarCuentaBancaria()"
+                     [class.text-gray-500]="!mostrarCuentaBancaria()"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
+                    </path>
+                </svg>
+                <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
+                    [class.text-purple-700]="mostrarCuentaBancaria()"
+                    [class.text-gray-800]="!mostrarCuentaBancaria()">
+                    Cuenta Bancaria
+                </h4>
+            </div>
+            <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
+                [class.rotate-180]="mostrarCuentaBancaria()"
+                [class.text-purple-600]="mostrarCuentaBancaria()"
+                [class.text-gray-400]="!mostrarCuentaBancaria()"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </div>
+
+        <div class="overflow-hidden transition-all duration-500 ease-in-out"
+             [style.max-height]="mostrarCuentaBancaria() ? '1000px' : '0px'"
+             [style.opacity]="mostrarCuentaBancaria() ? '1' : '0'">
+            <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Número de Cuenta:</strong> {{ solicitud()?.cuentaBancaria?.numeroCuenta || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Nombre de Cuenta:</strong> {{ solicitud()?.cuentaBancaria?.nombreCuenta || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Banco:</strong> {{ obtenerNombreBanco(solicitud()?.cuentaBancaria?.bancoId) }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Tipo de Cuenta:</strong> {{ obtenerNombreTipoCuenta(solicitud()?.cuentaBancaria?.tipoCuentaId) }}</p>
+                    <p class="mb-2"><strong>Moneda:</strong> {{ solicitud()?.cuentaBancaria?.monedaId === 1 ? 'Q - Quetzales' : '$ - Dólares' }}</p>
+                    <!-- <p class="mb-2"><strong>Estado:</strong> 
+                        <span [class]="solicitud()?.cuentaBancaria?.activo ? 'badge bg-success' : 'badge bg-secondary'">
+                            {{ solicitud()?.cuentaBancaria?.activo ? 'Activa' : 'Inactiva' }}
+                        </span>
+                    </p> -->
                 </div>
             </div>
             </div>
@@ -207,12 +260,11 @@
         <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-2"><strong>ID Solicitud:</strong> <span class="badge bg-secondary">{{ solicitud()?.solicitudId }}</span></p>
                     <p class="mb-2"><strong>Tipo de Solicitud:</strong> {{ solicitud()?.tipoSolicitud?.nombre || 'N/A' }}</p>
                     <p class="mb-2"><strong>Tipo de Afiliación:</strong> {{ solicitud()?.tipoAfiliacion?.nombre || 'N/A' }}</p>
                 </div>
                 <div class="col-md-6">
-                    <p class="mb-2"><strong>Estado Actual:</strong> 
+                    <p class="mb-2"><strong>Estado Actual: </strong> 
                         <span class="badge bg-{{ solicitud()?.estadoSolicitud?.nombre === 'Espera' ? 'warning' : solicitud()?.estadoSolicitud?.nombre === 'Aprobado' ? 'success' : solicitud()?.estadoSolicitud?.nombre === 'Rechazado' ? 'danger' : 'secondary' }}">
                             {{ solicitud()?.estadoSolicitud?.nombre || 'N/A' }}
                         </span>
@@ -272,7 +324,7 @@
 
     <!-- Formulario para Nuevo Seguimiento -->
     <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-md transition-all duration-300 mb-4">
-        <div class="px-3 py-3 md:px-6 md:py-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 hover:from-emerald-100 hover:to-emerald-200 transition-colors">
+        <div class="px-3 py-3 md:px-6 md:py-4 bg-linear-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 hover:from-emerald-100 hover:to-emerald-200 transition-colors">
             <div class="flex items-center gap-2 md:gap-3">
                 <svg class="w-5 h-5 md:w-6 md:h-6 text-emerald-600"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,7 +351,7 @@
                         @if (esFormularioAprobado()) {
                         <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-md">
                             <div class="flex items-start gap-3">
-                                <svg class="h-6 w-6 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <svg class="h-6 w-6 text-green-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                 </svg>
                                 <div>
@@ -311,12 +363,13 @@
                         } @else {
                         <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 shadow-md">
                             <div class="flex items-start gap-3">
-                                <svg class="h-6 w-6 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <svg class="h-6 w-6 text-yellow-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                 </svg>
                                 <div>
                                     <h6 class="text-sm font-bold text-yellow-800">⚠️ Formulario Incompleto</h6>
-                                    <p class="text-sm text-yellow-700 mt-1">Complete todas las preguntas para aprobar el formulario.</p>
+                                    <p class="text-sm text-yellow-700 mt-1">Por favor, responda todas las preguntas (Sí o No) y complete el campo de validación del registro.</p>
+                                    <p class="text-xs text-yellow-600 mt-2">Recuerde: Los empleados y proveedores de FUNDEA deben seleccionar "No".</p>
                                 </div>
                             </div>
                         </div>

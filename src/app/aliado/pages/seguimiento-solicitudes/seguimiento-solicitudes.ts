@@ -6,6 +6,7 @@ import { SolicitudesService } from '../../../../services/aliado/solicitudes.serv
 import { SeguimientoSolicitudService } from '../../../../services/aliado/seguimiento-solicitud.service';
 import { GeneralidadesService } from '../../../../services/aliado/generalidades.service';
 import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
+import { BancoService } from '../../../../services/aliado/banco.service';
 import { CatalogoSimple } from '../../../../interfaces/api-bantotal/catalogos';
 import { Solicitud, SeguimientoSolicitud, Empresa } from '../../../../interfaces/aliado/solicitudes';
 import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
@@ -23,6 +24,7 @@ export default class SeguimientoSolicitudesComponent {
 	private seguimientoService = inject(SeguimientoSolicitudService);
 	private generalidadesService = inject(GeneralidadesService);
 	private catalogosService = inject(CatalogosBantotalService);
+	private bancoService = inject(BancoService);
 	private cdr = inject(ChangeDetectorRef);
 
 	solicitud = signal<Solicitud | null>(null);
@@ -33,6 +35,7 @@ export default class SeguimientoSolicitudesComponent {
 	// Signals para mostrar/ocultar secciones (inicialmente ocultos)
 	mostrarRepresentante = signal(false);
 	mostrarEmpresa = signal(false);
+	mostrarCuentaBancaria = signal(false);
 
 	// Catálogos para mostrar valores
 	catalogoProfesion = signal<CatalogoSimple[]>([]);
@@ -44,6 +47,8 @@ export default class SeguimientoSolicitudesComponent {
 	catalogoDepartamento = signal<CatalogoSimple[]>([]);
 	catalogoLocalidad = signal<CatalogoSimple[]>([]);
 	catalogoSector = signal<CatalogoSimple[]>([]);
+	catalogoBancos = signal<any[]>([]);
+	catalogoTiposCuenta = signal<any[]>([]);
 
 	// Formulario de nuevo seguimiento
 	nuevoSeguimiento = {
@@ -71,6 +76,7 @@ export default class SeguimientoSolicitudesComponent {
 		}
 		this.cargarEstadosSolicitud();
 		this.cargarCatalogos();
+		this.cargarCatalogosBancos();
 	}
 
 	private async cargarSolicitud(solicitudId: string) {
@@ -128,6 +134,31 @@ export default class SeguimientoSolicitudesComponent {
 
 		const sector = this.catalogosService.obtenerLocal('sector');
 		if (sector) this.catalogoSector.set(sector);
+	}
+
+	private async cargarCatalogosBancos() {
+		try {
+			const [bancos, tiposCuenta] = await Promise.all([
+				this.bancoService.obtenerBancos(),
+				this.bancoService.obtenerTiposCuenta()
+			]);
+			this.catalogoBancos.set(bancos || []);
+			this.catalogoTiposCuenta.set(tiposCuenta || []);
+		} catch (error) {
+			console.error('Error al cargar catálogos de bancos:', error);
+		}
+	}
+
+	obtenerNombreBanco(bancoId?: string): string {
+		if (!bancoId) return 'N/A';
+		const banco = this.catalogoBancos().find((b: any) => b.bancoId === bancoId);
+		return banco?.nombreBanco || 'N/A';
+	}
+
+	obtenerNombreTipoCuenta(tipoCuentaId?: string): string {
+		if (!tipoCuentaId) return 'N/A';
+		const tipo = this.catalogoTiposCuenta().find((t: any) => t.tipoCuentaId === tipoCuentaId);
+		return tipo?.nombre || 'N/A';
 	}
 
 	async guardarSeguimiento() {
@@ -228,16 +259,49 @@ export default class SeguimientoSolicitudesComponent {
 	 */
 	esFormularioAprobado(): boolean {
 		const form = this.formularioAprobacion;
+		
+		// Convertir strings a booleanos si es necesario
+		const convertToBoolean = (val: any): boolean | null => {
+			if (val === null || val === undefined) return null;
+			if (typeof val === 'boolean') return val;
+			if (typeof val === 'string') {
+				return val === 'true' || val === '1' || val === 'true ';
+			}
+			return !!val;
+		};
+		
+		const revision = convertToBoolean(form.revisionFormularioCompleto);
+		const nombre = convertToBoolean(form.nombreAfiliado);
+		const dpi = convertToBoolean(form.numeroDpiAfiliado);
+		const cuenta = convertToBoolean(form.cuentaBancariaAfiliado);
+		const firma = convertToBoolean(form.firmaAfiliado);
+		const empleado = convertToBoolean(form.aficiadoEmpleadoFundea);
+		const proveedor = convertToBoolean(form.afililadoProveedorFundea);
+		const reputacion = convertToBoolean(form.buenaReputacionComunidad);
+		const validacion = form.validacionRegistro?.trim() ?? '';
+		
+		console.log('🔍 Verificando formulario:', {
+			revision: revision === true ? '✅ Sí' : '❌ No/Vacío',
+			nombre: nombre === true ? '✅ Sí' : '❌ No/Vacío',
+			dpi: dpi === true ? '✅ Sí' : '❌ No/Vacío',
+			cuenta: cuenta === true ? '✅ Sí' : '❌ No/Vacío',
+			firma: firma === true ? '✅ Sí' : '❌ No/Vacío',
+			empleado: empleado === false ? '✅ No' : '❌ Sí/Vacío',
+			proveedor: proveedor === false ? '✅ No' : '❌ Sí/Vacío',
+			reputacion: reputacion === true ? '✅ Sí' : '❌ No/Vacío',
+			validacion: validacion.length > 0 ? '✅ Tiene texto' : '❌ Vacío'
+		});
+		
 		return (
-			form.revisionFormularioCompleto === true &&
-			form.nombreAfiliado === true &&
-			form.numeroDpiAfiliado === true &&
-			form.cuentaBancariaAfiliado === true &&
-			form.firmaAfiliado === true &&
-			form.aficiadoEmpleadoFundea === false && // No debe ser empleado
-			form.afililadoProveedorFundea === false && // No debe ser proveedor
-			form.buenaReputacionComunidad === true &&
-			form.validacionRegistro.trim() !== ''
+			revision === true &&
+			nombre === true &&
+			dpi === true &&
+			cuenta === true &&
+			firma === true &&
+			empleado === false && // No debe ser empleado
+			proveedor === false && // No debe ser proveedor
+			reputacion === true &&
+			validacion.length > 0
 		);
 	}
 }

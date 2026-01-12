@@ -17,6 +17,9 @@ import { ICuentaBancaria } from '../../../../interfaces/aliado/cuenta-bancaria';
 import { SolicitudesService } from '../../../../services/aliado/solicitudes.service';
 import { Solicitud } from '../../../../interfaces/aliado/solicitudes';
 import UpsertSolicitudComponent, { SolicitudFormData } from '../../components/upsert-solicitud/upsert-solicitud.component';
+import { SeguimientoSolicitudService } from '../../../../services/aliado/seguimiento-solicitud.service';
+import { GeneralidadesService } from '../../../../services/aliado/generalidades.service';
+import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
 
 
 @Component({
@@ -34,6 +37,8 @@ export default class EmpresasRepresentantePage {
   private cuentaBancariaService = inject(CuentaBancariaService);
   private bancoService = inject(BancoService);
   private solicitudesService = inject(SolicitudesService);
+  private seguimientoService = inject(SeguimientoSolicitudService);
+  private generalidadesService = inject(GeneralidadesService);
   representanteId = signal('');
   representante = signal<Representante | null>(null);
 
@@ -56,6 +61,7 @@ export default class EmpresasRepresentantePage {
   showModalSolicitud = signal(false);
   empresaIdSolicitud = signal<string>('');
   modalKeySolicitud = signal(0);
+  esEditarSolicitud = signal(false);
 
   // Lista de empresas reales
   empresas = signal<(IEmpresaRepresentante & { open?: boolean })[]>([]);
@@ -70,9 +76,13 @@ export default class EmpresasRepresentantePage {
   cuentasPorEmpresa = signal<Map<string, ICuentaBancaria[]>>(new Map());
   cargandoCuentas = signal<Set<string>>(new Set());
 
+  // Catálogo de estados de solicitud
+  estadosSolicitud = signal<EstadoSolicitud[]>([]);
+
   async ngOnInit() {
     // Cargar catálogos
     this.cargarCatalogos();
+    await this.cargarEstadosSolicitud();
     
     // Obtener el representanteId de la URL
     const id = this.route.snapshot.paramMap.get('representanteId') || '';
@@ -150,15 +160,6 @@ export default class EmpresasRepresentantePage {
     }
     const estado = solicitud.estadoSolicitud.nombre.toUpperCase();
     return estado !== 'APROBADO' && estado !== 'RECHAZADO';
-  }
-
-  puedeAgregarCuentaBancaria(empresaId: string): boolean {
-    const solicitud = this.getSolicitudPorEmpresa(empresaId);
-    if (!solicitud || !solicitud.estadoSolicitud || !solicitud.estadoSolicitud.nombre) {
-      return false; // Si no hay solicitud, no se puede agregar cuenta
-    }
-    const estado = solicitud.estadoSolicitud.nombre.toUpperCase();
-    return estado === 'APROBADO';
   }
 
   getUltimoSeguimiento(empresaId: string) {
@@ -252,6 +253,17 @@ export default class EmpresasRepresentantePage {
     this.tiposCuenta.set(tiposCuenta || []);
   }
 
+  private async cargarEstadosSolicitud() {
+    try {
+      const resp = await this.generalidadesService.getAllEstadoSolicitud({ all: true });
+      if (resp?.data) {
+        this.estadosSolicitud.set(resp.data as EstadoSolicitud[]);
+      }
+    } catch (error) {
+      console.error('Error al cargar estados de solicitud:', error);
+    }
+  }
+
   obtenerNombreDepartamento(codigo: number): string {
     const depto = this.departamentos().find(d => d.valorCore === codigo.toString());
     return depto ? depto.nombre : `Código: ${codigo}`;
@@ -262,7 +274,21 @@ export default class EmpresasRepresentantePage {
     return muni ? muni.nombre : `Código: ${codigo}`;
   }
 
-  abrirModalNuevaCuenta(empresaId: string) {
+  async abrirModalNuevaCuenta(empresaId: string) {
+    if (!this.cuentasPorEmpresa().has(empresaId)) {
+      await this.cargarCuentasEmpresa(empresaId);
+    }
+
+    const solicitud = this.getSolicitudPorEmpresa(empresaId);
+    const solicitudAprobada =
+      solicitud?.estadoSolicitud?.nombre?.toUpperCase() === 'APROBADO';
+    const cuentas = this.obtenerCuentasEmpresa(empresaId);
+
+    if (!solicitudAprobada && cuentas.length >= 1) {
+      alert('Solo puede registrar una cuenta bancaria antes de aprobar la solicitud.');
+      return;
+    }
+
     this.empresaIdCuenta.set(empresaId);
     this.cuentaSeleccionada.set({
       cuentaBancariaId: '',
@@ -295,6 +321,19 @@ export default class EmpresasRepresentantePage {
       console.log('♻️ Recargando cuentas de la empresa...');
       await this.cargarCuentasEmpresa(empresaId);
       console.log('✨ Cuentas recargadas completadas');
+
+      const solicitud = this.getSolicitudPorEmpresa(empresaId);
+      if (solicitud?.solicitudId && cuenta.cuentaBancariaId) {
+        try {
+          await this.solicitudesService.updateSolicitud(solicitud.solicitudId, {
+            cuentaBancariaId: cuenta.cuentaBancariaId,
+            empresaId: solicitud.empresaId || empresaId,
+          });
+          await this.cargarSolicitudesParaEmpresas(this.empresas());
+        } catch (error) {
+          console.error('❌ Error al asociar cuenta con solicitud:', error);
+        }
+      }
     } else {
       console.warn('⚠️ No hay ID de empresa para recargar');
     }
@@ -390,8 +429,33 @@ export default class EmpresasRepresentantePage {
 
   crearNuevaSolicitud(empresaId: string) {
     this.empresaIdSolicitud.set(empresaId);
+    this.esEditarSolicitud.set(false);
     this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
     this.showModalSolicitud.set(true);
+  }
+
+  editarSolicitud(empresaId: string) {
+    this.empresaIdSolicitud.set(empresaId);
+    this.esEditarSolicitud.set(true);
+    this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
+    this.showModalSolicitud.set(true);
+  }
+
+  puedeEditarSolicitud(empresaId: string): boolean {
+    const solicitud = this.getSolicitudPorEmpresa(empresaId);
+    if (!solicitud || !solicitud.estadoSolicitud || !solicitud.estadoSolicitud.nombre) {
+      return false;
+    }
+    const estado = solicitud.estadoSolicitud.nombre.toUpperCase();
+    return estado !== 'APROBADO' && estado !== 'RECHAZADO';
+  }
+
+  esEstadoCorregir(empresaId: string): boolean {
+    const solicitud = this.getSolicitudPorEmpresa(empresaId);
+    if (!solicitud || !solicitud.estadoSolicitud || !solicitud.estadoSolicitud.nombre) {
+      return false;
+    }
+    return solicitud.estadoSolicitud.nombre.toUpperCase() === 'CORREGIR';
   }
 
   cerrarModalSolicitud() {
@@ -412,40 +476,133 @@ export default class EmpresasRepresentantePage {
     return cuentas?.find(c => c.activo) || cuentas?.[0] || null;
   }
 
+  getSolicitudFormData(): SolicitudFormData | undefined {
+    if (!this.esEditarSolicitud()) return undefined;
+    
+    const empresaId = this.empresaIdSolicitud();
+    const solicitud = this.getSolicitudPorEmpresa(empresaId);
+    
+    if (!solicitud) return undefined;
+
+    return {
+      tipoSolicitudId: solicitud.tipoSolicitudId || '',
+      estadoSolicitudId: solicitud.estadoSolicitudId || '',
+      tipoAfiliacionId: solicitud.tipoAfiliacionId || '',
+      regionId: solicitud.regionId?.toString() || '',
+      agenciaId: solicitud.agenciaId?.toString() || '',
+      observaciones: solicitud.observaciones || undefined,
+    };
+  }
+
+  async confirmarCorrecciones(empresaId: string) {
+    const solicitud = this.getSolicitudPorEmpresa(empresaId);
+    if (!solicitud?.solicitudId) {
+      alert('No se encontró la solicitud');
+      return;
+    }
+
+    if (!confirm('¿Confirmar que las correcciones han sido realizadas?')) {
+      return;
+    }
+
+    try {
+      // Buscar el estado "ESPERA"
+      const estadoEspera = this.estadosSolicitud().find(
+        estado => estado.nombre?.toUpperCase().includes('ESPERA')
+      );
+
+      if (!estadoEspera) {
+        alert('No se encontró el estado ESPERA');
+        return;
+      }
+
+      // Obtener el último seguimiento para calcular el orden
+      const ultimoSeguimiento = this.getUltimoSeguimiento(empresaId);
+      const nuevoOrden = (ultimoSeguimiento?.ordenSeguimiento || 0) + 1;
+
+      // Crear el seguimiento
+      await this.seguimientoService.createSeguimientoSolicitud({
+        solicitudId: solicitud.solicitudId,
+        ordenSeguimiento: nuevoOrden,
+        estadoAprobacionId: estadoEspera.estadoSolicitudId,
+        observaciones: 'Correcciones realizadas',
+      });
+
+      // Actualizar el estado de la solicitud
+      await this.solicitudesService.updateSolicitud(solicitud.solicitudId, {
+        estadoSolicitudId: estadoEspera.estadoSolicitudId,
+      });
+
+      // Recargar las empresas para actualizar la vista
+      await this.cargarEmpresas();
+    } catch (error) {
+      console.error('Error al confirmar correcciones:', error);
+    }
+  }
+
   async onGuardarSolicitud(formData: SolicitudFormData) {
     try {
       const empresaId = this.empresaIdSolicitud();
       const representanteId = this.representanteId();
       
-      // Obtener la cuenta bancaria de la empresa
-      const cuentaBancaria = this.getCuentaBancariaEmpresa(empresaId);
+      if (this.esEditarSolicitud()) {
+        // Modo edición
+        const solicitud = this.getSolicitudPorEmpresa(empresaId);
+        if (!solicitud?.solicitudId) {
+          alert('No se encontró la solicitud a editar');
+          return;
+        }
 
-      // Preparar datos para crear la solicitud
-      const solicitudData: Partial<Solicitud> = {
-        representanteId,
-        empresaId,
-        cuentaBancariaId: cuentaBancaria?.cuentaBancariaId || null,
-        tipoSolicitudId: formData.tipoSolicitudId,
-        estadoSolicitudId: formData.estadoSolicitudId,
-        tipoAfiliacionId: formData.tipoAfiliacionId,
-        regionId: formData.regionId ? parseInt(formData.regionId) : null,
-        agenciaId: formData.agenciaId ? parseInt(formData.agenciaId) : null,
-        fechaSolicitud: new Date().toISOString(),
-        observaciones: formData.observaciones || null,
-      };
+        const solicitudData: Partial<Solicitud> = {
+          tipoSolicitudId: formData.tipoSolicitudId,
+          estadoSolicitudId: formData.estadoSolicitudId,
+          tipoAfiliacionId: formData.tipoAfiliacionId,
+          regionId: formData.regionId ? parseInt(formData.regionId) : null,
+          agenciaId: formData.agenciaId ? parseInt(formData.agenciaId) : null,
+          observaciones: formData.observaciones || null,
+        };
 
-      // Si hay archivo, convertirlo a base64
-      if (formData.archivo) {
-        const base64 = await this.convertirArchivoABase64(formData.archivo);
-        solicitudData.documentoCargado = base64;
-      }
+        // Si hay archivo, convertirlo a base64
+        if (formData.archivo) {
+          const base64 = await this.convertirArchivoABase64(formData.archivo);
+          solicitudData.documentoCargado = base64;
+        }
 
-      const resp = await this.solicitudesService.createSolicitud(solicitudData);
-      
-      if (resp?.success) {
-        this.cerrarModalSolicitud();
-        // Recargar empresas para actualizar la vista con la nueva solicitud
-        await this.cargarEmpresas();
+        const resp = await this.solicitudesService.updateSolicitud(solicitud.solicitudId, solicitudData);
+        
+        if (resp?.success) {
+          this.cerrarModalSolicitud();
+          await this.cargarEmpresas();
+        }
+      } else {
+        // Modo creación
+        const cuentaBancaria = this.getCuentaBancariaEmpresa(empresaId);
+
+        const solicitudData: Partial<Solicitud> = {
+          representanteId,
+          empresaId,
+          cuentaBancariaId: cuentaBancaria?.cuentaBancariaId || null,
+          tipoSolicitudId: formData.tipoSolicitudId,
+          estadoSolicitudId: formData.estadoSolicitudId,
+          tipoAfiliacionId: formData.tipoAfiliacionId,
+          regionId: formData.regionId ? parseInt(formData.regionId) : null,
+          agenciaId: formData.agenciaId ? parseInt(formData.agenciaId) : null,
+          fechaSolicitud: new Date().toISOString(),
+          observaciones: formData.observaciones || null,
+        };
+
+        // Si hay archivo, convertirlo a base64
+        if (formData.archivo) {
+          const base64 = await this.convertirArchivoABase64(formData.archivo);
+          solicitudData.documentoCargado = base64;
+        }
+
+        const resp = await this.solicitudesService.createSolicitud(solicitudData);
+        
+        if (resp?.success) {
+          this.cerrarModalSolicitud();
+          await this.cargarEmpresas();
+        }
       }
     } catch (error) {
       console.error('Error al guardar solicitud:', error);

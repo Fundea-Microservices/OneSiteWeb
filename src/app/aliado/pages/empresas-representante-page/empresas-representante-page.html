@@ -125,10 +125,8 @@
                                     <button
                                         type="button"
                                         (click)="abrirModalNuevaCuenta(empresa.empresaId)"
-                                        [disabled]="!puedeAgregarCuentaBancaria(empresa.empresaId)"
-                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
-                                        [ngClass]="puedeAgregarCuentaBancaria(empresa.empresaId) ? 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
-                                        [title]="puedeAgregarCuentaBancaria(empresa.empresaId) ? 'Añadir cuenta bancaria' : 'Solo se puede agregar cuenta bancaria cuando la solicitud está aprobada'"
+                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 rounded-md transition-colors duration-200 shadow-sm text-sm font-medium bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white"
+                                        title="Añadir cuenta bancaria"
                                     >
                                         <ion-icon name="card-outline" class="text-lg"></ion-icon>
                                         <span>Cuenta</span>
@@ -206,10 +204,8 @@
                                         <button
                                             type="button"
                                             (click)="abrirModalNuevaCuenta(empresa.empresaId)"
-                                            [disabled]="!puedeAgregarCuentaBancaria(empresa.empresaId)"
-                                            class="flex items-center justify-center w-10 h-10 rounded-md transition-colors duration-200 shadow-sm"
-                                            [ngClass]="puedeAgregarCuentaBancaria(empresa.empresaId) ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
-                                            [title]="puedeAgregarCuentaBancaria(empresa.empresaId) ? 'Añadir cuenta bancaria' : 'Solo se puede agregar cuenta bancaria cuando la solicitud está aprobada'"
+                                            class="flex items-center justify-center w-10 h-10 rounded-md transition-colors duration-200 shadow-sm bg-blue-500 hover:bg-blue-600 text-white"
+                                            title="Añadir cuenta bancaria"
                                         >
                                             <ion-icon name="card-outline" class="text-xl"></ion-icon>
                                         </button>
@@ -262,6 +258,32 @@
                                                     }
                                                 </div>
                                             </div>
+                                            
+                                            @if (puedeEditarSolicitud(empresa.empresaId)) {
+                                            <div class="flex gap-2 mt-3">
+                                                <button
+                                                    type="button"
+                                                    (click)="editarSolicitud(empresa.empresaId)"
+                                                    class="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
+                                                    title="Editar solicitud"
+                                                >
+                                                    <ion-icon name="create-outline" class="text-lg"></ion-icon>
+                                                    <span>Editar Solicitud</span>
+                                                </button>
+                                                
+                                                @if (esEstadoCorregir(empresa.empresaId)) {
+                                                <button
+                                                    type="button"
+                                                    (click)="confirmarCorrecciones(empresa.empresaId)"
+                                                    class="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
+                                                    title="Confirmar correcciones"
+                                                >
+                                                    <ion-icon name="checkmark-done-outline" class="text-lg"></ion-icon>
+                                                    <span>Confirmar Correcciones</span>
+                                                </button>
+                                                }
+                                            </div>
+                                            }
                                         </div>
                                     }
                                 </div>
@@ -440,7 +462,7 @@
     <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-gray-800">Nueva Solicitud</h2>
+                <h2 class="text-2xl font-semibold text-gray-800">{{ esEditarSolicitud() ? 'Editar Solicitud' : 'Nueva Solicitud' }}</h2>
                 <button 
                     type="button" 
                     (click)="cerrarModalSolicitud()"
@@ -452,10 +474,11 @@
                 </button>
             </div>
             <app-upsert-solicitud
-                [nuevo]="true"
+                [nuevo]="!esEditarSolicitud()"
                 [representante]="representante()"
                 [empresa]="getEmpresaActual()"
                 [cuentaBancaria]="getCuentaBancariaEmpresa(empresaIdSolicitud())"
+                [solicitudData]="getSolicitudFormData()"
                 (save)="onGuardarSolicitud($event)"
                 (cancel)="cerrarModalSolicitud()"
             />
