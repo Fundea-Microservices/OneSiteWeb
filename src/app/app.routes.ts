@@ -224,6 +224,14 @@ export const routes: Routes = [
                 path: 'empresas',
                 loadComponent: () => import('./aliado/pages/empresa-page/empresa-page.component'),
             },
+            {
+                path: 'generalidades',
+                loadComponent: () => import('./aliado/pages/generalidades-page/generalidades-page'),
+            },
+            {
+                path: 'gestionar-solicitudes',
+                loadComponent: () => import('./aliado/pages/gestionar-solicitudes/gestionar-solicitudes'),
+            },
         ]
     },
     // {

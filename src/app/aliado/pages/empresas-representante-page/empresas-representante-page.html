@@ -102,11 +102,30 @@
                             <!-- Layout mobile: Botones arriba, info abajo -->
                             <div class="flex flex-col gap-4">
                                 <!-- Botones de acción - Mobile: horizontal arriba, Desktop: vertical derecha -->
-                                <div class="flex lg:hidden gap-2 pb-3 border-b border-gray-200">
+                                <div class="flex lg:hidden gap-2 pb-3 border-b border-gray-200 flex-wrap">
+                                    @if (!getSolicitudPorEmpresa(empresa.empresaId)) {
+                                    <button
+                                        type="button"
+                                        (click)="crearNuevaSolicitud(empresa.empresaId)"
+                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
+                                        title="Crear solicitud"
+                                    >
+                                        <ion-icon name="document-outline" class="text-lg"></ion-icon>
+                                        <span>Solicitud</span>
+                                    </button>
+                                    } @else {
+                                    <div class="flex-1 min-w-max flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm">
+                                        <ion-icon name="checkmark-circle" class="text-green-600 text-lg"></ion-icon>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs text-gray-600">Solicitud: {{ getSolicitudPorEmpresa(empresa.empresaId)?.estadoSolicitudId }}</span>
+                                            <span class="text-xs font-medium text-gray-800">{{ getSolicitudPorEmpresa(empresa.empresaId)?.fechaSolicitud | date:'dd/MM/yyyy' }}</span>
+                                        </div>
+                                    </div>
+                                    }
                                     <button
                                         type="button"
                                         (click)="abrirModalNuevaCuenta(empresa.empresaId)"
-                                        class="flex-1 flex items-center justify-center gap-2 h-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
+                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
                                         title="Añadir cuenta bancaria"
                                     >
                                         <ion-icon name="card-outline" class="text-lg"></ion-icon>
@@ -115,7 +134,7 @@
                                     <button
                                         type="button"
                                         (click)="abrirModalEditarEmpresa(empresa)"
-                                        class="flex-1 flex items-center justify-center gap-2 h-10 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
+                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
                                         title="Editar empresa"
                                     >
                                         <ion-icon name="create-outline" class="text-lg"></ion-icon>
@@ -205,6 +224,32 @@
                                             <ion-icon name="trash-outline" class="text-xl"></ion-icon>
                                         </button>
                                     </div>
+                                </div>
+
+                                <!-- Sección de Solicitud -->
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <h6 class="text-base font-semibold mb-3 text-gray-800">Solicitud</h6>
+                                    @if (!getSolicitudPorEmpresa(empresa.empresaId)) {
+                                        <button
+                                            type="button"
+                                            (click)="crearNuevaSolicitud(empresa.empresaId)"
+                                            class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors duration-200 shadow-sm font-medium"
+                                        >
+                                            <ion-icon name="document-outline" class="text-xl"></ion-icon>
+                                            <span>Crear Nueva Solicitud</span>
+                                        </button>
+                                    } @else {
+                                        <div class="p-4 bg-green-50 border border-green-200 rounded-md">
+                                            <div class="flex items-center gap-3">
+                                                <ion-icon name="checkmark-circle" class="text-green-600 text-2xl"></ion-icon>
+                                                <div class="flex-1">
+                                                    <p class="text-sm text-gray-600 mb-1">Solicitud creada</p>
+                                                    <p class="font-semibold text-gray-800">{{ getSolicitudPorEmpresa(empresa.empresaId)?.fechaSolicitud | date:'dd/MM/yyyy HH:mm' }}</p>
+                                                    <p class="text-sm text-gray-700 mt-1">Estado: <span class="font-medium">{{ getSolicitudPorEmpresa(empresa.empresaId)?.estadoSolicitud?.nombre | uppercase }}</span></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
 
                                 <!-- Tabla de Cuentas Bancarias -->
@@ -371,6 +416,36 @@
             (save)="onGuardarCuenta($event)"
             (cancel)="cerrarModalCuenta()"
         />
+    </div>
+</div>
+}
+
+<!-- Modal Solicitud -->
+@if (showModalSolicitud()) {
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Nueva Solicitud</h2>
+                <button 
+                    type="button" 
+                    (click)="cerrarModalSolicitud()"
+                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <app-upsert-solicitud
+                [nuevo]="true"
+                [representante]="representante()"
+                [empresa]="getEmpresaActual()"
+                [cuentaBancaria]="getCuentaBancariaEmpresa(empresaIdSolicitud())"
+                (save)="onGuardarSolicitud($event)"
+                (cancel)="cerrarModalSolicitud()"
+            />
+        </div>
     </div>
 </div>
 }

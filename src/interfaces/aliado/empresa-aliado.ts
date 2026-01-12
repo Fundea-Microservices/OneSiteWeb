@@ -1,3 +1,5 @@
+import { Solicitud } from "./solicitudes";
+
 export interface EmpresaAliadoResponse {
     success:    boolean;
     statusCode: number;
@@ -22,6 +24,7 @@ export interface IEmpresaAliado {
     phone2:      null;
     email:       string;
     active:      boolean;
+    solicitud?:  Solicitud
     created_at?:  Date;
     updated_at?:  null;
     deleted_at?:  null;

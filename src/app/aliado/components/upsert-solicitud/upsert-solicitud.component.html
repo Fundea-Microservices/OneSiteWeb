@@ -1,0 +1,124 @@
+<form (ngSubmit)="onSubmit()" class="needs-validation">
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <label for="tipoSolicitud" class="form-label">Tipo de Solicitud *</label>
+      <select
+        id="tipoSolicitud"
+        class="form-select"
+        [(ngModel)]="selectedTipoSolicitud"
+        name="tipoSolicitud"
+        required
+        [disabled]="isLoading()"
+      >
+        <option value="">Selecciona un tipo de solicitud</option>
+        @for (tipo of tiposSolicitud(); track tipo.tipoSolicitudId) {
+        <option [value]="tipo.tipoSolicitudId">{{ tipo.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label for="estadoSolicitud" class="form-label">Estado de Solicitud *</label>
+      <select
+        id="estadoSolicitud"
+        class="form-select"
+        [(ngModel)]="selectedEstadoSolicitud"
+        name="estadoSolicitud"
+        required
+        [disabled]="isLoading()"
+      >
+        <option value="">Selecciona un estado de solicitud</option>
+        @for (estado of estadosSolicitud(); track estado.estadoSolicitudId) {
+        <option [value]="estado.estadoSolicitudId">{{ estado.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <label for="tipoAfiliacion" class="form-label">Tipo de Afiliación *</label>
+      <select
+        id="tipoAfiliacion"
+        class="form-select"
+        [(ngModel)]="selectedTipoAfiliacion"
+        name="tipoAfiliacion"
+        required
+        [disabled]="isLoading()"
+      >
+        <option value="">Selecciona un tipo de afiliación</option>
+        @for (tipo of tiposAfiliacion(); track tipo.tipoAfiliacionId) {
+        <option [value]="tipo.tipoAfiliacionId">{{ tipo.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label for="region" class="form-label">Región *</label>
+      <select
+        id="region"
+        class="form-select"
+        [(ngModel)]="selectedRegion"
+        name="region"
+        (change)="onRegionChange(selectedRegion())"
+        required
+        [disabled]="isLoading()"
+      >
+        <option value="">Selecciona una región</option>
+        @for (region of regiones(); track region.regionId) {
+        <option [value]="region.regionId">{{ region.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <label for="agencia" class="form-label">Agencia *</label>
+      <select
+        id="agencia"
+        class="form-select"
+        [(ngModel)]="selectedAgencia"
+        name="agencia"
+        required
+        [disabled]="isLoading() || selectedRegion() === ''"
+      >
+        <option value="">Selecciona una agencia</option>
+        @for (agencia of agenciasFilterradas(); track agencia.agenciaId) {
+        <option [value]="agencia.agenciaId">{{ agencia.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label for="archivo" class="form-label">Archivo PDF *</label>
+      <div class="input-group">
+        <input
+          type="file"
+          id="archivo"
+          class="form-control"
+          accept=".pdf"
+          (change)="onArchivoSeleccionado($event)"
+          required
+          [disabled]="isLoading()"
+        />
+        @if (nombreArchivo()) {
+        <span class="input-group-text text-success">✓ {{ nombreArchivo() }}</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+        @if (isLoading()) {
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        } {{ isNew ? 'Crear Solicitud' : 'Actualizar Solicitud' }}
+      </button>
+      <button type="button" class="btn btn-secondary ms-2" (click)="onCancel()" [disabled]="isLoading()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</form>

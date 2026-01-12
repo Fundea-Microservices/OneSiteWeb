@@ -14,11 +14,14 @@ import { ICuentaBancariaRepresentante, IBancoRepresentante, ITipoCuentaRepresent
 import { CuentaBancariaService } from '../../../../services/aliado/cuenta-bancaria.service';
 import { BancoService } from '../../../../services/aliado/banco.service';
 import { ICuentaBancaria } from '../../../../interfaces/aliado/cuenta-bancaria';
+import { SolicitudesService } from '../../../../services/aliado/solicitudes.service';
+import { Solicitud } from '../../../../interfaces/aliado/solicitudes';
+import UpsertSolicitudComponent, { SolicitudFormData } from '../../components/upsert-solicitud/upsert-solicitud.component';
 
 
 @Component({
   selector: 'app-empresas-representante-page',
-  imports: [RouterLink, UpsertEmpresaRepresentanteComponent, UpsertCuentaRepresentanteComponent, CommonModule],
+  imports: [RouterLink, UpsertEmpresaRepresentanteComponent, UpsertCuentaRepresentanteComponent, UpsertSolicitudComponent, CommonModule],
   templateUrl: './empresas-representante-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,8 +33,12 @@ export default class EmpresasRepresentantePage {
   private catalogosService = inject(CatalogosBantotalService);
   private cuentaBancariaService = inject(CuentaBancariaService);
   private bancoService = inject(BancoService);
+  private solicitudesService = inject(SolicitudesService);
   representanteId = signal('');
   representante = signal<Representante | null>(null);
+
+  // Solicitudes por empresa
+  solicitudesPorEmpresa = signal<Map<string, Solicitud | null>>(new Map());
 
   // Estado del modal
   showModal = signal(false);
@@ -44,6 +51,11 @@ export default class EmpresasRepresentantePage {
   cuentaSeleccionada = signal<ICuentaBancariaRepresentante | null>(null);
   empresaIdCuenta = signal<string>('');
   modalKeyCuenta = signal(0);
+
+  // Estado del modal de solicitud
+  showModalSolicitud = signal(false);
+  empresaIdSolicitud = signal<string>('');
+  modalKeySolicitud = signal(0);
 
   // Lista de empresas reales
   empresas = signal<(IEmpresaRepresentante & { open?: boolean })[]>([]);
@@ -85,8 +97,50 @@ export default class EmpresasRepresentantePage {
     
     // La respuesta tiene doble anidamiento: resp.data.data
     if (resp?.data && (resp.data as any).data && Array.isArray((resp.data as any).data)) {
-      this.empresas.set((resp.data as any).data.map((e: any) => ({ ...e, open: false })));
+      const empresas = (resp.data as any).data.map((e: any) => ({ ...e, open: false }));
+      this.empresas.set(empresas);
+      
+      // Cargar solicitudes para cada empresa
+      await this.cargarSolicitudesParaEmpresas(empresas);
     }
+  }
+
+  private async cargarSolicitudesParaEmpresas(empresas: IEmpresaRepresentante[]) {
+    const map = new Map<string, Solicitud | null>();
+    
+    // Obtener todas las solicitudes del representante una sola vez
+    try {
+      const representanteId = this.representanteId();
+      const resp = await this.solicitudesService.findAllSolicitudes(representanteId);
+      
+      // Crear un mapa de solicitudes por empresaId
+      if (resp?.data && Array.isArray(resp.data)) {
+        const solicitudes = resp.data as Solicitud[];
+        
+        // Para cada empresa, buscar su solicitud
+        empresas.forEach(empresa => {
+          const solicitud = solicitudes.find(s => s.empresaId === empresa.empresaId) || null;
+          map.set(empresa.empresaId, solicitud);
+        });
+      } else {
+        // Si no hay solicitudes, marcar todas como null
+        empresas.forEach(empresa => {
+          map.set(empresa.empresaId, null);
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar solicitudes:', error);
+      // En caso de error, marcar todas como null
+      empresas.forEach(empresa => {
+        map.set(empresa.empresaId, null);
+      });
+    }
+    
+    this.solicitudesPorEmpresa.set(map);
+  }
+
+  getSolicitudPorEmpresa(empresaId: string): Solicitud | null {
+    return this.solicitudesPorEmpresa().get(empresaId) || null;
   }
 
   abrirModalNuevaEmpresa() {
@@ -301,5 +355,83 @@ export default class EmpresasRepresentantePage {
       // Recargar las cuentas para asegurar consistencia
       await this.cargarCuentasEmpresa(empresaId);
     }
+  }
+
+  crearNuevaSolicitud(empresaId: string) {
+    this.empresaIdSolicitud.set(empresaId);
+    this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
+    this.showModalSolicitud.set(true);
+  }
+
+  cerrarModalSolicitud() {
+    this.showModalSolicitud.set(false);
+    this.empresaIdSolicitud.set('');
+  }
+
+  // Obtener la empresa actual para el modal
+  getEmpresaActual(): IEmpresaRepresentante | null {
+    const empresaId = this.empresaIdSolicitud();
+    return this.empresas().find(e => e.empresaId === empresaId) || null;
+  }
+
+  // Obtener la cuenta bancaria de la empresa (si existe)
+  getCuentaBancariaEmpresa(empresaId: string): ICuentaBancaria | null {
+    const cuentas = this.cuentasPorEmpresa().get(empresaId);
+    // Retornar la primera cuenta activa si existe
+    return cuentas?.find(c => c.activo) || cuentas?.[0] || null;
+  }
+
+  async onGuardarSolicitud(formData: SolicitudFormData) {
+    try {
+      const empresaId = this.empresaIdSolicitud();
+      const representanteId = this.representanteId();
+      
+      // Obtener la cuenta bancaria de la empresa
+      const cuentaBancaria = this.getCuentaBancariaEmpresa(empresaId);
+
+      // Preparar datos para crear la solicitud
+      const solicitudData: Partial<Solicitud> = {
+        representanteId,
+        empresaId,
+        cuentaBancariaId: cuentaBancaria?.cuentaBancariaId || null,
+        tipoSolicitudId: formData.tipoSolicitudId,
+        estadoSolicitudId: formData.estadoSolicitudId,
+        tipoAfiliacionId: formData.tipoAfiliacionId,
+        regionId: formData.regionId ? parseInt(formData.regionId) : null,
+        agenciaId: formData.agenciaId ? parseInt(formData.agenciaId) : null,
+        fechaSolicitud: new Date().toISOString(),
+        observaciones: formData.observaciones || null,
+      };
+
+      // Si hay archivo, convertirlo a base64
+      if (formData.archivo) {
+        const base64 = await this.convertirArchivoABase64(formData.archivo);
+        solicitudData.documentoCargado = base64;
+      }
+
+      const resp = await this.solicitudesService.createSolicitud(solicitudData);
+      
+      if (resp?.success) {
+        this.cerrarModalSolicitud();
+        // Recargar empresas para actualizar la vista con la nueva solicitud
+        await this.cargarEmpresas();
+      }
+    } catch (error) {
+      console.error('Error al guardar solicitud:', error);
+    }
+  }
+
+  private convertirArchivoABase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remover el prefijo "data:application/pdf;base64," si existe
+        const base64 = result.split(',')[1] || result;
+        resolve(base64);
+      };
+      reader.onerror = error => reject(error);
+    });
   }
 }
