@@ -287,6 +287,191 @@
         </div>
         <div class="px-3 py-3 md:px-6 md:py-4 bg-white">
             <form (ngSubmit)="guardarSeguimiento()">
+                
+                <!-- Formulario de Aprobación -->
+                <div class="mb-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
+                    <h5 class="text-base md:text-lg font-semibold text-gray-800 mb-4">Formulario de Aprobación</h5>
+                    
+                    <!-- Alerta de Estado del Formulario -->
+                    @if (formularioAprobacion.revisionFormularioCompleto !== null || 
+                         formularioAprobacion.nombreAfiliado !== null) {
+                    <div class="mb-4">
+                        @if (esFormularioAprobado()) {
+                        <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-md">
+                            <div class="flex items-start gap-3">
+                                <svg class="h-6 w-6 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                                <div>
+                                    <h6 class="text-sm font-bold text-green-800">✅ Formulario Aprobado</h6>
+                                    <p class="text-sm text-green-700 mt-1">Todas las validaciones han sido completadas correctamente.</p>
+                                </div>
+                            </div>
+                        </div>
+                        } @else {
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 shadow-md">
+                            <div class="flex items-start gap-3">
+                                <svg class="h-6 w-6 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <div>
+                                    <h6 class="text-sm font-bold text-yellow-800">⚠️ Formulario Incompleto</h6>
+                                    <p class="text-sm text-yellow-700 mt-1">Complete todas las preguntas para aprobar el formulario.</p>
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    }
+
+                    <!-- Preguntas del Formulario -->
+                    <div class="space-y-4">
+                        <!-- Revisión del formulario completo -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                ¿Revisión del formulario completo?
+                            </label>
+                            <select 
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.revisionFormularioCompleto"
+                                
+                                name="revisionFormulario">
+                                <option [ngValue]="null">Seleccione una opción</option>
+                                <option [ngValue]="true">Sí</option>
+                                <option [ngValue]="false">No</option>
+                            </select>
+                        </div>
+
+                        <!-- El nombre del afiliado es correcto -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                ¿El nombre del afiliado es correcto?
+                            </label>
+                            <select 
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.nombreAfiliado"
+                                
+                                name="nombreAfiliado">
+                                <option [ngValue]="null">Seleccione una opción</option>
+                                <option [ngValue]="true">Sí</option>
+                                <option [ngValue]="false">No</option>
+                            </select>
+                        </div>
+
+                        <!-- El número de DPI del afiliado es correcto -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                ¿El número de DPI del afiliado es correcto? (validar contra imagen de DPI)
+                            </label>
+                            <select 
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.numeroDpiAfiliado"
+                                
+                                name="numeroDpiAfiliado">
+                                <option [ngValue]="null">Seleccione una opción</option>
+                                <option [ngValue]="true">Sí</option>
+                                <option [ngValue]="false">No</option>
+                            </select>
+                        </div>
+
+                        <!-- La cuenta bancaria del afiliado es correcta -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                ¿La cuenta bancaria del afiliado es correcta? (validar con formulario firmado)
+                            </label>
+                            <select 
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.cuentaBancariaAfiliado"
+                                
+                                name="cuentaBancariaAfiliado">
+                                <option [ngValue]="null">Seleccione una opción</option>
+                                <option [ngValue]="true">Sí</option>
+                                <option [ngValue]="false">No</option>
+                            </select>
+                        </div>
+
+                        <!-- La firma del afiliado corresponde a la firma del DPI -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                ¿La firma del afiliado corresponde a la firma del DPI? (validar con la imagen del DPI)
+                            </label>
+                            <select 
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.firmaAfiliado"
+                                
+                                name="firmaAfiliado">
+                                <option [ngValue]="null">Seleccione una opción</option>
+                                <option [ngValue]="true">Sí</option>
+                                <option [ngValue]="false">No</option>
+                            </select>
+                        </div>
+
+                        <!-- El afiliado es empleado de FUNDEA -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                ¿El afiliado es empleado de FUNDEA?
+                            </label>
+                            <select 
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.aficiadoEmpleadoFundea"
+                                
+                                name="empleadoFundea">
+                                <option [ngValue]="null">Seleccione una opción</option>
+                                <option [ngValue]="true">Sí</option>
+                                <option [ngValue]="false">No</option>
+                            </select>
+                        </div>
+
+                        <!-- El afiliado es proveedor de FUNDEA -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                ¿El afiliado es proveedor de FUNDEA?
+                            </label>
+                            <select 
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.afililadoProveedorFundea"
+                                
+                                name="proveedorFundea">
+                                <option [ngValue]="null">Seleccione una opción</option>
+                                <option [ngValue]="true">Sí</option>
+                                <option [ngValue]="false">No</option>
+                            </select>
+                        </div>
+
+                        <!-- Buena reputación en la comunidad -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                ¿Verificó que el afiliado cuenta con buena reputación dentro de la comunidad?
+                            </label>
+                            <select 
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.buenaReputacionComunidad"
+                                
+                                name="buenaReputacion">
+                                <option [ngValue]="null">Seleccione una opción</option>
+                                <option [ngValue]="true">Sí</option>
+                                <option [ngValue]="false">No</option>
+                            </select>
+                        </div>
+
+                        <!-- Validación del registro del afiliado -->
+                        <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                            <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
+                                Validación del registro del afiliado
+                            </label>
+                            <input 
+                                type="text"
+                                class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                                [(ngModel)]="formularioAprobacion.validacionRegistro"
+                                
+                                name="validacionRegistro"
+                                placeholder="Ingrese observaciones..." />
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+                
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="estadoAprobacion" class="form-label">Estado de la Solicitud <span class="text-danger">*</span></label>

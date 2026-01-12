@@ -51,6 +51,19 @@ export default class SeguimientoSolicitudesComponent {
 		observaciones: ''
 	};
 
+	// Formulario de aprobación
+	formularioAprobacion = {
+		revisionFormularioCompleto: null as boolean | null,
+		nombreAfiliado: null as boolean | null,
+		numeroDpiAfiliado: null as boolean | null,
+		cuentaBancariaAfiliado: null as boolean | null,
+		firmaAfiliado: null as boolean | null,
+		aficiadoEmpleadoFundea: null as boolean | null,
+		afililadoProveedorFundea: null as boolean | null,
+		buenaReputacionComunidad: null as boolean | null,
+		validacionRegistro: '' as string
+	};
+
 	ngOnInit() {
 		const solicitudId = this.route.snapshot.paramMap.get('solicitudId');
 		if (solicitudId) {
@@ -124,6 +137,14 @@ export default class SeguimientoSolicitudesComponent {
 			return;
 		}
 
+		// Validar que el formulario de aprobación esté completo si hay respuestas
+		const form = this.formularioAprobacion;
+		const tieneRespuestasFormulario = Object.values(form).some(v => v !== null && v !== '');
+		if (tieneRespuestasFormulario && !this.esFormularioAprobado()) {
+			alert('El formulario de aprobación no está completamente aprobado. Por favor revise todas las preguntas.');
+			return;
+		}
+
 		this.isSavingSeguimiento.set(true);
 		try {
 			const nuevoOrden = (solicitud.seguimientos?.length ?? 0) + 1;
@@ -146,6 +167,18 @@ export default class SeguimientoSolicitudesComponent {
 					estadoAprobacionId: '',
 					observaciones: ''
 				};
+				// Limpiar formulario de aprobación
+			this.formularioAprobacion = {
+				revisionFormularioCompleto: null,
+				nombreAfiliado: null,
+				numeroDpiAfiliado: null,
+				cuentaBancariaAfiliado: null,
+				firmaAfiliado: null,
+				aficiadoEmpleadoFundea: null,
+				afililadoProveedorFundea: null,
+				buenaReputacionComunidad: null,
+				validacionRegistro: ''
+			};
 			}
 		} catch (error) {
 			console.error('❌ Error al crear seguimiento:', error);
@@ -186,5 +219,25 @@ export default class SeguimientoSolicitudesComponent {
 		if (!idValor || catalogo.length === 0) return 'N/A';
 		const item = catalogo.find(c => c.valorCore === idValor.toString());
 		return item?.nombre || `N/A (${idValor})`;
+	}
+
+	/**
+	 * Calcula si el formulario de aprobación está completamente aprobado
+	 * Todas las preguntas con opciones sí/no deben ser true (Sí)
+	 * La validación del registro debe tener un valor
+	 */
+	esFormularioAprobado(): boolean {
+		const form = this.formularioAprobacion;
+		return (
+			form.revisionFormularioCompleto === true &&
+			form.nombreAfiliado === true &&
+			form.numeroDpiAfiliado === true &&
+			form.cuentaBancariaAfiliado === true &&
+			form.firmaAfiliado === true &&
+			form.aficiadoEmpleadoFundea === false && // No debe ser empleado
+			form.afililadoProveedorFundea === false && // No debe ser proveedor
+			form.buenaReputacionComunidad === true &&
+			form.validacionRegistro.trim() !== ''
+		);
 	}
 }
