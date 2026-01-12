@@ -143,6 +143,37 @@ export default class EmpresasRepresentantePage {
     return this.solicitudesPorEmpresa().get(empresaId) || null;
   }
 
+  puedeEditarEmpresa(empresaId: string): boolean {
+    const solicitud = this.getSolicitudPorEmpresa(empresaId);
+    if (!solicitud || !solicitud.estadoSolicitud || !solicitud.estadoSolicitud.nombre) {
+      return true; // Si no hay solicitud, se puede editar
+    }
+    const estado = solicitud.estadoSolicitud.nombre.toUpperCase();
+    return estado !== 'APROBADO' && estado !== 'RECHAZADO';
+  }
+
+  puedeAgregarCuentaBancaria(empresaId: string): boolean {
+    const solicitud = this.getSolicitudPorEmpresa(empresaId);
+    if (!solicitud || !solicitud.estadoSolicitud || !solicitud.estadoSolicitud.nombre) {
+      return false; // Si no hay solicitud, no se puede agregar cuenta
+    }
+    const estado = solicitud.estadoSolicitud.nombre.toUpperCase();
+    return estado === 'APROBADO';
+  }
+
+  getUltimoSeguimiento(empresaId: string) {
+    const solicitud = this.getSolicitudPorEmpresa(empresaId);
+    if (!solicitud || !solicitud.seguimientos || solicitud.seguimientos.length === 0) {
+      return null;
+    }
+    // Encontrar el seguimiento con el ordenSeguimiento más alto
+    return solicitud.seguimientos.reduce((ultimo, actual) => {
+      const ordenActual = actual.ordenSeguimiento || 0;
+      const ordenUltimo = ultimo.ordenSeguimiento || 0;
+      return ordenActual > ordenUltimo ? actual : ultimo;
+    });
+  }
+
   abrirModalNuevaEmpresa() {
     this.esNuevaEmpresa.set(true);
     this.empresaSeleccionada.set({

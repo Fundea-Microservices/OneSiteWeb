@@ -1,0 +1,344 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Aliados</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado/gestionar-solicitudes']">Gestionar Solicitudes</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Seguimiento de Solicitud</li>
+    </ol>
+</nav>
+
+@if (isLoading()) {
+<div class="text-center py-8">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3 text-gray-600">Cargando información de la solicitud...</p>
+</div>
+} @else if (solicitud()) {
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Seguimiento de Solicitud</h2>
+        </div>
+    </div>
+
+    <!-- Información del Representante (Colapsable) -->
+    @if (solicitud()?.representante) {
+    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+        <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-blue-50"
+             (click)="mostrarRepresentante.set(!mostrarRepresentante())">
+            <div class="flex items-center gap-2 md:gap-3">
+                <svg class="w-5 h-5 md:w-6 md:h-6 transition-colors duration-200"
+                     [class.text-blue-600]="mostrarRepresentante()"
+                     [class.text-gray-500]="!mostrarRepresentante()"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                    </path>
+                </svg>
+                <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
+                    [class.text-blue-700]="mostrarRepresentante()"
+                    [class.text-gray-800]="!mostrarRepresentante()">
+                    Datos del Representante
+                </h4>
+            </div>
+            <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
+                [class.rotate-180]="mostrarRepresentante()"
+                [class.text-blue-600]="mostrarRepresentante()"
+                [class.text-gray-400]="!mostrarRepresentante()"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </div>
+
+        <div class="overflow-hidden transition-all duration-500 ease-in-out"
+             [style.max-height]="mostrarRepresentante() ? '5000px' : '0px'"
+             [style.opacity]="mostrarRepresentante() ? '1' : '0'">
+            <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Nombre Completo:</strong> {{ getNombreCompleto(solicitud()?.representante) }}</p>
+                    <p class="mb-2"><strong>Documento:</strong> {{ solicitud()?.representante?.documento || 'N/A' }} (Tipo: {{ solicitud()?.representante?.tipoDocumento }})</p>
+                    <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.representante?.nit || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Correo:</strong> {{ solicitud()?.representante?.correoElectronico || 'N/A' }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Teléfono Celular:</strong> {{ solicitud()?.representante?.telefonoCelular || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Teléfono Fijo:</strong> {{ solicitud()?.representante?.telefonoFijo || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Código Postal:</strong> {{ solicitud()?.representante?.codigoPostal || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.representante?.direccion || 'N/A' }}</p>
+                </div>
+            </div>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Fecha de Nacimiento:</strong> {{ formatDate(solicitud()?.representante?.fechaNacimiento) }}</p>
+                    <p class="mb-2"><strong>Sexo:</strong> {{ solicitud()?.representante?.sexo === 'M' ? 'Masculino' : 'Femenino' }}</p>
+                    <p class="mb-2"><strong>Estado Civil:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.estadoCivil, catalogoEstadoCivil()) }}</p>
+                    <p class="mb-2"><strong>Nacionalidad:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.nacionalidad, catalogoNacionalidad()) }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Profesión:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.profesion, catalogoProfesion()) }}</p>
+                    <p class="mb-2"><strong>Ocupación:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.ocupacion, catalogoOcupacion()) }}</p>
+                    <p class="mb-2"><strong>Etnia:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.etnia, catalogoEtnia()) }}</p>
+                    <p class="mb-2"><strong>Sabe Leer:</strong> <i [class]="'bi ' + (solicitud()?.representante?.sabeLeer ? 'bi-check-circle text-success' : 'bi-x-circle text-danger')"></i></p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Sabe Escribir:</strong> <i [class]="'bi ' + (solicitud()?.representante?.sabeEscribir ? 'bi-check-circle text-success' : 'bi-x-circle text-danger')"></i></p>
+                    <p class="mb-2"><strong>Nombre Empresa:</strong> {{ solicitud()?.representante?.nombreEmpresa || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Actividad Laboral:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.actividadLaboral, catalogoOcupacion()) }}</p>
+                    <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{ formatDate(solicitud()?.representante?.fechaInicioActividad) }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Ingresos:</strong> {{ solicitud()?.representante?.ingresos || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Sector:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.sectorId, catalogoSector()) }}</p>
+                    <p class="mb-2"><strong>Clasificación Interna:</strong> {{ solicitud()?.representante?.clasificacionInterna || 'N/A' }}</p>
+                    <p class="mb-2"><strong>País Domicilio:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.paisDomicilio, catalogoPais()) }}</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Departamento Domicilio:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.departamentoDomicilio, catalogoDepartamento()) }}</p>
+                    <p class="mb-2"><strong>Localidad:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.localidad, catalogoLocalidad()) }}</p>
+                    <p class="mb-2"><strong>Barrio:</strong> {{ solicitud()?.representante?.barrio || 'N/A' }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Asesor ID:</strong> {{ solicitud()?.representante?.asesorId || 'N/A' }}</p>
+                    <p class="mb-2"><strong>País Documento:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.paisDocumento, catalogoPais()) }}</p>
+                    <p class="mb-2"><strong>Fecha Vencimiento Documento:</strong> {{ formatDate(solicitud()?.representante?.fechaVencimiento) }}</p>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Información de la Empresa (Colapsable) -->
+    @if (solicitud()?.empresa) {
+    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+        <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-emerald-50"
+             (click)="mostrarEmpresa.set(!mostrarEmpresa())">
+            <div class="flex items-center gap-2 md:gap-3">
+                <svg class="w-5 h-5 md:w-6 md:h-6 transition-colors duration-200"
+                     [class.text-emerald-600]="mostrarEmpresa()"
+                     [class.text-gray-500]="!mostrarEmpresa()"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M9 7h.01M13 7h.01M9 11h.01M13 11h.01M9 15h.01M13 15h.01">
+                    </path>
+                </svg>
+                <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
+                    [class.text-emerald-700]="mostrarEmpresa()"
+                    [class.text-gray-800]="!mostrarEmpresa()">
+                    Datos de la Empresa
+                </h4>
+            </div>
+            <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
+                [class.rotate-180]="mostrarEmpresa()"
+                [class.text-emerald-600]="mostrarEmpresa()"
+                [class.text-gray-400]="!mostrarEmpresa()"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </div>
+
+        <div class="overflow-hidden transition-all duration-500 ease-in-out"
+             [style.max-height]="mostrarEmpresa() ? '3000px' : '0px'"
+             [style.opacity]="mostrarEmpresa() ? '1' : '0'">
+            <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>ID Empresa:</strong> <span class="badge bg-secondary">{{ solicitud()?.empresa?.empresaId }}</span></p>
+                    <p class="mb-2"><strong>Nombre:</strong> {{ solicitud()?.empresa?.nombreEmpresa || 'N/A' }}</p>
+                    <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.empresa?.nit || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Teléfono:</strong> {{ solicitud()?.empresa?.telefono || 'N/A' }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.empresa?.direccion || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Departamento:</strong> {{ solicitud()?.empresa?.departamento || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Municipio:</strong> {{ solicitud()?.empresa?.municipio || 'N/A' }}</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Tipo de Actividad:</strong> {{ solicitud()?.empresa?.tipoActividad || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.actividad || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Detalle de Actividad:</strong> {{ solicitud()?.empresa?.detalleActividad || 'N/A' }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{ formatDate(solicitud()?.empresa?.fechaInicioActividad) }}</p>
+                    <p class="mb-2"><strong>Usuario Ingreso:</strong> {{ solicitud()?.empresa?.usrIngreso || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Fecha Creación:</strong> {{ formatDate(solicitud()?.empresa?.created_at) }}</p>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Información de la Solicitud -->
+    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+        <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-cyan-50">
+            <div class="flex items-center gap-2 md:gap-3">
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-cyan-600"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                    </path>
+                </svg>
+                <h4 class="text-base md:text-lg font-semibold text-cyan-700">
+                    Datos de la Solicitud
+                </h4>
+            </div>
+        </div>
+        <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-2"><strong>ID Solicitud:</strong> <span class="badge bg-secondary">{{ solicitud()?.solicitudId }}</span></p>
+                    <p class="mb-2"><strong>Tipo de Solicitud:</strong> {{ solicitud()?.tipoSolicitud?.nombre || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Tipo de Afiliación:</strong> {{ solicitud()?.tipoAfiliacion?.nombre || 'N/A' }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-2"><strong>Estado Actual:</strong> 
+                        <span class="badge bg-{{ solicitud()?.estadoSolicitud?.nombre === 'Espera' ? 'warning' : solicitud()?.estadoSolicitud?.nombre === 'Aprobado' ? 'success' : solicitud()?.estadoSolicitud?.nombre === 'Rechazado' ? 'danger' : 'secondary' }}">
+                            {{ solicitud()?.estadoSolicitud?.nombre || 'N/A' }}
+                        </span>
+                    </p>
+                    <p class="mb-2"><strong>Fecha de Solicitud:</strong> {{ formatDate(solicitud()?.fechaSolicitud) }}</p>
+                    <p class="mb-2"><strong>Observaciones:</strong> {{ solicitud()?.observaciones || 'Sin observaciones' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Seguimientos -->
+    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+        <div class="px-3 py-3 md:px-6 md:py-4 bg-white hover:bg-amber-50">
+            <div class="flex items-center gap-2 md:gap-3">
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-amber-600"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                    </path>
+                </svg>
+                <h4 class="text-base md:text-lg font-semibold text-amber-700">
+                    Historial de Seguimientos
+                </h4>
+            </div>
+        </div>
+        <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+            @if (solicitud()?.seguimientos && solicitud()!.seguimientos!.length > 0) {
+            <div class="timeline">
+                @for (seg of solicitud()!.seguimientos!; track seg.seguimientoId) {
+                <div class="timeline-item mb-4 pb-4 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div style="flex-grow: 1;">
+                            <h6 class="mb-2">
+                                <span class="badge bg-primary me-2">Seguimiento #{{ seg.ordenSeguimiento }}</span>
+                                <span class="badge bg-{{ seg.estadoAprobacion?.nombre === 'Espera' ? 'warning' : seg.estadoAprobacion?.nombre === 'Aprobado' ? 'success' : seg.estadoAprobacion?.nombre === 'Rechazado' ? 'danger' : 'secondary' }}">
+                                    {{ seg.estadoAprobacion?.nombre || 'N/A' }}
+                                </span>
+                            </h6>
+                            <p class="mb-1"><strong>Observaciones:</strong> {{ seg.observaciones || 'Sin observaciones' }}</p>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>{{ formatDate(seg.created_at) }}
+                                @if (seg.usrIngreso) {
+                                <span class="ms-3"><i class="bi bi-person me-1"></i>{{ seg.usrIngreso }}</span>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+            } @else {
+            <p class="text-muted text-center py-4">No hay seguimientos registrados para esta solicitud.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Formulario para Nuevo Seguimiento -->
+    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-md transition-all duration-300 mb-4">
+        <div class="px-3 py-3 md:px-6 md:py-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 hover:from-emerald-100 hover:to-emerald-200 transition-colors">
+            <div class="flex items-center gap-2 md:gap-3">
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-emerald-600"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 4v16m8-8H4">
+                    </path>
+                </svg>
+                <h4 class="text-base md:text-lg font-semibold text-emerald-700">
+                    Agregar Nuevo Seguimiento
+                </h4>
+            </div>
+        </div>
+        <div class="px-3 py-3 md:px-6 md:py-4 bg-white">
+            <form (ngSubmit)="guardarSeguimiento()">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="estadoAprobacion" class="form-label">Estado de la Solicitud <span class="text-danger">*</span></label>
+                        <select 
+                            id="estadoAprobacion" 
+                            class="form-select" 
+                            [(ngModel)]="nuevoSeguimiento.estadoAprobacionId" 
+                            name="estadoAprobacion"
+                            required>
+                            <option value="">Seleccione un estado</option>
+                            @for (estado of estadosSolicitud(); track estado.estadoSolicitudId) {
+                            <option [value]="estado.estadoSolicitudId">{{ estado.nombre }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label for="observaciones" class="form-label">Observaciones / Mensaje <span class="text-danger">*</span></label>
+                        <textarea 
+                            id="observaciones" 
+                            class="form-control" 
+                            rows="4" 
+                            [(ngModel)]="nuevoSeguimiento.observaciones" 
+                            name="observaciones"
+                            placeholder="Escriba sus observaciones o comentarios sobre este seguimiento..."
+                            required></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <button 
+                            type="submit" 
+                            class="btn btn-primary me-2"
+                            [disabled]="isSavingSeguimiento() || !nuevoSeguimiento.estadoAprobacionId || !nuevoSeguimiento.observaciones.trim()">
+                            @if (isSavingSeguimiento()) {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            }
+                            <i class="bi bi-check-circle me-1"></i>
+                            Guardar Seguimiento
+                        </button>
+                        <a [routerLink]="['/aliado/gestionar-solicitudes']" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Volver al Listado
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+} @else {
+<div class="alert alert-warning text-center" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    No se encontró la solicitud solicitada.
+</div>
+}

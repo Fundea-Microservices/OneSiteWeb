@@ -1,6 +1,25 @@
 import { EstadoSolicitud, TipoAfiliacion, TipoSolicitud } from "./generalidades";
 import { Representante } from "./representante";
 
+export interface Empresa {
+  empresaId: string;
+  representanteId: string;
+  nombreEmpresa: string;
+  nit: string;
+  telefono: string;
+  departamento: number;
+  municipio: number;
+  direccion: string;
+  tipoActividad: string;
+  actividad: string;
+  detalleActividad: string;
+  fechaInicioActividad: string;
+  usrIngreso?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  deleted_at?: string | null;
+}
+
 export interface Solicitud {
   solicitudId: string; // UUID
 
@@ -35,6 +54,7 @@ export interface Solicitud {
 
   // --- Relaciones Opcionales (Si el backend hace 'populate' o 'eager loading') ---
   representante?: Representante;
+  empresa?: Empresa;
   tipoSolicitud?: TipoSolicitud;
   estadoSolicitud?: EstadoSolicitud;
   tipoAfiliacion?: TipoAfiliacion;

@@ -15,6 +15,7 @@ interface SeguimientoResponse<T> {
 @Injectable({ providedIn: 'root' })
 export class SeguimientoSolicitudService extends HttpService {
   private readonly base = '/api-bantotal/solicitud/representante/seguimiento';
+  private readonly baseSeguimiento = '/api-bantotal/solicitud/seguimiento';
 
   constructor(http: HttpClient, private toastr: ToastrService) {
     super(http);
@@ -25,7 +26,7 @@ export class SeguimientoSolicitudService extends HttpService {
    * @param data - Datos del seguimiento a crear
    */
   async createSeguimientoSolicitud(data: Partial<SeguimientoSolicitud>) {
-    return this.executeRequest<SeguimientoSolicitud>('post', this.base, data);
+    return this.executeRequest<SeguimientoSolicitud>('post', this.baseSeguimiento, data);
   }
 
   /**

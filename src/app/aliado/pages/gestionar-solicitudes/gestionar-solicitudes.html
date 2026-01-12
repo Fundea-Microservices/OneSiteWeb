@@ -167,9 +167,11 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-primary" title="Ver detalles">
+                                <a [routerLink]="['/aliado/seguimiento-solicitudes', item.solicitudId]" 
+                                   class="btn btn-sm btn-primary" 
+                                   title="Ver seguimiento">
                                     <ion-icon name="document-text-outline"></ion-icon>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         }
@@ -227,11 +229,12 @@
                 </div>
 
                 <div class="flex gap-2 pt-3 border-t border-gray-200">
-                    <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                        title="Ver detalles">
+                    <a [routerLink]="['/aliado/seguimiento-solicitudes', item.solicitudId]" 
+                       class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                       title="Ver seguimiento">
                         <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
-                        Ver Detalles
-                    </button>
+                        Ver Seguimiento
+                    </a>
                 </div>
             </div>
             }

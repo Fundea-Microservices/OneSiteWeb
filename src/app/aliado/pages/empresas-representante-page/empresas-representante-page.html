@@ -125,8 +125,10 @@
                                     <button
                                         type="button"
                                         (click)="abrirModalNuevaCuenta(empresa.empresaId)"
-                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
-                                        title="Añadir cuenta bancaria"
+                                        [disabled]="!puedeAgregarCuentaBancaria(empresa.empresaId)"
+                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
+                                        [ngClass]="puedeAgregarCuentaBancaria(empresa.empresaId) ? 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
+                                        [title]="puedeAgregarCuentaBancaria(empresa.empresaId) ? 'Añadir cuenta bancaria' : 'Solo se puede agregar cuenta bancaria cuando la solicitud está aprobada'"
                                     >
                                         <ion-icon name="card-outline" class="text-lg"></ion-icon>
                                         <span>Cuenta</span>
@@ -134,8 +136,10 @@
                                     <button
                                         type="button"
                                         (click)="abrirModalEditarEmpresa(empresa)"
-                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
-                                        title="Editar empresa"
+                                        [disabled]="!puedeEditarEmpresa(empresa.empresaId)"
+                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
+                                        [ngClass]="puedeEditarEmpresa(empresa.empresaId) ? 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
+                                        [title]="puedeEditarEmpresa(empresa.empresaId) ? 'Editar empresa' : 'No se puede editar cuando la solicitud está aprobada o rechazada'"
                                     >
                                         <ion-icon name="create-outline" class="text-lg"></ion-icon>
                                         <span>Editar</span>
@@ -202,16 +206,20 @@
                                         <button
                                             type="button"
                                             (click)="abrirModalNuevaCuenta(empresa.empresaId)"
-                                            class="flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors duration-200 shadow-sm"
-                                            title="Añadir cuenta bancaria"
+                                            [disabled]="!puedeAgregarCuentaBancaria(empresa.empresaId)"
+                                            class="flex items-center justify-center w-10 h-10 rounded-md transition-colors duration-200 shadow-sm"
+                                            [ngClass]="puedeAgregarCuentaBancaria(empresa.empresaId) ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
+                                            [title]="puedeAgregarCuentaBancaria(empresa.empresaId) ? 'Añadir cuenta bancaria' : 'Solo se puede agregar cuenta bancaria cuando la solicitud está aprobada'"
                                         >
                                             <ion-icon name="card-outline" class="text-xl"></ion-icon>
                                         </button>
                                         <button
                                             type="button"
                                             (click)="abrirModalEditarEmpresa(empresa)"
-                                            class="flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors duration-200 shadow-sm"
-                                            title="Editar empresa"
+                                            [disabled]="!puedeEditarEmpresa(empresa.empresaId)"
+                                            class="flex items-center justify-center w-10 h-10 rounded-md transition-colors duration-200 shadow-sm"
+                                            [ngClass]="puedeEditarEmpresa(empresa.empresaId) ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
+                                            [title]="puedeEditarEmpresa(empresa.empresaId) ? 'Editar empresa' : 'No se puede editar cuando la solicitud está aprobada o rechazada'"
                                         >
                                             <ion-icon name="create-outline" class="text-xl"></ion-icon>
                                         </button>
@@ -246,6 +254,12 @@
                                                     <p class="text-sm text-gray-600 mb-1">Solicitud creada</p>
                                                     <p class="font-semibold text-gray-800">{{ getSolicitudPorEmpresa(empresa.empresaId)?.fechaSolicitud | date:'dd/MM/yyyy HH:mm' }}</p>
                                                     <p class="text-sm text-gray-700 mt-1">Estado: <span class="font-medium">{{ getSolicitudPorEmpresa(empresa.empresaId)?.estadoSolicitud?.nombre | uppercase }}</span></p>
+                                                    @if (getUltimoSeguimiento(empresa.empresaId)?.observaciones) {
+                                                    <div class="mt-3 pt-3 border-t border-green-300">
+                                                        <p class="text-xs text-gray-600 mb-1 font-medium">Comentario: </p>
+                                                        <p class="text-sm text-gray-700 italic">{{ getUltimoSeguimiento(empresa.empresaId)?.observaciones }}</p>
+                                                    </div>
+                                                    }
                                                 </div>
                                             </div>
                                         </div>

@@ -232,6 +232,10 @@ export const routes: Routes = [
                 path: 'gestionar-solicitudes',
                 loadComponent: () => import('./aliado/pages/gestionar-solicitudes/gestionar-solicitudes'),
             },
+            {
+                path: 'seguimiento-solicitudes/:solicitudId',
+                loadComponent: () => import('./aliado/pages/seguimiento-solicitudes/seguimiento-solicitudes'),
+            },
         ]
     },
     // {

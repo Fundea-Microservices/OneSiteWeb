@@ -1,0 +1,190 @@
+import { ChangeDetectionStrategy, Component, inject, signal, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SolicitudesService } from '../../../../services/aliado/solicitudes.service';
+import { SeguimientoSolicitudService } from '../../../../services/aliado/seguimiento-solicitud.service';
+import { GeneralidadesService } from '../../../../services/aliado/generalidades.service';
+import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
+import { CatalogoSimple } from '../../../../interfaces/api-bantotal/catalogos';
+import { Solicitud, SeguimientoSolicitud, Empresa } from '../../../../interfaces/aliado/solicitudes';
+import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
+
+@Component({
+	selector: 'app-seguimiento-solicitudes',
+	standalone: true,
+	imports: [CommonModule, FormsModule, RouterLink],
+	templateUrl: './seguimiento-solicitudes.html',
+	changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export default class SeguimientoSolicitudesComponent {
+	private route = inject(ActivatedRoute);
+	private solicitudesService = inject(SolicitudesService);
+	private seguimientoService = inject(SeguimientoSolicitudService);
+	private generalidadesService = inject(GeneralidadesService);
+	private catalogosService = inject(CatalogosBantotalService);
+	private cdr = inject(ChangeDetectorRef);
+
+	solicitud = signal<Solicitud | null>(null);
+	estadosSolicitud = signal<EstadoSolicitud[]>([]);
+	isLoading = signal(false);
+	isSavingSeguimiento = signal(false);
+
+	// Signals para mostrar/ocultar secciones (inicialmente ocultos)
+	mostrarRepresentante = signal(false);
+	mostrarEmpresa = signal(false);
+
+	// Catálogos para mostrar valores
+	catalogoProfesion = signal<CatalogoSimple[]>([]);
+	catalogoOcupacion = signal<CatalogoSimple[]>([]);
+	catalogoEtnia = signal<CatalogoSimple[]>([]);
+	catalogoEstadoCivil = signal<CatalogoSimple[]>([]);
+	catalogoNacionalidad = signal<CatalogoSimple[]>([]);
+	catalogoPais = signal<CatalogoSimple[]>([]);
+	catalogoDepartamento = signal<CatalogoSimple[]>([]);
+	catalogoLocalidad = signal<CatalogoSimple[]>([]);
+	catalogoSector = signal<CatalogoSimple[]>([]);
+
+	// Formulario de nuevo seguimiento
+	nuevoSeguimiento = {
+		estadoAprobacionId: '',
+		observaciones: ''
+	};
+
+	ngOnInit() {
+		const solicitudId = this.route.snapshot.paramMap.get('solicitudId');
+		if (solicitudId) {
+			this.cargarSolicitud(solicitudId);
+		}
+		this.cargarEstadosSolicitud();
+		this.cargarCatalogos();
+	}
+
+	private async cargarSolicitud(solicitudId: string) {
+		this.isLoading.set(true);
+		try {
+			const response = await this.solicitudesService.findOneSolicitud(solicitudId);
+			if (response?.data && !Array.isArray(response.data)) {
+				this.solicitud.set(response.data);
+				console.log('✅ Solicitud cargada:', response.data);
+			}
+		} catch (error) {
+			console.error('❌ Error al cargar solicitud:', error);
+		} finally {
+			this.isLoading.set(false);
+			this.cdr.markForCheck();
+		}
+	}
+
+	private async cargarEstadosSolicitud() {
+		try {
+			const response = await this.generalidadesService.getAllEstadoSolicitud();
+			if (response?.data && Array.isArray(response.data)) {
+				this.estadosSolicitud.set(response.data as EstadoSolicitud[]);
+			}
+		} catch (error) {
+			console.error('❌ Error al cargar estados:', error);
+		}
+	}
+
+	private cargarCatalogos() {
+		// Cargar catálogos desde localStorage
+		const profesion = this.catalogosService.obtenerLocal('profesion');
+		if (profesion) this.catalogoProfesion.set(profesion);
+
+		const ocupacion = this.catalogosService.obtenerLocal('ocupacion');
+		if (ocupacion) this.catalogoOcupacion.set(ocupacion);
+
+		const etnia = this.catalogosService.obtenerLocal('etnia');
+		if (etnia) this.catalogoEtnia.set(etnia);
+
+		const estadoCivil = this.catalogosService.obtenerLocal('estado_civil');
+		if (estadoCivil) this.catalogoEstadoCivil.set(estadoCivil);
+
+		const nacionalidad = this.catalogosService.obtenerLocal('nacionalidad');
+		if (nacionalidad) this.catalogoNacionalidad.set(nacionalidad);
+
+		const pais = this.catalogosService.obtenerLocal('pais');
+		if (pais) this.catalogoPais.set(pais);
+
+		const departamento = this.catalogosService.obtenerLocal('departamento');
+		if (departamento) this.catalogoDepartamento.set(departamento);
+
+		const localidad = this.catalogosService.obtenerLocal('localidad');
+		if (localidad) this.catalogoLocalidad.set(localidad);
+
+		const sector = this.catalogosService.obtenerLocal('sector');
+		if (sector) this.catalogoSector.set(sector);
+	}
+
+	async guardarSeguimiento() {
+		const solicitud = this.solicitud();
+		if (!solicitud || !this.nuevoSeguimiento.estadoAprobacionId || !this.nuevoSeguimiento.observaciones.trim()) {
+			alert('Por favor completa todos los campos');
+			return;
+		}
+
+		this.isSavingSeguimiento.set(true);
+		try {
+			const nuevoOrden = (solicitud.seguimientos?.length ?? 0) + 1;
+			
+			const seguimientoData: Partial<SeguimientoSolicitud> = {
+				solicitudId: solicitud.solicitudId,
+				ordenSeguimiento: nuevoOrden,
+				estadoAprobacionId: this.nuevoSeguimiento.estadoAprobacionId,
+				observaciones: this.nuevoSeguimiento.observaciones
+			};
+
+			const response = await this.seguimientoService.createSeguimientoSolicitud(seguimientoData);
+			
+			if (response?.data) {
+				console.log('✅ Seguimiento creado exitosamente');
+				// Recargar la solicitud para ver el nuevo seguimiento
+				await this.cargarSolicitud(solicitud.solicitudId);
+				// Limpiar formulario
+				this.nuevoSeguimiento = {
+					estadoAprobacionId: '',
+					observaciones: ''
+				};
+			}
+		} catch (error) {
+			console.error('❌ Error al crear seguimiento:', error);
+			alert('Error al crear el seguimiento');
+		} finally {
+			this.isSavingSeguimiento.set(false);
+			this.cdr.markForCheck();
+		}
+	}
+
+	getNombreCompleto(rep: any): string {
+		if (!rep) return 'N/A';
+		const partes = [
+			rep.primerNombre,
+			rep.segundoNombre,
+			rep.primerApellido,
+			rep.segundoApellido
+		].filter(Boolean);
+		return partes.join(' ');
+	}
+
+	formatDate(dateString: string | null | undefined): string {
+		if (!dateString) return 'N/A';
+		const date = new Date(dateString);
+		return date.toLocaleDateString('es-GT', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
+
+	/**
+	 * Obtiene el nombre de un valor de catálogo por su ID
+	 */
+	obtenerNombreCatalogo(idValor: number | null | undefined, catalogo: CatalogoSimple[]): string {
+		if (!idValor || catalogo.length === 0) return 'N/A';
+		const item = catalogo.find(c => c.valorCore === idValor.toString());
+		return item?.nombre || `N/A (${idValor})`;
+	}
+}
