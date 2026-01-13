@@ -243,6 +243,15 @@ export default class SeguimientoSolicitudesComponent {
 		});
 	}
 
+	estaVencido(dateString: string | null | undefined): boolean {
+		if (!dateString) return false;
+		const fecha = new Date(dateString);
+		const hoy = new Date();
+		hoy.setHours(0, 0, 0, 0);
+		fecha.setHours(0, 0, 0, 0);
+		return fecha < hoy;
+	}
+
 	/**
 	 * Obtiene el nombre de un valor de catálogo por su ID
 	 */

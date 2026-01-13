@@ -115,7 +115,12 @@
                 <div class="col-md-6 mb-3">
                     <p class="mb-2"><strong>Asesor ID:</strong> {{ solicitud()?.representante?.asesorId || 'N/A' }}</p>
                     <p class="mb-2"><strong>País Documento:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.paisDocumento, catalogoPais()) }}</p>
-                    <p class="mb-2"><strong>Fecha Vencimiento Documento:</strong> {{ formatDate(solicitud()?.representante?.fechaVencimiento) }}</p>
+                    <p class="mb-2"><strong>Fecha Vencimiento Documento:</strong> 
+                        <span [ngClass]="{'text-danger fw-bold': estaVencido(solicitud()?.representante?.fechaVencimiento)}">{{ formatDate(solicitud()?.representante?.fechaVencimiento) }}</span>
+                        @if (estaVencido(solicitud()?.representante?.fechaVencimiento)) {
+                        <i class="bi bi-exclamation-circle-fill text-danger ms-1" title="Documento vencido"></i>
+                        }
+                    </p>
                 </div>
             </div>
             </div>
