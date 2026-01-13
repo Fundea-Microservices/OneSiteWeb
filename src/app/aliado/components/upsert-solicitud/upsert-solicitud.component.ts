@@ -139,14 +139,21 @@ export default class UpsertSolicitudComponent implements OnInit {
 
   private populateForm(): void {
     const data = this.solicitudData();
-    if (!data) return;
+    if (!data) return;    
     this.selectedTipoSolicitud.set(data.tipoSolicitudId);
     this.selectedEstadoSolicitud.set(data.estadoSolicitudId);
     this.selectedTipoAfiliacion.set(data.tipoAfiliacionId);
     this.selectedRegion.set(data.regionId);
-    this.selectedAgencia.set(data.agenciaId);
+    this.selectedAgencia.set(data.agenciaId);    
     if (data.observaciones) {
       this.observaciones.set(data.observaciones);
+    }
+    
+    // Filtrar agencias basándose en la región seleccionada
+    if (data.regionId) {
+      const agenciasFiltradas = this.agencias().filter((a) => a.regionId === data.regionId);
+      console.log('🔍 Agencias filtradas para región', data.regionId, ':', agenciasFiltradas.length);
+      this.agenciasFilterradas.set(agenciasFiltradas);
     }
   }
 

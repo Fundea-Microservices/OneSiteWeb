@@ -23,7 +23,7 @@ export class UpsertContacto implements OnInit {
 
   // Valores seleccionados
   selectedPaisCode = signal<string>('320');
-  selectedDepartamentoCode = signal<string>('1');
+  selectedDepartamentoCode = signal<string>('0');
   selectedMunicipioId = signal<string>('');
 
   // Campos requeridos
@@ -64,7 +64,6 @@ export class UpsertContacto implements OnInit {
     // Effect para sincronizar cambios del representante al componente
     effect(() => {
       const rep = this.representante();
-      console.log("🚀 ~ UpsertContacto ~ constructor ~ rep:", rep)
       if (rep) {
         this.telefonoCelular.set(rep.telefonoCelular?.toString() || '');
         this.telefonoFijo.set(rep.telefonoFijo?.toString() || '');
