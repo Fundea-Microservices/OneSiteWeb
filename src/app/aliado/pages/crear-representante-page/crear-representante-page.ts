@@ -48,13 +48,13 @@ export default class CrearRepresentantePage implements AfterViewInit {
   camposBloqueados = signal(false);
   activeSection = signal<'datos' | 'contacto' | 'actividad' | null>('datos');
   llenadorManualHabilitado = signal(false);
-  
+
   // Datos de búsqueda Bantotal
   cuentaBT = signal<number | null>(null);
   buscandoCliente = signal(false);
   private debounceTimeout: any = null;
 
-  
+
   representante = signal<Representante>({
     representanteId: '',
     documento: '',
@@ -71,7 +71,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
     etnia: 6,
     nacionalidad: 320,
     paisDomicilio: 320,
-    departamentoDomicilio: 1,
+    departamentoDomicilio: 0,
     telefonoCelular: '',
     telefonoFijo: '',
   });
@@ -104,353 +104,471 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
   toggleLlenadoManual() {
     this.llenadorManualHabilitado.update(value => !value);
-    
+
     // Si se habilita el llenado manual, desbloqueamos los campos
     if (this.llenadorManualHabilitado()) {
       this.camposBloqueados.set(false);
+      if(!this.dpiValidado()){
+        this.reiniciarCampos();
+      }
       // Reinicializar Flowbite después de mostrar los campos
       setTimeout(() => {
         initFlowbite();
         this.cdr.detectChanges();
       }, 100);
     }
+    else {
+      this.camposBloqueados.set(true);
+    }
   }
 
-  /**
-   * Verifica si el DPI está vencido comparando la fecha de vencimiento con la fecha actual
-   * @returns true si la fecha de vencimiento es menor a la fecha actual
-   */
-  esDpiVencido(): boolean {
-    const fechaVencimiento = this.representante().fechaVencimiento;
-    if (!fechaVencimiento) {
-      return false;
-    }
-    
-    const fechaVenc = new Date(fechaVencimiento);
-    const hoy = new Date();
-    // Comparar solo fechas, sin horas
-    hoy.setHours(0, 0, 0, 0);
-    fechaVenc.setHours(0, 0, 0, 0);
-    
-    return fechaVenc < hoy;
+  reiniciarCampos(documento:string = '') {
+    this.representante.update(current => ({
+      representanteId: '',
+      documento: documento,
+      direccion: '',
+      nit: '',
+      correoElectronico: '',
+      paisDocumento: 320,
+      tipoDocumento: 1,
+      primerApellido: '',
+      segundoApellido: '',
+      primerNombre: '',
+      segundoNombre: '',
+      sexo: 'M',
+      etnia: 6,
+      nacionalidad: 320,
+      paisDomicilio: 320,
+      departamentoDomicilio: 0,
+      telefonoCelular: '',
+      telefonoFijo: '',
+    }));
+
+    this.cuentaBT.set(0)
   }
 
-  /**
-   * Buscar datos del cliente en Bantotal por documento
-   * Se ejecuta con debounce de 500ms cuando el documento tiene 13 dígitos
-   * Mapea automáticamente los datos obtenidos al representante
-   */
-  buscarClientePorDocumento(documentoSinFormato: string) {
-    // Limpiar el debounce anterior si existe
-    if (this.debounceTimeout) {
-      clearTimeout(this.debounceTimeout);
+    /**
+     * Verifica si el DPI está vencido comparando la fecha de vencimiento con la fecha actual
+     * @returns true si la fecha de vencimiento es menor a la fecha actual
+     */
+    esDpiVencido(): boolean {
+      const fechaVencimiento = this.representante().fechaVencimiento;
+      if (!fechaVencimiento) {
+        return false;
+      }
+
+      const fechaVenc = new Date(fechaVencimiento);
+      const hoy = new Date();
+      // Comparar solo fechas, sin horas
+      hoy.setHours(0, 0, 0, 0);
+      fechaVenc.setHours(0, 0, 0, 0);
+
+      return fechaVenc < hoy;
     }
 
-    // Solo buscar si tiene exactamente 13 dígitos
-    if (documentoSinFormato.length !== 13) {
-      this.cuentaBT.set(null);
-      return;
-    }
+    /**
+     * Buscar datos del cliente en Bantotal por documento
+     * Se ejecuta con debounce de 500ms cuando el documento tiene 13 dígitos
+     * Mapea automáticamente los datos obtenidos al representante
+     */
+    buscarClientePorDocumento(documentoSinFormato: string) {
+      // Limpiar el debounce anterior si existe
+      if (this.debounceTimeout) {
+        clearTimeout(this.debounceTimeout);
+      }
 
-    // Establecer nuevo debounce de 500ms
-    this.debounceTimeout = setTimeout(() => {
-      this.buscandoCliente.set(true);
-      console.log('🔍 Buscando cliente con documento:', documentoSinFormato);
+      // Solo buscar si tiene exactamente 13 dígitos
+      if (documentoSinFormato.length !== 13) {
+        this.cuentaBT.set(null);
+        return;
+      }
 
-      this.clienteService.obtenerDatosBantotal({
-        documento: documentoSinFormato,
-        pais: 320,
-        tipoDoc: 1
-      }).subscribe({
-        next: (datos) => {
-          console.log('✅ Datos de cliente encontrados:', datos);
-          
-          // Mapear datos de Bantotal al representante
-          this.representante.update(current => {
-            const datosActualizados = {
-              ...current,
-              // Datos básicos
-              documento: datos.nroDocumento || current.documento,
-              primerNombre: datos.primerNombre || current.primerNombre,
-              segundoNombre: datos.segundoNombre || current.segundoNombre,
-              primerApellido: datos.primerApellido || current.primerApellido,
-              segundoApellido: datos.segundoApellido || current.segundoApellido,
-              
-              // Datos personales
-              fechaNacimiento: datos.fechaNacimiento || current.fechaNacimiento,
-              sexo: datos.sexo || current.sexo,
-              nacionalidad: parseInt(datos.nacionalidadId || '320', 10),
-              
-              // Datos de contacto
-              correoElectronico: datos.correoElectronico || current.correoElectronico,
-              telefonoCelular: datos.telefonoCelular || current.telefonoCelular,
-              telefonoFijo: datos.telefonoFijo || current.telefonoFijo,
-              
-              // Datos de domicilio
-              direccion: datos.calle || current.direccion,
-              paisDomicilio: parseInt(datos.paisDomicilioId || '320', 10),
-              departamentoDomicilio: parseInt(datos.departamentoId || '1', 10),
-              
-              // Datos de documento
-              paisDocumento: parseInt(datos.paisDocumentoId || '320', 10),
-              tipoDocumento: parseInt(datos.tipoDocumentoId || '1', 10),
-              
-              // Datos laborales y financieros
-              ocupacion: datos.ocupacionId ? parseInt(datos.ocupacionId, 10) : current.ocupacion,
-              ingresos: datos.ingresos ? parseFloat(datos.ingresos) : current.ingresos,
-              fechaInicioActividad: datos.fechaInicioActividad || current.fechaInicioActividad,
-              fechaVencimiento: datos.fechaVencimiento || current.fechaVencimiento,
-              
-              // Estado civil (si aplica)
-              estadoCivil: datos.estadoCivilId ? parseInt(datos.estadoCivilId, 10) : current.estadoCivil,
-              
-              // Cuenta Bantotal
-              cuentaBT: datos.cuentaBT || current.cuentaBT,
-            };
-            
-            console.log('📝 Datos mapeados al representante:', datosActualizados);
-            return datosActualizados;
-          });
-          
-          if (datos.cuentaBT) {
-            this.cuentaBT.set(datos.cuentaBT);
-            console.log(`💳 Cuenta Bantotal encontrada: ${datos.cuentaBT}`);
+      // Establecer nuevo debounce de 500ms
+      this.debounceTimeout = setTimeout(() => {
+        this.buscandoCliente.set(true);
+        console.log('🔍 Buscando cliente con documento:', documentoSinFormato);
+
+        this.clienteService.obtenerDatosBantotal({
+          documento: documentoSinFormato,
+          pais: 320,
+          tipoDoc: 1
+        }).subscribe({
+          next: (datos) => {
+            console.log('✅ Datos de cliente encontrados:', datos);
+
+            // Mapear datos de Bantotal al representante
+            this.representante.update(current => {
+              const datosActualizados = {
+                ...current,
+                // Datos básicos
+                documento: datos.nroDocumento || current.documento,
+                primerNombre: datos.primerNombre || current.primerNombre,
+                segundoNombre: datos.segundoNombre || current.segundoNombre,
+                primerApellido: datos.primerApellido || current.primerApellido,
+                segundoApellido: datos.segundoApellido || current.segundoApellido,
+
+                // Datos personales
+                fechaNacimiento: datos.fechaNacimiento || current.fechaNacimiento,
+                sexo: datos.sexo || current.sexo,
+                nacionalidad: parseInt(datos.nacionalidadId || '320', 10),
+
+                // Datos de contacto
+                correoElectronico: datos.correoElectronico || current.correoElectronico,
+                telefonoCelular: datos.telefonoCelular || current.telefonoCelular,
+                telefonoFijo: datos.telefonoFijo || current.telefonoFijo,
+
+                // Datos de domicilio
+                direccion: datos.calle || current.direccion,
+                paisDomicilio: parseInt(datos.paisDomicilioId || '320', 10),
+                departamentoDomicilio: parseInt(datos.departamentoId || '1', 10),
+
+                // Datos de documento
+                paisDocumento: parseInt(datos.paisDocumentoId || '320', 10),
+                tipoDocumento: parseInt(datos.tipoDocumentoId || '1', 10),
+
+                // Datos laborales y financieros
+                ocupacion: datos.ocupacionId ? parseInt(datos.ocupacionId, 10) : current.ocupacion,
+                ingresos: datos.ingresos ? parseFloat(datos.ingresos) : current.ingresos,
+                fechaInicioActividad: datos.fechaInicioActividad || current.fechaInicioActividad,
+                fechaVencimiento: datos.fechaVencimiento || current.fechaVencimiento,
+
+                // Estado civil (si aplica)
+                estadoCivil: datos.estadoCivilId ? parseInt(datos.estadoCivilId, 10) : current.estadoCivil,
+
+                // Cuenta Bantotal
+                cuentaBT: datos.cuentaBT || current.cuentaBT,
+              };
+
+              console.log('📝 Datos mapeados al representante:', datosActualizados);
+              return datosActualizados;
+            });
+
+            if (datos.cuentaBT) {
+              this.cuentaBT.set(datos.cuentaBT);
+              console.log(`💳 Cuenta Bantotal encontrada: ${datos.cuentaBT}`);
+            }
+
+            this.buscandoCliente.set(false);
+            this.cdr.detectChanges();
+          },
+          error: (error) => {
+            console.log('⚠️ Cliente no encontrado en Bantotal o error en búsqueda:', error.message);
+            this.cuentaBT.set(null);
+            this.buscandoCliente.set(false);
+            this.cdr.detectChanges();
+            this.reiniciarCampos(documentoSinFormato);
           }
-          
-          this.buscandoCliente.set(false);
-          this.cdr.detectChanges();
+        });
+      }, 500); // Esperar 500ms antes de hacer la búsqueda
+    }
+
+    onFrontImageSelected(event: any) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Guardar el archivo para enviar al servicio
+      this.frontFile = file;
+
+      // Mostrar preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.frontPreview = reader.result;
+        this.cdr.markForCheck();
+
+        // Validar con el servicio
+        this.validarDocumentoFrontal(file);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    validarDocumentoFrontal(file: File) {
+      this.validandoFront.set(true);
+      this.dpiFrontValidado.set(false);
+
+      console.log('🔍 Validando DPI frontal...');
+
+      this.agenteService.validarDocumento({
+        accion: 'dpi_frente',
+        upload_file: file
+      }).subscribe({
+        next: (response) => {
+          this.validandoFront.set(false);
+
+          console.log('📦 Respuesta completa del servicio:', response);
+          console.log('🔍 Success:', response.metadata?.success || response.documento?.metadata?.success);
+          console.log('🔍 Decision IA:', response.resumen_ejecutivo?.decision_ia || response.documento?.resumen_ejecutivo?.decision_ia);
+          console.log('🔍 Mensaje:', this.agenteService.getMensajeUsuario(response));
+
+          if (this.agenteService.isDocumentoAprobado(response)) {
+            this.dpiFrontValidado.set(true);
+            this.datosFrontalDPI.set(response);
+            this.extraerDatosFrontales(response);
+            this.toastr.success('DPI frontal validado correctamente', this.agenteService.getMensajeUsuario(response));
+            console.log('✅ DPI frontal aprobado');
+            if(this.llenadorManualHabilitado()){
+              this.camposBloqueados.set(false);
+            }
+          } else {
+            this.dpiFrontValidado.set(false);
+            this.intentosFallidos.update(count => count + 1);
+            const mensaje = this.agenteService.getMensajeUsuario(response);
+            this.toastr.error(mensaje, 'Error de validación');
+            console.log('❌ DPI frontal rechazado:', mensaje);
+
+            // Si ya hay 3 intentos fallidos, habilitar entrada manual
+            if (this.intentosFallidos() >= 3) {
+              this.dpiValidado.set(true);
+              this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
+              console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
+            }
+          }
+
+          // Actualizar estado global
+          //this.dpiValidado.set(this.dpfFrontValidado() && this.dpfBackValidado());
+          this.cdr.markForCheck();
         },
         error: (error) => {
-          console.log('⚠️ Cliente no encontrado en Bantotal o error en búsqueda:', error.message);
-          this.cuentaBT.set(null);
-          this.buscandoCliente.set(false);
-          this.cdr.detectChanges();
-        }
-      });
-    }, 500); // Esperar 500ms antes de hacer la búsqueda
-  }
-
-  onFrontImageSelected(event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Guardar el archivo para enviar al servicio
-    this.frontFile = file;
-
-    // Mostrar preview
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.frontPreview = reader.result;
-      this.cdr.markForCheck();
-      
-      // Validar con el servicio
-      this.validarDocumentoFrontal(file);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  validarDocumentoFrontal(file: File) {
-    this.validandoFront.set(true);
-    this.dpiFrontValidado.set(false);
-    
-    console.log('🔍 Validando DPI frontal...');
-    
-    this.agenteService.validarDocumento({
-      accion: 'dpi_frente',
-      upload_file: file
-    }).subscribe({
-      next: (response) => {
-        this.validandoFront.set(false);
-        
-        console.log('📦 Respuesta completa del servicio:', response);
-        console.log('🔍 Success:', response.metadata?.success || response.documento?.metadata?.success);
-        console.log('🔍 Decision IA:', response.resumen_ejecutivo?.decision_ia || response.documento?.resumen_ejecutivo?.decision_ia);
-        console.log('🔍 Mensaje:', this.agenteService.getMensajeUsuario(response));
-        
-        if (this.agenteService.isDocumentoAprobado(response)) {
-          this.dpiFrontValidado.set(true);
-          this.datosFrontalDPI.set(response);
-          this.extraerDatosFrontales(response);
-          this.toastr.success('DPI frontal validado correctamente',this.agenteService.getMensajeUsuario(response));
-          console.log('✅ DPI frontal aprobado');
-        } else {
+          this.validandoFront.set(false);
           this.dpiFrontValidado.set(false);
           this.intentosFallidos.update(count => count + 1);
-          const mensaje = this.agenteService.getMensajeUsuario(response);
-          this.toastr.error(mensaje, 'Error de validación');
-          console.log('❌ DPI frontal rechazado:', mensaje);
-          
+          this.toastr.error('Error al validar el documento', 'Error');
+          console.error('❌ Error en validación frontal:', error);
+
           // Si ya hay 3 intentos fallidos, habilitar entrada manual
           if (this.intentosFallidos() >= 3) {
             this.dpiValidado.set(true);
             this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
             console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
           }
-        }
-        
-        // Actualizar estado global
-        //this.dpiValidado.set(this.dpfFrontValidado() && this.dpfBackValidado());
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        this.validandoFront.set(false);
-        this.dpiFrontValidado.set(false);
-        this.intentosFallidos.update(count => count + 1);
-        this.toastr.error('Error al validar el documento', 'Error');
-        console.error('❌ Error en validación frontal:', error);
-        
-        // Si ya hay 3 intentos fallidos, habilitar entrada manual
-        if (this.intentosFallidos() >= 3) {
-          this.dpiValidado.set(true);
-          this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
-          console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
-        }
-        
-        this.cdr.markForCheck();
-      }
-    });
-  }
 
-  extraerDatosFrontales(response: ValidarDocumentoResponse) {
-    const datos = response.contenido_documento?.datos_especificos;
-    const desglose = datos?.desglose_nombre;
-    
-    if (datos && desglose) {
-      this.camposBloqueados.set(true);
-      this.dpiFrontValidado.set(true);
-      this.dpiValidado.set(this.dpiFrontValidado() && this.dpiBackValidado());
-      this.representante.update(current => ({
-        ...current,
-        documento: datos.cui_numero,
-        primerNombre: desglose.nombre_1 || '',
-        segundoNombre: desglose.nombre_2 || '',
-        tercerNombre: desglose.nombre_3 || '',
-        primerApellido: desglose.apellido_1 || '',
-        segundoApellido: desglose.apellido_2 || '',
-        apellidoCasada: desglose.apellido_casada || '',
-        nroDocumento: datos.cui_numero || '',
-        cuiVisual: datos.cui_visual || '',
-        fechaNacimiento: datos.fecha_nacimiento || '',
-        fechaEmision: datos.fecha_de_emision || '',
-        sexo: datos.sexo_codigo || '',
-        nacionalidad: Number(datos.nacionalidad_pais || ''),
-        camposBloqueados: true
-      }));
-      
+          this.cdr.markForCheck();
+        }
+      });
     }
-  }
 
+    extraerDatosFrontales(response: ValidarDocumentoResponse) {
+      const datos = response.contenido_documento?.datos_especificos;
+      const desglose = datos?.desglose_nombre;
 
-  onBackImageSelected(event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
+      console.log('📄 Datos frontales recibidos:', datos);
 
-    // Guardar el archivo para enviar al servicio
-    this.backFile = file;
+      if (datos && desglose) {
+        this.camposBloqueados.set(true);
+        this.dpiFrontValidado.set(true);
+        this.dpiValidado.set(this.dpiFrontValidado() && this.dpiBackValidado());
+        
+        // Normalizar fechas que vienen con año de 2 dígitos (0174 -> 1974)
+        const fechaNacimiento = this.normalizarFecha(datos.fecha_nacimiento);
+        const fechaEmision = this.normalizarFecha(datos.fecha_de_emision);
 
-    // Mostrar preview
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.backPreview = reader.result;
-      this.cdr.markForCheck();
+        console.log('📅 Fecha nacimiento normalizada:', fechaNacimiento);
+        console.log('📅 Fecha emisión normalizada:', fechaEmision);
+
+        this.representante.update(current => ({
+          ...current,
+          documento: datos.cui_numero,
+          primerNombre: desglose.nombre_1 || '',
+          segundoNombre: desglose.nombre_2 || '',
+          tercerNombre: desglose.nombre_3 || '',
+          primerApellido: desglose.apellido_1 || '',
+          segundoApellido: desglose.apellido_2 || '',
+          apellidoCasada: desglose.apellido_casada || '',
+          nroDocumento: datos.cui_numero || '',
+          cuiVisual: datos.cui_visual || '',
+          fechaNacimiento: fechaNacimiento,
+          fechaEmision: fechaEmision,
+          sexo: datos.sexo_codigo || '',
+          nacionalidad: Number(datos.nacionalidad_pais || ''),
+          camposBloqueados: true
+        }));
+
+      }
+    }
+
+    // Función helper para normalizar fechas en diferentes formatos
+    private normalizarFecha(fecha: string | undefined): string {
+      if (!fecha) return '';
       
-      // Validar con el servicio
-      this.validarDocumentoReverso(file);
-    };
-    reader.readAsDataURL(file);
-  }
+      console.log('📅 Normalizando fecha:', fecha);
+      
+      // Detectar y convertir formato ISO (YYYY-MM-DD)
+      if (fecha.includes('-')) {
+        const partes = fecha.split('-');
+        if (partes.length === 3) {
+          const [anio, mes, dia] = partes;
+          const fechaFormato = `${dia}/${mes}/${anio}`;
+          console.log('✅ Fecha convertida de ISO a DD/MM/YYYY:', fechaFormato);
+          return fechaFormato;
+        }
+      }
+      
+      // Formato esperado: DD/MM/YYYY o DD/MM/YY
+      const partes = fecha.split('/');
+      if (partes.length !== 3) {
+        console.warn('⚠️ Formato de fecha no reconocido:', fecha);
+        return fecha;
+      }
+      
+      let [dia, mes, anio] = partes;
+      
+      // Si el año tiene 4 dígitos pero empieza con 0 (ej: 0174 -> 1974)
+      if (anio.length === 4 && anio.startsWith('0')) {
+        anio = '1' + anio.substring(1);
+        console.log('🔧 Año corregido de 0XXX a 1XXX:', anio);
+      }
+      // Si el año tiene 2 dígitos (ej: 74 -> 1974)
+      else if (anio.length === 2) {
+        const anioNum = parseInt(anio, 10);
+        // Asumir que años < 50 son 2000+, años >= 50 son 1900+
+        anio = (anioNum < 50 ? '20' : '19') + anio;
+        console.log('🔧 Año expandido de 2 dígitos a 4:', anio);
+      }
+      
+      const fechaFormato = `${dia}/${mes}/${anio}`;
+      console.log('✅ Fecha final:', fechaFormato);
+      return fechaFormato;
+    }
 
-  validarDocumentoReverso(file: File) {
-    this.validandoBack.set(true);
-    this.dpiBackValidado.set(false);
-    
-    console.log('🔍 Validando DPI reverso...');
-    
-    this.agenteService.validarDocumento({
-      accion: 'dpi_reverso',
-      upload_file: file
-    }).subscribe({
-      next: (response) => {
-        this.validandoBack.set(false);
-        
-        console.log('📦 Respuesta completa del servicio (reverso):', response);
-        console.log('🔍 Success:', response.metadata?.success || response.documento?.metadata?.success);
-        console.log('🔍 Decision IA:', response.resumen_ejecutivo?.decision_ia || response.documento?.resumen_ejecutivo?.decision_ia);
-        console.log('🔍 Mensaje:', this.agenteService.getMensajeUsuario(response));
-        
-        if (this.agenteService.isDocumentoAprobado(response)) {
-          this.dpiBackValidado.set(true);
-          this.datosReversoDPI.set(response);
-          this.extraerDatosReverso(response);
-          this.toastr.success('DPI reverso validado correctamente', 'Éxito');
-          console.log('✅ DPI reverso aprobado');
-        } else {
+
+    onBackImageSelected(event: any) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Guardar el archivo para enviar al servicio
+      this.backFile = file;
+
+      // Mostrar preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.backPreview = reader.result;
+        this.cdr.markForCheck();
+
+        // Validar con el servicio
+        this.validarDocumentoReverso(file);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    validarDocumentoReverso(file: File) {
+      this.validandoBack.set(true);
+      this.dpiBackValidado.set(false);
+
+      console.log('🔍 Validando DPI reverso...');
+
+      this.agenteService.validarDocumento({
+        accion: 'dpi_reverso',
+        upload_file: file
+      }).subscribe({
+        next: (response) => {
+          this.validandoBack.set(false);
+
+          console.log('📦 Respuesta completa del servicio (reverso):', response);
+          console.log('🔍 Success:', response.metadata?.success || response.documento?.metadata?.success);
+          console.log('🔍 Decision IA:', response.resumen_ejecutivo?.decision_ia || response.documento?.resumen_ejecutivo?.decision_ia);
+          console.log('🔍 Mensaje:', this.agenteService.getMensajeUsuario(response));
+
+          if (this.agenteService.isDocumentoAprobado(response)) {
+            this.dpiBackValidado.set(true);
+            this.datosReversoDPI.set(response);
+            this.extraerDatosReverso(response);
+            this.toastr.success('DPI reverso validado correctamente', 'Éxito');
+            console.log('✅ DPI reverso aprobado');
+            if(this.llenadorManualHabilitado()){
+              this.camposBloqueados.set(false);
+            }
+          } else {
+            this.dpiBackValidado.set(false);
+            this.intentosFallidos.update(count => count + 1);
+            const mensaje = this.agenteService.getMensajeUsuario(response);
+            this.toastr.error(mensaje, 'Error de validación');
+            console.log('❌ DPI reverso rechazado:', mensaje);
+
+            // Si ya hay 3 intentos fallidos, habilitar entrada manual
+            if (this.intentosFallidos() >= 3) {
+              this.dpiValidado.set(true);
+              this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
+              console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
+            }
+          }
+
+          // Actualizar estado global
+          //this.dpiValidado.set(this.dpfFrontValidado() && this.dpfBackValidado());
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.validandoBack.set(false);
           this.dpiBackValidado.set(false);
           this.intentosFallidos.update(count => count + 1);
-          const mensaje = this.agenteService.getMensajeUsuario(response);
-          this.toastr.error(mensaje, 'Error de validación');
-          console.log('❌ DPI reverso rechazado:', mensaje);
-          
+          this.toastr.error('Error al validar el documento', 'Error');
+          console.error('❌ Error en validación reverso:', error);
+
           // Si ya hay 3 intentos fallidos, habilitar entrada manual
           if (this.intentosFallidos() >= 3) {
             this.dpiValidado.set(true);
             this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
             console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
           }
-        }
-        
-        // Actualizar estado global
-        //this.dpiValidado.set(this.dpfFrontValidado() && this.dpfBackValidado());
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        this.validandoBack.set(false);
-        this.dpiBackValidado.set(false);
-        this.intentosFallidos.update(count => count + 1);
-        this.toastr.error('Error al validar el documento', 'Error');
-        console.error('❌ Error en validación reverso:', error);
-        
-        // Si ya hay 3 intentos fallidos, habilitar entrada manual
-        if (this.intentosFallidos() >= 3) {
-          this.dpiValidado.set(true);
-          this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
-          console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
-        }
-        
-        this.cdr.markForCheck();
-      }
-    });
-  }
 
-  extraerDatosReverso(response: ValidarDocumentoResponse) {
-    const datos = response.contenido_documento?.datos_especificos;
-    const demografia = datos?.demografia;
-    const geografia = datos?.geografia;
-    const seguridad = datos?.datos_seguridad;
-    
-    if (datos) {
-      this.camposBloqueados.set(true);
-      this.dpiBackValidado.set(true);
-      this.dpiValidado.set(this.dpiFrontValidado() && this.dpiBackValidado());
-      this.representante.update(current => ({
-        ...current,
-        estadoCivil: Number(demografia?.estado_civil),
-        profesion: Number(demografia?.profesion_oficio || ''),
-        pueblo: demografia?.pueblo || '',
-        comunidadLinguistica: demografia?.comunidad_linguistica || '',
-        lugarNacimiento: geografia?.nacimiento_completo || '',
-        municipioNacimiento: geografia?.nacimiento_municipio || '',
-        departamentoNacimiento: geografia?.nacimiento_departamento || '',
-        lugarVecindad: geografia?.vecindad_completa || '',
-        municipioVecindad: geografia?.vecindad_municipio || '',
-        departamentoVecindad: geografia?.vecindad_departamento || '',
-        numeroSerie: seguridad?.numero_de_serie || '',
-        fechaVencimiento: demografia?.fecha_de_vencimiento || ''
-      }));
-      
-      console.log('📋 Datos reverso extraídos:', this.representante());
+          this.cdr.markForCheck();
+        }
+      });
     }
-  }
+
+    extraerDatosReverso(response: ValidarDocumentoResponse) {
+      const datos = response.contenido_documento?.datos_especificos;
+      const demografia = datos?.demografia;
+      const geografia = datos?.geografia;
+      const seguridad = datos?.datos_seguridad;
+
+      console.log('📊 Datos demográficos recibidos:', demografia);
+      console.log('🌎 Datos geográficos recibidos:', geografia);
+
+      if (datos) {
+        this.camposBloqueados.set(true);
+        this.dpiBackValidado.set(true);
+        this.dpiValidado.set(this.dpiFrontValidado() && this.dpiBackValidado());
+        
+        // Mapear estado civil de string a código numérico
+        let estadoCivilCodigo: number | undefined;
+        if (demografia?.estado_civil) {
+          const estadoCivilStr = demografia.estado_civil.toUpperCase();
+          if (estadoCivilStr === 'CASADO' || estadoCivilStr === 'CASADA') {
+            estadoCivilCodigo = 2;
+          } else if (estadoCivilStr === 'SOLTERO' || estadoCivilStr === 'SOLTERA') {
+            estadoCivilCodigo = 1;
+          } else if (estadoCivilStr === 'DIVORCIADO' || estadoCivilStr === 'DIVORCIADA') {
+            estadoCivilCodigo = 3;
+          } else if (estadoCivilStr === 'VIUDO' || estadoCivilStr === 'VIUDA') {
+            estadoCivilCodigo = 4;
+          } else if (estadoCivilStr === 'UNIDO' || estadoCivilStr === 'UNIDA') {
+            estadoCivilCodigo = 5;
+          }
+        }
+
+        // Normalizar fecha de vencimiento
+        const fechaVencimiento = this.normalizarFecha(demografia?.fecha_de_vencimiento);
+        console.log('📅 Fecha vencimiento normalizada:', fechaVencimiento);
+
+        this.representante.update(current => ({
+          ...current,
+          estadoCivil: estadoCivilCodigo,
+          profesion: demografia?.profesion_oficio ? undefined : current.profesion, // Solo actualizar si tiene valor
+          pueblo: demografia?.pueblo || '',
+          comunidadLinguistica: demografia?.comunidad_linguistica || '',
+          lugarNacimiento: geografia?.nacimiento_completo || '',
+          municipioNacimiento: geografia?.nacimiento_municipio || '',
+          departamentoNacimiento: geografia?.nacimiento_departamento || '',
+          lugarVecindad: geografia?.vecindad_completa || '',
+          municipioVecindad: geografia?.vecindad_municipio || '',
+          departamentoVecindad: geografia?.vecindad_departamento || '',
+          numeroSerie: seguridad?.numero_de_serie || '',
+          fechaVencimiento: fechaVencimiento
+        }));
+
+        console.log('📋 Datos reverso extraídos:', this.representante());
+        console.log('👉 Estado civil mapeado:', estadoCivilCodigo);
+      }
+    }
 
   private isValidEmail(email: string | undefined | null): boolean {
     if (!email) return false;
@@ -519,7 +637,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       const datosCrudos = this.representante();
       const payload = this.sanitizeRepresentante(datosCrudos);
       console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ payload listo:", payload);
-      
+
       // Validar que tengamos datos básicos
       if (!payload.documento || !payload.primerNombre || !payload.primerApellido) {
         this.toastr.error('Por favor completa los campos requeridos', 'Campos incompletos');
@@ -534,7 +652,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
       // Llamar al servicio con el valor del signal (no el signal mismo)
       const resp = await this.representanteService.crearRepresentante(payload);
-      
+
       if (resp?.success) {
         this.toastr.success('Representante creado correctamente', 'Éxito');
         // Limpiar formulario
