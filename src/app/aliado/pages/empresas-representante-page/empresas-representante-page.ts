@@ -20,6 +20,7 @@ import UpsertSolicitudComponent, { SolicitudFormData } from '../../components/up
 import { SeguimientoSolicitudService } from '../../../../services/aliado/seguimiento-solicitud.service';
 import { GeneralidadesService } from '../../../../services/aliado/generalidades.service';
 import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
+import { AgenciaRegionService } from '../../../../services/aliado/agencia-region.service';
 
 
 @Component({
@@ -39,6 +40,7 @@ export default class EmpresasRepresentantePage {
   private solicitudesService = inject(SolicitudesService);
   private seguimientoService = inject(SeguimientoSolicitudService);
   private generalidadesService = inject(GeneralidadesService);
+  private agenciaRegionService = inject(AgenciaRegionService);
   representanteId = signal('');
   representante = signal<Representante | null>(null);
 
@@ -56,12 +58,15 @@ export default class EmpresasRepresentantePage {
   cuentaSeleccionada = signal<ICuentaBancariaRepresentante | null>(null);
   empresaIdCuenta = signal<string>('');
   modalKeyCuenta = signal(0);
+  esEditarCuenta = signal(false);
 
   // Estado del modal de solicitud
   showModalSolicitud = signal(false);
   empresaIdSolicitud = signal<string>('');
   modalKeySolicitud = signal(0);
   esEditarSolicitud = signal(false);
+  solicitudFormData = signal<SolicitudFormData | undefined>(undefined);
+  cuentaBancariaIdSolicitud = signal<string>(''); // ID de cuenta cuando se crea solicitud desde cuenta
 
   // Lista de empresas reales
   empresas = signal<(IEmpresaRepresentante & { open?: boolean })[]>([]);
@@ -183,8 +188,8 @@ export default class EmpresasRepresentantePage {
       nombreEmpresa: '',
       nit: '',
       telefono: '',
-      departamento: 1,
-      municipio: 1,
+      departamento: 0,
+      municipio: 0,
       direccion: '',
       tipoActividad: '',
       actividad: '',
@@ -290,6 +295,7 @@ export default class EmpresasRepresentantePage {
     }
 
     this.empresaIdCuenta.set(empresaId);
+    this.esEditarCuenta.set(false);
     this.cuentaSeleccionada.set({
       cuentaBancariaId: '',
       empresaId: empresaId,
@@ -329,11 +335,15 @@ export default class EmpresasRepresentantePage {
             cuentaBancariaId: cuenta.cuentaBancariaId,
             empresaId: solicitud.empresaId || empresaId,
           });
-          await this.cargarSolicitudesParaEmpresas(this.empresas());
         } catch (error) {
           console.error('❌ Error al asociar cuenta con solicitud:', error);
         }
       }
+      
+      // Siempre recargar las solicitudes del representante después de guardar la cuenta
+      console.log('🔄 Recargando solicitudes del representante...');
+      await this.cargarSolicitudesParaEmpresas(this.empresas());
+      console.log('✅ Solicitudes recargadas');
     } else {
       console.warn('⚠️ No hay ID de empresa para recargar');
     }
@@ -389,6 +399,38 @@ export default class EmpresasRepresentantePage {
     return monedaId === 1 ? 'Q - Quetzales' : '$ - Dólares';
   }
 
+  obtenerEstadoSolicitudPorCuenta(cuentaBancariaId: string): string | null {
+    const solicitudes = Array.from(this.solicitudesPorEmpresa().values()).filter(s => s !== null) as Solicitud[];
+    const solicitud = solicitudes.find(s => s.cuentaBancariaId === cuentaBancariaId);
+    return solicitud?.estadoSolicitud?.nombre || null;
+  }
+
+  puedeEditarCuenta(cuentaBancariaId: string): boolean {
+    const estado = this.obtenerEstadoSolicitudPorCuenta(cuentaBancariaId);
+    if (!estado) return true; // Si no hay solicitud, se puede editar
+    const estadoUpper = estado.toUpperCase();
+    return estadoUpper !== 'APROBADO' && estadoUpper !== 'RECHAZADO';
+  }
+
+  async editarCuenta(empresaId: string, cuenta: ICuentaBancaria) {
+    this.empresaIdCuenta.set(empresaId);
+    this.esEditarCuenta.set(true);
+    const cuentaRepresentante: ICuentaBancariaRepresentante = {
+      cuentaBancariaId: cuenta.cuentaBancariaId || '',
+      empresaId: cuenta.empresaId,
+      bancoId: cuenta.bancoId,
+      tipoCuentaId: cuenta.tipoCuentaId,
+      monedaId: cuenta.monedaId,
+      numeroCuenta: cuenta.numeroCuenta,
+      nombreCuenta: cuenta.nombreCuenta,
+      activo: cuenta.activo ?? true,
+      usrIngreso: cuenta.usrIngreso || '',
+    };
+    this.cuentaSeleccionada.set(cuentaRepresentante);
+    this.modalKeyCuenta.set(this.modalKeyCuenta() + 1);
+    this.showModalCuenta.set(true);
+  }
+
   async toggleEmpresa(empresa: IEmpresaRepresentante & { open?: boolean }) {
     empresa.open = !empresa.open;
     
@@ -429,14 +471,30 @@ export default class EmpresasRepresentantePage {
 
   crearNuevaSolicitud(empresaId: string) {
     this.empresaIdSolicitud.set(empresaId);
+    this.cuentaBancariaIdSolicitud.set(''); // Limpiar
     this.esEditarSolicitud.set(false);
+    this.solicitudFormData.set(undefined);
     this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
     this.showModalSolicitud.set(true);
   }
 
-  editarSolicitud(empresaId: string) {
+  crearSolicitudDesdeCuenta(cuentaBancariaId: string) {
+    this.cuentaBancariaIdSolicitud.set(cuentaBancariaId);
+    this.empresaIdSolicitud.set(''); // No necesitamos empresaId
+    this.esEditarSolicitud.set(false);
+    this.solicitudFormData.set(undefined);
+    this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
+    this.showModalSolicitud.set(true);
+  }
+
+  async editarSolicitud(empresaId: string) {
     this.empresaIdSolicitud.set(empresaId);
     this.esEditarSolicitud.set(true);
+    
+    // Cargar los datos de la solicitud de forma async
+    const formData = await this.cargarSolicitudFormData(empresaId);
+    this.solicitudFormData.set(formData);
+    
     this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
     this.showModalSolicitud.set(true);
   }
@@ -461,6 +519,7 @@ export default class EmpresasRepresentantePage {
   cerrarModalSolicitud() {
     this.showModalSolicitud.set(false);
     this.empresaIdSolicitud.set('');
+    this.cuentaBancariaIdSolicitud.set('');
   }
 
   // Obtener la empresa actual para el modal
@@ -469,27 +528,54 @@ export default class EmpresasRepresentantePage {
     return this.empresas().find(e => e.empresaId === empresaId) || null;
   }
 
-  // Obtener la cuenta bancaria de la empresa (si existe)
+  // Obtener la cuenta bancaria de la empresa (si existe) o la cuenta desde la que se crea la solicitud
   getCuentaBancariaEmpresa(empresaId: string): ICuentaBancaria | null {
+    // Si se está creando desde una cuenta bancaria específica
+    const cuentaIdDesdeCuenta = this.cuentaBancariaIdSolicitud();
+    if (cuentaIdDesdeCuenta) {
+      // Buscar en todas las empresas
+      for (const [, cuentas] of this.cuentasPorEmpresa()) {
+        const cuenta = cuentas.find(c => c.cuentaBancariaId === cuentaIdDesdeCuenta);
+        if (cuenta) return cuenta;
+      }
+      return null;
+    }
+    
+    // Si no, buscar la cuenta de la empresa
     const cuentas = this.cuentasPorEmpresa().get(empresaId);
     // Retornar la primera cuenta activa si existe
     return cuentas?.find(c => c.activo) || cuentas?.[0] || null;
   }
 
-  getSolicitudFormData(): SolicitudFormData | undefined {
-    if (!this.esEditarSolicitud()) return undefined;
-    
-    const empresaId = this.empresaIdSolicitud();
+  private async cargarSolicitudFormData(empresaId: string): Promise<SolicitudFormData | undefined> {
     const solicitud = this.getSolicitudPorEmpresa(empresaId);
     
     if (!solicitud) return undefined;
+
+    // Convertir códigos numéricos del backend a IDs string del frontend
+    let regionId = '';
+    let agenciaId = '';
+
+    if (solicitud.regionId) {
+      // Convertir número de región a formato 'r-001'
+      regionId = `r-${String(solicitud.regionId).padStart(3, '0')}`;
+    }
+
+    if (solicitud.agenciaId) {
+      // Buscar la agencia por su código numérico
+      const agencias = await this.agenciaRegionService.getAgencias();
+      const agencia = agencias.find(a => a.codigo === solicitud.agenciaId);
+      if (agencia) {
+        agenciaId = agencia.agenciaId;
+      }
+    }
 
     return {
       tipoSolicitudId: solicitud.tipoSolicitudId || '',
       estadoSolicitudId: solicitud.estadoSolicitudId || '',
       tipoAfiliacionId: solicitud.tipoAfiliacionId || '',
-      regionId: solicitud.regionId?.toString() || '',
-      agenciaId: solicitud.agenciaId?.toString() || '',
+      regionId,
+      agenciaId,
       observaciones: solicitud.observaciones || undefined,
     };
   }
@@ -543,6 +629,7 @@ export default class EmpresasRepresentantePage {
   async onGuardarSolicitud(formData: SolicitudFormData) {
     try {
       const empresaId = this.empresaIdSolicitud();
+      const cuentaBancariaIdDesdeCuenta = this.cuentaBancariaIdSolicitud();
       const representanteId = this.representanteId();
       
       if (this.esEditarSolicitud()) {
@@ -553,12 +640,45 @@ export default class EmpresasRepresentantePage {
           return;
         }
 
+        // Convertir regionId y agenciaId string a códigos numéricos
+        let regionId: number | null = null;
+        let agenciaId: number | null = null;
+
+        // Buscar el código de la región
+        const regionEncontrada = await this.agenciaRegionService.getRegiones().then(regiones => 
+          regiones.find(r => r.regionId === formData.regionId)
+        );
+        
+        // Para región, extraer el número del formato 'r-001' -> 1
+        if (regionEncontrada) {
+          const match = regionEncontrada.regionId.match(/\d+/);
+          regionId = match ? parseInt(match[0], 10) : null;
+        }
+
+        // Buscar el código numérico de la agencia
+        const agenciaEncontrada = await this.agenciaRegionService.getAgencias().then(agencias => 
+          agencias.find(a => a.agenciaId === formData.agenciaId)
+        );
+        
+        if (agenciaEncontrada) {
+          agenciaId = agenciaEncontrada.codigo;
+        }
+
+        console.log('📝 Editando solicitud:', {
+          regionId,
+          agenciaId,
+          formDataRegion: formData.regionId,
+          formDataAgencia: formData.agenciaId,
+          regionEncontrada,
+          agenciaEncontrada
+        });
+
         const solicitudData: Partial<Solicitud> = {
           tipoSolicitudId: formData.tipoSolicitudId,
           estadoSolicitudId: formData.estadoSolicitudId,
           tipoAfiliacionId: formData.tipoAfiliacionId,
-          regionId: formData.regionId ? parseInt(formData.regionId) : null,
-          agenciaId: formData.agenciaId ? parseInt(formData.agenciaId) : null,
+          regionId,
+          agenciaId,
           observaciones: formData.observaciones || null,
         };
 
@@ -576,32 +696,121 @@ export default class EmpresasRepresentantePage {
         }
       } else {
         // Modo creación
-        const cuentaBancaria = this.getCuentaBancariaEmpresa(empresaId);
-
-        const solicitudData: Partial<Solicitud> = {
-          representanteId,
-          empresaId,
-          cuentaBancariaId: cuentaBancaria?.cuentaBancariaId || null,
-          tipoSolicitudId: formData.tipoSolicitudId,
-          estadoSolicitudId: formData.estadoSolicitudId,
-          tipoAfiliacionId: formData.tipoAfiliacionId,
-          regionId: formData.regionId ? parseInt(formData.regionId) : null,
-          agenciaId: formData.agenciaId ? parseInt(formData.agenciaId) : null,
-          fechaSolicitud: new Date().toISOString(),
-          observaciones: formData.observaciones || null,
-        };
-
-        // Si hay archivo, convertirlo a base64
-        if (formData.archivo) {
-          const base64 = await this.convertirArchivoABase64(formData.archivo);
-          solicitudData.documentoCargado = base64;
-        }
-
-        const resp = await this.solicitudesService.createSolicitud(solicitudData);
         
-        if (resp?.success) {
-          this.cerrarModalSolicitud();
-          await this.cargarEmpresas();
+        // Si se crea desde una cuenta bancaria, solo enviar representanteId y cuentaBancariaId
+        if (cuentaBancariaIdDesdeCuenta) {
+          console.log('✨ Creando solicitud desde cuenta bancaria:', {
+            representanteId,
+            cuentaBancariaId: cuentaBancariaIdDesdeCuenta
+          });
+
+          // Convertir regionId y agenciaId string a códigos numéricos
+          let regionId: number | null = null;
+          let agenciaId: number | null = null;
+
+          const regionEncontrada = await this.agenciaRegionService.getRegiones().then(regiones => 
+            regiones.find(r => r.regionId === formData.regionId)
+          );
+          
+          if (regionEncontrada) {
+            const match = regionEncontrada.regionId.match(/\d+/);
+            regionId = match ? parseInt(match[0], 10) : null;
+          }
+
+          const agenciaEncontrada = await this.agenciaRegionService.getAgencias().then(agencias => 
+            agencias.find(a => a.agenciaId === formData.agenciaId)
+          );
+          
+          if (agenciaEncontrada) {
+            agenciaId = agenciaEncontrada.codigo;
+          }
+
+          const solicitudData: Partial<Solicitud> = {
+            representanteId,
+            cuentaBancariaId: cuentaBancariaIdDesdeCuenta,
+            tipoSolicitudId: formData.tipoSolicitudId,
+            estadoSolicitudId: formData.estadoSolicitudId,
+            tipoAfiliacionId: formData.tipoAfiliacionId,
+            regionId,
+            agenciaId,
+            fechaSolicitud: new Date().toISOString(),
+            observaciones: formData.observaciones || null,
+          };
+
+          // Si hay archivo, convertirlo a base64
+          if (formData.archivo) {
+            const base64 = await this.convertirArchivoABase64(formData.archivo);
+            solicitudData.documentoCargado = base64;
+          }
+
+          const resp = await this.solicitudesService.createSolicitud(solicitudData);
+          
+          if (resp?.success) {
+            this.cerrarModalSolicitud();
+            await this.cargarEmpresas();
+          }
+        } else {
+          // Creación normal desde empresa
+          const cuentaBancaria = this.getCuentaBancariaEmpresa(empresaId);
+
+          // Convertir regionId y agenciaId string a códigos numéricos
+          let regionId: number | null = null;
+          let agenciaId: number | null = null;
+
+          // Buscar el código de la región
+          const regionEncontrada = await this.agenciaRegionService.getRegiones().then(regiones => 
+            regiones.find(r => r.regionId === formData.regionId)
+          );
+          
+          // Para región, extraer el número del formato 'r-001' -> 1
+          if (regionEncontrada) {
+            const match = regionEncontrada.regionId.match(/\d+/);
+            regionId = match ? parseInt(match[0], 10) : null;
+          }
+
+          // Buscar el código numérico de la agencia
+          const agenciaEncontrada = await this.agenciaRegionService.getAgencias().then(agencias => 
+            agencias.find(a => a.agenciaId === formData.agenciaId)
+          );
+          
+          if (agenciaEncontrada) {
+            agenciaId = agenciaEncontrada.codigo;
+          }
+
+          console.log('✨ Creando nueva solicitud desde empresa:', {
+            regionId,
+            agenciaId,
+            formDataRegion: formData.regionId,
+            formDataAgencia: formData.agenciaId,
+            regionEncontrada,
+            agenciaEncontrada
+          });
+
+          const solicitudData: Partial<Solicitud> = {
+            representanteId,
+            empresaId,
+            cuentaBancariaId: cuentaBancaria?.cuentaBancariaId || null,
+            tipoSolicitudId: formData.tipoSolicitudId,
+            estadoSolicitudId: formData.estadoSolicitudId,
+            tipoAfiliacionId: formData.tipoAfiliacionId,
+            regionId,
+            agenciaId,
+            fechaSolicitud: new Date().toISOString(),
+            observaciones: formData.observaciones || null,
+          };
+
+          // Si hay archivo, convertirlo a base64
+          if (formData.archivo) {
+            const base64 = await this.convertirArchivoABase64(formData.archivo);
+            solicitudData.documentoCargado = base64;
+          }
+
+          const resp = await this.solicitudesService.createSolicitud(solicitudData);
+          
+          if (resp?.success) {
+            this.cerrarModalSolicitud();
+            await this.cargarEmpresas();
+          }
         }
       }
     } catch (error) {

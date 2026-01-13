@@ -126,65 +126,111 @@ export class UpsertCuentaRepresentanteComponent implements OnInit {
       try {
         const formValue = this.form().value;
         
-        const dto: CreateCuentaBancariaDto = {
-          empresaId: this.empresaId(),
-          bancoId: formValue.bancoId,
-          tipoCuentaId: formValue.tipoCuentaId,
-          monedaId: parseInt(formValue.monedaId, 10),
-          numeroCuenta: formValue.numeroCuenta,
-          nombreCuenta: formValue.nombreCuenta,
-          activo: formValue.activo ?? true
-        };
+        if (this.nuevo()) {
+          // Modo creación
+          const dto: CreateCuentaBancariaDto = {
+            empresaId: this.empresaId(),
+            bancoId: formValue.bancoId,
+            tipoCuentaId: formValue.tipoCuentaId,
+            monedaId: parseInt(formValue.monedaId, 10),
+            numeroCuenta: formValue.numeroCuenta,
+            nombreCuenta: formValue.nombreCuenta,
+            activo: formValue.activo ?? true
+          };
 
-        console.log('💾 Guardando cuenta bancaria:', dto);
+          console.log('💾 Guardando cuenta bancaria:', dto);
 
-        const resp = await this.cuentaBancariaService.crear(dto);
-        console.log('📊 Respuesta del servidor:', resp);
-        
-        if (resp?.success) {
-          console.log('✅ Cuenta creada exitosamente');
+          const resp = await this.cuentaBancariaService.crear(dto);
+          console.log('📊 Respuesta del servidor:', resp);
           
-          // Verificar la estructura de la respuesta
-          let cuentaCreada: ICuentaBancariaRepresentante;
-          
-          if (resp.data?.cuentaBancaria) {
-            // Si viene en resp.data.cuentaBancaria
-            cuentaCreada = {
-              cuentaBancariaId: resp.data.cuentaBancaria.cuentaBancariaId || '',
-              empresaId: resp.data.cuentaBancaria.empresaId,
-              bancoId: resp.data.cuentaBancaria.bancoId,
-              tipoCuentaId: resp.data.cuentaBancaria.tipoCuentaId,
-              monedaId: resp.data.cuentaBancaria.monedaId,
-              numeroCuenta: resp.data.cuentaBancaria.numeroCuenta,
-              nombreCuenta: resp.data.cuentaBancaria.nombreCuenta,
-              activo: resp.data.cuentaBancaria.activo,
-              usrIngreso: resp.data.cuentaBancaria.usrIngreso
-            };
-          } else if (resp.data && typeof resp.data === 'object') {
-            // Si viene directamente en resp.data
-            cuentaCreada = {
-              cuentaBancariaId: (resp.data as any).cuentaBancariaId || '',
-              empresaId: (resp.data as any).empresaId,
-              bancoId: (resp.data as any).bancoId,
-              tipoCuentaId: (resp.data as any).tipoCuentaId,
-              monedaId: (resp.data as any).monedaId,
-              numeroCuenta: (resp.data as any).numeroCuenta,
-              nombreCuenta: (resp.data as any).nombreCuenta,
-              activo: (resp.data as any).activo,
-              usrIngreso: (resp.data as any).usrIngreso
-            };
+          if (resp?.success) {
+            console.log('✅ Cuenta creada exitosamente');
+            
+            // Verificar la estructura de la respuesta
+            let cuentaCreada: ICuentaBancariaRepresentante;
+            
+            if (resp.data?.cuentaBancaria) {
+              // Si viene en resp.data.cuentaBancaria
+              cuentaCreada = {
+                cuentaBancariaId: resp.data.cuentaBancaria.cuentaBancariaId || '',
+                empresaId: resp.data.cuentaBancaria.empresaId,
+                bancoId: resp.data.cuentaBancaria.bancoId,
+                tipoCuentaId: resp.data.cuentaBancaria.tipoCuentaId,
+                monedaId: resp.data.cuentaBancaria.monedaId,
+                numeroCuenta: resp.data.cuentaBancaria.numeroCuenta,
+                nombreCuenta: resp.data.cuentaBancaria.nombreCuenta,
+                activo: resp.data.cuentaBancaria.activo,
+                usrIngreso: resp.data.cuentaBancaria.usrIngreso
+              };
+            } else if (resp.data && typeof resp.data === 'object') {
+              // Si viene directamente en resp.data
+              cuentaCreada = {
+                cuentaBancariaId: (resp.data as any).cuentaBancariaId || '',
+                empresaId: (resp.data as any).empresaId,
+                bancoId: (resp.data as any).bancoId,
+                tipoCuentaId: (resp.data as any).tipoCuentaId,
+                monedaId: (resp.data as any).monedaId,
+                numeroCuenta: (resp.data as any).numeroCuenta,
+                nombreCuenta: (resp.data as any).nombreCuenta,
+                activo: (resp.data as any).activo,
+                usrIngreso: (resp.data as any).usrIngreso
+              };
+            } else {
+              // Si no hay datos, retornar el DTO original
+              cuentaCreada = {
+                cuentaBancariaId: '',
+                ...dto
+              };
+            }
+            
+            console.log('🎉 Emitiendo cuenta creada:', cuentaCreada);
+            this.save.emit(cuentaCreada);
           } else {
-            // Si no hay datos, retornar el DTO original
-            cuentaCreada = {
-              cuentaBancariaId: '',
-              ...dto
-            };
+            console.error('❌ Error al crear cuenta bancaria:', resp);
           }
-          
-          console.log('🎉 Emitiendo cuenta creada:', cuentaCreada);
-          this.save.emit(cuentaCreada);
         } else {
-          console.error('❌ Error al crear cuenta bancaria:', resp);
+          // Modo edición
+          const cuentaActual = this.cuenta();
+          if (!cuentaActual.cuentaBancariaId) {
+            alert('No se encontró el ID de la cuenta a actualizar');
+            return;
+          }
+
+          const updateDto = {
+            bancoId: formValue.bancoId,
+            tipoCuentaId: formValue.tipoCuentaId,
+            monedaId: parseInt(formValue.monedaId, 10),
+            numeroCuenta: formValue.numeroCuenta,
+            nombreCuenta: formValue.nombreCuenta,
+            activo: formValue.activo ?? true
+          };
+
+          console.log('💾 Actualizando cuenta bancaria:', updateDto);
+
+          const resp = await this.cuentaBancariaService.actualizar(cuentaActual.cuentaBancariaId, updateDto);
+          console.log('📊 Respuesta del servidor:', resp);
+          
+          if (resp?.success) {
+            console.log('✅ Cuenta actualizada exitosamente');
+            
+            // Construir la cuenta actualizada
+            let cuentaActualizada: ICuentaBancariaRepresentante = {
+              cuentaBancariaId: cuentaActual.cuentaBancariaId,
+              empresaId: cuentaActual.empresaId,
+              bancoId: updateDto.bancoId,
+              tipoCuentaId: updateDto.tipoCuentaId,
+              monedaId: updateDto.monedaId,
+              numeroCuenta: updateDto.numeroCuenta,
+              nombreCuenta: updateDto.nombreCuenta,
+              activo: updateDto.activo,
+              usrIngreso: cuentaActual.usrIngreso
+            };
+            
+            console.log('🎉 Emitiendo cuenta actualizada:', cuentaActualizada);
+            this.save.emit(cuentaActualizada);
+          } else {
+            console.error('❌ Error al actualizar cuenta bancaria:', resp);
+          }
         }
       } finally {
         this.guardando.set(false);
