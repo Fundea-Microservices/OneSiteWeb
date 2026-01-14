@@ -112,7 +112,7 @@ export class UpsertDatosGenerales implements OnInit, AfterViewInit {
 
         }
         this.paisDocumento.set(rep.paisDocumento || 320);
-        this.tipoDocumento.set(rep.tipoDocumento || 1);
+        this.tipoDocumento.set(rep.tipoDocumento || 1);        
       }
     });
 
@@ -180,6 +180,41 @@ export class UpsertDatosGenerales implements OnInit, AfterViewInit {
 
   onEstadoCivilChange() {
     
+  }
+
+  /**
+   * Convierte una fecha en formato DD/MM/YYYY a YYYY-MM-DD para el input type="date"
+   */
+  toISODate(fecha: string | undefined | null): string {
+    if (!fecha) return '';
+    const partes = fecha.split('/');
+    if (partes.length === 3) {
+      const [dia, mes, anio] = partes;
+      // Si el año tiene solo 2 dígitos, asume 19xx o 20xx
+      let year = anio;
+      if (anio.length === 2) {
+        year = (parseInt(anio, 10) < 50 ? '20' : '19') + anio;
+      }
+      return `${year}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+    }
+    // Si ya está en formato ISO, regresa igual
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return fecha;
+    return '';
+  }
+
+  /**
+   * Convierte una fecha en formato YYYY-MM-DD a DD/MM/YYYY para mostrar en la app
+   */
+  toDisplayDate(fecha: string | undefined | null): string {
+    if (!fecha) return '';
+    const partes = fecha.split('-');
+    if (partes.length === 3) {
+      const [anio, mes, dia] = partes;
+      return `${dia}/${mes}/${anio}`;
+    }
+    // Si ya está en formato DD/MM/YYYY, regresa igual
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) return fecha;
+    return '';
   }
 
 

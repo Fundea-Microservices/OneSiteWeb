@@ -148,15 +148,12 @@
           </svg>
         </div>
         <input
-          [value]="fechaNacimiento()"
-          (input)="fechaNacimiento.set($any($event.target).value)"
+          [value]="toISODate(fechaNacimiento())"
+          (input)="fechaNacimiento.set(toDisplayDate($any($event.target).value))"
           [disabled]="camposBloqueados()"
-          id="datepicker-autohide-73"
-          datepicker
-          datepicker-autohide
-          type="text"
+          type="date"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg pl-10 pr-3 h-12 w-full"
-          placeholder="Select date"
+          placeholder="Selecciona fecha"
         />
       </div>
     </div>
@@ -258,15 +255,12 @@
           </svg>
         </div>
         <input
-          [value]="fechaVencimiento()"
-          (input)="fechaVencimiento.set($any($event.target).value)"
+          [value]="toISODate(fechaVencimiento())"
+          (input)="fechaVencimiento.set(toDisplayDate($any($event.target).value))"
           [disabled]="camposBloqueados()"
-          id="datepicker-autohide-73"
-          datepicker
-          datepicker-autohide
-          type="text"
+          type="date"
           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg pl-10 pr-3 h-12 w-full"
-          placeholder="Select date"
+          placeholder="Selecciona fecha"
         />
       </div>
     </div>
