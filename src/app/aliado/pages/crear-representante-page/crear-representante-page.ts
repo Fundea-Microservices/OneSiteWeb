@@ -294,7 +294,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
           this.cuentaBT.set(null);
           this.buscandoCliente.set(false);
           this.cdr.detectChanges();
-          this.reiniciarCampos(documentoSinFormato);
+          if(!this.dpiValidado()) this.reiniciarCampos(documentoSinFormato);
         }
       });
     }, 500); // Esperar 500ms antes de hacer la búsqueda
