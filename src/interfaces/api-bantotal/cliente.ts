@@ -77,6 +77,12 @@ export interface DatosBantotalCliente {
   nacionalidadId?: string;
   ocupacion?: string;
   ocupacionId?: string;
+  actividadLaboral?: string;
+  actividadLaboralId?: string;
+  sector?: string;
+  sectorId?: string;
+  clasificacionInterna?: string;
+  clasificacionInternaId?: string;
   ingresos?: string;
   correoElectronico?: string;
   telefonoCelular?: string;
@@ -95,6 +101,8 @@ export interface DatosBantotalCliente {
   codigoPostal?: string;
   fechaInicioActividad?: string;
   fechaVencimiento?: string;
+  ejecutivo?: string;
+  ejecutivoId?: string;
   clienteUId: number;
   cuentaBT: number;
 }
@@ -121,6 +129,12 @@ export interface ObtenerDatosBantotalResponse {
   nacionalidadId?: string;
   ocupacion?: string;
   ocupacionId?: string;
+  actividadLaboral?: string;
+  actividadLaboralId?: string;
+  sector?: string;
+  sectorId?: string;
+  clasificacionInterna?: string;
+  clasificacionInternaId?: string;
   ingresos?: string;
   correoElectronico?: string;
   telefonoCelular?: string;
@@ -139,6 +153,8 @@ export interface ObtenerDatosBantotalResponse {
   codigoPostal?: string;
   fechaInicioActividad?: string;
   fechaVencimiento?: string;
+  ejecutivo?: string;
+  ejecutivoId?: string;
   clienteUId: number;
   cuentaBT: number;
 }

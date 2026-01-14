@@ -171,15 +171,22 @@ export default class SeguimientoSolicitudesComponent {
 		// Validar que el formulario de aprobación esté completo si hay respuestas
 		const form = this.formularioAprobacion;
 		const tieneRespuestasFormulario = Object.values(form).some(v => v !== null && v !== '');
-		if (tieneRespuestasFormulario && !this.esFormularioAprobado()) {
-			alert('El formulario de aprobación no está completamente aprobado. Por favor revise todas las preguntas.');
-			return;
+
+		const estadoSeleccionado = this.estadosSolicitud().find(
+			e => e.estadoSolicitudId === this.nuevoSeguimiento.estadoAprobacionId
+		);
+
+		if (estadoSeleccionado?.nombre?.includes('APROBADO')) {
+			if (tieneRespuestasFormulario && !this.esFormularioAprobado()) {
+				alert('El formulario de aprobación no está completamente aprobado. Por favor revise todas las preguntas.');
+				return;
+			}
 		}
 
 		this.isSavingSeguimiento.set(true);
 		try {
 			const nuevoOrden = (solicitud.seguimientos?.length ?? 0) + 1;
-			
+
 			const seguimientoData: Partial<SeguimientoSolicitud> = {
 				solicitudId: solicitud.solicitudId,
 				ordenSeguimiento: nuevoOrden,
@@ -188,7 +195,7 @@ export default class SeguimientoSolicitudesComponent {
 			};
 
 			const response = await this.seguimientoService.createSeguimientoSolicitud(seguimientoData);
-			
+
 			if (response?.data) {
 				console.log('✅ Seguimiento creado exitosamente');
 				// Recargar la solicitud para ver el nuevo seguimiento
@@ -199,17 +206,17 @@ export default class SeguimientoSolicitudesComponent {
 					observaciones: ''
 				};
 				// Limpiar formulario de aprobación
-			this.formularioAprobacion = {
-				revisionFormularioCompleto: null,
-				nombreAfiliado: null,
-				numeroDpiAfiliado: null,
-				cuentaBancariaAfiliado: null,
-				firmaAfiliado: null,
-				aficiadoEmpleadoFundea: null,
-				afililadoProveedorFundea: null,
-				buenaReputacionComunidad: null,
-				validacionRegistro: ''
-			};
+				this.formularioAprobacion = {
+					revisionFormularioCompleto: null,
+					nombreAfiliado: null,
+					numeroDpiAfiliado: null,
+					cuentaBancariaAfiliado: null,
+					firmaAfiliado: null,
+					aficiadoEmpleadoFundea: null,
+					afililadoProveedorFundea: null,
+					buenaReputacionComunidad: null,
+					validacionRegistro: ''
+				};
 			}
 		} catch (error) {
 			console.error('❌ Error al crear seguimiento:', error);
@@ -268,7 +275,7 @@ export default class SeguimientoSolicitudesComponent {
 	 */
 	esFormularioAprobado(): boolean {
 		const form = this.formularioAprobacion;
-		
+
 		// Convertir strings a booleanos si es necesario
 		const convertToBoolean = (val: any): boolean | null => {
 			if (val === null || val === undefined) return null;
@@ -278,7 +285,7 @@ export default class SeguimientoSolicitudesComponent {
 			}
 			return !!val;
 		};
-		
+
 		const revision = convertToBoolean(form.revisionFormularioCompleto);
 		const nombre = convertToBoolean(form.nombreAfiliado);
 		const dpi = convertToBoolean(form.numeroDpiAfiliado);
@@ -288,7 +295,7 @@ export default class SeguimientoSolicitudesComponent {
 		const proveedor = convertToBoolean(form.afililadoProveedorFundea);
 		const reputacion = convertToBoolean(form.buenaReputacionComunidad);
 		const validacion = form.validacionRegistro?.trim() ?? '';
-		
+
 		console.log('🔍 Verificando formulario:', {
 			revision: revision === true ? '✅ Sí' : '❌ No/Vacío',
 			nombre: nombre === true ? '✅ Sí' : '❌ No/Vacío',
@@ -300,7 +307,7 @@ export default class SeguimientoSolicitudesComponent {
 			reputacion: reputacion === true ? '✅ Sí' : '❌ No/Vacío',
 			validacion: validacion.length > 0 ? '✅ Tiene texto' : '❌ Vacío'
 		});
-		
+
 		return (
 			revision === true &&
 			nombre === true &&

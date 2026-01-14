@@ -71,7 +71,7 @@ export class UpsertContacto implements OnInit {
         this.direccionCompleta.set(rep.direccion || '');
         this.selectedPaisCode.set(rep.paisDomicilio?.toString() || '320');
         this.selectedDepartamentoCode.set(rep.departamentoDomicilio?.toString() || '1');
-        this.selectedMunicipioId.set(rep.localidad?.toString() || '');
+        this.selectedMunicipioId.set(rep.municipioDomicilio?.toString() || '');
       }
     });
 

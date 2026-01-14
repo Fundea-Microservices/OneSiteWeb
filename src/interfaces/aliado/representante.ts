@@ -57,6 +57,8 @@ export interface Representante {
   clasificacionInterna?: number;
   paisDomicilio: number;
   departamentoDomicilio: number;
+  municipioDomicilio?: number;
+  
   localidad?: number;
   barrio?: number;
   

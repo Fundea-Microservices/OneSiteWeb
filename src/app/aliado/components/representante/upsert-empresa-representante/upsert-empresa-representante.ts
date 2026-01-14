@@ -57,7 +57,7 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
   nombreEmpresa = signal<string>('');
   nit = signal<string>('');
   telefono = signal<string>('');
-  selectedDepartamentoCode = signal<string>('1');
+  selectedDepartamentoCode = signal<string>('');
   selectedMunicipioId = signal<string>('');
   direccion = signal<string>('');
   selectedTipoActividadId = signal<string>('');

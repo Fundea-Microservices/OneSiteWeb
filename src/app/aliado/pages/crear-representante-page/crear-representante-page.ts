@@ -247,6 +247,8 @@ export default class CrearRepresentantePage implements AfterViewInit {
                 direccion: datos.calle || current.direccion,
                 paisDomicilio: parseInt(datos.paisDomicilioId || '320', 10),
                 departamentoDomicilio: parseInt(datos.departamentoId || '1', 10),
+                municipioDomicilio: datos.localidadId ? (typeof datos.localidadId === 'number' ? datos.localidadId : parseInt(datos.localidadId, 10)) : current.municipioDomicilio,
+                localidad: datos.localidadId ? (typeof datos.localidadId === 'number' ? datos.localidadId : parseInt(datos.localidadId, 10)) : current.municipioDomicilio,
 
                 // Datos de documento
                 paisDocumento: parseInt(datos.paisDocumentoId || '320', 10),
@@ -254,6 +256,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
                 // Datos laborales y financieros
                 ocupacion: datos.ocupacionId ? parseInt(datos.ocupacionId, 10) : current.ocupacion,
+                actividadLaboral: datos.actividadLaboralId ? parseInt(datos.actividadLaboralId, 10) : current.actividadLaboral,
                 ingresos: datos.ingresos ? parseFloat(datos.ingresos) : current.ingresos,
                 fechaInicioActividad: datos.fechaInicioActividad || current.fechaInicioActividad,
                 fechaVencimiento: datos.fechaVencimiento || current.fechaVencimiento,
