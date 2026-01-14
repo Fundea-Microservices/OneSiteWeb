@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { UpsertContacto } from '../../components/representante/upsert-contacto/upsert-contacto';
 import { UpsertActividadLaboralFinanciera } from '../../components/representante/upsert-actividad-laboral-financiera/upsert-actividad-laboral-financiera';
 import { AgenteService } from '../../../../services/terceros/agente.service';
@@ -25,6 +25,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
   private toastr = inject(ToastrService);
   private representanteService = inject(RepresentanteService);
   private clienteService = inject(ClienteBantotalService);
+  private router = inject(Router);
 
   frontPreview: string | ArrayBuffer | null = null;
   backPreview: string | ArrayBuffer | null = null;
@@ -49,32 +50,39 @@ export default class CrearRepresentantePage implements AfterViewInit {
   activeSection = signal<'datos' | 'contacto' | 'actividad' | null>('datos');
   llenadorManualHabilitado = signal(false);
 
+  postCreateModalOpen = signal(false);
+  lastCreatedRepresentanteId = signal<string | null>(null);
+
   // Datos de búsqueda Bantotal
   cuentaBT = signal<number | null>(null);
   buscandoCliente = signal(false);
   private debounceTimeout: any = null;
 
 
-  representante = signal<Representante>({
-    representanteId: '',
-    documento: '',
-    direccion: '',
-    nit: '',
-    correoElectronico: '',
-    paisDocumento: 320,
-    tipoDocumento: 1,
-    primerApellido: '',
-    segundoApellido: '',
-    primerNombre: '',
-    segundoNombre: '',
-    sexo: 'M',
-    etnia: 6,
-    nacionalidad: 320,
-    paisDomicilio: 320,
-    departamentoDomicilio: 0,
-    telefonoCelular: '',
-    telefonoFijo: '',
-  });
+  representante = signal<Representante>(this.buildRepresentanteInicial());
+
+  private buildRepresentanteInicial(documento: string = ''): Representante {
+    return {
+      representanteId: '',
+      documento: documento,
+      direccion: '',
+      nit: '',
+      correoElectronico: '',
+      paisDocumento: 320,
+      tipoDocumento: 1,
+      primerApellido: '',
+      segundoApellido: '',
+      primerNombre: '',
+      segundoNombre: '',
+      sexo: 'M',
+      etnia: 6,
+      nacionalidad: 320,
+      paisDomicilio: 320,
+      departamentoDomicilio: 0,
+      telefonoCelular: '',
+      telefonoFijo: '',
+    };
+  }
 
   constructor(private cdr: ChangeDetectorRef) {
     // Effect para reinicializar Flowbite cuando se muestre el contenido
@@ -123,28 +131,46 @@ export default class CrearRepresentantePage implements AfterViewInit {
   }
 
   reiniciarCampos(documento:string = '') {
-    this.representante.update(current => ({
-      representanteId: '',
-      documento: documento,
-      direccion: '',
-      nit: '',
-      correoElectronico: '',
-      paisDocumento: 320,
-      tipoDocumento: 1,
-      primerApellido: '',
-      segundoApellido: '',
-      primerNombre: '',
-      segundoNombre: '',
-      sexo: 'M',
-      etnia: 6,
-      nacionalidad: 320,
-      paisDomicilio: 320,
-      departamentoDomicilio: 0,
-      telefonoCelular: '',
-      telefonoFijo: '',
-    }));
+    this.representante.set(this.buildRepresentanteInicial(documento));
 
-    this.cuentaBT.set(0)
+    this.cuentaBT.set(null);
+  }
+
+  limpiarFormularioCompleto() {
+    this.reiniciarCampos();
+    this.frontPreview = null;
+    this.backPreview = null;
+    this.frontFile = null;
+    this.backFile = null;
+    this.dpiFrontValidado.set(false);
+    this.dpiBackValidado.set(false);
+    this.dpiValidado.set(false);
+    this.intentosFallidos.set(0);
+    this.datosFrontalDPI.set(null);
+    this.datosReversoDPI.set(null);
+    this.validandoFront.set(false);
+    this.validandoBack.set(false);
+    this.camposBloqueados.set(false);
+    this.llenadorManualHabilitado.set(false);
+    this.activeSection.set('datos');
+    this.buscandoCliente.set(false);
+
+    if (this.debounceTimeout) {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = null;
+    }
+
+    const frontInput = document.getElementById('frontDpiInput') as HTMLInputElement | null;
+    if (frontInput) {
+      frontInput.value = '';
+    }
+
+    const backInput = document.getElementById('backDpiInput') as HTMLInputElement | null;
+    if (backInput) {
+      backInput.value = '';
+    }
+
+    this.cdr.detectChanges();
   }
 
     /**
@@ -632,6 +658,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
   }
 
   async onGuardar() {
+      if (!this.frontPreview || !this.backPreview) {
+        alert('Las fotos de DPI, de frente y reverso son obligatorias.');
+        return; // Prevent saving if images are not uploaded
+      }
+
     try {
       // Recolectar y sanitizar el payload según la interfaz Representante
       const datosCrudos = this.representante();
@@ -654,10 +685,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
       const resp = await this.representanteService.crearRepresentante(payload);
 
       if (resp?.success) {
+        const nuevoRepresentanteId = resp.data?.representante?.representanteId || payload.representanteId || null;
+        this.lastCreatedRepresentanteId.set(nuevoRepresentanteId);
         this.toastr.success('Representante creado correctamente', 'Éxito');
-        // Limpiar formulario
-        this.representante.set({} as Representante);
-        // Redirigir si es necesario
+        this.limpiarFormularioCompleto();
+        this.abrirModalPostCreacion();
       } else {
         this.toastr.error(resp?.message || 'Error al crear representante', 'Error');
       }
@@ -665,6 +697,33 @@ export default class CrearRepresentantePage implements AfterViewInit {
       console.error('❌ Error en onGuardar:', error);
       this.toastr.error(error?.message || 'Error inesperado', 'Error');
     }
+  }
+
+  abrirModalPostCreacion() {
+    if (!this.lastCreatedRepresentanteId()) {
+      this.toastr.info('Representante creado, pero no se recibió el identificador', 'Aviso');
+      this.irAListadoRepresentante();
+      return;
+    }
+
+    this.postCreateModalOpen.set(true);
+  }
+
+  irAListadoRepresentante() {
+    this.postCreateModalOpen.set(false);
+    this.router.navigate(['/aliado/listado-representante']);
+  }
+
+  irAEmpresasRepresentante() {
+    const representanteId = this.lastCreatedRepresentanteId();
+
+    if (!representanteId) {
+      this.irAListadoRepresentante();
+      return;
+    }
+
+    this.postCreateModalOpen.set(false);
+    this.router.navigate(['/aliado/empresas-representante', representanteId]);
   }
 
 }

@@ -295,6 +295,10 @@
                         Guardar
                     </button>
                 </div>
+                <div *ngIf="!frontPreview || !backPreview" class="text-red-600">
+                    Las fotos de DPI, de frente y reverso son obligatorias.
+                </div>
+
             </div>
         </div>
 
@@ -306,3 +310,22 @@
 
 
 </div>
+
+@if (postCreateModalOpen()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Representante creado</h3>
+        <p class="text-gray-600 mb-6">¿Desea añadir una empresa y/o cuenta bancaria al representante?</p>
+        <div class="flex justify-end gap-3">
+            <button type="button" class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100"
+                (click)="irAListadoRepresentante()">
+                Cancelar
+            </button>
+            <button type="button" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                (click)="irAEmpresasRepresentante()">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</div>
+}
