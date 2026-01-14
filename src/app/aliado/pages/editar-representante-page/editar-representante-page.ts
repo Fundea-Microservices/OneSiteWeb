@@ -67,9 +67,7 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
         // Si tiene documento, cargar la cuenta BT
         if (resultado.data.representante.documento) {
           const docSinFormato = resultado.data.representante.documento.replace(/\s/g, '');
-          if (docSinFormato.length === 13) {
-            this.buscarClientePorDocumento(docSinFormato);
-          }
+          
         }
 
         console.log('✅ Representante cargado:', resultado.data.representante);
@@ -92,48 +90,6 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
     this.camposBloqueados.update(value => !value);
   }
 
-  /**
-   * Buscar datos del cliente en Bantotal por documento
-   */
-  buscarClientePorDocumento(documentoSinFormato: string) {
-    if (this.debounceTimeout) {
-      clearTimeout(this.debounceTimeout);
-    }
-
-    if (documentoSinFormato.length !== 13) {
-      this.cuentaBT.set(null);
-      return;
-    }
-
-    this.debounceTimeout = setTimeout(() => {
-      this.buscandoCliente.set(true);
-      console.log('🔍 Buscando cliente con documento:', documentoSinFormato);
-
-      this.clienteService.obtenerDatosBantotal({
-        documento: documentoSinFormato,
-        pais: 320,
-        tipoDoc: 1
-      }).subscribe({
-        next: (datos) => {
-          console.log('✅ Datos de cliente encontrados:', datos);
-          
-          if (datos.cuentaBT) {
-            this.cuentaBT.set(datos.cuentaBT);
-            console.log(`💳 Cuenta Bantotal encontrada: ${datos.cuentaBT}`);
-          }
-          
-          this.buscandoCliente.set(false);
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.log('⚠️ Cliente no encontrado en Bantotal:', error.message);
-          this.cuentaBT.set(null);
-          this.buscandoCliente.set(false);
-          this.cdr.detectChanges();
-        }
-      });
-    }, 500);
-  }
 
   /**
    * Guardar cambios del representante
