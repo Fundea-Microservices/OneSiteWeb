@@ -704,7 +704,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
   abrirModalPostCreacion() {
     if (!this.lastCreatedRepresentanteId()) {
-      this.toastr.info('Representante creado, pero no se recibió el identificador', 'Aviso');
+      this.toastr.info('Representante creado', 'Aviso');
       this.irAListadoRepresentante();
       return;
     }
