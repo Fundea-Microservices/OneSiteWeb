@@ -165,7 +165,7 @@ export default class UpsertSolicitudComponent implements OnInit {
     );
   }
 
-  onArchivoSeleccionado(event: Event): void {
+  onArchivoSeleccionado2(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
@@ -252,6 +252,14 @@ export default class UpsertSolicitudComponent implements OnInit {
     return this.agencias().find((a) => a.agenciaId === id)?.nombre ?? '';
   }
 
+  onArchivoSeleccionado(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.archivoSeleccionado.set(file);
+      this.nombreArchivo.set(file.name);
+    }
+  }
+
   generarDocumento(): void {
     const rep = this.representante();
     if (!rep) return;
@@ -277,20 +285,28 @@ export default class UpsertSolicitudComponent implements OnInit {
   }
 
   private crearHTMLDocumento(rep: Representante): string {
-    const hoy = new Date().toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    const empresa = this.empresa();
+    const hoy = new Date();
+    const dia = hoy.getDate();
+    const mes = hoy.toLocaleDateString('es-ES', { month: 'long' });
+    const anio = hoy.getFullYear();
+    
+    // Obtener municipio y departamento del representante
+    const municipio = '___________________';
+    const departamento = '___________________';
 
     return `
       <!DOCTYPE html>
       <html lang="es">
       <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Solicitud de Afiliación</title>
+        <title>Carta de Entendimiento - Red de Referidos FUNDEA</title>
         <style>
+          @page {
+            size: letter;
+            margin: 3.5cm;
+          }
+          
           * {
             margin: 0;
             padding: 0;
@@ -298,252 +314,333 @@ export default class UpsertSolicitudComponent implements OnInit {
           }
           
           body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            padding: 40px;
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+            padding: 3.5cm 3.5cm 1cm 3.5cm;
           }
           
           .container {
-            max-width: 800px;
-            margin: 0 auto;
-            border: 2px solid #000;
-            padding: 40px;
-            background: white;
+            max-width: 100%;
           }
           
           .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 20px;
-          }
-          
-          .header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-          }
-          
-          .header p {
-            font-size: 12px;
-            color: #666;
-          }
-          
-          .section {
-            margin-bottom: 25px;
-          }
-          
-          .section-title {
-            font-weight: bold;
-            font-size: 14px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-          }
-          
-          .row {
+            background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+            padding: 25px 30px;
+            text-align: left;
+            margin: 0 -3.5cm 25px -3.5cm;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
-            gap: 30px;
-            margin-bottom: 10px;
+            align-items: center;
+            justify-content: space-between;
           }
           
-          .col {
+          .header-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+          }
+          
+          .logo-container {
+            flex: 0 0 auto;
+            margin-right: 20px;
+          }
+          
+          .logo-text {
+            font-size: 32pt;
+            font-weight: bold;
+            color: white;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-family: 'Arial Black', Arial, sans-serif;
+          }
+          
+          .logo-subtitle {
+            color: white;
+            font-size: 9pt;
+            margin-top: 5px;
+            font-style: italic;
+            opacity: 0.95;
+          }
+          
+          .header-right {
             flex: 1;
+            text-align: right;
+            color: white;
           }
           
-          .field {
-            margin-bottom: 12px;
-          }
-          
-          .label {
+          .titulo {
+            text-align: center;
             font-weight: bold;
-            font-size: 11px;
-            color: #000;
+            font-size: 14pt;
+            margin-bottom: 25px;
+            line-height: 1.4;
+            text-transform: uppercase;
           }
           
-          .value {
-            font-size: 11px;
-            color: #333;
-            padding: 4px 0;
-            border-bottom: 1px solid #ccc;
-            min-height: 18px;
-          }
-          
-          .signature-section {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #000;
-          }
-          
-          .signature-line {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 50px;
-          }
-          
-          .signature-box {
-            text-align: center;
-            width: 150px;
-          }
-          
-          .sig-line {
-            border-top: 1px solid #000;
-            margin-top: 30px;
-            padding-top: 5px;
-            font-size: 10px;
-          }
-          
-          .date-section {
-            text-align: center;
+          .fecha-lugar {
             margin-bottom: 20px;
-            font-size: 11px;
+            line-height: 1.8;
+            text-align: justify;
+          }
+          
+          .partes {
+            margin-bottom: 20px;
+            text-align: justify;
+            line-height: 1.7;
+          }
+          
+          .partes p {
+            margin-bottom: 15px;
+          }
+          
+          .clausula {
+            margin-bottom: 18px;
+            text-align: justify;
+          }
+          
+          .clausula-titulo {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 10.5pt;
+          }
+          
+          .clausula-texto {
+            margin-bottom: 10px;
+            text-align: justify;
+            line-height: 1.6;
+          }
+          
+          ol, ul {
+            margin-left: 25px;
+            margin-bottom: 10px;
+          }
+          
+          li {
+            margin-bottom: 6px;
+            line-height: 1.5;
+          }
+          
+          .tabla-comisiones {
+            margin: 12px 0 12px 20px;
+            line-height: 1.7;
+          }
+          
+          .condiciones {
+            margin: 12px 0 12px 20px;
+            line-height: 1.6;
+          }
+          
+          .condiciones p {
+            margin-bottom: 5px;
+          }
+          
+          .firmas {
+            margin-top: 60px;
+            page-break-inside: avoid;
+          }
+          
+          .firmas-titulo {
+            font-weight: bold;
+            margin-bottom: 35px;
+            font-size: 12pt;
+            text-align: center;
+          }
+          
+          .firma-seccion {
+            margin-bottom: 40px;
+          }
+          
+          .firma-seccion p {
+            margin-bottom: 8px;
+            line-height: 1.8;
+          }
+          
+          .firma-linea {
+            display: inline-block;
+            min-width: 300px;
+            border-bottom: 1px solid #000;
+            margin-left: 5px;
+          }
+          
+          .page-break {
+            page-break-after: always;
+          }
+          
+          .footer-info {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 9pt;
+            color: #666;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
           }
           
           @media print {
             body {
-              padding: 0;
+              font-size: 10.5pt;
+              padding: 0 2cm 1cm 2cm;
             }
-            .container {
-              border: none;
-              max-width: 100%;
+            
+            .header {
+              margin: -2.5cm -2cm 25px -2cm;
+              break-inside: avoid;
+            }
+            
+            .page-break {
+              page-break-after: always;
+            }
+            
+            .firmas {
+              break-inside: avoid;
             }
           }
         </style>
       </head>
       <body>
         <div class="container">
+          <!-- PÁGINA 1 -->
           <div class="header">
-            <h1>SOLICITUD DE AFILIACIÓN</h1>
-            <p>Fundación para el Desarrollo Empresarial (FUNDEA)</p>
+            <div class="header-content">
+              <div class="logo-container">
+                <div class="logo-text">FUNDEA</div>
+                <div class="logo-subtitle">¡Que buena idea!</div>
+              </div>
+            </div>
+          </div>
+        
+        <div class="titulo">
+          CARTA DE ENTENDIMIENTO<br>
+          RED DE REFERIDOS FUNDEA
+        </div>
+        
+        <div class="fecha-lugar">
+          En el municipio de ${municipio}, departamento de ${departamento}, el día ____ de ${mes} de ${anio}, comparecen:
+        </div>
+        
+        <div class="partes">
+          <p style="margin-bottom: 12px;"><strong>I.</strong> FUNDACIÓN PARA EL DESARROLLO EMPRESARIAL Y AGRÍCOLA –FUNDEA–, entidad no lucrativa debidamente constituida conforme las leyes de la República de Guatemala, representada en este acto por _________________________________________, quien se identifica con DPI No. _________________, en su calidad de _________________________________________ (acreditar representación legal).</p>
+          
+          <p><strong>II.</strong> _________________________________________, en adelante "LA EMPRESA AFILIADA", representada por _________________________________________, quien se identifica con DPI No. _________________, en su calidad de _________________________________________ (acreditar representación legal).</p>
+        </div>
+        
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA PRIMERA – OBJETO</div>
+          <div class="clausula-texto">
+            El presente documento tiene por finalidad establecer los términos de cooperación mediante los cuales LA EMPRESA AFILIADA referirá a FUNDEA clientes potenciales interesados en la obtención de crédito, conforme políticas internas y normativa aplicable.
+          </div>
+        </div>
+        
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA SEGUNDA – RESPONSABILIDADES DE LA EMPRESA AFILIADA</div>
+          <ol>
+            <li>Enviar información de clientes potenciales mediante la aplicación autorizada.</li>
+            <li>Completar toda la información requerida, bajo principio de veracidad.</li>
+            <li>Obtener consentimiento informado del cliente para compartir datos.</li>
+            <li>Capacitar a sus colaboradores según lineamientos de FUNDEA.</li>
+            <li>Abstenerse de prometer aprobaciones o condiciones crediticias.</li>
+            <li>Cumplir legislación de protección de datos.</li>
+          </ol>
+        </div>
+        
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA TERCERA – RESPONSABILIDADES DE FUNDEA</div>
+          <ol>
+            <li>Recibir y evaluar solicitudes.</li>
+            <li>Procesar información conforme normativa vigente.</li>
+            <li>Pagar comisiones en los plazos establecidos.</li>
+            <li>Proporcionar capacitación necesaria.</li>
+          </ol>
+        </div>
+        
+        <div class="page-break"></div>
+        
+        <!-- PÁGINA 2 -->
+        <div class="clausula-texto" style="margin-top: 0;">
+          <strong>De la observación especial:</strong> Con los clientes referidos, FUNDEA, a través de su departamento específico o personas designadas, realizarán el estudio crediticio para determinar la aprobación o no de la solicitud de crédito. FUNDEA en ningún caso garantizará la aprobación del crédito que se realice en la forma y modo de esta carta de entendimiento.
+        </div>
+        
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA CUARTA – TABLA DE COMISIONES</div>
+          <div class="clausula-texto">
+            Cuando LA EMPRESA AFILIADA, proporcione las cantidades de clientes que se detallan a continuación, FUNDEA realizará el pago de las siguientes comisiones de conformidad con el número de desembolsos que se realicen:
+          </div>
+          <div class="tabla-comisiones">
+            <p>1–4 desembolsos/mes: Q100 c/u</p>
+            <p>5–9 desembolsos/mes: Q150 c/u</p>
+            <p>10 desembolsos/mes o más: Q200 c/u</p>
+          </div>
+          <div class="condiciones">
+            <p><strong>Condiciones para devengar comisión:</strong></p>
+            <p>a) Cliente nuevo.</p>
+            <p>b) Formulario completo.</p>
+            <p>c) Crédito aprobado y desembolsado posterior a la fecha de referencia.</p>
+          </div>
+        </div>
+        
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA QUINTA – CONFIDENCIALIDAD Y PROTECCIÓN DE DATOS</div>
+          <div class="clausula-texto">
+            Ambas partes deberán mantener estricta confidencialidad y cumplir la normativa aplicable, notificando cualquier filtración inmediatamente.
+          </div>
+        </div>
+        
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA SEXTA – SUPERVISIÓN Y COMUNICACIÓN</div>
+          <div class="clausula-texto">
+            Coordinación a cargo del Jefe(a) de Agencia ______________ de FUNDEA y el representante designado de LA EMPRESA AFILIADA.
+          </div>
+        </div>
+        
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA SÉPTIMA – LIMITACIÓN DE RESPONSABILIDAD</div>
+          <div class="clausula-texto">
+            FUNDEA es la única entidad responsable del análisis y aprobación del crédito. No se generan relaciones laborales ni obligaciones adicionales.
+          </div>
+        </div>
+        
+        <div class="page-break"></div>
+        
+        <!-- PÁGINA 3 -->
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA OCTAVA – TERMINACIÓN</div>
+          <div class="clausula-texto">
+            FUNDEA podrá revocar la afiliación en cualquier momento mediante notificación escrita. Cualquier modificación deberá hacerse mediante intercambio de cartas.
+          </div>
+        </div>
+        
+        <div class="clausula">
+          <div class="clausula-titulo">CLÁUSULA NOVENA – VIGENCIA</div>
+          <div class="clausula-texto">
+            Esta carta de entendimiento entra en vigencia a partir de su firma y por tiempo indefinido.
+          </div>
+        </div>
+        
+        <div class="firmas">
+          <div class="firmas-titulo">FIRMAS</div>
+          
+          <div class="firma-seccion">
+            <p><strong>Por FUNDEA:</strong></p>
+            <p>Nombre: <span class="firma-linea"></span></p>
+            <p>Cargo: <span class="firma-linea"></span></p>
+            <p>DPI: <span class="firma-linea"></span></p>
+            <p>Firma: <span class="firma-linea"></span></p>
           </div>
           
-          <div class="date-section">
-            <strong>Fecha:</strong> ${hoy}
+          <div class="firma-seccion">
+            <p><strong>Por la Empresa Afiliada:</strong></p>
+            <p>Nombre: <span class="firma-linea"></span></p>
+            <p>Cargo: <span class="firma-linea"></span></p>
+            <p>DPI: <span class="firma-linea"></span></p>
+            <p>Firma: <span class="firma-linea"></span></p>
           </div>
-          
-          <div class="section">
-            <div class="section-title">DATOS DEL REPRESENTANTE</div>
-            <div class="row">
-              <div class="col">
-                <div class="field">
-                  <span class="label">Nombre Completo:</span>
-                  <div class="value">${this.getNombreCompleto()}</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="field">
-                  <span class="label">Documento:</span>
-                  <div class="value">${rep.documento || ''}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="row">
-              <div class="col">
-                <div class="field">
-                  <span class="label">NIT:</span>
-                  <div class="value">${rep.nit || ''}</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="field">
-                  <span class="label">Teléfono Celular:</span>
-                  <div class="value">${rep.telefonoCelular || ''}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="row">
-              <div class="col">
-                <div class="field">
-                  <span class="label">Correo Electrónico:</span>
-                  <div class="value">${rep.correoElectronico || ''}</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="field">
-                  <span class="label">Teléfono Fijo:</span>
-                  <div class="value">${rep.telefonoFijo || ''}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="row">
-              <div class="col">
-                <div class="field">
-                  <span class="label">Dirección:</span>
-                  <div class="value">${rep.direccion || ''}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="row">
-              <div class="col">
-                <div class="field">
-                  <span class="label">Fecha de Nacimiento:</span>
-                  <div class="value">${rep.fechaNacimiento ? new Date(rep.fechaNacimiento).toLocaleDateString('es-ES') : ''}</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="field">
-                  <span class="label">Sexo:</span>
-                  <div class="value">${rep.sexo === 'M' ? 'Masculino' : rep.sexo === 'F' ? 'Femenino' : ''}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">DATOS DE ACTIVIDAD LABORAL</div>
-            <div class="row">
-              <div class="col">
-                <div class="field">
-                  <span class="label">Nombre Empresa:</span>
-                  <div class="value">${rep.nombreEmpresa || ''}</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="field">
-                  <span class="label">Ingresos Mensuales:</span>
-                  <div class="value">Q ${(rep.ingresos || 0).toLocaleString('es-ES')}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="row">
-              <div class="col">
-                <div class="field">
-                  <span class="label">Fecha Inicio Actividad:</span>
-                  <div class="value">${rep.fechaInicioActividad ? new Date(rep.fechaInicioActividad).toLocaleDateString('es-ES') : ''}</div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="field">
-                  <span class="label">Profesión/Ocupación:</span>
-                  <div class="value"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="signature-section">
-            <p style="font-size: 12px; margin-bottom: 10px;"><strong>Declaración:</strong></p>
-            <p style="font-size: 11px; line-height: 1.8; margin-bottom: 20px;">
-              Declaro bajo protesta de decir verdad que todos los datos e información proporcionada en este documento son correctos y verídicos. Autorizo a FUNDEA para que verifique la información contenida en esta solicitud.
-            </p>
-            
-            <div class="signature-line">
-              <div class="signature-box">
-                <div class="sig-line">
-                  <strong>${this.getNombreCompleto()}</strong><br>
-                  Firma del Representante
-                </div>
-              </div>
-              <div class="signature-box">
-                <div class="sig-line">Fecha</div>
-              </div>
-            </div>
-          </div>
+        </div>
+        
+        <div class="footer-info">
+          <p>Oficinas Centrales: 15 avenida 2-09 zona 13, Ciudad de Guatemala • PBX: 2444 - 2222</p>
+          <p>www.fundea.org.gt</p>
+        </div>
         </div>
       </body>
       </html>
