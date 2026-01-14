@@ -212,7 +212,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
       // Establecer nuevo debounce de 500ms
       this.debounceTimeout = setTimeout(() => {
         this.buscandoCliente.set(true);
-        console.log('🔍 Buscando cliente con documento:', documentoSinFormato);
 
         this.clienteService.obtenerDatosBantotal({
           documento: documentoSinFormato,
@@ -220,7 +219,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
           tipoDoc: 1
         }).subscribe({
           next: (datos) => {
-            console.log('✅ Datos de cliente encontrados:', datos);
+            console.log('Datos de cliente encontrados:', datos);
 
             // Mapear datos de Bantotal al representante
             this.representante.update(current => {
@@ -249,7 +248,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
                 departamentoDomicilio: parseInt(datos.departamentoId || '1', 10),
                 municipioDomicilio: datos.localidadId ? (typeof datos.localidadId === 'number' ? datos.localidadId : parseInt(datos.localidadId, 10)) : current.municipioDomicilio,
                 localidad: datos.localidadId ? (typeof datos.localidadId === 'number' ? datos.localidadId : parseInt(datos.localidadId, 10)) : current.municipioDomicilio,
-
+                
                 // Datos de documento
                 paisDocumento: parseInt(datos.paisDocumentoId || '320', 10),
                 tipoDocumento: parseInt(datos.tipoDocumentoId || '1', 10),
@@ -260,7 +259,9 @@ export default class CrearRepresentantePage implements AfterViewInit {
                 ingresos: datos.ingresos ? parseFloat(datos.ingresos) : current.ingresos,
                 fechaInicioActividad: datos.fechaInicioActividad || current.fechaInicioActividad,
                 fechaVencimiento: datos.fechaVencimiento || current.fechaVencimiento,
-
+                profesion: datos.profesionId ? parseInt(datos.profesionId.toString(), 10) : current.profesion,
+                etnia: datos.etniaId ? parseInt(datos.etniaId.toString(), 10) : current.etnia,
+                sectorId: datos.sectorId ? parseInt(datos.sectorId.toString(), 10) : current.sectorId,
                 // Estado civil (si aplica)
                 estadoCivil: datos.estadoCivilId ? parseInt(datos.estadoCivilId, 10) : current.estadoCivil,
 
@@ -268,20 +269,18 @@ export default class CrearRepresentantePage implements AfterViewInit {
                 cuentaBT: datos.cuentaBT || current.cuentaBT,
               };
 
-              console.log('📝 Datos mapeados al representante:', datosActualizados);
               return datosActualizados;
             });
 
             if (datos.cuentaBT) {
               this.cuentaBT.set(datos.cuentaBT);
-              console.log(`💳 Cuenta Bantotal encontrada: ${datos.cuentaBT}`);
             }
 
             this.buscandoCliente.set(false);
             this.cdr.detectChanges();
           },
           error: (error) => {
-            console.log('⚠️ Cliente no encontrado en Bantotal o error en búsqueda:', error.message);
+            console.log('Cliente no encontrado en Bantotal o error en búsqueda:', error.message);
             this.cuentaBT.set(null);
             this.buscandoCliente.set(false);
             this.cdr.detectChanges();
@@ -314,7 +313,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       this.validandoFront.set(true);
       this.dpiFrontValidado.set(false);
 
-      console.log('🔍 Validando DPI frontal...');
+      console.log('Validando DPI frontal...');
 
       this.agenteService.validarDocumento({
         accion: 'dpi_frente',
@@ -323,17 +322,13 @@ export default class CrearRepresentantePage implements AfterViewInit {
         next: (response) => {
           this.validandoFront.set(false);
 
-          console.log('📦 Respuesta completa del servicio:', response);
-          console.log('🔍 Success:', response.metadata?.success || response.documento?.metadata?.success);
-          console.log('🔍 Decision IA:', response.resumen_ejecutivo?.decision_ia || response.documento?.resumen_ejecutivo?.decision_ia);
-          console.log('🔍 Mensaje:', this.agenteService.getMensajeUsuario(response));
+          console.log('Respuesta completa del servicio:', response);
 
           if (this.agenteService.isDocumentoAprobado(response)) {
             this.dpiFrontValidado.set(true);
             this.datosFrontalDPI.set(response);
             this.extraerDatosFrontales(response);
             this.toastr.success('DPI frontal validado correctamente', this.agenteService.getMensajeUsuario(response));
-            console.log('✅ DPI frontal aprobado');
             if(this.llenadorManualHabilitado()){
               this.camposBloqueados.set(false);
             }
@@ -342,13 +337,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
             this.intentosFallidos.update(count => count + 1);
             const mensaje = this.agenteService.getMensajeUsuario(response);
             this.toastr.error(mensaje, 'Error de validación');
-            console.log('❌ DPI frontal rechazado:', mensaje);
 
             // Si ya hay 3 intentos fallidos, habilitar entrada manual
             if (this.intentosFallidos() >= 3) {
               this.dpiValidado.set(true);
               this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
-              console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
             }
           }
 
@@ -361,13 +354,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
           this.dpiFrontValidado.set(false);
           this.intentosFallidos.update(count => count + 1);
           this.toastr.error('Error al validar el documento', 'Error');
-          console.error('❌ Error en validación frontal:', error);
 
           // Si ya hay 3 intentos fallidos, habilitar entrada manual
           if (this.intentosFallidos() >= 3) {
             this.dpiValidado.set(true);
             this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
-            console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
           }
 
           this.cdr.markForCheck();
@@ -379,8 +370,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
       const datos = response.contenido_documento?.datos_especificos;
       const desglose = datos?.desglose_nombre;
 
-      console.log('📄 Datos frontales recibidos:', datos);
-
       if (datos && desglose) {
         this.camposBloqueados.set(true);
         this.dpiFrontValidado.set(true);
@@ -389,9 +378,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
         // Normalizar fechas que vienen con año de 2 dígitos (0174 -> 1974)
         const fechaNacimiento = this.normalizarFecha(datos.fecha_nacimiento);
         const fechaEmision = this.normalizarFecha(datos.fecha_de_emision);
-
-        console.log('📅 Fecha nacimiento normalizada:', fechaNacimiento);
-        console.log('📅 Fecha emisión normalizada:', fechaEmision);
 
         this.representante.update(current => ({
           ...current,
@@ -417,16 +403,13 @@ export default class CrearRepresentantePage implements AfterViewInit {
     // Función helper para normalizar fechas en diferentes formatos
     private normalizarFecha(fecha: string | undefined): string {
       if (!fecha) return '';
-      
-      console.log('📅 Normalizando fecha:', fecha);
-      
+            
       // Detectar y convertir formato ISO (YYYY-MM-DD)
       if (fecha.includes('-')) {
         const partes = fecha.split('-');
         if (partes.length === 3) {
           const [anio, mes, dia] = partes;
           const fechaFormato = `${dia}/${mes}/${anio}`;
-          console.log('✅ Fecha convertida de ISO a DD/MM/YYYY:', fechaFormato);
           return fechaFormato;
         }
       }
@@ -434,7 +417,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
       // Formato esperado: DD/MM/YYYY o DD/MM/YY
       const partes = fecha.split('/');
       if (partes.length !== 3) {
-        console.warn('⚠️ Formato de fecha no reconocido:', fecha);
         return fecha;
       }
       
@@ -443,18 +425,15 @@ export default class CrearRepresentantePage implements AfterViewInit {
       // Si el año tiene 4 dígitos pero empieza con 0 (ej: 0174 -> 1974)
       if (anio.length === 4 && anio.startsWith('0')) {
         anio = '1' + anio.substring(1);
-        console.log('🔧 Año corregido de 0XXX a 1XXX:', anio);
       }
       // Si el año tiene 2 dígitos (ej: 74 -> 1974)
       else if (anio.length === 2) {
         const anioNum = parseInt(anio, 10);
         // Asumir que años < 50 son 2000+, años >= 50 son 1900+
         anio = (anioNum < 50 ? '20' : '19') + anio;
-        console.log('🔧 Año expandido de 2 dígitos a 4:', anio);
       }
       
       const fechaFormato = `${dia}/${mes}/${anio}`;
-      console.log('✅ Fecha final:', fechaFormato);
       return fechaFormato;
     }
 
@@ -482,7 +461,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       this.validandoBack.set(true);
       this.dpiBackValidado.set(false);
 
-      console.log('🔍 Validando DPI reverso...');
+      console.log('Validando DPI reverso...');
 
       this.agenteService.validarDocumento({
         accion: 'dpi_reverso',
@@ -491,17 +470,13 @@ export default class CrearRepresentantePage implements AfterViewInit {
         next: (response) => {
           this.validandoBack.set(false);
 
-          console.log('📦 Respuesta completa del servicio (reverso):', response);
-          console.log('🔍 Success:', response.metadata?.success || response.documento?.metadata?.success);
-          console.log('🔍 Decision IA:', response.resumen_ejecutivo?.decision_ia || response.documento?.resumen_ejecutivo?.decision_ia);
-          console.log('🔍 Mensaje:', this.agenteService.getMensajeUsuario(response));
+          console.log('Respuesta completa del servicio (reverso):', response);
 
           if (this.agenteService.isDocumentoAprobado(response)) {
             this.dpiBackValidado.set(true);
             this.datosReversoDPI.set(response);
             this.extraerDatosReverso(response);
             this.toastr.success('DPI reverso validado correctamente', 'Éxito');
-            console.log('✅ DPI reverso aprobado');
             if(this.llenadorManualHabilitado()){
               this.camposBloqueados.set(false);
             }
@@ -510,13 +485,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
             this.intentosFallidos.update(count => count + 1);
             const mensaje = this.agenteService.getMensajeUsuario(response);
             this.toastr.error(mensaje, 'Error de validación');
-            console.log('❌ DPI reverso rechazado:', mensaje);
 
             // Si ya hay 3 intentos fallidos, habilitar entrada manual
             if (this.intentosFallidos() >= 3) {
               this.dpiValidado.set(true);
               this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
-              console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
             }
           }
 
@@ -529,13 +502,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
           this.dpiBackValidado.set(false);
           this.intentosFallidos.update(count => count + 1);
           this.toastr.error('Error al validar el documento', 'Error');
-          console.error('❌ Error en validación reverso:', error);
 
           // Si ya hay 3 intentos fallidos, habilitar entrada manual
           if (this.intentosFallidos() >= 3) {
             this.dpiValidado.set(true);
             this.toastr.warning('Se habilitó el ingreso manual de datos', 'Ingreso manual');
-            console.log('⚠️ 3 intentos fallidos - Habilitando ingreso manual');
           }
 
           this.cdr.markForCheck();
@@ -548,9 +519,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
       const demografia = datos?.demografia;
       const geografia = datos?.geografia;
       const seguridad = datos?.datos_seguridad;
-
-      console.log('📊 Datos demográficos recibidos:', demografia);
-      console.log('🌎 Datos geográficos recibidos:', geografia);
 
       if (datos) {
         this.camposBloqueados.set(true);
@@ -576,7 +544,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
         // Normalizar fecha de vencimiento
         const fechaVencimiento = this.normalizarFecha(demografia?.fecha_de_vencimiento);
-        console.log('📅 Fecha vencimiento normalizada:', fechaVencimiento);
 
         this.representante.update(current => ({
           ...current,
@@ -593,9 +560,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
           numeroSerie: seguridad?.numero_de_serie || '',
           fechaVencimiento: fechaVencimiento
         }));
-
-        console.log('📋 Datos reverso extraídos:', this.representante());
-        console.log('👉 Estado civil mapeado:', estadoCivilCodigo);
       }
     }
 
@@ -670,7 +634,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
       // Recolectar y sanitizar el payload según la interfaz Representante
       const datosCrudos = this.representante();
       const payload = this.sanitizeRepresentante(datosCrudos);
-      console.log("🚀 ~ CrearRepresentantePage ~ onGuardar ~ payload listo:", payload);
 
       // Validar que tengamos datos básicos
       if (!payload.documento || !payload.primerNombre || !payload.primerApellido) {

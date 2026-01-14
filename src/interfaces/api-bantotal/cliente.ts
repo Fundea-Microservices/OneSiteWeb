@@ -105,6 +105,18 @@ export interface DatosBantotalCliente {
   ejecutivoId?: string;
   clienteUId: number;
   cuentaBT: number;
+    // Campos adicionales según el ejemplo proporcionado
+  tercerNombre?: string;
+  nombreEmpresa?: string;
+  asesorId?: number | null;
+  asesor?: string;
+  profesionId?: number | null;
+  profesion?: string;
+  etniaId?: number | null;
+  etnia?: string;
+  sabeLeer?: number | boolean;
+  sabeEscribir?: number | boolean;
+  domicilio?: string;
 }
 
 /**
@@ -157,4 +169,16 @@ export interface ObtenerDatosBantotalResponse {
   ejecutivoId?: string;
   clienteUId: number;
   cuentaBT: number;
+  // Campos adicionales según el ejemplo proporcionado
+  tercerNombre?: string;
+  nombreEmpresa?: string;
+  asesorId?: number | null;
+  asesor?: string;
+  profesionId?: number | null;
+  profesion?: string;
+  etniaId?: number | null;
+  etnia?: string;
+  sabeLeer?: number | boolean;
+  sabeEscribir?: number | boolean;
+  domicilio?: string;
 }
