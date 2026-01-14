@@ -126,7 +126,7 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     this.nombreEmpresa.set('');
     this.nit.set('');
     this.telefono.set('');
-    this.selectedDepartamentoCode.set('1');
+    this.selectedDepartamentoCode.set('0');
     this.selectedMunicipioId.set('');
     this.direccion.set('');
     this.selectedTipoActividadId.set('');
@@ -139,7 +139,7 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     this.nombreEmpresa.set(empresa.nombreEmpresa || '');
     this.nit.set(empresa.nit || '');
     this.telefono.set(empresa.telefono || '');
-    this.selectedDepartamentoCode.set(empresa.departamento?.toString() || '1');
+    this.selectedDepartamentoCode.set(empresa.departamento?.toString() || '0');
     this.selectedMunicipioId.set(empresa.municipio?.toString() || '');
     this.direccion.set(empresa.direccion || '');
     this.selectedTipoActividadId.set(empresa.tipoActividad || '');
