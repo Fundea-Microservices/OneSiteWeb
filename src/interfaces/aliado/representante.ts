@@ -62,7 +62,7 @@ export interface Representante {
   localidad?: number;
   barrio?: number;
   
-  cuentabanTotal?: string; // String para cuentas bancarias
+  cuentaBantotal?: string; // String para cuentas bancarias
   
   fotoFrontalDpi?: string; // URL o Path
   fotoReversoDpi?: string; // URL o Path
@@ -92,6 +92,19 @@ export interface RepresentanteResponse {
     totalPages: number;
   };
   };
+  metadata?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface CreateRepresentanteResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data?: Representante;
   metadata?: {
     page: number;
     limit: number;

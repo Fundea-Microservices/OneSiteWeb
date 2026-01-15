@@ -88,6 +88,7 @@ export class UpsertContacto implements OnInit {
             direccion: this.direccionCompleta(),
             paisDomicilio: Number(this.selectedPaisCode()),
             departamentoDomicilio: Number(this.selectedDepartamentoCode()),
+            municipioDomicilio: Number(this.selectedMunicipioId()),
             localidad: Number(this.selectedMunicipioId())
           });
         }

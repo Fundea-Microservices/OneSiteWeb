@@ -640,7 +640,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       departamentoDomicilio: Number(input?.departamentoDomicilio ?? 1),
       localidad: input?.localidad != null ? Number(input.localidad) : undefined,
       barrio: input?.barrio != null ? Number(input.barrio) : undefined,
-      cuentabanTotal: input?.cuentabanTotal ? String(input.cuentabanTotal) : undefined,
+      cuentaBantotal: input?.cuentabanTotal ? String(input.cuentaBantotal) : undefined,
       fotoFrontalDpi: input?.fotoFrontalDpi ? String(input.fotoFrontalDpi) : undefined,
       fotoReversoDpi: input?.fotoReversoDpi ? String(input.fotoReversoDpi) : undefined,
       usuarioIngreso: input?.usuarioIngreso ? String(input.usuarioIngreso) : undefined,
@@ -663,15 +663,32 @@ export default class CrearRepresentantePage implements AfterViewInit {
       const datosCrudos = this.representante();
       const payload = this.sanitizeRepresentante(datosCrudos);
 
-      // Validar que tengamos datos básicos
-      if (!payload.documento || !payload.primerNombre || !payload.primerApellido) {
-        this.toastr.error('Por favor completa los campos requeridos', 'Campos incompletos');
-        return;
+      // Validar que tengamos datos básicos requeridos
+      const camposRequeridos = [
+        'documento', 'primerNombre', 'primerApellido', 'fechaNacimiento', 'sexo',
+        'estadoCivil', 'nacionalidad', 'etnia', 'fechaVencimiento', 'nit',
+        'telefonoCelular', 'paisDomicilio', 'departamentoDomicilio', 'direccion',
+        'actividadLaboral', 'sectorId', 'fechaInicioActividad', 'ingresos'
+      ];
+
+      let camposFaltantes: string[] = [];
+      const payloadAny = payload as any;
+      for (const campo of camposRequeridos) {
+        if (
+          payloadAny[campo] === undefined ||
+          payloadAny[campo] === null ||
+          (typeof payloadAny[campo] === 'string' && payloadAny[campo].toString().trim() === '') 
+        ) {
+          camposFaltantes.push(campo);
+        }
       }
 
-      // Validar email
-      if (!this.isValidEmail(payload.correoElectronico)) {
-        this.toastr.error('Correo electrónico inválido', 'Validación');
+      if(payload.departamentoDomicilio === 0) camposFaltantes.push('departamentoDomicilio'); 
+      if(payload.localidad === 0) camposFaltantes.push('municipioDomicilio'); 
+      if(payload.ingresos === 0) camposFaltantes.push('ingresos'); 
+
+      if (camposFaltantes.length > 0) {
+       this.toastr.error('Por favor completa los campos requeridos: ' + camposFaltantes.join(', '), 'Campos incompletos');
         return;
       }
 
@@ -679,9 +696,8 @@ export default class CrearRepresentantePage implements AfterViewInit {
       const resp = await this.representanteService.crearRepresentante(payload);
 
       if (resp?.success) {
-        const nuevoRepresentanteId = resp.data?.representante?.representanteId || payload.representanteId || null;
+        const nuevoRepresentanteId = resp.data?.representanteId || payload.representanteId || null;
         this.lastCreatedRepresentanteId.set(nuevoRepresentanteId);
-        this.toastr.success('Representante creado correctamente', 'Éxito');
         this.limpiarFormularioCompleto();
         this.abrirModalPostCreacion();
       } else {
@@ -695,7 +711,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
   abrirModalPostCreacion() {
     if (!this.lastCreatedRepresentanteId()) {
-      this.toastr.info('Representante creado', 'Aviso');
       this.irAListadoRepresentante();
       return;
     }

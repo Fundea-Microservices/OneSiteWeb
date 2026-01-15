@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { Representante, RepresentanteResponse, ListarRepresentantesParams } from '../../interfaces/aliado/representante';
+import { Representante, RepresentanteResponse, ListarRepresentantesParams, CreateRepresentanteResponse } from '../../interfaces/aliado/representante';
 
 /**
  * Servicio para gestionar representantes de empresas aliadas
@@ -70,23 +70,17 @@ export class RepresentanteService extends HttpService {
    * @param representante - Datos del representante a crear
    * @returns Promise con la respuesta del backend o null en caso de error   * 
    */
-  async crearRepresentante(representante: Representante): Promise<RepresentanteResponse | null> {
-    console.log('🚀 Creando nuevo representante...');
-    console.log('📋 Datos:', representante);   
+  async crearRepresentante(representante: Representante): Promise<CreateRepresentanteResponse | null> {
     const {representanteId, created_at, updated_at, deleted_at,...representanteDTO} = representante
 
     try {
       const resp = await firstValueFrom(
-        this.post<RepresentanteResponse>(this.endpoints.representante, representanteDTO)
+        this.post<CreateRepresentanteResponse>(this.endpoints.representante, representanteDTO)
       );
-
-      if (resp.body?.success) {
-        console.log('✅ Representante creado exitosamente');
+      if (resp?.body?.success) {
         this.toastr.success(resp.body.message || 'Representante creado correctamente', '¡Éxito!');
         return resp.body;
       }
-
-      console.warn('⚠️ Respuesta no exitosa:', resp.body);
       return null;
 
     } catch (error: any) {
