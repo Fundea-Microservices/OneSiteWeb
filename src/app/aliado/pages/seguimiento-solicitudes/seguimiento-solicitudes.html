@@ -58,15 +58,14 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <p class="mb-2"><strong>Nombre Completo:</strong> {{ getNombreCompleto(solicitud()?.representante) }}</p>
-                    <p class="mb-2"><strong>Documento:</strong> {{ solicitud()?.representante?.documento || 'N/A' }} (Tipo: {{ solicitud()?.representante?.tipoDocumento }})</p>
-                    <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.representante?.nit || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Correo:</strong> {{ solicitud()?.representante?.correoElectronico || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Documento:</strong> {{ solicitud()?.representante?.documento || '' }}</p>
+                    <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.representante?.nit || '' }}</p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Teléfono Celular:</strong> {{ solicitud()?.representante?.telefonoCelular || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Teléfono Fijo:</strong> {{ solicitud()?.representante?.telefonoFijo || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Código Postal:</strong> {{ solicitud()?.representante?.codigoPostal || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.representante?.direccion || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Teléfono Celular:</strong> {{ solicitud()?.representante?.telefonoCelular || '' }}</p>
+                    <p class="mb-2"><strong>Teléfono Fijo:</strong> {{ solicitud()?.representante?.telefonoFijo || '' }}</p>
+                    <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.representante?.direccion || '' }}</p>
+                    <p class="mb-2"><strong>Correo:</strong> {{ solicitud()?.representante?.correoElectronico || '' }}</p>
                 </div>
             </div>
             
@@ -78,44 +77,39 @@
                     <p class="mb-2"><strong>Sexo:</strong> {{ solicitud()?.representante?.sexo === 'M' ? 'Masculino' : 'Femenino' }}</p>
                     <p class="mb-2"><strong>Estado Civil:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.estadoCivil, catalogoEstadoCivil()) }}</p>
                     <p class="mb-2"><strong>Nacionalidad:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.nacionalidad, catalogoNacionalidad()) }}</p>
+                    <p class="mb-2"><strong>Sabe Escribir:</strong> {{solicitud()?.representante?.sabeEscribir ? 'Sí' : 'No'}}</p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="mb-2"><strong>Profesión:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.profesion, catalogoProfesion()) }}</p>
                     <p class="mb-2"><strong>Ocupación:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.ocupacion, catalogoOcupacion()) }}</p>
                     <p class="mb-2"><strong>Etnia:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.etnia, catalogoEtnia()) }}</p>
-                    <p class="mb-2"><strong>Sabe Leer:</strong> <i [class]="'bi ' + (solicitud()?.representante?.sabeLeer ? 'bi-check-circle text-success' : 'bi-x-circle text-danger')"></i></p>
+                    <p class="mb-2"><strong>Sabe Leer:</strong> {{solicitud()?.representante?.sabeLeer ? 'Sí' : 'No'}}</p>
                 </div>
             </div>
 
             <hr/>
 
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Sabe Escribir:</strong> <i [class]="'bi ' + (solicitud()?.representante?.sabeEscribir ? 'bi-check-circle text-success' : 'bi-x-circle text-danger')"></i></p>
-                    <p class="mb-2"><strong>Nombre Empresa:</strong> {{ solicitud()?.representante?.nombreEmpresa || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Actividad Laboral:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.actividadLaboral, catalogoOcupacion()) }}</p>
+                <div class="col-md-12 mb-3">
+                    <p class="mb-2"><strong>Nombre Empresa:</strong> {{ solicitud()?.representante?.nombreEmpresa || '' }}</p>
+                    <p class="mb-2"><strong>Actividad Laboral:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.actividadLaboral, catalogoActividad()) }}</p>
                     <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{ formatDate(solicitud()?.representante?.fechaInicioActividad) }}</p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Ingresos:</strong> {{ solicitud()?.representante?.ingresos || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Ingresos:</strong> {{ solicitud()?.representante?.ingresos || 'Sin datos disponibles' }}</p>
                     <p class="mb-2"><strong>Sector:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.sectorId, catalogoSector()) }}</p>
-                    <p class="mb-2"><strong>Clasificación Interna:</strong> {{ solicitud()?.representante?.clasificacionInterna || 'N/A' }}</p>
-                    <p class="mb-2"><strong>País Domicilio:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.paisDomicilio, catalogoPais()) }}</p>
                 </div>
             </div>
-
+            
             <hr/>
-
+            
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Departamento Domicilio:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.departamentoDomicilio, catalogoDepartamento()) }}</p>
-                    <p class="mb-2"><strong>Localidad:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.localidad, catalogoLocalidad()) }}</p>
-                    <p class="mb-2"><strong>Barrio:</strong> {{ solicitud()?.representante?.barrio || 'N/A' }}</p>
+                    <p class="mb-2"><strong>País:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.paisDomicilio, catalogoPais()) }}</p>
+                    <p class="mb-2"><strong>Departamento:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.departamentoDomicilio, catalogoDepartamento()) }}</p>
+                    <p class="mb-2"><strong>Municipio:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.localidad, catalogoLocalidad()) }}</p>
+                    
                 </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Asesor ID:</strong> {{ solicitud()?.representante?.asesorId || 'N/A' }}</p>
-                    <p class="mb-2"><strong>País Documento:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.paisDocumento, catalogoPais()) }}</p>
-                    <p class="mb-2"><strong>Fecha Vencimiento Documento:</strong> 
+                <div class="col-md-6 mb-3">                    
+                    <p class="mb-2"><strong>Fecha Vencimiento Documento: </strong> 
                         <span [ngClass]="{'text-danger fw-bold': estaVencido(solicitud()?.representante?.fechaVencimiento)}">{{ formatDate(solicitud()?.representante?.fechaVencimiento) }}</span>
                         @if (estaVencido(solicitud()?.representante?.fechaVencimiento)) {
                         <i class="bi bi-exclamation-circle-fill text-danger ms-1" title="Documento vencido"></i>
@@ -163,27 +157,27 @@
             <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
             <div class="row">
                 <div class="col-md-6 mb-3">                    
-                    <p class="mb-2"><strong>Nombre:</strong> {{ solicitud()?.empresa?.nombreEmpresa || 'N/A' }}</p>
-                    <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.empresa?.nit || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Teléfono:</strong> {{ solicitud()?.empresa?.telefono || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Nombre:</strong> {{ solicitud()?.empresa?.nombreEmpresa || '' }}</p>
+                    <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.empresa?.nit || '' }}</p>
+                    <p class="mb-2"><strong>Teléfono:</strong> {{ solicitud()?.empresa?.telefono || '' }}</p>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.empresa?.direccion || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Departamento:</strong> {{ solicitud()?.empresa?.departamento || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Municipio:</strong> {{ solicitud()?.empresa?.municipio || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.empresa?.direccion || '' }}</p>
+                    <p class="mb-2"><strong>Departamento:</strong> {{ obtenerNombreCatalogo(solicitud()?.empresa?.departamento,catalogoDepartamento()) || '' }}</p>
+                    <p class="mb-2"><strong>Municipio:</strong> {{ obtenerNombreCatalogo(solicitud()?.empresa?.municipio,catalogoLocalidad()) || '' }}</p>
                 </div>
             </div>
 
             <hr/>
 
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-12 mb-3">
                     <!-- <p class="mb-2"><strong>Tipo de Actividad:</strong> {{ solicitud()?.empresa?.tipoActividad || 'N/A' }}</p> -->
-                    <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.actividad || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Detalle de Actividad:</strong> {{ solicitud()?.empresa?.detalleActividad || 'N/A' }}</p>
-                </div>
-                <div class="col-md-6 mb-3">
+                    <!-- <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.actividad || 'N/A' }}</p> -->
+                    <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.detalleActividad || 'N/A' }}</p>
                     <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{ formatDate(solicitud()?.empresa?.fechaInicioActividad) }}</p>
+                </div>
+                <div class="col-md-12 mb-3">
                     <p class="mb-2"><strong>Usuario Ingreso:</strong> {{ solicitud()?.empresa?.usrIngreso || 'N/A' }}</p>
                     <p class="mb-2"><strong>Fecha Creación:</strong> {{ formatDate(solicitud()?.empresa?.created_at) }}</p>
                 </div>
@@ -311,7 +305,7 @@
                             </h6>
                             <p class="mb-1"><strong>Observaciones:</strong> {{ seg.observaciones || 'Sin observaciones' }}</p>
                             <small class="text-muted">
-                                <i class="bi bi-calendar me-1"></i>{{ formatDate(seg.created_at) }}
+                                <i class="bi bi-calendar me-1"></i>{{ seg.created_at | date:'dd/MM/yyyy HH:mm' }}
                                 @if (seg.usrIngreso) {
                                 <span class="ms-3"><i class="bi bi-person me-1"></i>{{ seg.usrIngreso }}</span>
                                 }

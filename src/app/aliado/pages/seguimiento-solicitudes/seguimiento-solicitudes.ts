@@ -40,6 +40,7 @@ export default class SeguimientoSolicitudesComponent {
 	// Catálogos para mostrar valores
 	catalogoProfesion = signal<CatalogoSimple[]>([]);
 	catalogoOcupacion = signal<CatalogoSimple[]>([]);
+	catalogoActividad = signal<CatalogoSimple[]>([]);
 	catalogoEtnia = signal<CatalogoSimple[]>([]);
 	catalogoEstadoCivil = signal<CatalogoSimple[]>([]);
 	catalogoNacionalidad = signal<CatalogoSimple[]>([]);
@@ -114,22 +115,25 @@ export default class SeguimientoSolicitudesComponent {
 		const ocupacion = this.catalogosService.obtenerLocal('ocupacion');
 		if (ocupacion) this.catalogoOcupacion.set(ocupacion);
 
+		const actividad = this.catalogosService.obtenerLocal('actividad');
+		if (actividad) this.catalogoActividad.set(actividad);
+
 		const etnia = this.catalogosService.obtenerLocal('etnia');
 		if (etnia) this.catalogoEtnia.set(etnia);
 
 		const estadoCivil = this.catalogosService.obtenerLocal('estado_civil');
 		if (estadoCivil) this.catalogoEstadoCivil.set(estadoCivil);
 
-		const nacionalidad = this.catalogosService.obtenerLocal('nacionalidad');
+		const nacionalidad = this.catalogosService.obtenerLocal('pais');
 		if (nacionalidad) this.catalogoNacionalidad.set(nacionalidad);
-
+		
 		const pais = this.catalogosService.obtenerLocal('pais');
 		if (pais) this.catalogoPais.set(pais);
 
 		const departamento = this.catalogosService.obtenerLocal('departamento');
 		if (departamento) this.catalogoDepartamento.set(departamento);
 
-		const localidad = this.catalogosService.obtenerLocal('localidad');
+		const localidad = this.catalogosService.obtenerLocal('municipio');
 		if (localidad) this.catalogoLocalidad.set(localidad);
 
 		const sector = this.catalogosService.obtenerLocal('sector');
@@ -245,8 +249,6 @@ export default class SeguimientoSolicitudesComponent {
 			year: 'numeric',
 			month: 'long',
 			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
 		});
 	}
 
@@ -263,9 +265,9 @@ export default class SeguimientoSolicitudesComponent {
 	 * Obtiene el nombre de un valor de catálogo por su ID
 	 */
 	obtenerNombreCatalogo(idValor: number | null | undefined, catalogo: CatalogoSimple[]): string {
-		if (!idValor || catalogo.length === 0) return 'N/A';
+		if (!idValor || catalogo.length === 0) return 'Valor no disponible';
 		const item = catalogo.find(c => c.valorCore === idValor.toString());
-		return item?.nombre || `N/A (${idValor})`;
+		return item?.nombre || ` (${idValor})`;
 	}
 
 	/**
