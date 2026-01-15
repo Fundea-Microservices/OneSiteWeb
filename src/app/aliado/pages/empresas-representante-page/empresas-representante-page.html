@@ -102,7 +102,7 @@
                                 <!-- Botones de acción - Mobile: horizontal arriba, Desktop: vertical derecha -->
                                 <div class="flex lg:hidden gap-2 pb-3 border-b border-gray-200 flex-wrap">
                                     @if (!getSolicitudPorEmpresa(empresa.empresaId)) {
-                                    <button type="button" (click)="crearNuevaSolicitud(empresa.empresaId)"
+                                    <button type="button" (click)="crearNuevaSolicitud(empresa.empresaId, true)"
                                         class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
                                         title="Crear solicitud">
                                         <ion-icon name="document-outline" class="text-lg"></ion-icon>
@@ -228,7 +228,7 @@
                                 <div class="mt-4 pt-4 border-t border-gray-200">
                                     <h6 class="text-base font-semibold mb-3 text-gray-800">Solicitud</h6>
                                     @if (!getSolicitudPorEmpresa(empresa.empresaId)) {
-                                    <button type="button" (click)="crearNuevaSolicitud(empresa.empresaId)"
+                                    <button type="button" (click)="crearNuevaSolicitud(empresa.empresaId, true)"
                                         class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors duration-200 shadow-sm font-medium">
                                         <ion-icon name="document-outline" class="text-xl"></ion-icon>
                                         <span>Crear Nueva Solicitud</span>
@@ -493,7 +493,9 @@
     <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <app-upsert-cuenta-representante [cuenta]="cuentaSeleccionada()!" [empresaId]="empresaIdCuenta()"
             [nuevo]="!esEditarCuenta()" [key]="modalKeyCuenta()" (save)="onGuardarCuenta($event)"
-            (cancel)="cerrarModalCuenta()" />
+            (cancel)="cerrarModalCuenta()" 
+            [tipoSolicitudId]="esEmpresa() ? solicitudEmpresaId() : solicitudCuentaId()"
+            [tipoAfiliacionId]="afiliacionReferidoId()" />
     </div>
 </div>
 }
@@ -504,8 +506,7 @@
     <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-gray-800">{{ esEditarSolicitud() ? 'Editar Solicitud' : 'Nueva
-                    Solicitud' }}</h2>
+                <h2 class="text-2xl font-semibold text-gray-800">{{ esEditarSolicitud() ? 'Editar Solicitud' : 'Nueva Solicitud' }}</h2>
                 <button type="button" (click)="cerrarModalSolicitud()"
                     class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -517,7 +518,8 @@
             <app-upsert-solicitud [nuevo]="!esEditarSolicitud()" [representante]="representante()"
                 [empresa]="getEmpresaActual()" [cuentaBancaria]="getCuentaBancariaEmpresa(empresaIdSolicitud())"
                 [solicitudData]="solicitudFormData()" (save)="onGuardarSolicitud($event)"
-                (cancel)="cerrarModalSolicitud()" />
+                (cancel)="cerrarModalSolicitud()" [tipoAfiliacionId]="afiliacionReferidoId()" 
+                [tipoSolicitudId]="esEmpresa() ? solicitudEmpresaId() : solicitudCuentaId() " />
         </div>
     </div>
 </div>

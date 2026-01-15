@@ -1,4 +1,3 @@
-
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { RepresentanteService } from '../../../../services/aliado/representante.service';
@@ -43,9 +42,17 @@ export default class EmpresasRepresentantePage {
   private agenciaRegionService = inject(AgenciaRegionService);
   representanteId = signal('');
   representante = signal<Representante | null>(null);
-
+  
   // Solicitudes por empresa
   solicitudesPorEmpresa = signal<Map<string, Solicitud | null>>(new Map());
+  solicitudEmpresaId = signal('');
+  solicitudCuentaId = signal('');
+  afiliacionReferidoId = signal('');
+  esEmpresa = signal(true);
+  tiposSolicitud = signal<any[]>([]);
+  tiposAfiliacion = signal<any[]>([]);
+  listadoSolicitudes = signal<Solicitud[]>([]);
+  
 
   // Estado del modal
   showModal = signal(false);
@@ -88,16 +95,32 @@ export default class EmpresasRepresentantePage {
     // Cargar catálogos
     this.cargarCatalogos();
     await this.cargarEstadosSolicitud();
-    
+
+    // Cargar tipos de solicitud y afiliación
+    const [tiposSolicitudResp, tiposAfiliacionResp] = await Promise.all([
+      this.generalidadesService.getAllTipoSolicitud({ all: true }),
+      this.generalidadesService.getAllTipoAfiliacion({ all: true })
+    ]);
+    this.tiposSolicitud.set((tiposSolicitudResp?.data as any[]) ?? []);
+    this.tiposAfiliacion.set((tiposAfiliacionResp?.data as any[]) ?? []);
+
+    // Asignar signals según nombre
+    const tipoEmpresa = this.tiposSolicitud().find(t => t.nombre?.toLowerCase().includes('empresa'));
+    if (tipoEmpresa) this.solicitudEmpresaId.set(tipoEmpresa.tipoSolicitudId);
+   
+
+    const tipoCuenta = this.tiposSolicitud().find(t => t.nombre?.toLowerCase().includes('cuenta bancaria'));
+    if (tipoCuenta) this.solicitudCuentaId.set(tipoCuenta.tipoSolicitudId);
+
+    const afiliacionReferido = this.tiposAfiliacion().find(a => a.nombre?.toLowerCase().includes('red de referidos'));
+    if (afiliacionReferido) this.afiliacionReferidoId.set(afiliacionReferido.tipoAfiliacionId);
+
     // Obtener el representanteId de la URL
     const id = this.route.snapshot.paramMap.get('representanteId') || '';
-    console.log("🚀 ~ EmpresasRepresentantePage ~ ngOnInit ~ id:", id)
     this.representanteId.set(id);
     if (id) {
       const resp = await this.representanteService.byId(id);
-      console.log("🚀 ~ EmpresasRepresentantePage ~ ngOnInit ~ resp:", resp)
       this.representante.set(resp?.data?.representante || null);
-      
       // Cargar empresas del representante
       await this.cargarEmpresas();
     }
@@ -108,7 +131,6 @@ export default class EmpresasRepresentantePage {
     if (!id) return;
 
     const resp = await this.empresaService.obtenerEmpresasPorRepresentante(id, 1, 100);
-    console.log('🚀 ~ cargarEmpresas ~ resp:', resp);
     
     // La respuesta tiene doble anidamiento: resp.data.data
     if (resp?.data && (resp.data as any).data && Array.isArray((resp.data as any).data)) {
@@ -131,12 +153,26 @@ export default class EmpresasRepresentantePage {
       // Crear un mapa de solicitudes por empresaId
       if (resp?.data && Array.isArray(resp.data)) {
         const solicitudes = resp.data as Solicitud[];
+        this.listadoSolicitudes.set(solicitudes);
         
         // Para cada empresa, buscar su solicitud
         empresas.forEach(empresa => {
           const solicitud = solicitudes.find(s => s.empresaId === empresa.empresaId) || null;
           map.set(empresa.empresaId, solicitud);
         });
+
+        // Para las solicitudes que empresaId == null, buscamos si la cuentaBancariaId pertenece a la empresa
+        const solicitudesSinEmpresa = solicitudes.filter(s => !s.empresaId && s.cuentaBancariaId);
+        empresas.forEach(empresa => {
+          const cuentasEmpresa = this.obtenerCuentasEmpresa(empresa.empresaId).map(c => c.cuentaBancariaId);
+          const solicitudCuenta = solicitudesSinEmpresa.find(s => cuentasEmpresa.includes(s.cuentaBancariaId!));
+          console.log("🚀 ~ EmpresasRepresentantePage ~ cargarSolicitudesParaEmpresas ~ solicitudCuenta:", solicitudCuenta)
+          // Solo asignar si no hay ya una solicitud asignada a la empresa
+          if (solicitudCuenta ) {
+            map.set(empresa.empresaId, solicitudCuenta);
+          }
+        });
+
       } else {
         // Si no hay solicitudes, marcar todas como null
         empresas.forEach(empresa => {
@@ -152,6 +188,7 @@ export default class EmpresasRepresentantePage {
     }
     
     this.solicitudesPorEmpresa.set(map);
+    console.log("🚀 ~ EmpresasRepresentantePage ~ cargarSolicitudesParaEmpresas ~ this.solicitudesPorEmpresa:", this.solicitudesPorEmpresa())
   }
 
   getSolicitudPorEmpresa(empresaId: string): Solicitud | null {
@@ -367,6 +404,8 @@ export default class EmpresasRepresentantePage {
         cuentasMap.set(empresaId, resp.data.data);
         this.cuentasPorEmpresa.set(cuentasMap);
         console.log('💳 Cuentas cargadas para empresa', empresaId, ':', resp.data.data);
+        // Cargar solicitudes para cada empresa
+        await this.cargarSolicitudesParaEmpresas(this.empresas());
       }
     } catch (error) {
       console.error('❌ Error al cargar cuentas:', error);
@@ -400,8 +439,8 @@ export default class EmpresasRepresentantePage {
   }
 
   obtenerEstadoSolicitudPorCuenta(cuentaBancariaId: string): string | null {
-    const solicitudes = Array.from(this.solicitudesPorEmpresa().values()).filter(s => s !== null) as Solicitud[];
-    const solicitud = solicitudes.find(s => s.cuentaBancariaId === cuentaBancariaId);
+    // const solicitudes = Array.from(this.solicitudesPorEmpresa().values()).filter(s => s !== null) as Solicitud[];
+    const solicitud = this.listadoSolicitudes().find(s => s.cuentaBancariaId === cuentaBancariaId);
     return solicitud?.estadoSolicitud?.nombre || null;
   }
 
@@ -469,12 +508,13 @@ export default class EmpresasRepresentantePage {
     }
   }
 
-  crearNuevaSolicitud(empresaId: string) {
+  crearNuevaSolicitud(empresaId: string, esEmpresa: boolean = true) {
     this.empresaIdSolicitud.set(empresaId);
     this.cuentaBancariaIdSolicitud.set(''); // Limpiar
     this.esEditarSolicitud.set(false);
     this.solicitudFormData.set(undefined);
     this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
+    this.esEmpresa.set(esEmpresa);
     this.showModalSolicitud.set(true);
   }
 
@@ -482,6 +522,7 @@ export default class EmpresasRepresentantePage {
     this.cuentaBancariaIdSolicitud.set(cuentaBancariaId);
     this.empresaIdSolicitud.set(''); // No necesitamos empresaId
     this.esEditarSolicitud.set(false);
+    this.esEmpresa.set(false);
     this.solicitudFormData.set(undefined);
     this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
     this.showModalSolicitud.set(true);
