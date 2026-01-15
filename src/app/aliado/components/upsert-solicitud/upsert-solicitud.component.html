@@ -33,25 +33,33 @@
 
   <div class="row mb-3">
     <div class="col-md-6">
-      <label for="tipoSolicitud" class="form-label">Tipo de Solicitud *</label>
-      <select id="tipoSolicitud" class="form-select" [(ngModel)]="selectedTipoSolicitud" name="tipoSolicitud" required
-        [disabled]="isLoading()">
-        <option value="">Selecciona un tipo de solicitud</option>
-        @for (tipo of tiposSolicitud(); track tipo.tipoSolicitudId) {
-        <option [value]="tipo.tipoSolicitudId">{{ tipo.nombre }}</option>
-        }
-      </select>
+      @if (tipoSolicitudSeleccionado) {
+        <div class="form-control-plaintext fw-bold text-blue-800">SOLICITUD: {{ tipoSolicitudSeleccionado.nombre }}</div>
+      } @else {
+        <label for="tipoSolicitud" class="form-label">Tipo de Solicitud *</label>
+        <select id="tipoSolicitud" class="form-select" [(ngModel)]="selectedTipoSolicitud" name="tipoSolicitud" required
+          [disabled]="isLoading()">
+          <option value="">Selecciona un tipo de solicitud</option>
+          @for (tipo of tiposSolicitud(); track tipo.tipoSolicitudId) {
+          <option [value]="tipo.tipoSolicitudId">{{ tipo.nombre }}</option>
+          }
+        </select>
+      }
     </div>
 
     <div class="col-md-6">
-      <label for="tipoAfiliacion" class="form-label">Tipo de Afiliación *</label>
-      <select id="tipoAfiliacion" class="form-select" [(ngModel)]="selectedTipoAfiliacion" name="tipoAfiliacion"
-        required [disabled]="isLoading()">
-        <option value="">Selecciona un tipo de afiliación</option>
-        @for (tipo of tiposAfiliacion(); track tipo.tipoAfiliacionId) {
-        <option [value]="tipo.tipoAfiliacionId">{{ tipo.nombre }}</option>
-        }
-      </select>
+      @if (tipoAfiliacionSeleccionada) {
+        <div class="form-control-plaintext fw-bold text-blue-800">TIPO AFILIACIÓN: {{ tipoAfiliacionSeleccionada.nombre }}</div>
+      } @else {
+        <label for="tipoAfiliacion" class="form-label">Tipo de Afiliación *</label>
+        <select id="tipoAfiliacion" class="form-select" [(ngModel)]="selectedTipoAfiliacion" name="tipoAfiliacion"
+          required [disabled]="isLoading()">
+          <option value="">Selecciona un tipo de afiliación</option>
+          @for (tipo of tiposAfiliacion(); track tipo.tipoAfiliacionId) {
+          <option [value]="tipo.tipoAfiliacionId">{{ tipo.nombre }}</option>
+          }
+        </select>
+      }
     </div>
 
   </div>
@@ -122,8 +130,11 @@
   </div>
 
   <div class="row">
+    @if (!documentoGenerado()) {
+    <div class="mt-1 text-danger small">Debe generar el documento antes de crear la solicitud.</div>
+    }
     <div class="col-12">
-      <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+      <button type="submit" class="btn btn-primary" [disabled]="isLoading() || !documentoGenerado()">
         @if (isLoading()) {
         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
         } {{ nuevo() ? 'Crear Solicitud' : 'Actualizar Solicitud' }}

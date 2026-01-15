@@ -60,7 +60,13 @@ export default class UpsertSolicitudComponent implements OnInit {
   representante = input<Representante | null>(null);
   empresa = input<IEmpresaRepresentante | null>(null);
   cuentaBancaria = input<ICuentaBancaria | null>(null);
-  
+  tipoSolicitudId = input<string | null>(null);
+  tipoAfiliacionId = input<string | null>(null);
+
+  // Para mostrar el nombre si viene el id
+  tipoSolicitudSeleccionado: TipoSolicitud | null = null;
+  tipoAfiliacionSeleccionada: TipoAfiliacion | null = null;
+
   @Output() save = new EventEmitter<SolicitudFormData>();
   @Output() cancel = new EventEmitter<void>();
 
@@ -84,17 +90,31 @@ export default class UpsertSolicitudComponent implements OnInit {
   estadoDeshabilitado = signal(false);
 
   isLoading = signal(false);
+  documentoGenerado = signal(false);
 
   async ngOnInit(): Promise<void> {
     await this.loadData();
-    
     // Si es nuevo, buscar y seleccionar el estado "Espera" automáticamente
     if (this.nuevo()) {
       this.seleccionarEstadoEspera();
     }
-    
     if (this.solicitudData() && !this.nuevo()) {
       this.populateForm();
+    }
+
+    // Si viene tipoSolicitudId, filtrar y guardar el tipo
+    if (this.tipoSolicitudId()) {
+      this.tipoSolicitudSeleccionado = this.tiposSolicitud().find(t => t.tipoSolicitudId === this.tipoSolicitudId()) || null;
+      if (this.tipoSolicitudSeleccionado) {
+        this.selectedTipoSolicitud.set(this.tipoSolicitudSeleccionado.tipoSolicitudId);
+      }
+    }
+    // Si viene tipoAfiliacionId, filtrar y guardar el tipo
+    if (this.tipoAfiliacionId()) {
+      this.tipoAfiliacionSeleccionada = this.tiposAfiliacion().find(t => t.tipoAfiliacionId === this.tipoAfiliacionId()) || null;
+      if (this.tipoAfiliacionSeleccionada) {
+        this.selectedTipoAfiliacion.set(this.tipoAfiliacionSeleccionada.tipoAfiliacionId);
+      }
     }
   }
 
@@ -114,7 +134,7 @@ export default class UpsertSolicitudComponent implements OnInit {
       this.tiposAfiliacion.set((afiliaciones?.data as TipoAfiliacion[]) ?? []);
       this.regiones.set(regiones ?? []);
       this.agencias.set(agencias ?? []);
-      
+
       // Si es nuevo, intentar seleccionar "Espera" después de cargar los estados
       if (this.nuevo()) {
         this.seleccionarEstadoEspera();
@@ -130,7 +150,7 @@ export default class UpsertSolicitudComponent implements OnInit {
     const estadoEspera = this.estadosSolicitud().find(
       estado => estado.nombre?.toLowerCase().includes('espera')
     );
-    
+
     if (estadoEspera) {
       this.selectedEstadoSolicitud.set(estadoEspera.estadoSolicitudId);
       this.estadoDeshabilitado.set(true);
@@ -139,16 +159,16 @@ export default class UpsertSolicitudComponent implements OnInit {
 
   private populateForm(): void {
     const data = this.solicitudData();
-    if (!data) return;    
+    if (!data) return;
     this.selectedTipoSolicitud.set(data.tipoSolicitudId);
     this.selectedEstadoSolicitud.set(data.estadoSolicitudId);
     this.selectedTipoAfiliacion.set(data.tipoAfiliacionId);
     this.selectedRegion.set(data.regionId);
-    this.selectedAgencia.set(data.agenciaId);    
+    this.selectedAgencia.set(data.agenciaId);
     if (data.observaciones) {
       this.observaciones.set(data.observaciones);
     }
-    
+
     // Filtrar agencias basándose en la región seleccionada
     if (data.regionId) {
       const agenciasFiltradas = this.agencias().filter((a) => a.regionId === data.regionId);
@@ -181,6 +201,10 @@ export default class UpsertSolicitudComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (!this.documentoGenerado()) {
+      alert('Debe generar el documento antes de crear la solicitud.');
+      return;
+    }
     if (!this.isFormValid()) {
       alert('Por favor completa todos los campos requeridos');
       return;
@@ -217,18 +241,18 @@ export default class UpsertSolicitudComponent implements OnInit {
   getNombreCompleto(): string {
     const rep = this.representante();
     if (!rep) return 'Sin representante';
-    
+
     const nombres = [
       rep.primerNombre,
       rep.segundoNombre,
       rep.tercerNombre
     ].filter(Boolean).join(' ');
-    
+
     const apellidos = [
       rep.primerApellido,
       rep.segundoApellido
     ].filter(Boolean).join(' ');
-    
+
     return `${nombres} ${apellidos}`.trim() || 'Sin nombre';
   }
 
@@ -266,20 +290,21 @@ export default class UpsertSolicitudComponent implements OnInit {
 
     // Crear elemento temporal para generar el HTML
     const htmlContent = this.crearHTMLDocumento(rep);
-    
+
     // Crear iframe temporal para imprimir
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     document.body.appendChild(iframe);
-    
+
     const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
     if (iframeDoc) {
       iframeDoc.write(htmlContent);
       iframeDoc.close();
-      
+
       // Esperar a que se cargue el contenido
       setTimeout(() => {
         iframe.contentWindow?.print();
+        this.documentoGenerado.set(true);
       }, 250);
     }
   }
@@ -290,7 +315,7 @@ export default class UpsertSolicitudComponent implements OnInit {
     const dia = hoy.getDate();
     const mes = hoy.toLocaleDateString('es-ES', { month: 'long' });
     const anio = hoy.getFullYear();
-    
+
     // Obtener municipio y departamento del representante
     const municipio = '___________________';
     const departamento = '___________________';
