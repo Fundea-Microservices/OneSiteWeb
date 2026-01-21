@@ -40,7 +40,7 @@ export interface CuentasBancariasResponse {
 export class CuentaBancariaService extends HttpService {
 
   private readonly endpoints = {
-    base: '/api-bantotal/cuenta-bancaria',
+    base: '/aliado/cuenta-bancaria',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {

@@ -45,8 +45,8 @@ export interface TiposCuentaResponse {
 export class BancoService extends HttpService {
 
   private readonly endpoints = {
-    bancos: '/api-bantotal/banco/bancos',
-    tiposCuenta: '/api-bantotal/banco/tipo-cuentas',
+    bancos: '/aliado/banco/bancos',
+    tiposCuenta: '/aliado/banco/tipo-cuentas',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {

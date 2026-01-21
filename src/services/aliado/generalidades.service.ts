@@ -14,7 +14,7 @@ interface GeneralidadResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class GeneralidadesService extends HttpService {
-  private readonly base = '/api-bantotal/solicitud/generales';
+  private readonly base = '/aliado/solicitud/generales';
 
   constructor(http: HttpClient, private toastr: ToastrService) {
     super(http);

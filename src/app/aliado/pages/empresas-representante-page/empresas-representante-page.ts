@@ -133,8 +133,8 @@ export default class EmpresasRepresentantePage {
     const resp = await this.empresaService.obtenerEmpresasPorRepresentante(id, 1, 100);
     
     // La respuesta tiene doble anidamiento: resp.data.data
-    if (resp?.data && (resp.data as any).data && Array.isArray((resp.data as any).data)) {
-      const empresas = (resp.data as any).data.map((e: any) => ({ ...e, open: false }));
+    if (resp?.data && Array.isArray((resp.data as any))) {
+      const empresas = (resp.data as any).map((e: any) => ({ ...e, open: false }));
       this.empresas.set(empresas);
       
       // Cargar solicitudes para cada empresa

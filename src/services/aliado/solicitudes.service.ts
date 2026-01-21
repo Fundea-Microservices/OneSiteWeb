@@ -15,7 +15,7 @@ interface SolicitudResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class SolicitudesService extends HttpService {
-  private readonly base = '/api-bantotal/solicitud/representante';
+  private readonly base = '/aliado/solicitud';
 
   constructor(http: HttpClient, private toastr: ToastrService) {
     super(http);

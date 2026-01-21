@@ -33,7 +33,7 @@ export interface EmpresaRepresentanteResponse {
 export class EmpresaRepresentanteService extends HttpService {
 
   private readonly endpoints = {
-    empresa: '/api-bantotal/empresa/representante',
+    empresa: '/aliado/empresa/representante',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {

@@ -18,7 +18,7 @@ import { Representante, RepresentanteResponse, ListarRepresentantesParams, Creat
 export class RepresentanteService extends HttpService {
 
   private readonly endpoints = {
-    representante: '/api-bantotal/representante',
+    representante: '/aliado/representante',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
@@ -44,7 +44,7 @@ export class RepresentanteService extends HttpService {
       );
       if (resp.body?.success) {
         // El backend retorna la data anidada en body.data.data
-        const representante = resp.body.data?.data;
+        const representante = resp.body.data;
         return {
           success: true,
           statusCode: Number(resp.body.statusCode),
@@ -143,8 +143,8 @@ export class RepresentanteService extends HttpService {
 
       if (resp.body?.success) {
         // La respuesta tiene doble anidamiento: body.data.data
-        const representantesData = resp.body.data?.data;
-        const metadata = resp.body.data?.metadata;
+        const representantesData = resp.body.data;
+        const metadata = resp.body.metadata;
 
         if (representantesData && Array.isArray(representantesData)) {
           console.log(`✅ ${representantesData.length} representante(s) encontrado(s)`);
