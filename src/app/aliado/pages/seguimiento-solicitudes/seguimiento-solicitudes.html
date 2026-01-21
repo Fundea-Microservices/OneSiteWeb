@@ -24,99 +24,124 @@
 
     <!-- Información del Representante (Colapsable) -->
     @if (solicitud()?.representante) {
-    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+    <div
+        class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
         <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-blue-50"
-             (click)="mostrarRepresentante.set(!mostrarRepresentante())">
+            (click)="mostrarRepresentante.set(!mostrarRepresentante())">
             <div class="flex items-center gap-2 md:gap-3">
                 <svg class="w-5 h-5 md:w-6 md:h-6 transition-colors duration-200"
-                     [class.text-blue-600]="mostrarRepresentante()"
-                     [class.text-gray-500]="!mostrarRepresentante()"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    [class.text-blue-600]="mostrarRepresentante()" [class.text-gray-500]="!mostrarRepresentante()"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
                     </path>
                 </svg>
                 <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
-                    [class.text-blue-700]="mostrarRepresentante()"
-                    [class.text-gray-800]="!mostrarRepresentante()">
+                    [class.text-blue-700]="mostrarRepresentante()" [class.text-gray-800]="!mostrarRepresentante()">
                     Datos del Representante
                 </h4>
             </div>
             <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
-                [class.rotate-180]="mostrarRepresentante()"
-                [class.text-blue-600]="mostrarRepresentante()"
-                [class.text-gray-400]="!mostrarRepresentante()"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                [class.rotate-180]="mostrarRepresentante()" [class.text-blue-600]="mostrarRepresentante()"
+                [class.text-gray-400]="!mostrarRepresentante()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
         </div>
 
         <div class="overflow-hidden transition-all duration-500 ease-in-out"
-             [style.max-height]="mostrarRepresentante() ? '5000px' : '0px'"
-             [style.opacity]="mostrarRepresentante() ? '1' : '0'">
+            [style.max-height]="mostrarRepresentante() ? '5000px' : '0px'"
+            [style.opacity]="mostrarRepresentante() ? '1' : '0'">
             <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Nombre Completo:</strong> {{ getNombreCompleto(solicitud()?.representante) }}</p>
-                    <p class="mb-2"><strong>Documento:</strong> {{ solicitud()?.representante?.documento || '' }}</p>
-                    <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.representante?.nit || '' }}</p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Nombre Completo:</strong> {{
+                            getNombreCompleto(solicitud()?.representante) }}</p>
+                        <p class="mb-2"><strong>Documento:</strong> {{ solicitud()?.representante?.documento || '' }}
+                        </p>
+                        <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.representante?.nit || '' }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Teléfono Celular:</strong> {{
+                            solicitud()?.representante?.telefonoCelular || '' }}</p>
+                        <p class="mb-2"><strong>Teléfono Fijo:</strong> {{ solicitud()?.representante?.telefonoFijo ||
+                            '' }}</p>
+                        <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.representante?.direccion || '' }}
+                        </p>
+                        <p class="mb-2"><strong>Correo:</strong> {{ solicitud()?.representante?.correoElectronico || ''
+                            }}</p>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Teléfono Celular:</strong> {{ solicitud()?.representante?.telefonoCelular || '' }}</p>
-                    <p class="mb-2"><strong>Teléfono Fijo:</strong> {{ solicitud()?.representante?.telefonoFijo || '' }}</p>
-                    <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.representante?.direccion || '' }}</p>
-                    <p class="mb-2"><strong>Correo:</strong> {{ solicitud()?.representante?.correoElectronico || '' }}</p>
-                </div>
-            </div>
-            
-            <hr/>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Fecha de Nacimiento:</strong> {{ formatDate(solicitud()?.representante?.fechaNacimiento) }}</p>
-                    <p class="mb-2"><strong>Sexo:</strong> {{ solicitud()?.representante?.sexo === 'M' ? 'Masculino' : 'Femenino' }}</p>
-                    <p class="mb-2"><strong>Estado Civil:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.estadoCivil, catalogoEstadoCivil()) }}</p>
-                    <p class="mb-2"><strong>Nacionalidad:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.nacionalidad, catalogoNacionalidad()) }}</p>
-                    <p class="mb-2"><strong>Sabe Escribir:</strong> {{solicitud()?.representante?.sabeEscribir ? 'Sí' : 'No'}}</p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Profesión:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.profesion, catalogoProfesion()) }}</p>
-                    <p class="mb-2"><strong>Ocupación:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.ocupacion, catalogoOcupacion()) }}</p>
-                    <p class="mb-2"><strong>Etnia:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.etnia, catalogoEtnia()) }}</p>
-                    <p class="mb-2"><strong>Sabe Leer:</strong> {{solicitud()?.representante?.sabeLeer ? 'Sí' : 'No'}}</p>
-                </div>
-            </div>
 
-            <hr/>
+                <hr />
 
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <p class="mb-2"><strong>Nombre Empresa:</strong> {{ solicitud()?.representante?.nombreEmpresa || '' }}</p>
-                    <p class="mb-2"><strong>Actividad Laboral:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.actividadLaboral, catalogoActividad()) }}</p>
-                    <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{ formatDate(solicitud()?.representante?.fechaInicioActividad) }}</p>
-                    <p class="mb-2"><strong>Ingresos:</strong> {{ solicitud()?.representante?.ingresos || 'Sin datos disponibles' }}</p>
-                    <p class="mb-2"><strong>Sector:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.sectorId, catalogoSector()) }}</p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Fecha de Nacimiento:</strong> {{
+                            formatDate(solicitud()?.representante?.fechaNacimiento) }}</p>
+                        <p class="mb-2"><strong>Sexo:</strong> {{ solicitud()?.representante?.sexo === 'M' ? 'Masculino'
+                            : 'Femenino' }}</p>
+                        <p class="mb-2"><strong>Estado Civil:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.estadoCivil, catalogoEstadoCivil()) }}</p>
+                        <p class="mb-2"><strong>Nacionalidad:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.nacionalidad, catalogoNacionalidad()) }}
+                        </p>
+                        <p class="mb-2"><strong>Sabe Escribir:</strong> {{solicitud()?.representante?.sabeEscribir ?
+                            'Sí' : 'No'}}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Profesión:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.profesion, catalogoProfesion()) }}</p>
+                        <p class="mb-2"><strong>Ocupación:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.ocupacion, catalogoOcupacion()) }}</p>
+                        <p class="mb-2"><strong>Etnia:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.etnia, catalogoEtnia()) }}</p>
+                        <p class="mb-2"><strong>Sabe Leer:</strong> {{solicitud()?.representante?.sabeLeer ? 'Sí' :
+                            'No'}}</p>
+                    </div>
                 </div>
-            </div>
-            
-            <hr/>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>País:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.paisDomicilio, catalogoPais()) }}</p>
-                    <p class="mb-2"><strong>Departamento:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.departamentoDomicilio, catalogoDepartamento()) }}</p>
-                    <p class="mb-2"><strong>Municipio:</strong> {{ obtenerNombreCatalogo(solicitud()?.representante?.localidad, catalogoLocalidad()) }}</p>
-                    
+
+                <hr />
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <p class="mb-2"><strong>Nombre Empresa:</strong> {{ solicitud()?.representante?.nombreEmpresa ||
+                            '' }}</p>
+                        <p class="mb-2"><strong>Actividad Laboral:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.actividadLaboral, catalogoActividad()) }}
+                        </p>
+                        <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{
+                            formatDate(solicitud()?.representante?.fechaInicioActividad) }}</p>
+                        <p class="mb-2"><strong>Ingresos:</strong> {{ solicitud()?.representante?.ingresos || 'Sin datos
+                            disponibles' }}</p>
+                        <p class="mb-2"><strong>Sector:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.sectorId, catalogoSector()) }}</p>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">                    
-                    <p class="mb-2"><strong>Fecha Vencimiento Documento: </strong> 
-                        <span [ngClass]="{'text-danger fw-bold': estaVencido(solicitud()?.representante?.fechaVencimiento)}">{{ formatDate(solicitud()?.representante?.fechaVencimiento) }}</span>
-                        @if (estaVencido(solicitud()?.representante?.fechaVencimiento)) {
-                        <i class="bi bi-exclamation-circle-fill text-danger ms-1" title="Documento vencido"></i>
-                        }
-                    </p>
+
+                <hr />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>País:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.paisDomicilio, catalogoPais()) }}</p>
+                        <p class="mb-2"><strong>Departamento:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.departamentoDomicilio,
+                            catalogoDepartamento()) }}</p>
+                        <p class="mb-2"><strong>Municipio:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.representante?.localidad, catalogoLocalidad()) }}</p>
+
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Fecha Vencimiento Documento: </strong>
+                            <span
+                                [ngClass]="{'text-danger fw-bold': estaVencido(solicitud()?.representante?.fechaVencimiento)}">{{
+                                formatDate(solicitud()?.representante?.fechaVencimiento) }}</span>
+                            @if (estaVencido(solicitud()?.representante?.fechaVencimiento)) {
+                            <i class="bi bi-exclamation-circle-fill text-danger ms-1" title="Documento vencido"></i>
+                            }
+                        </p>
+                    </div>
                 </div>
-            </div>
             </div>
         </div>
     </div>
@@ -124,64 +149,67 @@
 
     <!-- Información de la Empresa (Colapsable) -->
     @if (solicitud()?.empresa) {
-    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+    <div
+        class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
         <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-emerald-50"
-             (click)="mostrarEmpresa.set(!mostrarEmpresa())">
+            (click)="mostrarEmpresa.set(!mostrarEmpresa())">
             <div class="flex items-center gap-2 md:gap-3">
                 <svg class="w-5 h-5 md:w-6 md:h-6 transition-colors duration-200"
-                     [class.text-emerald-600]="mostrarEmpresa()"
-                     [class.text-gray-500]="!mostrarEmpresa()"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    [class.text-emerald-600]="mostrarEmpresa()" [class.text-gray-500]="!mostrarEmpresa()" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M9 7h.01M13 7h.01M9 11h.01M13 11h.01M9 15h.01M13 15h.01">
                     </path>
                 </svg>
                 <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
-                    [class.text-emerald-700]="mostrarEmpresa()"
-                    [class.text-gray-800]="!mostrarEmpresa()">
+                    [class.text-emerald-700]="mostrarEmpresa()" [class.text-gray-800]="!mostrarEmpresa()">
                     Datos de la Empresa
                 </h4>
             </div>
-            <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
-                [class.rotate-180]="mostrarEmpresa()"
-                [class.text-emerald-600]="mostrarEmpresa()"
-                [class.text-gray-400]="!mostrarEmpresa()"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 transition-transform duration-300 ease-in-out" [class.rotate-180]="mostrarEmpresa()"
+                [class.text-emerald-600]="mostrarEmpresa()" [class.text-gray-400]="!mostrarEmpresa()" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
         </div>
 
         <div class="overflow-hidden transition-all duration-500 ease-in-out"
-             [style.max-height]="mostrarEmpresa() ? '3000px' : '0px'"
-             [style.opacity]="mostrarEmpresa() ? '1' : '0'">
+            [style.max-height]="mostrarEmpresa() ? '3000px' : '0px'" [style.opacity]="mostrarEmpresa() ? '1' : '0'">
             <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
-            <div class="row">
-                <div class="col-md-6 mb-3">                    
-                    <p class="mb-2"><strong>Nombre:</strong> {{ solicitud()?.empresa?.nombreEmpresa || '' }}</p>
-                    <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.empresa?.nit || '' }}</p>
-                    <p class="mb-2"><strong>Teléfono:</strong> {{ solicitud()?.empresa?.telefono || '' }}</p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Nombre:</strong> {{ solicitud()?.empresa?.nombreEmpresa || '' }}</p>
+                        <p class="mb-2"><strong>NIT:</strong> {{ solicitud()?.empresa?.nit || '' }}</p>
+                        <p class="mb-2"><strong>Teléfono:</strong> {{ solicitud()?.empresa?.telefono || '' }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.empresa?.direccion || '' }}</p>
+                        <p class="mb-2"><strong>Departamento:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.empresa?.departamento,catalogoDepartamento()) || '' }}
+                        </p>
+                        <p class="mb-2"><strong>Municipio:</strong> {{
+                            obtenerNombreCatalogo(solicitud()?.empresa?.municipio,catalogoLocalidad()) || '' }}</p>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Dirección:</strong> {{ solicitud()?.empresa?.direccion || '' }}</p>
-                    <p class="mb-2"><strong>Departamento:</strong> {{ obtenerNombreCatalogo(solicitud()?.empresa?.departamento,catalogoDepartamento()) || '' }}</p>
-                    <p class="mb-2"><strong>Municipio:</strong> {{ obtenerNombreCatalogo(solicitud()?.empresa?.municipio,catalogoLocalidad()) || '' }}</p>
-                </div>
-            </div>
 
-            <hr/>
+                <hr />
 
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <!-- <p class="mb-2"><strong>Tipo de Actividad:</strong> {{ solicitud()?.empresa?.tipoActividad || 'N/A' }}</p> -->
-                    <!-- <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.actividad || 'N/A' }}</p> -->
-                    <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.detalleActividad || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{ formatDate(solicitud()?.empresa?.fechaInicioActividad) }}</p>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <!-- <p class="mb-2"><strong>Tipo de Actividad:</strong> {{ solicitud()?.empresa?.tipoActividad || 'N/A' }}</p> -->
+                        <!-- <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.actividad || 'N/A' }}</p> -->
+                        <p class="mb-2"><strong>Actividad:</strong> {{ solicitud()?.empresa?.detalleActividad || 'N/A'
+                            }}</p>
+                        <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{
+                            formatDate(solicitud()?.empresa?.fechaInicioActividad) }}</p>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <p class="mb-2"><strong>Usuario Ingreso:</strong> {{ solicitud()?.empresa?.usrIngreso || 'N/A'
+                            }}</p>
+                        <p class="mb-2"><strong>Fecha Creación:</strong> {{ formatDate(solicitud()?.empresa?.created_at)
+                            }}</p>
+                    </div>
                 </div>
-                <div class="col-md-12 mb-3">
-                    <p class="mb-2"><strong>Usuario Ingreso:</strong> {{ solicitud()?.empresa?.usrIngreso || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Fecha Creación:</strong> {{ formatDate(solicitud()?.empresa?.created_at) }}</p>
-                </div>
-            </div>
             </div>
         </div>
     </div>
@@ -189,64 +217,67 @@
 
     <!-- Información de Cuenta Bancaria (Colapsable) -->
     @if (solicitud()?.cuentaBancaria) {
-    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+    <div
+        class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
         <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-purple-50"
-             (click)="mostrarCuentaBancaria.set(!mostrarCuentaBancaria())">
+            (click)="mostrarCuentaBancaria.set(!mostrarCuentaBancaria())">
             <div class="flex items-center gap-2 md:gap-3">
                 <svg class="w-5 h-5 md:w-6 md:h-6 transition-colors duration-200"
-                     [class.text-purple-600]="mostrarCuentaBancaria()"
-                     [class.text-gray-500]="!mostrarCuentaBancaria()"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    [class.text-purple-600]="mostrarCuentaBancaria()" [class.text-gray-500]="!mostrarCuentaBancaria()"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
                     </path>
                 </svg>
                 <h4 class="text-base md:text-lg font-semibold transition-colors duration-200"
-                    [class.text-purple-700]="mostrarCuentaBancaria()"
-                    [class.text-gray-800]="!mostrarCuentaBancaria()">
+                    [class.text-purple-700]="mostrarCuentaBancaria()" [class.text-gray-800]="!mostrarCuentaBancaria()">
                     Cuenta Bancaria
                 </h4>
             </div>
             <svg class="w-5 h-5 transition-transform duration-300 ease-in-out"
-                [class.rotate-180]="mostrarCuentaBancaria()"
-                [class.text-purple-600]="mostrarCuentaBancaria()"
-                [class.text-gray-400]="!mostrarCuentaBancaria()"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                [class.rotate-180]="mostrarCuentaBancaria()" [class.text-purple-600]="mostrarCuentaBancaria()"
+                [class.text-gray-400]="!mostrarCuentaBancaria()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
         </div>
 
         <div class="overflow-hidden transition-all duration-500 ease-in-out"
-             [style.max-height]="mostrarCuentaBancaria() ? '1000px' : '0px'"
-             [style.opacity]="mostrarCuentaBancaria() ? '1' : '0'">
+            [style.max-height]="mostrarCuentaBancaria() ? '1000px' : '0px'"
+            [style.opacity]="mostrarCuentaBancaria() ? '1' : '0'">
             <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Número de Cuenta:</strong> {{ solicitud()?.cuentaBancaria?.numeroCuenta || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Nombre de Cuenta:</strong> {{ solicitud()?.cuentaBancaria?.nombreCuenta || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Banco:</strong> {{ obtenerNombreBanco(solicitud()?.cuentaBancaria?.bancoId) }}</p>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <p class="mb-2"><strong>Tipo de Cuenta:</strong> {{ obtenerNombreTipoCuenta(solicitud()?.cuentaBancaria?.tipoCuentaId) }}</p>
-                    <p class="mb-2"><strong>Moneda:</strong> {{ solicitud()?.cuentaBancaria?.monedaId === 1 ? 'Q - Quetzales' : '$ - Dólares' }}</p>
-                    <!-- <p class="mb-2"><strong>Estado:</strong> 
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Número de Cuenta:</strong> {{ solicitud()?.cuentaBancaria?.numeroCuenta
+                            || 'N/A' }}</p>
+                        <p class="mb-2"><strong>Nombre de Cuenta:</strong> {{ solicitud()?.cuentaBancaria?.nombreCuenta
+                            || 'N/A' }}</p>
+                        <p class="mb-2"><strong>Banco:</strong> {{
+                            obtenerNombreBanco(solicitud()?.cuentaBancaria?.bancoId) }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-2"><strong>Tipo de Cuenta:</strong> {{
+                            obtenerNombreTipoCuenta(solicitud()?.cuentaBancaria?.tipoCuentaId) }}</p>
+                        <p class="mb-2"><strong>Moneda:</strong> {{ solicitud()?.cuentaBancaria?.monedaId === 1 ? 'Q -
+                            Quetzales' : '$ - Dólares' }}</p>
+                        <!-- <p class="mb-2"><strong>Estado:</strong> 
                         <span [class]="solicitud()?.cuentaBancaria?.activo ? 'badge bg-success' : 'badge bg-secondary'">
                             {{ solicitud()?.cuentaBancaria?.activo ? 'Activa' : 'Inactiva' }}
                         </span>
                     </p> -->
+                    </div>
                 </div>
-            </div>
             </div>
         </div>
     </div>
     }
 
     <!-- Información de la Solicitud -->
-    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
-        <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-cyan-50">
+    <div
+        class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+        <div
+            class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200 bg-white hover:bg-cyan-50">
             <div class="flex items-center gap-2 md:gap-3">
-                <svg class="w-5 h-5 md:w-6 md:h-6 text-cyan-600"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
                     </path>
@@ -259,28 +290,44 @@
         <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-2"><strong>Tipo de Solicitud:</strong> {{ solicitud()?.tipoSolicitud?.nombre || 'N/A' }}</p>
-                    <p class="mb-2"><strong>Tipo de Afiliación:</strong> {{ solicitud()?.tipoAfiliacion?.nombre || 'N/A' }}</p>
+                    <p class="mb-2"><strong>Tipo de Solicitud:</strong> {{ solicitud()?.tipoSolicitud?.nombre || 'N/A'
+                        }}</p>
+                    <p class="mb-2"><strong>Tipo de Afiliación:</strong> {{ solicitud()?.tipoAfiliacion?.nombre || 'N/A'
+                        }}</p>
                 </div>
                 <div class="col-md-6">
-                    <p class="mb-2"><strong>Estado Actual: </strong> 
-                        <span class="badge bg-{{ solicitud()?.estadoSolicitud?.nombre === 'Espera' ? 'warning' : solicitud()?.estadoSolicitud?.nombre === 'Aprobado' ? 'success' : solicitud()?.estadoSolicitud?.nombre === 'Rechazado' ? 'danger' : 'secondary' }}">
+                    <p class="mb-2"><strong>Estado Actual: </strong>
+                        <span
+                            class="badge bg-{{ solicitud()?.estadoSolicitud?.nombre === 'Espera' ? 'warning' : solicitud()?.estadoSolicitud?.nombre === 'Aprobado' ? 'success' : solicitud()?.estadoSolicitud?.nombre === 'Rechazado' ? 'danger' : 'secondary' }}">
                             {{ solicitud()?.estadoSolicitud?.nombre || 'N/A' }}
                         </span>
                     </p>
-                    <p class="mb-2"><strong>Fecha de Solicitud:</strong> {{ formatDate(solicitud()?.fechaSolicitud) }}</p>
-                    <p class="mb-2"><strong>Observaciones:</strong> {{ solicitud()?.observaciones || 'Sin observaciones' }}</p>
+                    <p class="mb-2"><strong>Fecha de Solicitud:</strong> {{ formatDate(solicitud()?.fechaSolicitud) }}
+                    </p>
+                    <p class="mb-2"><strong>Observaciones:</strong> {{ solicitud()?.observaciones || 'Sin observaciones'
+                        }}</p>
                 </div>
+                <!-- Visualización de PDF cargado -->
+                @if (solicitud()?.documentoCargado) {
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Documento PDF de la Solicitud:</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-primary btn-sm" (click)="verDocumentoSolicitud()">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Ver PDF
+                        </button>
+                    </div>
+                </div>
+                }
             </div>
         </div>
     </div>
 
     <!-- Historial de Seguimientos -->
-    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
+    <div
+        class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4">
         <div class="px-3 py-3 md:px-6 md:py-4 bg-white hover:bg-amber-50">
             <div class="flex items-center gap-2 md:gap-3">
-                <svg class="w-5 h-5 md:w-6 md:h-6 text-amber-600"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
                     </path>
@@ -299,11 +346,13 @@
                         <div style="flex-grow: 1;">
                             <h6 class="mb-2">
                                 <span class="badge bg-primary me-2">Seguimiento #{{ seg.ordenSeguimiento }}</span>
-                                <span class="badge bg-{{ seg.estadoAprobacion?.nombre === 'Espera' ? 'warning' : seg.estadoAprobacion?.nombre === 'Aprobado' ? 'success' : seg.estadoAprobacion?.nombre === 'Rechazado' ? 'danger' : 'secondary' }}">
+                                <span
+                                    class="badge bg-{{ seg.estadoAprobacion?.nombre === 'Espera' ? 'warning' : seg.estadoAprobacion?.nombre === 'Aprobado' ? 'success' : seg.estadoAprobacion?.nombre === 'Rechazado' ? 'danger' : 'secondary' }}">
                                     {{ seg.estadoAprobacion?.nombre || '' }}
                                 </span>
                             </h6>
-                            <p class="mb-1"><strong>Observaciones:</strong> {{ seg.observaciones || 'Sin observaciones' }}</p>
+                            <p class="mb-1"><strong>Observaciones:</strong> {{ seg.observaciones || 'Sin observaciones'
+                                }}</p>
                             <small class="text-muted">
                                 <i class="bi bi-calendar me-1"></i>{{ seg.created_at | date:'dd/MM/yyyy HH:mm' }}
                                 @if (seg.usrIngreso) {
@@ -324,12 +373,12 @@
     <!-- Formulario para Nuevo Seguimiento solo si la solicitud NO está aprobada ni rechazada -->
     @if (solicitud()?.estadoSolicitud?.nombre !== 'Aprobado' && solicitud()?.estadoSolicitud?.nombre !== 'Rechazado') {
     <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-md transition-all duration-300 mb-4">
-        <div class="px-3 py-3 md:px-6 md:py-4 bg-linear-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 hover:from-emerald-100 hover:to-emerald-200 transition-colors">
+        <div
+            class="px-3 py-3 md:px-6 md:py-4 bg-linear-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 hover:from-emerald-100 hover:to-emerald-200 transition-colors">
             <div class="flex items-center gap-2 md:gap-3">
-                <svg class="w-5 h-5 md:w-6 md:h-6 text-emerald-600"
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4v16m8-8H4">
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-emerald-600" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
                     </path>
                 </svg>
                 <h4 class="text-base md:text-lg font-semibold text-emerald-700">
@@ -339,24 +388,27 @@
         </div>
         <div class="px-3 py-3 md:px-6 md:py-4 bg-white">
             <form (ngSubmit)="guardarSeguimiento()">
-                
+
                 <!-- Formulario de Aprobación solo para tipo Afiliación empresa -->
                 @if (solicitud()?.tipoSolicitud?.nombre === 'Afiliación empresa') {
                 <div class="mb-6 p-4 border border-gray-300 rounded-lg bg-gray-50">
                     <h5 class="text-base md:text-lg font-semibold text-gray-800 mb-4">Formulario de Aprobación</h5>
                     <!-- Alerta de Estado del Formulario -->
-                    @if (formularioAprobacion.revisionFormularioCompleto !== null || 
-                         formularioAprobacion.nombreAfiliado !== null) {
+                    @if (formularioAprobacion.revisionFormularioCompleto !== null ||
+                    formularioAprobacion.nombreAfiliado !== null) {
                     <div class="mb-4">
                         @if (esFormularioAprobado()) {
                         <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-md">
                             <div class="flex items-start gap-3">
                                 <svg class="h-6 w-6 text-green-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd"></path>
                                 </svg>
                                 <div>
                                     <h6 class="text-sm font-bold text-green-800">✅ Formulario Aprobado</h6>
-                                    <p class="text-sm text-green-700 mt-1">Todas las validaciones han sido completadas correctamente.</p>
+                                    <p class="text-sm text-green-700 mt-1">Todas las validaciones han sido completadas
+                                        correctamente.</p>
                                 </div>
                             </div>
                         </div>
@@ -364,12 +416,16 @@
                         <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 shadow-md">
                             <div class="flex items-start gap-3">
                                 <svg class="h-6 w-6 text-yellow-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    <path fill-rule="evenodd"
+                                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                        clip-rule="evenodd"></path>
                                 </svg>
                                 <div>
                                     <h6 class="text-sm font-bold text-yellow-800">⚠️ Formulario Incompleto</h6>
-                                    <p class="text-sm text-yellow-700 mt-1">Por favor, responda todas las preguntas (Sí o No) y complete el campo de validación del registro.</p>
-                                    <p class="text-xs text-yellow-600 mt-2">Recuerde: Los empleados y proveedores de FUNDEA deben seleccionar "No".</p>
+                                    <p class="text-sm text-yellow-700 mt-1">Por favor, responda todas las preguntas (Sí
+                                        o No) y complete el campo de validación del registro.</p>
+                                    <p class="text-xs text-yellow-600 mt-2">Recuerde: Los empleados y proveedores de
+                                        FUNDEA deben seleccionar "No".</p>
                                 </div>
                             </div>
                         </div>
@@ -383,10 +439,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 ¿Revisión del formulario completo?
                             </label>
-                            <select 
+                            <select
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.revisionFormularioCompleto"
-                                name="revisionFormulario">
+                                [(ngModel)]="formularioAprobacion.revisionFormularioCompleto" name="revisionFormulario">
                                 <option [ngValue]="true">Sí</option>
                                 <option [ngValue]="false">No</option>
                             </select>
@@ -396,10 +451,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 ¿El nombre del afiliado es correcto?
                             </label>
-                            <select 
+                            <select
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.nombreAfiliado"
-                                name="nombreAfiliado">
+                                [(ngModel)]="formularioAprobacion.nombreAfiliado" name="nombreAfiliado">
                                 <option [ngValue]="true">Sí</option>
                                 <option [ngValue]="false">No</option>
                             </select>
@@ -409,10 +463,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 ¿El número de DPI del afiliado es correcto? (validar contra imagen de DPI)
                             </label>
-                            <select 
+                            <select
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.numeroDpiAfiliado"
-                                name="numeroDpiAfiliado">
+                                [(ngModel)]="formularioAprobacion.numeroDpiAfiliado" name="numeroDpiAfiliado">
                                 <option [ngValue]="true">Sí</option>
                                 <option [ngValue]="false">No</option>
                             </select>
@@ -422,10 +475,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 ¿La cuenta bancaria del afiliado es correcta? (validar con formulario firmado)
                             </label>
-                            <select 
+                            <select
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.cuentaBancariaAfiliado"
-                                name="cuentaBancariaAfiliado">
+                                [(ngModel)]="formularioAprobacion.cuentaBancariaAfiliado" name="cuentaBancariaAfiliado">
                                 <option [ngValue]="true">Sí</option>
                                 <option [ngValue]="false">No</option>
                             </select>
@@ -435,10 +487,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 ¿La firma del afiliado corresponde a la firma del DPI? (validar con la imagen del DPI)
                             </label>
-                            <select 
+                            <select
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.firmaAfiliado"
-                                name="firmaAfiliado">
+                                [(ngModel)]="formularioAprobacion.firmaAfiliado" name="firmaAfiliado">
                                 <option [ngValue]="true">Sí</option>
                                 <option [ngValue]="false">No</option>
                             </select>
@@ -448,10 +499,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 ¿El afiliado es empleado de FUNDEA?
                             </label>
-                            <select 
+                            <select
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.aficiadoEmpleadoFundea"
-                                name="empleadoFundea">
+                                [(ngModel)]="formularioAprobacion.aficiadoEmpleadoFundea" name="empleadoFundea">
                                 <option [ngValue]="false">No</option>
                                 <option [ngValue]="true">Sí</option>
                             </select>
@@ -461,10 +511,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 ¿El afiliado es proveedor de FUNDEA?
                             </label>
-                            <select 
+                            <select
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.afililadoProveedorFundea"
-                                name="proveedorFundea">
+                                [(ngModel)]="formularioAprobacion.afililadoProveedorFundea" name="proveedorFundea">
                                 <option [ngValue]="false">No</option>
                                 <option [ngValue]="true">Sí</option>
                             </select>
@@ -474,10 +523,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 ¿Verificó que el afiliado cuenta con buena reputación dentro de la comunidad?
                             </label>
-                            <select 
+                            <select
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.buenaReputacionComunidad"
-                                name="buenaReputacion">
+                                [(ngModel)]="formularioAprobacion.buenaReputacionComunidad" name="buenaReputacion">
                                 <option [ngValue]="true">Sí</option>
                                 <option [ngValue]="false">No</option>
                             </select>
@@ -487,11 +535,9 @@
                             <label class="flex-1 text-sm md:text-base font-medium text-gray-700">
                                 Validación del registro del afiliado
                             </label>
-                            <input 
-                                type="text"
+                            <input type="text"
                                 class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-                                [(ngModel)]="formularioAprobacion.validacionRegistro"
-                                name="validacionRegistro"
+                                [(ngModel)]="formularioAprobacion.validacionRegistro" name="validacionRegistro"
                                 placeholder="Ingrese observaciones..." />
                         </div>
                     </div>
@@ -499,16 +545,13 @@
                 }
 
                 <hr class="my-4" />
-                
+
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="estadoAprobacion" class="form-label">Estado de la Solicitud <span class="text-danger">*</span></label>
-                        <select 
-                            id="estadoAprobacion" 
-                            class="form-select" 
-                            [(ngModel)]="nuevoSeguimiento.estadoAprobacionId" 
-                            name="estadoAprobacion"
-                            required>
+                        <label for="estadoAprobacion" class="form-label">Estado de la Solicitud <span
+                                class="text-danger">*</span></label>
+                        <select id="estadoAprobacion" class="form-select"
+                            [(ngModel)]="nuevoSeguimiento.estadoAprobacionId" name="estadoAprobacion" required>
                             <option value="">Seleccione un estado</option>
                             @for (estado of estadosSolicitud(); track estado.estadoSolicitudId) {
                             <option [value]="estado.estadoSolicitudId">{{ estado.nombre }}</option>
@@ -517,21 +560,16 @@
                     </div>
 
                     <div class="col-md-12 mb-3">
-                        <label for="observaciones" class="form-label">Observaciones / Mensaje <span class="text-danger">*</span></label>
-                        <textarea 
-                            id="observaciones" 
-                            class="form-control" 
-                            rows="4" 
-                            [(ngModel)]="nuevoSeguimiento.observaciones" 
-                            name="observaciones"
+                        <label for="observaciones" class="form-label">Observaciones / Mensaje <span
+                                class="text-danger">*</span></label>
+                        <textarea id="observaciones" class="form-control" rows="4"
+                            [(ngModel)]="nuevoSeguimiento.observaciones" name="observaciones"
                             placeholder="Escriba sus observaciones o comentarios sobre este seguimiento..."
                             required></textarea>
                     </div>
 
                     <div class="col-12">
-                        <button 
-                            type="submit" 
-                            class="btn btn-primary me-2"
+                        <button type="submit" class="btn btn-primary me-2"
                             [disabled]="isSavingSeguimiento() || !nuevoSeguimiento.estadoAprobacionId || !nuevoSeguimiento.observaciones.trim()">
                             @if (isSavingSeguimiento()) {
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

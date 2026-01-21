@@ -103,10 +103,10 @@ export class UpsertDatosGenerales implements OnInit, AfterViewInit {
         this.etnia.set(rep.etnia || 6);
         this.nacionalidad.set(rep.nacionalidad || 320);
         if(rep.estadoCivil?.toString()){
-          if(rep.estadoCivil.toString() == "CASADO" || rep.estadoCivil.toString() == "CASADA"){
+          if(rep.estadoCivil.toString() == "CASADO" || rep.estadoCivil.toString() == "CASADA" || rep.estadoCivil.toString() == "2"){
             this.estadoCivilId.set("2")
           }
-          if(rep.estadoCivil.toString() == "SOLTERO" || rep.estadoCivil.toString() == "SOLTERA"){
+          if(rep.estadoCivil.toString() == "SOLTERO" || rep.estadoCivil.toString() == "SOLTERA" || rep.estadoCivil.toString() == "1"){
             this.estadoCivilId.set("1")
           }
 

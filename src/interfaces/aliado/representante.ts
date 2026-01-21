@@ -62,7 +62,7 @@ export interface Representante {
   localidad?: number;
   barrio?: number;
   
-  cuentaBantotal?: string; // String para cuentas bancarias
+  cuentaBantotal?: number; // String para cuentas bancarias
   
   fotoFrontalDpi?: string; // URL o Path
   fotoReversoDpi?: string; // URL o Path

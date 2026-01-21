@@ -72,6 +72,7 @@ export class RepresentanteService extends HttpService {
    */
   async crearRepresentante(representante: Representante): Promise<CreateRepresentanteResponse | null> {
     const {representanteId, created_at, updated_at, deleted_at,...representanteDTO} = representante
+    console.log("🚀 ~ RepresentanteService ~ crearRepresentante ~ representanteDTO:", representanteDTO)
 
     try {
       const resp = await firstValueFrom(

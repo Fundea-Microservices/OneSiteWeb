@@ -14,8 +14,8 @@ interface SeguimientoResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class SeguimientoSolicitudService extends HttpService {
-  private readonly base = '/api-bantotal/solicitud/representante/seguimiento';
-  private readonly baseSeguimiento = '/api-bantotal/solicitud/seguimiento';
+  private readonly base = '/aliado/solicitud/representante/seguimiento';
+  private readonly baseSeguimiento = '/aliado/solicitud/seguimiento';
 
   constructor(http: HttpClient, private toastr: ToastrService) {
     super(http);

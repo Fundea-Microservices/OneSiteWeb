@@ -180,12 +180,18 @@ export default class SeguimientoSolicitudesComponent {
 			e => e.estadoSolicitudId === this.nuevoSeguimiento.estadoAprobacionId
 		);
 
+		// Si se va a aprobar, requerir documentoCargado
 		if (estadoSeleccionado?.nombre?.includes('APROBADO')) {
+			if (!solicitud.documentoCargado) {
+				alert('Debe adjuntar el documento PDF de la solicitud antes de aprobar.');
+				return;
+			}
 			if (tieneRespuestasFormulario && !this.esFormularioAprobado()) {
 				alert('El formulario de aprobación no está completamente aprobado. Por favor revise todas las preguntas.');
 				return;
 			}
 		}
+	
 
 		this.isSavingSeguimiento.set(true);
 		try {
@@ -228,6 +234,57 @@ export default class SeguimientoSolicitudesComponent {
 		} finally {
 			this.isSavingSeguimiento.set(false);
 			this.cdr.markForCheck();
+		}
+	}
+
+	// Visualizar PDF cargado
+	verDocumentoSolicitud() {
+		const solicitud = this.solicitud();
+		if (!solicitud?.documentoCargado) return;
+		let pdfData: string;
+		if (typeof solicitud.documentoCargado === 'string') {
+			pdfData = solicitud.documentoCargado.startsWith('data:application/pdf')
+				? solicitud.documentoCargado
+				: `data:application/pdf;base64,${solicitud.documentoCargado}`;
+		} else {
+			// Soportar formato {type: 'Buffer', data: [...]}
+			let arr: Uint8Array | null = null;
+			if (
+				solicitud.documentoCargado &&
+				typeof solicitud.documentoCargado === 'object' &&
+				'type' in solicitud.documentoCargado &&
+				(solicitud.documentoCargado as any).type === 'Buffer' &&
+				Array.isArray((solicitud.documentoCargado as any).data)
+			) {
+				arr = new Uint8Array((solicitud.documentoCargado as any).data);
+			} else {
+				// Detectar Uint8Array o array plano
+				const isUint8Array = Object.prototype.toString.call(solicitud.documentoCargado) === '[object Uint8Array]';
+				const isArray = Array.isArray(solicitud.documentoCargado);
+				if (isUint8Array) {
+					arr = solicitud.documentoCargado as Uint8Array;
+				} else if (isArray) {
+					arr = new Uint8Array(solicitud.documentoCargado);
+				}
+			}
+			if (arr) {
+				// Convertir a base64
+				let binary = '';
+				for (let i = 0; i < arr.length; i++) {
+					binary += String.fromCharCode(arr[i]);
+				}
+				const base64 = btoa(binary);
+				pdfData = `data:application/pdf;base64,${base64}`;
+			} else {
+				alert('Formato de documento no soportado para visualizar.');
+				return;
+			}
+		}
+		const win = window.open();
+		if (win) {
+			win.document.write(
+				`<iframe src='${pdfData}' width='100%' height='100%' style='border:none;'></iframe>`
+			);
 		}
 	}
 

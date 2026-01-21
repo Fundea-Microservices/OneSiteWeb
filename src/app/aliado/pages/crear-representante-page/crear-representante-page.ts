@@ -242,7 +242,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
               segundoNombre: datos.segundoNombre || current.segundoNombre,
               primerApellido: datos.primerApellido || current.primerApellido,
               segundoApellido: datos.segundoApellido || current.segundoApellido,
-
+              nit: '',
               // Datos personales
               fechaNacimiento: this.normalizarFecha(datos.fechaNacimiento) || current.fechaNacimiento,
               sexo: datos.sexo || current.sexo,
@@ -254,19 +254,20 @@ export default class CrearRepresentantePage implements AfterViewInit {
               telefonoFijo: datos.telefonoFijo || current.telefonoFijo,
 
               // Datos de domicilio
-              direccion: datos.calle || current.direccion,
+              direccion: datos.domicilio || '',
               paisDomicilio: parseInt(datos.paisDomicilioId || '320', 10),
-              departamentoDomicilio: parseInt(datos.departamentoId || '1', 10),
-              municipioDomicilio: datos.localidadId ? (typeof datos.localidadId === 'number' ? datos.localidadId : parseInt(datos.localidadId, 10)) : current.municipioDomicilio,
-              localidad: datos.localidadId ? (typeof datos.localidadId === 'number' ? datos.localidadId : parseInt(datos.localidadId, 10)) : current.municipioDomicilio,
+              departamentoDomicilio: parseInt(datos.departamentoId || '0', 10),
+              municipioDomicilio: datos.localidadId ? (typeof datos.localidadId === 'number' ? datos.localidadId : parseInt(datos.localidadId, 10)) : undefined,
+              localidad: datos.localidadId ? (typeof datos.localidadId === 'number' ? datos.localidadId : parseInt(datos.localidadId, 10)) : undefined,
+              
 
               // Datos de documento
               paisDocumento: parseInt(datos.paisDocumentoId || '320', 10),
               tipoDocumento: parseInt(datos.tipoDocumentoId || '1', 10),
 
               // Datos laborales y financieros
-              ocupacion: datos.ocupacionId ? parseInt(datos.ocupacionId, 10) : current.ocupacion,
-              actividadLaboral: datos.actividadLaboralId ? parseInt(datos.actividadLaboralId, 10) : current.actividadLaboral,
+              ocupacion: datos.ocupacionId ? parseInt(datos.ocupacionId, 10) : undefined,
+              actividadLaboral: datos.actividadLaboralId ? parseInt(datos.actividadLaboralId, 10) : undefined,
               ingresos: datos.ingresos ? parseFloat(datos.ingresos) : current.ingresos,
               fechaInicioActividad: datos.fechaInicioActividad || current.fechaInicioActividad,
               fechaVencimiento: this.normalizarFecha(datos.fechaVencimiento) || current.fechaVencimiento,
@@ -274,10 +275,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
               etnia: datos.etniaId ? parseInt(datos.etniaId.toString(), 10) : current.etnia,
               sectorId: datos.sectorId ? parseInt(datos.sectorId.toString(), 10) : current.sectorId,
               // Estado civil (si aplica)
-              estadoCivil: datos.estadoCivilId ? parseInt(datos.estadoCivilId, 10) : current.estadoCivil,
+              estadoCivil: datos.estadoCivil ? parseInt(datos.estadoCivil.toString(), 10) : current.estadoCivil,
 
               // Cuenta Bantotal
               cuentaBT: datos.cuentaBT || current.cuentaBT,
+              cuentaBantotal: Number(datos.cuentaBT) || current.cuentaBantotal,
             };
             return datosActualizados;
           });
@@ -640,7 +642,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       departamentoDomicilio: Number(input?.departamentoDomicilio ?? 1),
       localidad: input?.localidad != null ? Number(input.localidad) : undefined,
       barrio: input?.barrio != null ? Number(input.barrio) : undefined,
-      cuentaBantotal: input?.cuentabanTotal ? String(input.cuentaBantotal) : undefined,
+      cuentaBantotal: input?.cuentaBantotal ? Number(input.cuentaBantotal) : undefined,
       fotoFrontalDpi: input?.fotoFrontalDpi ? String(input.fotoFrontalDpi) : undefined,
       fotoReversoDpi: input?.fotoReversoDpi ? String(input.fotoReversoDpi) : undefined,
       usuarioIngreso: input?.usuarioIngreso ? String(input.usuarioIngreso) : undefined,

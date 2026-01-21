@@ -61,7 +61,7 @@ export class SolicitudesService extends HttpService {
    * @param id - ID de la solicitud
    */
   async findOneSolicitud(id: string) {
-    return this.executeRequest<Solicitud>('get', `${this.base}/${id}`);
+    return this.executeRequest<Solicitud>('get', `${this.base}/find/${id}`);
   }
 
   /**
