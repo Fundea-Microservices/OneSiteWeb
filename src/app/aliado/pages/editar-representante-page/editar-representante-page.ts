@@ -1,3 +1,4 @@
+
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -60,14 +61,14 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
 
     try {
       const resultado = await this.representanteService.byId(representanteId);
-      
+
       if (resultado?.data?.representante) {
         this.representante.set(resultado.data.representante);
-        
+
         // Si tiene documento, cargar la cuenta BT
         if (resultado.data.representante.documento) {
           const docSinFormato = resultado.data.representante.documento.replace(/\s/g, '');
-          
+
         }
 
         console.log('✅ Representante cargado:', resultado.data.representante);
@@ -157,5 +158,35 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
    */
   cancelar() {
     this.router.navigate(['/aliado/listado-representante']);
+  }
+
+  /**
+   * Verifica si el DPI está vencido comparando la fecha de vencimiento con la fecha actual
+   * @returns true si la fecha de vencimiento es menor a la fecha actual
+   */
+  esDpiVencido(): boolean {
+    const fechaVencimiento = this.representante()?.fechaVencimiento;
+    if (!fechaVencimiento) {
+      return false;
+    }
+
+    let fechaVenc: Date;
+    // Si la fecha está en formato DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaVencimiento)) {
+      const [dia, mes, anio] = fechaVencimiento.split('/');
+      fechaVenc = new Date(parseInt(anio, 10), parseInt(mes, 10) - 1, parseInt(dia, 10));
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(fechaVencimiento)) {
+      // Si está en formato ISO
+      fechaVenc = new Date(fechaVencimiento);
+    } else {
+      // Otro formato, intentar parsear directo
+      fechaVenc = new Date(fechaVencimiento);
+    }
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    fechaVenc.setHours(0, 0, 0, 0);
+
+    return fechaVenc < hoy;
   }
 }
