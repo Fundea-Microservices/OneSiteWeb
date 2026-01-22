@@ -196,7 +196,7 @@ export class RepresentanteService extends HttpService {
    */
   async actualizarRepresentante(representanteId: string, representante: Partial<Representante>): Promise<RepresentanteResponse | null> {
     console.log(`🔄 Actualizando representante ${representanteId}...`);
-    const {representanteId: repId, created_at, updated_at, deleted_at, ...representanteObj} = representante;
+    const {representanteId: repId, municipioDomicilio, created_at, updated_at, deleted_at, ...representanteObj} = representante;
     try {
       const resp = await firstValueFrom(
         this.put<RepresentanteResponse>(`${this.endpoints.representante}/${representanteId}`, representanteObj)

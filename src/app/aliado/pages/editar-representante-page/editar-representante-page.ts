@@ -96,20 +96,36 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
    */
   async guardarCambios() {
     const rep = this.representante();
-    
     if (!rep) {
       this.toastr.error('No hay datos del representante', 'Error');
       return;
     }
 
     // Validaciones básicas
-    if (!rep.documento || !rep.primerNombre || !rep.primerApellido) {
-      this.toastr.error('Por favor complete los campos requeridos', 'Error');
+    const camposFaltantes: string[] = [];
+    if (!rep.documento) camposFaltantes.push('Documento');
+    if (!rep.primerNombre) camposFaltantes.push('Primer Nombre');
+    if (!rep.primerApellido) camposFaltantes.push('Primer Apellido');
+    if (!rep.segundoApellido) camposFaltantes.push('Segundo Apellido');
+    if (!rep.fechaNacimiento) camposFaltantes.push('Fecha de Nacimiento');
+    if (!rep.sexo) camposFaltantes.push('Sexo');
+    if (!rep.estadoCivil) camposFaltantes.push('Estado Civil');
+    if (!rep.etnia) camposFaltantes.push('Etnia');
+    if (!rep.fechaVencimiento) camposFaltantes.push('Fecha de Vencimiento');
+    if (!rep.nit) camposFaltantes.push('NIT');
+    if (!rep.telefonoCelular) camposFaltantes.push('Teléfono Celular');
+    if (!rep.departamentoDomicilio) camposFaltantes.push('Departamento');
+    if (!rep.localidad) camposFaltantes.push('Localidad');
+    if (!rep.direccion) camposFaltantes.push('Dirección');
+    if (!rep.actividadLaboral) camposFaltantes.push('Actividad Laboral');
+    if (!rep.fechaInicioActividad) camposFaltantes.push('Fecha de Inicio de Actividad');
+    if (!rep.sectorId) camposFaltantes.push('Sector');
+    // Agrega aquí más campos obligatorios si lo necesitas
+
+    if (camposFaltantes.length > 0) {
+      this.toastr.error(`Faltan los siguientes campos obligatorios: ${camposFaltantes.join(', ')}`, 'Error');
       return;
     }
-
-    this.guardando.set(true);
-    console.log('💾 Guardando cambios del representante...', rep);
 
     try {
       const resultado = await this.representanteService.actualizarRepresentante(
@@ -120,7 +136,6 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
       if (resultado?.success) {
         this.toastr.success('Representante actualizado correctamente', 'Éxito');
         console.log('✅ Representante actualizado:', resultado);
-        
         // Redirigir al listado después de 2 segundos
         setTimeout(() => {
           this.router.navigate(['/aliado/listado-representante']);
