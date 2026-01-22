@@ -315,8 +315,10 @@ export default class CrearRepresentantePage implements AfterViewInit {
       this.frontPreview = reader.result;
       this.cdr.markForCheck();
 
-      // Validar con el servicio
-      this.validarDocumentoFrontal(file);
+      // Si el llenador manual está habilitado, no consultar al servicio
+      if (!this.llenadorManualHabilitado()) {
+        this.validarDocumentoFrontal(file);
+      }
     };
     reader.readAsDataURL(file);
   }
@@ -408,7 +410,22 @@ export default class CrearRepresentantePage implements AfterViewInit {
           fechaEmision: this.normalizarFecha(fechaEmision),
           sexo: datos.sexo_codigo || '',
           nacionalidad: Number(datos.nacionalidad_pais || ''),
-          camposBloqueados: true
+          camposBloqueados: true,
+          // LImpiamos el resto de campos
+          nit: '',
+          etnia: 0,
+          telefonoCelular: '',
+          telefonoFijo: '',
+          correoElectronico: '',
+          departamentoDomicilio : 0,
+          localidad: undefined,
+          direccion: '',
+          ocupacion: undefined,
+          profesion: undefined,
+          nombreEmpresa: '',
+          actividadLaboral: undefined,
+          fechaInicioActividad: '',
+          sectorId: undefined
         };
       });
 
@@ -473,8 +490,10 @@ export default class CrearRepresentantePage implements AfterViewInit {
       this.backPreview = reader.result;
       this.cdr.markForCheck();
 
-      // Validar con el servicio
-      this.validarDocumentoReverso(file);
+      // Si el llenador manual está habilitado, no consultar al servicio
+      if (!this.llenadorManualHabilitado()) {
+        this.validarDocumentoReverso(file);
+      }
     };
     reader.readAsDataURL(file);
   }
