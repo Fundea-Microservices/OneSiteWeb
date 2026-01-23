@@ -63,9 +63,9 @@ export class BancoService extends HttpService {
       );
       
       // La respuesta tiene doble anidamiento: resp.body.data.data
-      if (resp.body?.success && resp.body.data?.data && Array.isArray(resp.body.data.data)) {
-        console.log('🏦 Bancos cargados:', resp.body.data.data);
-        return resp.body.data.data;
+      if (resp.body?.success && resp.body.data && Array.isArray(resp.body.data)) {
+        console.log('🏦 Bancos cargados:', resp.body.data);
+        return resp.body.data;
       }
       
       console.warn('⚠️ Estructura de respuesta de bancos inesperada:', resp.body);
@@ -87,9 +87,9 @@ export class BancoService extends HttpService {
       );
       
       // La respuesta tiene doble anidamiento: resp.body.data.data
-      if (resp.body?.success && resp.body.data?.data && Array.isArray(resp.body.data.data)) {
-        console.log('💳 Tipos de cuenta cargados:', resp.body.data.data);
-        return resp.body.data.data;
+      if (resp.body?.success && resp.body?.data && Array.isArray(resp.body.data)) {
+        console.log('💳 Tipos de cuenta cargados:', resp.body.data);
+        return resp.body.data;
       }
       
       console.warn('⚠️ Estructura de respuesta de tipos de cuenta inesperada:', resp.body);
