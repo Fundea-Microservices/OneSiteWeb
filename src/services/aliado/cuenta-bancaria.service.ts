@@ -3,11 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { 
-  ICuentaBancaria, 
-  CreateCuentaBancariaDto, 
+import {
+  ICuentaBancaria,
+  CreateCuentaBancariaDto,
   UpdateCuentaBancariaDto,
-  ListarCuentasBancariasDto 
+  ListarCuentasBancariasDto
 } from '../../interfaces/aliado/cuenta-bancaria';
 
 export interface CuentaBancariaResponse {
@@ -23,14 +23,12 @@ export interface CuentasBancariasResponse {
   success: boolean;
   message: string;
   statusCode: number;
-  data?: {
-    data: ICuentaBancaria[];
-    metadata: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
+  data: ICuentaBancaria[];
+  metadata: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
   };
 }
 
@@ -55,12 +53,12 @@ export class CuentaBancariaService extends HttpService {
       const resp = await firstValueFrom(
         this.post<CuentaBancariaResponse>(this.endpoints.base, dto)
       );
-      
+
       if (resp.body?.success) {
         this.toastr.success(resp.body.message || 'Cuenta bancaria creada exitosamente', 'Éxito');
         return resp.body;
       }
-      
+
       this.toastr.error(resp.body?.message || 'Error al crear la cuenta bancaria', 'Error');
       return null;
     } catch (error: any) {
@@ -76,7 +74,7 @@ export class CuentaBancariaService extends HttpService {
   async listar(filtros?: ListarCuentasBancariasDto): Promise<CuentasBancariasResponse | null> {
     try {
       const queryParams: any = {};
-      
+
       if (filtros) {
         if (filtros.page !== undefined) queryParams.page = filtros.page;
         if (filtros.limit !== undefined) queryParams.limit = filtros.limit;
@@ -90,11 +88,11 @@ export class CuentaBancariaService extends HttpService {
       const resp = await firstValueFrom(
         this.get<CuentasBancariasResponse>(this.endpoints.base, queryParams)
       );
-      
+
       if (resp.body?.success) {
         return resp.body;
       }
-      
+
       return null;
     } catch (error: any) {
       console.error('🚀 ~ CuentaBancariaService ~ listar ~ error:', error);
@@ -125,11 +123,11 @@ export class CuentaBancariaService extends HttpService {
       const resp = await firstValueFrom(
         this.get<CuentaBancariaResponse>(`${this.endpoints.base}/${id}`)
       );
-      
+
       if (resp.body?.success) {
         return resp.body;
       }
-      
+
       return null;
     } catch (error: any) {
       console.error('🚀 ~ CuentaBancariaService ~ obtenerPorId ~ error:', error);
@@ -146,12 +144,12 @@ export class CuentaBancariaService extends HttpService {
       const resp = await firstValueFrom(
         this.put<CuentaBancariaResponse>(`${this.endpoints.base}/${id}`, dto)
       );
-      
+
       if (resp.body?.success) {
         this.toastr.success(resp.body.message || 'Cuenta bancaria actualizada exitosamente', 'Éxito');
         return resp.body;
       }
-      
+
       this.toastr.error(resp.body?.message || 'Error al actualizar la cuenta bancaria', 'Error');
       return null;
     } catch (error: any) {
@@ -169,12 +167,12 @@ export class CuentaBancariaService extends HttpService {
       const resp = await firstValueFrom(
         this.delete<CuentaBancariaResponse>(`${this.endpoints.base}/${id}`)
       );
-      
+
       if (resp.body?.success) {
         this.toastr.success(resp.body.message || 'Cuenta bancaria eliminada exitosamente', 'Éxito');
         return true;
       }
-      
+
       this.toastr.error(resp.body?.message || 'Error al eliminar la cuenta bancaria', 'Error');
       return false;
     } catch (error: any) {

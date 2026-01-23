@@ -399,11 +399,10 @@ export default class EmpresasRepresentantePage {
     try {
       const resp = await this.cuentaBancariaService.obtenerPorEmpresa(empresaId, 1, 100);
       
-      if (resp?.success && resp.data?.data) {
+      if (resp?.success && resp?.data) {
         const cuentasMap = new Map(this.cuentasPorEmpresa());
-        cuentasMap.set(empresaId, resp.data.data);
+        cuentasMap.set(empresaId, resp?.data);
         this.cuentasPorEmpresa.set(cuentasMap);
-        console.log('💳 Cuentas cargadas para empresa', empresaId, ':', resp.data.data);
         // Cargar solicitudes para cada empresa
         await this.cargarSolicitudesParaEmpresas(this.empresas());
       }
