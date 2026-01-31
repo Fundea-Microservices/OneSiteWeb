@@ -106,7 +106,6 @@
           <input
             [value]="fechaInicioActividad()"
             (input)="fechaInicioActividad.set($any($event.target).value)"
-            [disabled]="camposBloqueados()"
             type="date"
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg pl-4 pr-3 h-11 w-full"
             placeholder="Selecciona fecha"

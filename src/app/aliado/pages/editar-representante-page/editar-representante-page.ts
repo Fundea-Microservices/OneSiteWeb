@@ -107,7 +107,6 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
     if (!rep.documento) camposFaltantes.push('Documento');
     if (!rep.primerNombre) camposFaltantes.push('Primer Nombre');
     if (!rep.primerApellido) camposFaltantes.push('Primer Apellido');
-    if (!rep.segundoApellido) camposFaltantes.push('Segundo Apellido');
     if (!rep.fechaNacimiento) camposFaltantes.push('Fecha de Nacimiento');
     if (!rep.sexo) camposFaltantes.push('Sexo');
     if (!rep.estadoCivil) camposFaltantes.push('Estado Civil');

@@ -38,7 +38,7 @@ export class UpsertCuentaRepresentanteComponent implements OnInit {
     monedaId: 1,
     numeroCuenta: '',
     nombreCuenta: '',
-    activo: true,
+    activo: false,
     usrIngreso: '',
   });
 
@@ -74,7 +74,7 @@ export class UpsertCuentaRepresentanteComponent implements OnInit {
         monedaId: [cuentaData.monedaId, Validators.required],
         numeroCuenta: [cuentaData.numeroCuenta, [Validators.required, Validators.maxLength(30)]],
         nombreCuenta: [cuentaData.nombreCuenta, [Validators.required, Validators.maxLength(150)]],
-        activo: [cuentaData.activo ?? true],
+        activo: [cuentaData.activo ?? false],
       });
 
       if (isNuevo) {
@@ -84,7 +84,7 @@ export class UpsertCuentaRepresentanteComponent implements OnInit {
           monedaId: 1,
           numeroCuenta: '',
           nombreCuenta: '',
-          activo: true,
+          activo: false,
         });
       }
 

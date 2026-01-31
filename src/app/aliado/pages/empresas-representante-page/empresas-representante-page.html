@@ -317,6 +317,7 @@
                                                     <th class="text-center">Nombre de Cuenta</th>
                                                     <th class="text-center">Moneda</th>
                                                     <th class="text-center">Estado</th>
+                                                    <th class="text-center">Asignado</th>                                                    
                                                     <th class="text-center">Acciones</th>
                                                 </tr>
                                             </thead>
@@ -343,6 +344,13 @@
                                                                 }">{{ estado }}</span>
                                                         } @else {
                                                         <span class="text-muted small">Sin solicitud</span>
+                                                        }
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @if(cuenta.activo) {
+                                                        <span class="badge bg-success">Sí</span>
+                                                        } @else {
+                                                        <span class="badge bg-secondary">No</span>
                                                         }
                                                     </td>
                                                     <td class="text-center">

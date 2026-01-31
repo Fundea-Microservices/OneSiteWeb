@@ -16,6 +16,7 @@ export class UpsertDatosGenerales implements OnInit, AfterViewInit {
   representante = model<Representante | null>(null);
   camposBloqueados = input<boolean>(false);
   cuentaBT = input<number | null>(null);
+  clienteUId = input<number | null>(null);
   buscandoCliente = input<boolean>(false);
   
   // Output para emitir cambios del documento sin formato

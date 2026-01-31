@@ -55,6 +55,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
   // Datos de búsqueda Bantotal
   cuentaBT = signal<number | null>(null);
+  clienteUId = signal<number | null>(null);
   buscandoCliente = signal(false);
   private debounceTimeout: any = null;
 
@@ -134,6 +135,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
     this.representante.set(this.buildRepresentanteInicial(documento));
 
     this.cuentaBT.set(null);
+    this.clienteUId.set(null);
   }
 
   limpiarFormularioCompleto() {
@@ -217,6 +219,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
     // Solo buscar si tiene exactamente 13 dígitos
     if (documentoSinFormato.length !== 13) {
       this.cuentaBT.set(null);
+      this.clienteUId.set(null);
       return;
     }
 
@@ -280,6 +283,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
               // Cuenta Bantotal
               cuentaBT: datos.cuentaBT || current.cuentaBT,
               cuentaBantotal: Number(datos.cuentaBT) || current.cuentaBantotal,
+              clienteUId: datos.clienteUId || current.clienteUId,
             };
             return datosActualizados;
           });
@@ -662,6 +666,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       localidad: input?.localidad != null ? Number(input.localidad) : undefined,
       barrio: input?.barrio != null ? Number(input.barrio) : undefined,
       cuentaBantotal: input?.cuentaBantotal ? Number(input.cuentaBantotal) : undefined,
+      clienteUId: input?.clienteUId ? Number(input.clienteUId) : undefined,
       fotoFrontalDpi: input?.fotoFrontalDpi ? String(input.fotoFrontalDpi) : undefined,
       fotoReversoDpi: input?.fotoReversoDpi ? String(input.fotoReversoDpi) : undefined,
       usuarioIngreso: input?.usuarioIngreso ? String(input.usuarioIngreso) : undefined,
