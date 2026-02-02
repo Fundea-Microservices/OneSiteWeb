@@ -277,6 +277,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
               profesion: datos.profesionId ? parseInt(datos.profesionId.toString(), 10) : current.profesion,
               etnia: datos.etniaId ? parseInt(datos.etniaId.toString(), 10) : current.etnia,
               sectorId: datos.sectorId ? parseInt(datos.sectorId.toString(), 10) : current.sectorId,
+              nombreEmpresa: datos.nombreEmpresa || current.nombreEmpresa,
               // Estado civil (si aplica)
               estadoCivil: datos.estadoCivil ? parseInt(datos.estadoCivil.toString(), 10) : current.estadoCivil,
 

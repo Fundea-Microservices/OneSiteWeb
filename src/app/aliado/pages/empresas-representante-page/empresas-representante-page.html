@@ -317,7 +317,7 @@
                                                     <th class="text-center">Nombre de Cuenta</th>
                                                     <th class="text-center">Moneda</th>
                                                     <th class="text-center">Estado</th>
-                                                    <th class="text-center">Asignado</th>                                                    
+                                                    <th class="text-center">Asignado</th>
                                                     <th class="text-center">Acciones</th>
                                                 </tr>
                                             </thead>
@@ -397,28 +397,31 @@
                                         cuenta.cuentaBancariaId; let i = $index) {
                                         <div class="card mb-3 shadow-sm">
                                             <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div class="d-flex justify-content-end align-items-start mb-3">
                                                     <h6 class="card-title text-primary mb-0">
-                                                        <i class="bi bi-bank2 me-2"></i>
-                                                        {{ obtenerNombreBanco(cuenta.bancoId) }}
+                                                        <ion-icon name="business-outline"></ion-icon>
+                                                        {{obtenerNombreBanco(cuenta.bancoId) }}
                                                     </h6>
                                                     <div class="d-flex gap-2 align-items-center">
-                                                        <div class="form-check form-switch">
+                                                        <!-- <div class="form-check form-switch">
                                                             <input class="form-check-input" type="checkbox"
                                                                 role="switch"
                                                                 id="switchCuentaMobile{{empresa.empresaId}}_{{i}}"
                                                                 [checked]="cuenta.activo"
                                                                 (change)="cambiarEstadoCuenta(cuenta, empresa.empresaId, switchCuentaMobile.checked, switchCuentaMobile)"
                                                                 #switchCuentaMobile>
-                                                        </div>
+                                                        </div> -->
                                                         @if (puedeEditarCuenta(cuenta.cuentaBancariaId || '')) {
                                                         <button type="button"
                                                             (click)="editarCuenta(empresa.empresaId, cuenta)"
                                                             class="btn btn-sm btn-primary" title="Editar cuenta">
-                                                            <i class="bi bi-pencil"></i>
+                                                            <ion-icon name="create-outline"></ion-icon>
                                                         </button>
                                                         }
                                                     </div>
+                                                </div>
+                                                <div>
+
                                                 </div>
 
                                                 <div class="row g-2">
@@ -444,7 +447,7 @@
                                                         <span class="fw-semibold">{{ cuenta.nombreCuenta }}</span>
                                                     </div>
 
-                                                    <div class="col-12">
+                                                    <div class="col-6">
                                                         <small class="text-muted d-block">Estado</small>
                                                         @if (obtenerEstadoSolicitudPorCuenta(cuenta.cuentaBancariaId ||
                                                         ''); as estado) {
@@ -458,6 +461,15 @@
                                                         } @else {
                                                         <span class="text-muted small">Sin solicitud</span>
                                                         }
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">Asignado</small>
+                                                        @if(cuenta.activo) {
+                                                        <span class="badge bg-success">Sí</span>
+                                                        } @else {
+                                                        <span class="badge bg-secondary">No</span>
+                                                        }
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -501,8 +513,7 @@
     <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <app-upsert-cuenta-representante [cuenta]="cuentaSeleccionada()!" [empresaId]="empresaIdCuenta()"
             [nuevo]="!esEditarCuenta()" [key]="modalKeyCuenta()" (save)="onGuardarCuenta($event)"
-            (cancel)="cerrarModalCuenta()" 
-            [tipoSolicitudId]="esEmpresa() ? solicitudEmpresaId() : solicitudCuentaId()"
+            (cancel)="cerrarModalCuenta()" [tipoSolicitudId]="esEmpresa() ? solicitudEmpresaId() : solicitudCuentaId()"
             [tipoAfiliacionId]="afiliacionReferidoId()" />
     </div>
 </div>
@@ -514,7 +525,8 @@
     <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-gray-800">{{ esEditarSolicitud() ? 'Editar Solicitud' : 'Nueva Solicitud' }}</h2>
+                <h2 class="text-2xl font-semibold text-gray-800">{{ esEditarSolicitud() ? 'Editar Solicitud' : 'Nueva
+                    Solicitud' }}</h2>
                 <button type="button" (click)="cerrarModalSolicitud()"
                     class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -526,7 +538,7 @@
             <app-upsert-solicitud [nuevo]="!esEditarSolicitud()" [representante]="representante()"
                 [empresa]="getEmpresaActual()" [cuentaBancaria]="getCuentaBancariaEmpresa(empresaIdSolicitud())"
                 [solicitudData]="solicitudFormData()" (save)="onGuardarSolicitud($event)"
-                (cancel)="cerrarModalSolicitud()" [tipoAfiliacionId]="afiliacionReferidoId()" 
+                (cancel)="cerrarModalSolicitud()" [tipoAfiliacionId]="afiliacionReferidoId()"
                 [tipoSolicitudId]="esEmpresa() ? solicitudEmpresaId() : solicitudCuentaId() " />
         </div>
     </div>
