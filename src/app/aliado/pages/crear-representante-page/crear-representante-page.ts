@@ -429,7 +429,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
           nombreEmpresa: '',
           actividadLaboral: undefined,
           fechaInicioActividad: '',
-          sectorId: undefined
+          sectorId: undefined,
+          ingresos: 0,
+          cuentaBantotal: undefined,
+          cuentaBT: undefined,
+          clienteUId: undefined
         };
       });
 
