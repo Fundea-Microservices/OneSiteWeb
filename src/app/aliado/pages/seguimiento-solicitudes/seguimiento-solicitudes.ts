@@ -100,7 +100,10 @@ export default class SeguimientoSolicitudesComponent {
 		try {
 			const response = await this.generalidadesService.getAllEstadoSolicitud();
 			if (response?.data && Array.isArray(response.data)) {
-				this.estadosSolicitud.set(response.data as EstadoSolicitud[]);
+				const estadosFiltrados = (response.data as EstadoSolicitud[]).filter(
+					estado => estado.nombre !== 'Espera'
+				);
+				this.estadosSolicitud.set(estadosFiltrados);
 			}
 		} catch (error) {
 			console.error('❌ Error al cargar estados:', error);
@@ -353,7 +356,6 @@ export default class SeguimientoSolicitudesComponent {
 		const empleado = convertToBoolean(form.aficiadoEmpleadoFundea);
 		const proveedor = convertToBoolean(form.afililadoProveedorFundea);
 		const reputacion = convertToBoolean(form.buenaReputacionComunidad);
-		const validacion = form.validacionRegistro?.trim() ?? '';
 
 		console.log('🔍 Verificando formulario:', {
 			revision: revision === true ? '✅ Sí' : '❌ No/Vacío',
@@ -364,7 +366,6 @@ export default class SeguimientoSolicitudesComponent {
 			empleado: empleado === false ? '✅ No' : '❌ Sí/Vacío',
 			proveedor: proveedor === false ? '✅ No' : '❌ Sí/Vacío',
 			reputacion: reputacion === true ? '✅ Sí' : '❌ No/Vacío',
-			validacion: validacion.length > 0 ? '✅ Tiene texto' : '❌ Vacío'
 		});
 
 		return (
@@ -375,8 +376,7 @@ export default class SeguimientoSolicitudesComponent {
 			firma === true &&
 			empleado === false && // No debe ser empleado
 			proveedor === false && // No debe ser proveedor
-			reputacion === true &&
-			validacion.length > 0
+			reputacion === true
 		);
 	}
 }
