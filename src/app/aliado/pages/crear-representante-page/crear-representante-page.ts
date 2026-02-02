@@ -698,7 +698,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
         'documento', 'primerNombre', 'primerApellido', 'fechaNacimiento', 'sexo',
         'estadoCivil', 'nacionalidad', 'etnia', 'fechaVencimiento', 'nit', 'correoElectronico',
         'telefonoCelular', 'paisDomicilio', 'departamentoDomicilio', 'direccion',
-        'actividadLaboral', 'sectorId', 'fechaInicioActividad', 'ingresos'
+        'actividadLaboral', 'sectorId', 'fechaInicioActividad'
       ];
 
       let camposFaltantes: string[] = [];
@@ -715,7 +715,6 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
       if(payload.departamentoDomicilio === 0) camposFaltantes.push('departamentoDomicilio'); 
       if(payload.localidad === 0) camposFaltantes.push('municipioDomicilio'); 
-      if(payload.ingresos === 0) camposFaltantes.push('ingresos'); 
 
       if (camposFaltantes.length > 0) {
        this.toastr.error('Por favor completa los campos requeridos: ' + camposFaltantes.join(', '), 'Campos incompletos');
