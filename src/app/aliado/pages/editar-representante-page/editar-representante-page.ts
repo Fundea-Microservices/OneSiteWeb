@@ -120,6 +120,7 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
     if (!rep.actividadLaboral) camposFaltantes.push('Actividad Laboral');
     if (!rep.fechaInicioActividad) camposFaltantes.push('Fecha de Inicio de Actividad');
     if (!rep.sectorId) camposFaltantes.push('Sector');
+    if (!rep.correoElectronico) camposFaltantes.push('Correo Electrónico');
     // Agrega aquí más campos obligatorios si lo necesitas
 
     if (camposFaltantes.length > 0) {

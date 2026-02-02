@@ -692,7 +692,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       // Validar que tengamos datos básicos requeridos
       const camposRequeridos = [
         'documento', 'primerNombre', 'primerApellido', 'fechaNacimiento', 'sexo',
-        'estadoCivil', 'nacionalidad', 'etnia', 'fechaVencimiento', 'nit',
+        'estadoCivil', 'nacionalidad', 'etnia', 'fechaVencimiento', 'nit', 'correoElectronico',
         'telefonoCelular', 'paisDomicilio', 'departamentoDomicilio', 'direccion',
         'actividadLaboral', 'sectorId', 'fechaInicioActividad', 'ingresos'
       ];
