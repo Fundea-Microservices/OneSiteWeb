@@ -11,7 +11,7 @@
     [class]="'bg-custom-sidebar min-h-screen z-30 text-slate-900 fixed left-0 h-screen overflow-y-scroll w-[250px] transition-transform duration-300 ease-in-out ' + 
     (isMenuOpen() ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')">
     <app-side-menu-header />
-    <app-side-menu-list (click)="closeMenu()" />
+    <app-side-menu-list (submenuSelected)="closeMenu()" />
 </div>
 
 <!-- Modal de carga de catálogos (renderizado a nivel raíz) -->

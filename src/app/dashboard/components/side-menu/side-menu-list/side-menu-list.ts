@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal, ChangeDetectorRef, output } from '@angular/core';
 import { AuthService } from '../../../../../services/auth.service';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { SideMenuListItemComponent } from '../side-menu-list-item/side-menu-list-item';
@@ -30,7 +30,10 @@ export class SideMenuListComponent {
   private cdr = inject(ChangeDetectorRef);
   private toastr = inject(ToastrService);
   
-  public router = inject(Router)
+  public router = inject(Router);
+
+  // Output para notificar al componente padre que se debe cerrar el menú
+  public submenuSelected = output<void>();
 
   public accesos: any[] = [];
 
@@ -52,6 +55,11 @@ export class SideMenuListComponent {
     } else {
       this.openSet.add(id);
     }
+  }
+
+  onSubmenuClick(): void {
+    // Notificar al componente padre que se seleccionó un submenú
+    this.submenuSelected.emit();
   }
 
   logout() {
