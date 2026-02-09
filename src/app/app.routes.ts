@@ -12,7 +12,7 @@ export const routes: Routes = [
     {
         path: 'test',
         loadComponent: () => import('./test/test-page/test-page').then(m => m.TestPage),
-        
+
     },
     {
         path: 'fundea/login',
@@ -113,11 +113,11 @@ export const routes: Routes = [
                     {
                         path: 'diseño',
                         loadComponent: () => import('./reportes/pages/reporte/reporte.component'),
-                    },  
+                    },
                     {
                         path: 'detalle/:id',
                         loadComponent: () => import('./reportes/pages/reporte-detalle/reporte-detalle.component'),
-                    },                    
+                    },
                     {
                         path: 'ejecutar',
                         loadComponent: () => import('./reportes/pages/ejecucion/ejecucion.component'),
@@ -132,7 +132,7 @@ export const routes: Routes = [
                     }
                 ]
             },
-            
+
             {
                 path: 'procedimientos',
                 children: [
@@ -143,11 +143,11 @@ export const routes: Routes = [
                     {
                         path: 'diseño',
                         loadComponent: () => import('./procedimientos/pages/procedimiento/procedimiento.component'),
-                    },  
+                    },
                     {
                         path: 'detalle/:id',
                         loadComponent: () => import('./procedimientos/pages/procedimiento-detalle/procedimiento-detalle.component'),
-                    },                    
+                    },
                     {
                         path: 'ejecutar',
                         loadComponent: () => import('./procedimientos/pages/ejecutar-procedimiento/ejecutar-procedimiento.component'),
@@ -160,7 +160,7 @@ export const routes: Routes = [
             },
             {
                 path: 'ordenes-pago',
-                children: [                    
+                children: [
                     {
                         path: 'generar-orden',
                         loadComponent: () => import('./ordenes-pago/pages/generar-orden-page/generar-orden-page'),
@@ -172,6 +172,23 @@ export const routes: Routes = [
                     {
                         path: 'aprobar-gyt',
                         loadComponent: () => import('./ordenes-pago/gyt/pages/aprobar-gyt-page/aprobar-gyt-page'),
+                    },
+                ]
+            },
+            {
+                path: 'emanager',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./emanager/pages/gestion/gestion-listado-page/gestion-listado-page'),
+                    },
+                    {
+                        path: 'gestion-listado',
+                        loadComponent: () => import('./emanager/pages/gestion/gestion-listado-page/gestion-listado-page'),
+                    },
+                    {
+                        path: 'gestion-detalle/:id',
+                        loadComponent: () => import('./emanager/pages/gestion/gestion-detalle-page/gestion-detalle-page'),
                     },
                 ]
             },
@@ -193,6 +210,8 @@ export const routes: Routes = [
                     }
                 ]
             },
+
+            
         ]
     },
     {
