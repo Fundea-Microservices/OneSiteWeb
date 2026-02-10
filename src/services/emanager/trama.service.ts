@@ -15,16 +15,12 @@ export class TramaService extends HttpService {
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
-    super(http); // pasa HttpClient al servicio base
+    super(http);
   }
 
   async getTramas({ page = 1, limit = 10, search = '', all = false } = {}) {
     try {
-      let params: any = {
-        page,
-        limit,
-        search
-      };
+      let params: any = { page, limit, search };
       if (all) {
         params = { ...params, all: all };
       }
@@ -32,7 +28,6 @@ export class TramaService extends HttpService {
       if (resp.body?.success) {
         return resp.body;
       }
-
       return null;
     } catch (error: any) {
       console.log('🚀 ~ TramaService ~ getTramas ~ error:', error);
@@ -47,7 +42,6 @@ export class TramaService extends HttpService {
       if (resp.body?.success) {
         return resp.body;
       }
-
       return null;
     } catch (error: any) {
       console.log('🚀 ~ TramaService ~ getTramaById ~ error:', error);
@@ -58,15 +52,18 @@ export class TramaService extends HttpService {
 
   async createTrama(createTrama: ITrama) {
     try {
-      const { procesoId, descripcion, codigo, activo } = createTrama;
+      // Excluimos campos de auditoría o ID que genera la BD y enviamos el resto
+      const { tramaId, created_at, updated_at, deleted_at, ...data } = createTrama;
+
+      // Aseguramos que data incluya: procesoId, sistemaId, codigo, codigoInterno, descripcion, usuario, usuarioGlobal, activo
       const resp = await firstValueFrom(
-        this.post<TramaResponse>(`${this.endpoints.trama}`, { procesoId, descripcion, codigo, activo })
+        this.post<TramaResponse>(`${this.endpoints.trama}`, data)
       );
+      
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');
         return resp.body;
       }
-
       return null;
     } catch (error: any) {
       console.log('🚀 ~ TramaService ~ createTrama ~ error:', error);
@@ -77,19 +74,22 @@ export class TramaService extends HttpService {
 
   async updateTrama(tramaUpdate: ITrama) {
     try {
+      // Separamos el ID y las fechas del resto de la data
       const { tramaId, created_at, updated_at, deleted_at, ...data } = tramaUpdate;
+      
       if (!tramaId) {
         this.toastr.error('tramaId requerido para actualizar', 'Error');
         return null;
       }
+
       const resp = await firstValueFrom(
         this.put<TramaResponse>(`${this.endpoints.trama}/${tramaId}`, data)
       );
+
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');
         return resp.body;
       }
-
       return null;
     } catch (error: any) {
       console.log('🚀 ~ TramaService ~ updateTrama ~ error:', error);
@@ -107,7 +107,6 @@ export class TramaService extends HttpService {
         this.toastr.success(resp.body.message, 'Success');
         return resp.body;
       }
-
       return null;
     } catch (error: any) {
       console.log('🚀 ~ TramaService ~ deleteTrama ~ error:', error);

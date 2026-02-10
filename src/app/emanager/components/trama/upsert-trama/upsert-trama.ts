@@ -17,6 +17,8 @@ export interface TramaValidationRules {
   sistemaId?: any[];
   descripcion?: any[];
   codigo?: any[];
+  codigoInterno?: any[];
+  usuario?: any[];
 }
 
 @Component({
@@ -35,7 +37,10 @@ export class UpsertTramaComponent {
     sistemaId: 2,
     descripcion: '',
     codigo: 0,
-    activo: 1,
+    codigoInterno: 0,
+    usuario: '',
+    usuarioGlobal: false,
+    activo: true,
     created_at: new Date(),
   });
 
@@ -46,6 +51,8 @@ export class UpsertTramaComponent {
     sistemaId: [Validators.required, Validators.min(1)],
     descripcion: [Validators.required, Validators.minLength(3), Validators.maxLength(300)],
     codigo: [Validators.required, Validators.min(0)],
+    codigoInterno: [Validators.required, Validators.min(0)],
+    usuario: [Validators.required, Validators.maxLength(100)],
   };
 
   @Output() save = new EventEmitter<ITrama>();
@@ -63,7 +70,10 @@ export class UpsertTramaComponent {
         sistemaId: [trama.sistemaId, this.validationRules.sistemaId],
         descripcion: [trama.descripcion, this.validationRules.descripcion],
         codigo: [trama.codigo, this.validationRules.codigo],
-        activo: [trama.activo === 1],
+        codigoInterno: [trama.codigoInterno, this.validationRules.codigoInterno],
+        usuario: [trama.usuario, this.validationRules.usuario],
+        usuarioGlobal: [trama.usuarioGlobal],
+        activo: [trama.activo],
       });
 
       if (isNuevo) {
@@ -72,6 +82,9 @@ export class UpsertTramaComponent {
           sistemaId: 2,
           descripcion: '',
           codigo: 0,
+          codigoInterno: 0,
+          usuario: '',
+          usuarioGlobal: false,
           activo: true,
         });
       }
@@ -86,19 +99,15 @@ export class UpsertTramaComponent {
 
   onSubmit() {
     if (this.form().valid) {
-      const formValue = this.form().value as {
-        procesoId: number | string;
-        descripcion: string;
-        codigo: number | string;
-        activo: boolean;
-      };
+      const formValue = this.form().value;
 
       const value: ITrama = {
         ...this.trama(),
         ...formValue,
         procesoId: Number(formValue.procesoId ?? 0),
         codigo: Number(formValue.codigo ?? 0),
-        activo: formValue.activo ? 1 : 0,
+        codigoInterno: Number(formValue.codigoInterno ?? 0),
+        sistemaId: Number(formValue.sistemaId ?? 2),
       };
       this.save.emit(value);
     }

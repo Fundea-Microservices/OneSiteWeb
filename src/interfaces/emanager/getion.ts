@@ -1,15 +1,55 @@
-// src/app/models/trama.model.ts
+export type TipoTrama = 'CLIENTE' | 'PARAMETRO';
+export type TipoRespuesta = 'TEXT' | 'NUMBER' | 'DATE' | 'BOOLEAN';
+export type TipoInput = 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'EMAIL' | 'SWITCH';
+
+export interface ITramaDetalle {
+  detalleId: string;
+  tramaId: string;
+  
+  // Campos opcionales (?) porque en SQL aceptan NULL
+  codigo?: number;
+  valor?: string;
+  tag?: string;           // Nuevo campo
+  nombreInput?: string;   // Nuevo campo
+  
+  tipo: TipoTrama;
+  
+  codigoParametro?: number; // Nullable en SQL
+  
+  tipoRespuesta: TipoRespuesta;
+  tipoInput: TipoInput;
+  
+  opciones?: string;      // Nullable
+  valorDefecto?: string;  // Nullable
+  
+  // Campos obligatorios (NOT NULL en SQL)
+  obligatorio: boolean;   // Nuevo campo
+  orden: number;          // Nuevo campo
+  visible: boolean;       // Nuevo campo
+  activo: boolean;
+  
+  created_at?: string | Date;
+  updated_at?: string | Date;
+  deleted_at?: string | Date;
+}
+
 export interface ITrama {
-  /** Identificador UUID */
-  tramaId?: string;
+  tramaId: string;
   procesoId: number;
+  codigo: number;
+  codigoInterno: number; // Nuevo campo
   sistemaId: number;
   descripcion: string;
-  codigo: number;
-  activo: number;
-  created_at: string | Date;
-  updated_at?: string | Date | null;
-  deleted_at?: string | Date | null;
+  
+  usuario: string;       // Nuevo campo
+  usuarioGlobal: boolean; // Nuevo campo (BIT en SQL)
+  
+  activo: boolean;
+  
+  // Las fechas suelen manejarse como string (ISO) al venir del backend
+  created_at?: string | Date;
+  updated_at?: string | Date;
+  deleted_at?: string | Date;
 }
 
 export interface TramaResponse {
@@ -24,6 +64,27 @@ export interface TramasResponse {
   message: string;
   statusCode: number;
   data: ITrama[];
+  metadata: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+
+export interface TramaDetalleResponse {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data?: ITramaDetalle;
+}
+
+export interface TramaDetallesResponse {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data: ITramaDetalle[];
   metadata: {
     page: number;
     limit: number;

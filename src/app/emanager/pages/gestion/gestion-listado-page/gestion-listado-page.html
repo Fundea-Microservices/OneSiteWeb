@@ -1,6 +1,6 @@
 <nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>        
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
         <li class="breadcrumb-item active" aria-current="page">Listado de tramas - eManager</li>
     </ol>
 </nav>
@@ -43,38 +43,45 @@
                             </td>
                         </tr>
                         } @else {
-                            @for (item of tramasList(); track item.tramaId; let i = $index) {
-                            <tr>
-                                <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
-                                <td>{{ item.procesoId }}</td>
-                                <td>{{ item.descripcion }}</td>
-                                <td>{{ item.codigo }}</td>
-                                <td class="text-center">
-                                    @if (item.activo === 1) {
-                                        <span class="badge text-bg-success">Activo</span>
-                                    } @else {
-                                        <span class="badge text-bg-secondary">Inactivo</span>
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    <a class="btn btn-sm btn-success mx-1"
-                                        (click)="openModal(false, item)"
-                                        title="Editar trama">
-                                        <ion-icon name="create-outline"></ion-icon>
-                                    </a>
-                                    <a class="btn btn-sm btn-danger mx-1"
-                                        (click)="openDeleteModal(item)"
-                                        title="Eliminar trama">
-                                        <ion-icon name="trash-outline"></ion-icon>
-                                    </a>
-                                </td>
-                            </tr>
-                            }
+                        @for (item of tramasList(); track item.tramaId; let i = $index) {
+                        <tr>
+                            <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
+                            <td>{{ item.procesoId }}</td>
+                            <td>{{ item.descripcion }}</td>
+                            <td>{{ item.codigo }}</td>
+                            <td class="text-center">
+                                @if (item.activo) {
+                                <span class="badge text-bg-success">Activo</span>
+                                } @else {
+                                <span class="badge text-bg-secondary">Inactivo</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <a class="btn btn-sm btn-info mx-1" [routerLink]="['../','gestion-ejecutar', item.tramaId]"
+                                    title="Ver detalle / Configurar">
+                                    <ion-icon name="eye-outline"></ion-icon>
+                                </a>
+                                <a class="btn btn-sm btn-warning mx-1" [routerLink]="['../','gestion-detalle', item.tramaId]"
+                                    title="Ver detalle / Configurar">
+                                    <ion-icon name="list-outline"></ion-icon>
+                                </a>
+
+                                <a class="btn btn-sm btn-success mx-1" (click)="openModal(false, item)"
+                                    title="Editar trama">
+                                    <ion-icon name="create-outline"></ion-icon>
+                                </a>
+                                <a class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)"
+                                    title="Eliminar trama">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </a>
+                            </td>
+                        </tr>
+                        }
                         }
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Paginación -->
             <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
         </div>
@@ -93,52 +100,51 @@
                 No se encontraron tramas
             </div>
             } @else {
-                @for (item of tramasList(); track item.tramaId; let i = $index) {
-                <div class="bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow p-4">
-                    <div class="flex justify-between items-start mb-3">
-                        <h3 class="text-lg font-semibold text-gray-800 flex-1">
-                            Trama #{{ item.codigo }}
-                        </h3>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</span>
+            @for (item of tramasList(); track item.tramaId; let i = $index) {
+            <div class="bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <h3 class="text-lg font-semibold text-gray-800 flex-1">
+                        Trama #{{ item.codigo }}
+                    </h3>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded">{{ (i + 1) +
+                        ((pagination().page - 1) * pagination().pageSize) }}</span>
+                </div>
+
+                <div class="space-y-2 text-sm text-gray-700 mb-4">
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Proceso:</span>
+                        <span>{{ item.procesoId }}</span>
                     </div>
-                    
-                    <div class="space-y-2 text-sm text-gray-700 mb-4">
-                        <div class="flex justify-between">
-                            <span class="font-medium text-gray-600">Proceso:</span>
-                            <span>{{ item.procesoId }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="font-medium text-gray-600">Código:</span>
-                            <span>{{ item.codigo }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="font-medium text-gray-600">Estado:</span>
-                            <span>{{ item.activo === 1 ? 'Activo' : 'Inactivo' }}</span>
-                        </div>
-                        <div>
-                            <span class="font-medium text-gray-600">Descripción:</span>
-                            <p class="text-gray-600 mt-1">{{ item.descripcion }}</p>
-                        </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Código:</span>
+                        <span>{{ item.codigo }}</span>
                     </div>
-                    
-                    <div class="flex gap-2 pt-3 border-t border-gray-200">
-                        <a class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                            (click)="openModal(false, item)"
-                            title="Editar trama">
-                            <ion-icon name="create-outline" class="text-lg"></ion-icon>
-                            Editar
-                        </a>
-                        <a class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                            (click)="openDeleteModal(item)"
-                            title="Eliminar trama">
-                            <ion-icon name="trash-outline" class="text-lg"></ion-icon>
-                            Eliminar
-                        </a>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Estado:</span>
+                        <span>{{ item.activo ? 'Activo' : 'Inactivo' }}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-600">Descripción:</span>
+                        <p class="text-gray-600 mt-1">{{ item.descripcion }}</p>
                     </div>
                 </div>
-                }
+
+                <div class="flex gap-2 pt-3 border-t border-gray-200">
+                    <a class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        (click)="openModal(false, item)" title="Editar trama">
+                        <ion-icon name="create-outline" class="text-lg"></ion-icon>
+                        Editar
+                    </a>
+                    <a class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        (click)="openDeleteModal(item)" title="Eliminar trama">
+                        <ion-icon name="trash-outline" class="text-lg"></ion-icon>
+                        Eliminar
+                    </a>
+                </div>
+            </div>
             }
-            
+            }
+
             <!-- Paginación Mobile -->
             @if (!isLoading() && tramasList().length > 0) {
             <div class="mt-4">
@@ -150,8 +156,8 @@
     </div>
 
     <!-- Modal Crear/Editar Representante Usuario-->
-    <div #upsertTramaModal class="modal fade" id="upsertTramaModal" tabindex="-1"
-        aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div #upsertTramaModal class="modal fade" id="upsertTramaModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -159,8 +165,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <app-upsert-trama [trama]="tramaEdit()" [nuevo]="nuevoTrama()"
-                        (save)="upsertTrama($event)"
+                    <app-upsert-trama [trama]="tramaEdit()" [nuevo]="nuevoTrama()" (save)="upsertTrama($event)"
                         (cancel)="closeModal()" />
                 </div>
                 <div class="modal-footer">
@@ -170,7 +175,8 @@
     </div>
 
     <!-- Modal Delete Trama-->
-    <div #deleteTramaModal class="modal fade" id="deleteTramaModal" tabindex="-1" aria-labelledby="deleteTramaModalLabel" aria-hidden="true">
+    <div #deleteTramaModal class="modal fade" id="deleteTramaModal" tabindex="-1"
+        aria-labelledby="deleteTramaModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">

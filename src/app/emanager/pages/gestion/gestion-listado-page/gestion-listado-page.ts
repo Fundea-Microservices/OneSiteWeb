@@ -53,7 +53,10 @@ export default class GestionListadoPage {
       sistemaId: 2,
       descripcion: '',
       codigo: 0,
-      activo: 1,
+      codigoInterno: 0,
+      usuario: 'usuarioapp',
+      usuarioGlobal: false,
+      activo: true,
       created_at: new Date(),
     };
   }
