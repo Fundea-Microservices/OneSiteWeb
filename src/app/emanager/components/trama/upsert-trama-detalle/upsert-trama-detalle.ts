@@ -44,6 +44,8 @@ export class UpsertTramaDetalleComponent {
     valor: undefined,
     tag: undefined,
     nombreInput: undefined,
+    catalogo: undefined,
+    procedimiento: undefined,
     tipo: 'CLIENTE',
     codigoParametro: undefined,
     tipoRespuesta: 'TEXT',
@@ -60,8 +62,8 @@ export class UpsertTramaDetalleComponent {
 
   // Opciones para los selects
   tipoOptions: TipoTrama[] = ['CLIENTE', 'PARAMETRO'];
-  tipoRespuestaOptions: TipoRespuesta[] = ['TEXT', 'NUMBER', 'DATE', 'BOOLEAN'];
-  tipoInputOptions: TipoInput[] = ['TEXT', 'NUMBER', 'DATE', 'SELECT', 'EMAIL', 'SWITCH'];
+  tipoRespuestaOptions: TipoRespuesta[] = ['TEXT', 'NUMBER', 'DATE', 'BOOLEAN', 'FILE'];
+  tipoInputOptions: TipoInput[] = ['TEXT', 'NUMBER', 'DATE', 'SELECT', 'EMAIL', 'SWITCH', 'FILE'];
 
   validationRules: TramaDetalleValidationRules = {
     tramaId: [Validators.required],
@@ -91,6 +93,8 @@ export class UpsertTramaDetalleComponent {
         valor: [tramaDetalle.valor, this.validationRules.valor],
         tag: [tramaDetalle.tag, this.validationRules.tag],
         nombreInput: [tramaDetalle.nombreInput, this.validationRules.nombreInput],
+        catalogo: [tramaDetalle.catalogo],
+        procedimiento: [tramaDetalle.procedimiento],
         tipo: [tramaDetalle.tipo, this.validationRules.tipo],
         codigoParametro: [tramaDetalle.codigoParametro],
         tipoRespuesta: [tramaDetalle.tipoRespuesta, this.validationRules.tipoRespuesta],
@@ -110,6 +114,8 @@ export class UpsertTramaDetalleComponent {
           valor: '',
           tag: '',
           nombreInput: '',
+          catalogo: '',
+          procedimiento: '',
           tipo: 'CLIENTE',
           codigoParametro: undefined,
           tipoRespuesta: 'TEXT',
@@ -122,6 +128,28 @@ export class UpsertTramaDetalleComponent {
           activo: true,
         });
       }
+
+      const toggleSelectFields = (tipoInput: TipoInput | null | undefined) => {
+        const catalogoControl = newForm.get('catalogo');
+        const procedimientoControl = newForm.get('procedimiento');
+
+        if (!catalogoControl || !procedimientoControl) return;
+
+        if (tipoInput === 'SELECT') {
+          catalogoControl.enable({ emitEvent: false });
+          procedimientoControl.enable({ emitEvent: false });
+        } else {
+          catalogoControl.reset('', { emitEvent: false });
+          procedimientoControl.reset('', { emitEvent: false });
+          catalogoControl.disable({ emitEvent: false });
+          procedimientoControl.disable({ emitEvent: false });
+        }
+      };
+
+      toggleSelectFields(newForm.get('tipoInput')?.value as TipoInput | null | undefined);
+      newForm.get('tipoInput')?.valueChanges.subscribe((value) => {
+        toggleSelectFields(value as TipoInput | null | undefined);
+      });
 
       this.form.set(newForm);
     });

@@ -1,0 +1,291 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['../../']">Tramas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Ejecutar Trama</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header">
+        @if (trama()) {
+        <h5 class="mb-0">Ejecutar: {{ trama()!.descripcion }}</h5>
+        <small class="text-muted">Proceso: {{ trama()!.procesoId }} | Código: {{ trama()!.codigo }}</small>
+        } @else {
+        <h5 class="mb-0">Ejecutar Trama</h5>
+        }
+    </div>
+
+    <div class="card-body">
+        @if (isLoading()) {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3">Cargando formulario...</p>
+        </div>
+        } @else if (detallesAgrupados().cliente.length === 0 && detallesAgrupados().parametro.length === 0) {
+        <div class="alert alert-warning" role="alert">
+            <ion-icon name="warning-outline" class="me-2"></ion-icon>
+            No hay detalles visibles configurados para esta trama.
+        </div>
+        } @else {
+        <form [formGroup]="formulario()" (ngSubmit)="onSubmit()">
+
+            <!-- Sección CLIENTE -->
+            @if (detallesAgrupados().cliente.length > 0) {
+            <div class="mb-4">
+                <h6 class="border-bottom pb-2 mb-3">
+                    <ion-icon name="person-outline" class="me-2"></ion-icon>
+                    Datos del Cliente
+                </h6>
+
+                <div class="row">
+                    @for (detalle of detallesAgrupados().cliente; track detalle.detalleId) {
+                    @if(detalle.visible){
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            {{ detalle.nombreInput }}
+                            @if (detalle.obligatorio) {
+                            <span class="text-danger">*</span>
+                            }
+                        </label>
+
+                        <!-- INPUT TEXT -->
+                        @if (detalle.tipoInput === 'TEXT') {
+                        <input type="text" class="form-control" [formControlName]="detalle.detalleId"
+                            [placeholder]="detalle.valorDefecto || 'Ingrese ' + detalle.nombreInput" />
+                        }
+
+                        <!-- INPUT NUMBER -->
+                        @if (detalle.tipoInput === 'NUMBER') {
+                        <input type="number" class="form-control" [formControlName]="detalle.detalleId"
+                            [placeholder]="detalle.valorDefecto || 'Ingrese ' + detalle.nombreInput" />
+                        }
+
+                        <!-- INPUT EMAIL -->
+                        @if (detalle.tipoInput === 'EMAIL') {
+                        <input type="email" class="form-control" [formControlName]="detalle.detalleId"
+                            placeholder="correo@ejemplo.com" />
+                        }
+
+                        <!-- INPUT DATE -->
+                        @if (detalle.tipoInput === 'DATE') {
+                        <input type="date" class="form-control" [formControlName]="detalle.detalleId"
+                            placeholder="dd/mm/yyyy" maxlength="10"
+                            (input)="formatearInputFecha($event, detalle.detalleId)" />
+                        }
+
+                        <!-- SELECT -->
+                        @if (detalle.tipoInput === 'SELECT') {
+                        <select class="form-select" [formControlName]="detalle.detalleId">
+                            <option value="">Seleccione una opción</option>
+                            @for (opcion of getOpcionesArray(detalle); track opcion) {
+                            <option [value]="opcion">{{ opcion }}</option>
+                            }
+                        </select>
+                        }
+
+                        <!-- SWITCH (BOOLEAN) -->
+                        @if (detalle.tipoInput === 'SWITCH') {
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" [formControlName]="detalle.detalleId"
+                                [id]="'switch-' + detalle.detalleId" />
+                            <label class="form-check-label" [for]="'switch-' + detalle.detalleId">
+                                {{ detalle.valorDefecto || 'Activar' }}
+                            </label>
+                        </div>
+                        }
+
+                        <!-- FILE -->
+                        @if (detalle.tipoInput === 'FILE') {
+                        <input type="file" class="form-control" 
+                            (change)="onFileChange($event, detalle.detalleId)"
+                            [id]="'file-' + detalle.detalleId"
+                            [accept]="detalle.opciones || '*'" />
+                        <small class="text-muted d-block mt-1">
+                            @if (detalle.opciones) {
+                                Formatos permitidos: {{ detalle.opciones }}
+                            } @else {
+                                Todos los formatos permitidos
+                            }
+                        </small>
+                        }
+
+                        <!-- Mensajes de error -->
+                        @if (formulario().get(detalle.detalleId)?.touched &&
+                        formulario().get(detalle.detalleId)?.invalid) {
+                        <div class="text-danger small mt-1">
+                            @if (formulario().get(detalle.detalleId)?.errors?.['required']) {
+                            <div>Este campo es requerido</div>
+                            }
+                            @if (formulario().get(detalle.detalleId)?.errors?.['email']) {
+                            <div>Formato de correo inválido</div>
+                            }
+                            @if (formulario().get(detalle.detalleId)?.errors?.['pattern']) {
+                            <div>Formato inválido</div>
+                            }
+                        </div>
+                        }
+
+                        @if (detalle.valorDefecto && detalle.tipoInput !== 'SWITCH' && detalle.tipoInput !== 'DATE') {
+                        <small class="text-muted">Valor por defecto: {{ detalle.valorDefecto }}</small>
+                        }
+                    </div>
+                    }
+                    }
+                </div>
+            </div>
+            }
+
+            <!-- Sección PARAMETRO -->
+            @if (detallesAgrupados().parametro.length > 0) {
+            <div class="mb-4">
+                <h6 class="border-bottom pb-2 mb-3">
+                    <ion-icon name="settings-outline" class="me-2"></ion-icon>
+                    Parámetros Adicionales
+                </h6>
+
+                <div class="row">
+                    @for (detalle of detallesAgrupados().parametro; track detalle.detalleId) {
+                        @if(detalle.visible){
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    {{ detalle.nombreInput }}
+                                    @if (detalle.obligatorio) {
+                                        <span class="text-danger">*</span>
+                                    }
+                                </label>
+                                
+                                <!-- INPUT TEXT -->
+                                @if (detalle.tipoInput === 'TEXT') {
+                                    <input type="text" class="form-control" [formControlName]="detalle.detalleId"
+                                    [placeholder]="detalle.valorDefecto || 'Ingrese ' + detalle.nombreInput" />
+                        }
+                        
+                        <!-- INPUT NUMBER -->
+                        @if (detalle.tipoInput === 'NUMBER') {
+                            <input type="number" class="form-control" [formControlName]="detalle.detalleId"
+                            [placeholder]="detalle.valorDefecto || 'Ingrese ' + detalle.nombreInput" />
+                        }
+                        
+                        <!-- INPUT EMAIL -->
+                        @if (detalle.tipoInput === 'EMAIL') {
+                            <input type="email" class="form-control" [formControlName]="detalle.detalleId"
+                            placeholder="correo@ejemplo.com" />
+                        }
+
+                        <!-- INPUT DATE -->
+                        @if (detalle.tipoInput === 'DATE') {
+                            <input type="date" class="form-control" [formControlName]="detalle.detalleId"
+                                placeholder="dd/mm/yyyy" maxlength="10"
+                                (input)="formatearInputFecha($event, detalle.detalleId)" />
+                        }
+                        
+                        <!-- SELECT -->
+                        @if (detalle.tipoInput === 'SELECT') {
+                            <select class="form-select" [formControlName]="detalle.detalleId">
+                                <option value="">Seleccione una opción</option>
+                                @for (opcion of getOpcionesArray(detalle); track opcion) {
+                                    <option [value]="opcion">{{ opcion }}</option>
+                            }
+                        </select>
+                    }
+                    
+                    <!-- SWITCH (BOOLEAN) -->
+                    @if (detalle.tipoInput === 'SWITCH') {
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" [formControlName]="detalle.detalleId"
+                            [id]="'switch-param-' + detalle.detalleId" />
+                            <label class="form-check-label" [for]="'switch-param-' + detalle.detalleId">
+                                {{ detalle.valorDefecto || 'Activar' }}
+                            </label>
+                        </div>
+                    }
+                    
+                    <!-- FILE -->
+                    @if (detalle.tipoInput === 'FILE') {
+                        <input type="file" class="form-control" 
+                            (change)="onFileChange($event, detalle.detalleId)"
+                            [id]="'file-param-' + detalle.detalleId"
+                            [accept]="detalle.opciones || '*'" />
+                        <small class="text-muted d-block mt-1">
+                            @if (detalle.opciones) {
+                                Formatos permitidos: {{ detalle.opciones }}
+                            } @else {
+                                Todos los formatos permitidos
+                            }
+                        </small>
+                    }
+                    
+                    <!-- Mensajes de error -->
+                    @if (formulario().get(detalle.detalleId)?.touched &&
+                        formulario().get(detalle.detalleId)?.invalid) {
+                        <div class="text-danger small mt-1">
+                            @if (formulario().get(detalle.detalleId)?.errors?.['required']) {
+                                <div>Este campo es requerido</div>
+                            }
+                            @if (formulario().get(detalle.detalleId)?.errors?.['email']) {
+                            <div>Formato de correo inválido</div>
+                        }
+                        @if (formulario().get(detalle.detalleId)?.errors?.['pattern']) {
+                            <div>Formato inválido</div>
+                        }
+                    </div>
+                }
+                
+                @if (detalle.valorDefecto && detalle.tipoInput !== 'SWITCH' && detalle.tipoInput !== 'DATE') {
+                    <small class="text-muted">Valor por defecto: {{ detalle.valorDefecto }}</small>
+                }
+            </div>
+        }
+        }
+    </div>
+</div>
+}
+
+            <!-- Botones de acción -->
+            <div class="d-flex gap-2 justify-content-end border-top pt-3">
+                <button type="button" class="btn btn-secondary" (click)="reiniciarFormulario()">
+                    <ion-icon name="refresh-outline" class="me-1"></ion-icon>
+                    Limpiar
+                </button>
+                <button type="submit" class="btn btn-primary" [disabled]="formulario().invalid">
+                    <ion-icon name="checkmark-circle-outline" class="me-1"></ion-icon>
+                    Generar XML
+                </button>
+            </div>
+        </form>
+
+        <!-- Resultado XML -->
+        @if (mostrarResultado() && resultadoXML()) {
+        <div class="mt-4">
+            <div class="card bg-light">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <ion-icon name="code-outline" class="me-2"></ion-icon>
+                        XML Generado
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" (click)="copiarXML()">
+                            <ion-icon name="copy-outline" class="me-1"></ion-icon>
+                            Copiar XML
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="copiarJSON()">
+                            <ion-icon name="copy-outline" class="me-1"></ion-icon>
+                            Copiar JSON
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-dark text-light p-3 rounded"
+                        style="max-height: 400px; overflow-y: auto; font-family: 'Courier New', monospace;">{{ resultadoXML() }}</pre>
+                </div>
+            </div>
+        </div>
+        }
+        }
+    </div>
+</div>

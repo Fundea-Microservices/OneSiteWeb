@@ -190,6 +190,10 @@ export const routes: Routes = [
                         path: 'gestion-detalle/:id',
                         loadComponent: () => import('./emanager/pages/gestion/gestion-detalle-page/gestion-detalle-page'),
                     },
+                    {
+                        path: 'gestion-ejecutar/:id',
+                        loadComponent: () => import('./emanager/pages/gestion/gestion-ejecutar-page/gestion-ejecutar-page'),
+                    },
                 ]
             },
 
