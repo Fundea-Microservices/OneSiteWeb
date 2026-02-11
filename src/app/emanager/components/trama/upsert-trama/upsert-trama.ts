@@ -15,6 +15,7 @@ import { ITrama } from '../../../../../interfaces/emanager/getion';
 export interface TramaValidationRules {
   procesoId?: any[];
   sistemaId?: any[];
+  nombre?: any[];
   descripcion?: any[];
   codigo?: any[];
   codigoInterno?: any[];
@@ -35,6 +36,7 @@ export class UpsertTramaComponent {
     tramaId: '',
     procesoId: 0,
     sistemaId: 2,
+    nombre: '',
     descripcion: '',
     codigo: 0,
     codigoInterno: 0,
@@ -49,6 +51,7 @@ export class UpsertTramaComponent {
   validationRules: TramaValidationRules = {
     procesoId: [Validators.required, Validators.min(1)],
     sistemaId: [Validators.required, Validators.min(1)],
+    nombre: [Validators.required, Validators.minLength(3), Validators.maxLength(200)],
     descripcion: [Validators.required, Validators.minLength(3), Validators.maxLength(300)],
     codigo: [Validators.required, Validators.min(0)],
     codigoInterno: [Validators.required, Validators.min(0)],
@@ -68,6 +71,7 @@ export class UpsertTramaComponent {
       const newForm = this.fb.group({
         procesoId: [trama.procesoId, this.validationRules.procesoId],
         sistemaId: [trama.sistemaId, this.validationRules.sistemaId],
+        nombre: [trama.nombre, this.validationRules.nombre],
         descripcion: [trama.descripcion, this.validationRules.descripcion],
         codigo: [trama.codigo, this.validationRules.codigo],
         codigoInterno: [trama.codigoInterno, this.validationRules.codigoInterno],
@@ -80,6 +84,7 @@ export class UpsertTramaComponent {
         newForm.reset({
           procesoId: 0,
           sistemaId: 2,
+          nombre: '',
           descripcion: '',
           codigo: 0,
           codigoInterno: 0,

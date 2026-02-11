@@ -1,6 +1,6 @@
 export type TipoTrama = 'CLIENTE' | 'PARAMETRO';
-export type TipoRespuesta = 'TEXT' | 'NUMBER' | 'DATE' | 'BOOLEAN';
-export type TipoInput = 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'EMAIL' | 'SWITCH';
+export type TipoRespuesta = 'TEXT' | 'NUMBER' | 'DATE' | 'BOOLEAN' | 'FILE';
+export type TipoInput = 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'EMAIL' | 'SWITCH' | 'FILE';
 
 export interface ITramaDetalle {
   detalleId: string;
@@ -11,7 +11,8 @@ export interface ITramaDetalle {
   valor?: string;
   tag?: string;           // Nuevo campo
   nombreInput?: string;   // Nuevo campo
-  
+  catalogo?: string;
+  procedimiento?: string;
   tipo: TipoTrama;
   
   codigoParametro?: number; // Nullable en SQL
@@ -39,6 +40,7 @@ export interface ITrama {
   codigo: number;
   codigoInterno: number; // Nuevo campo
   sistemaId: number;
+  nombre: string;
   descripcion: string;
   
   usuario: string;       // Nuevo campo

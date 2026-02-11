@@ -20,6 +20,7 @@
                         <tr>
                             <th class="text-center" scope="col">#</th>
                             <th class="text-center" scope="col">Proceso</th>
+                            <th class="text-center" scope="col">Nombre</th>
                             <th class="text-center" scope="col">Descripción</th>
                             <th class="text-center" scope="col">Código</th>
                             <th class="text-center" scope="col">Activo</th>
@@ -47,6 +48,7 @@
                         <tr>
                             <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
                             <td>{{ item.procesoId }}</td>
+                            <td>{{ item.nombre }}</td>
                             <td>{{ item.descripcion }}</td>
                             <td>{{ item.codigo }}</td>
                             <td class="text-center">

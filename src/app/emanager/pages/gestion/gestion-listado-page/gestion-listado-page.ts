@@ -51,6 +51,7 @@ export default class GestionListadoPage {
       tramaId: '',
       procesoId: 0,
       sistemaId: 2,
+      nombre: '',
       descripcion: '',
       codigo: 0,
       codigoInterno: 0,
