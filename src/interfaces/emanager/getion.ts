@@ -12,6 +12,7 @@ export interface ITramaDetalle {
   tag?: string;           // Nuevo campo
   nombreInput?: string;   // Nuevo campo
   catalogo?: string;
+  catalogoHijo?: string;
   procedimiento?: string;
   tipo: TipoTrama;
   
@@ -52,6 +53,18 @@ export interface ITrama {
   created_at?: string | Date;
   updated_at?: string | Date;
   deleted_at?: string | Date;
+}
+
+export interface IGestion {
+  tramaEjecucionId: string; // UUID
+  usuario?: string;
+  usuarioId?: string;        // UUID
+  trama?: string;           
+  
+  operacion?: number;       // Opcional/Nullable
+  nombreCliente?: string;   // Opcional/Nullable
+  documento?: string;       // Opcional/Nullable
+  created_at: string | Date;
 }
 
 export interface TramaResponse {

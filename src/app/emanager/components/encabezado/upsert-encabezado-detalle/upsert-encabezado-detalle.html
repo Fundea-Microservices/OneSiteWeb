@@ -1,0 +1,298 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+  <!-- SELECCIÓN DE TIPO (PRIMERO) -->
+  <div class="row">
+    <div class="col-md-12 mb-4">
+      <label class="form-label fw-bold">Tipo <span class="text-danger">*</span></label>
+      <select class="form-select" formControlName="tipo">
+        @for (option of tipoOptions; track option) {
+        <option [value]="option">{{ option }}</option>
+        }
+      </select>
+
+      @if (form().get('tipo')?.touched && form().get('tipo')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('tipo')?.errors?.['required']) {
+        <div>Tipo es requerido</div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- CAMPOS PARA TIPO CLIENTE -->
+  @if (form().get('tipo')?.value === 'CLIENTE') {
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Tag (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="tag" />
+
+      @if (form().get('tag')?.touched && form().get('tag')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('tag')?.errors?.['maxlength']) {
+        <div>Máximo 100 caracteres</div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Nombre Input (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombreInput" />
+
+      @if (form().get('nombreInput')?.touched && form().get('nombreInput')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('nombreInput')?.errors?.['maxlength']) {
+        <div>Máximo 100 caracteres</div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Tipo Respuesta <span class="text-danger">*</span></label>
+      <select class="form-select form-select-sm" formControlName="tipoRespuesta">
+        @for (option of tipoRespuestaOptions; track option) {
+        <option [value]="option">{{ option }}</option>
+        }
+      </select>
+
+      @if (form().get('tipoRespuesta')?.touched && form().get('tipoRespuesta')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('tipoRespuesta')?.errors?.['required']) {
+        <div>Tipo Respuesta es requerido</div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Tipo Input <span class="text-danger">*</span></label>
+      <select class="form-select form-select-sm" formControlName="tipoInput">
+        @for (option of tipoInputOptions; track option) {
+        <option [value]="option">{{ option }}</option>
+        }
+      </select>
+
+      @if (form().get('tipoInput')?.touched && form().get('tipoInput')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('tipoInput')?.errors?.['required']) {
+        <div>Tipo Input es requerido</div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Código Parámetro (Opcional)</label>
+      <input type="number" class="form-control form-control-sm" formControlName="codigoParametro" />
+    </div>
+  </div>
+
+  @if (form().get('tipoInput')?.value === 'SELECT') {
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Catálogo (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="catalogo" />
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Catálogo Hijo (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="catalogoHijo" placeholder="ej: municipio, agencia" />
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Procedimiento (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="procedimiento" />
+    </div>
+  </div>
+  }
+
+  <div class="row">
+    <div class="col-md-12 mb-3">
+      <label class="form-label">Valor por Defecto (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="valorDefecto" />
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Opciones (Opcional - Separadas por coma)</label>
+    <textarea class="form-control form-control-sm" formControlName="opciones" rows="2"
+      placeholder="Opción1,Opción2,Opción3"></textarea>
+  </div>
+
+  <!-- Switches en la misma línea para CLIENTE -->
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="obligatorio" id="obligatorioCliente" />
+        <label class="form-check-label" for="obligatorioCliente">Obligatorio</label>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="visible" id="visibleCliente" />
+        <label class="form-check-label" for="visibleCliente">Visible</label>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="activo" id="activoCliente" />
+        <label class="form-check-label" for="activoCliente">Activo</label>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- CAMPOS PARA TIPO PARAMETRO -->
+  @if (form().get('tipo')?.value === 'PARAMETRO') {
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Código (Opcional)</label>
+      <input type="number" class="form-control form-control-sm" formControlName="codigo" />
+
+      @if (form().get('codigo')?.touched && form().get('codigo')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('codigo')?.errors?.['min']) {
+        <div>El código debe ser mayor o igual a 0</div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Orden <span class="text-danger">*</span></label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden" />
+
+      @if (form().get('orden')?.touched && form().get('orden')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('orden')?.errors?.['required']) {
+        <div>Orden es requerido</div>
+        }
+        @if (form().get('orden')?.errors?.['min']) {
+        <div>El orden debe ser mayor o igual a 0</div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Nombre Input (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombreInput" />
+
+      @if (form().get('nombreInput')?.touched && form().get('nombreInput')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('nombreInput')?.errors?.['maxlength']) {
+        <div>Máximo 100 caracteres</div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Tipo Respuesta <span class="text-danger">*</span></label>
+      <select class="form-select form-select-sm" formControlName="tipoRespuesta">
+        @for (option of tipoRespuestaOptions; track option) {
+        <option [value]="option">{{ option }}</option>
+        }
+      </select>
+
+      @if (form().get('tipoRespuesta')?.touched && form().get('tipoRespuesta')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('tipoRespuesta')?.errors?.['required']) {
+        <div>Tipo Respuesta es requerido</div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Tipo Input <span class="text-danger">*</span></label>
+      <select class="form-select form-select-sm" formControlName="tipoInput">
+        @for (option of tipoInputOptions; track option) {
+        <option [value]="option">{{ option }}</option>
+        }
+      </select>
+
+      @if (form().get('tipoInput')?.touched && form().get('tipoInput')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('tipoInput')?.errors?.['required']) {
+        <div>Tipo Input es requerido</div>
+        }
+      </div>
+      }
+    </div>   
+  </div>
+
+  <div class="row">
+    @if (form().get('tipoInput')?.value === 'SELECT') {
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Catálogo (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="catalogo" />
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Catálogo hijo (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="catalogoHijo" />
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Procedimiento (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="procedimiento" />
+    </div>
+    }
+  </div>
+
+
+  <div class="row">
+    <div class="col-md-12 mb-3">
+      <label class="form-label">Valor por Defecto (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="valorDefecto" />
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Opciones (Opcional - Separadas por coma)</label>
+    <textarea class="form-control form-control-sm" formControlName="opciones" rows="2"
+      placeholder="Opción1,Opción2,Opción3"></textarea>
+  </div>
+
+  <!-- Switches en la misma línea para PARAMETRO -->
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="obligatorio" id="obligatorioParametro" />
+        <label class="form-check-label" for="obligatorioParametro">Obligatorio</label>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="visible" id="visibleParametro" />
+        <label class="form-check-label" for="visibleParametro">Visible</label>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="activo" id="activoParametro" />
+        <label class="form-check-label" for="activoParametro">Activo</label>
+      </div>
+    </div>
+  </div>
+  }
+
+  <div class="row justify-content-end">
+    <div class="col-auto">
+      <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid">
+        {{ btnText }}
+      </button>
+    </div>
+  </div>
+</form>

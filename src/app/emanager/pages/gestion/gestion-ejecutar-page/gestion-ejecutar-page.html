@@ -2,17 +2,17 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
         <li class="breadcrumb-item"><a [routerLink]="['../../']">Tramas</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Ejecutar Trama</li>
+        <li class="breadcrumb-item active" aria-current="page">Ingreso de gestión</li>
     </ol>
 </nav>
 
 <div class="card">
     <div class="card-header">
         @if (trama()) {
-        <h5 class="mb-0">Ejecutar: {{ trama()!.descripcion }}</h5>
+        <h5 class="mb-0">{{ trama()!.nombre }}</h5>
         <small class="text-muted">Proceso: {{ trama()!.procesoId }} | Código: {{ trama()!.codigo }}</small>
         } @else {
-        <h5 class="mb-0">Ejecutar Trama</h5>
+        <h5 class="mb-0">Ingreso de gestión</h5>
         }
     </div>
 
@@ -79,9 +79,10 @@
 
                         <!-- SELECT -->
                         @if (detalle.tipoInput === 'SELECT') {
-                        <select class="form-select" [formControlName]="detalle.detalleId">
+                        <select class="form-select" [formControlName]="detalle.detalleId"
+                            (change)="onSelectChange(detalle, $event)">
                             <option value="">Seleccione una opción</option>
-                            @for (opcion of getOpcionesArray(detalle); track opcion) {
+                            @for (opcion of getOpcionesArray(detalle); track $index) {
                             <option [value]="opcion">{{ opcion }}</option>
                             }
                         </select>
@@ -186,9 +187,10 @@
                         
                         <!-- SELECT -->
                         @if (detalle.tipoInput === 'SELECT') {
-                            <select class="form-select" [formControlName]="detalle.detalleId">
+                            <select class="form-select" [formControlName]="detalle.detalleId"
+                                (change)="onSelectChange(detalle, $event)">
                                 <option value="">Seleccione una opción</option>
-                                @for (opcion of getOpcionesArray(detalle); track opcion) {
+                                @for (opcion of getOpcionesArray(detalle); track $index) {
                                     <option [value]="opcion">{{ opcion }}</option>
                             }
                         </select>
@@ -268,16 +270,19 @@
                         <ion-icon name="code-outline" class="me-2"></ion-icon>
                         XML Generado
                     </h6>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary" (click)="copiarXML()">
-                            <ion-icon name="copy-outline" class="me-1"></ion-icon>
-                            Copiar XML
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="copiarJSON()">
-                            <ion-icon name="copy-outline" class="me-1"></ion-icon>
-                            Copiar JSON
-                        </button>
-                    </div>
+                    <button 
+                        type="button" 
+                        class="btn btn-success" 
+                        (click)="enviarFormulario()"
+                        [disabled]="enviandoFormulario()">
+                        @if (enviandoFormulario()) {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            Enviando...
+                        } @else {
+                            <ion-icon name="send-outline" class="me-1"></ion-icon>
+                            Enviar Formulario
+                        }
+                    </button>
                 </div>
                 <div class="card-body">
                     <pre class="bg-dark text-light p-3 rounded"

@@ -4,7 +4,11 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TramaDetalleService } from '../../../../../services/emanager/trama-detalle.service';
 import { TramaService } from '../../../../../services/emanager/trama.service';
+import { TramaService as GestionService } from '../../../../../services/emanager/gestion.service';
+import { EncabezadoService } from '../../../../../services/emanager/encabezado.service';
+import { EncabezadoDetalleService } from '../../../../../services/emanager/encabezado-detalle.service';
 import { ITramaDetalle, ITrama } from '../../../../../interfaces/emanager/getion';
+import { IEncabezadoDetalle } from '../../../../../interfaces/emanager/encabezado';
 import { ToastrService } from 'ngx-toastr';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos';
@@ -16,6 +20,7 @@ interface DetalleAgrupado {
 
 interface DetalleConOpciones extends ITramaDetalle {
   opcionesCatalogo?: CatalogoSimple[];
+  opcionesFiltradas?: CatalogoSimple[];
 }
 
 @Component({
@@ -28,6 +33,9 @@ interface DetalleConOpciones extends ITramaDetalle {
 export default class GestionEjecutarPage {
   private tramaDetalleService = inject(TramaDetalleService);
   private tramaService = inject(TramaService);
+  private gestionService = inject(GestionService);
+  private encabezadoService = inject(EncabezadoService);
+  private encabezadoDetalleService = inject(EncabezadoDetalleService);
   private catalogosService = inject(CatalogosBantotalService);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
@@ -47,16 +55,24 @@ export default class GestionEjecutarPage {
   resultadoJSON = signal<any>(null);
   resultadoXML = signal<string>('');
   mostrarResultado = signal(false);
+  enviandoFormulario = signal(false);
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
         this.tramaId.set(id);
-        this.cargarTrama();
-        this.cargarDetalles();
+        this.cargarTramaYDetalles();
       }
     });
+  }
+
+  /**
+   * Carga la trama y luego los detalles para asegurar que procesoId esté disponible
+   */
+  async cargarTramaYDetalles() {
+    await this.cargarTrama();
+    await this.cargarDetalles();
   }
 
   async cargarTrama() {
@@ -75,44 +91,126 @@ export default class GestionEjecutarPage {
     this.isLoading.set(true);
 
     try {
+      const tramaActual = this.trama();
+      let detallesEncabezado: ITramaDetalle[] = [];
+
+      // Si la trama tiene procesoId, buscar encabezados con ese proceso
+      if (tramaActual && tramaActual.procesoId) {
+        const encabezadosResult = await this.encabezadoService.getEncabezados({
+          all: true,
+          search: ''
+        });
+
+        if (encabezadosResult?.data) {
+          // Filtrar encabezados que tengan el mismo proceso que la trama
+          const encabezadosDelProceso = encabezadosResult.data.filter(
+            enc => enc.proceso === tramaActual.procesoId && enc.activo
+          );
+
+          // Para cada encabezado, obtener sus detalles
+          for (const encabezado of encabezadosDelProceso) {
+            const detallesResult = await this.encabezadoDetalleService.getEncabezadoDetalles({
+              encabezadoId: encabezado.encabezadoId,
+              all: true
+            });
+
+            if (detallesResult?.data) {
+              // Convertir detalles de encabezado a formato ITramaDetalle
+              const detallesConvertidos = detallesResult.data
+                .filter(d => d.activo && d.visible)
+                .map(detalle => this.convertirEncabezadoDetalleATramaDetalle(detalle));
+              
+              detallesEncabezado.push(...detallesConvertidos);
+            }
+          }
+        }
+      }
+
+      // Obtener detalles de la trama
       const resultado = await this.tramaDetalleService.getTramaDetalles({
         tramaId: this.tramaId(),
         all: true
       });
 
+      let detallesTrama: ITramaDetalle[] = [];
       if (resultado?.data) {
         // Filtrar solo los visibles y activos
-        const detallesVisibles = resultado.data.filter(d => d.activo);
+        const detallesVisibles = resultado.data.filter(d => d.activo && d.visible);
         
-        // Ordenar por el campo 'orden'
-        detallesVisibles.sort((a, b) => a.orden - b.orden);
-
-        // Cargar opciones de catálogos para detalles SELECT
-        const detallesConCatalogos = detallesVisibles.map(detalle => {
-          if (detalle.tipoInput === 'SELECT' && detalle.catalogo) {
-            const opcionesCatalogo = this.catalogosService.obtenerLocal(detalle.catalogo);
-            return { ...detalle, opcionesCatalogo: opcionesCatalogo || [] };
-          }
-          return detalle;
-        });
-
-        // Agrupar por tipo
-        const agrupados: DetalleAgrupado = {
-          cliente: detallesConCatalogos.filter(d => d.tipo === 'CLIENTE'),
-          parametro: detallesConCatalogos.filter(d => d.tipo === 'PARAMETRO')
-        };
-
-        this.detallesAgrupados.set(agrupados);
-        this.construirFormulario(detallesConCatalogos);
+        // Calcular el máximo orden de los detalles de encabezado
+        const maxOrdenEncabezado = detallesEncabezado.length > 0 
+          ? Math.max(...detallesEncabezado.map(d => d.orden || 0))
+          : 0;
         
-        this.cdr.markForCheck();
+        // Incrementar el orden de los detalles de trama para que aparezcan después
+        detallesTrama = detallesVisibles.map(detalle => ({
+          ...detalle,
+          orden: detalle.orden + maxOrdenEncabezado + 10
+        }));
       }
+
+      // Combinar detalles de encabezado con detalles de trama
+      // Los detalles de encabezado van primero
+      const todosLosDetalles = [...detallesEncabezado, ...detallesTrama];
+      
+      // Ordenar por el campo 'orden'
+      todosLosDetalles.sort((a, b) => a.orden - b.orden);
+
+      // Cargar opciones de catálogos para detalles SELECT
+      const detallesConCatalogos = todosLosDetalles.map(detalle => {
+        if (detalle.tipoInput === 'SELECT' && detalle.catalogo) {
+          const opcionesCatalogo = this.catalogosService.obtenerLocal(detalle.catalogo);
+          return { ...detalle, opcionesCatalogo: opcionesCatalogo || [] };
+        }
+        return detalle;
+      });
+
+      // Agrupar por tipo
+      const agrupados: DetalleAgrupado = {
+        cliente: detallesConCatalogos.filter(d => d.tipo === 'CLIENTE'),
+        parametro: detallesConCatalogos.filter(d => d.tipo === 'PARAMETRO')
+      };
+
+      this.detallesAgrupados.set(agrupados);
+      this.construirFormulario(detallesConCatalogos);
+      
+      this.cdr.markForCheck();
     } catch (error) {
       console.error('Error al cargar detalles:', error);
     } finally {
       this.isLoading.set(false);
       this.cdr.markForCheck();
     }
+  }
+
+  /**
+   * Convierte un detalle de encabezado a formato de detalle de trama
+   */
+  private convertirEncabezadoDetalleATramaDetalle(detalle: IEncabezadoDetalle): ITramaDetalle {
+    return {
+      detalleId: `enc_${detalle.detalleId}`, // Prefijo para distinguir
+      tramaId: this.tramaId(),
+      codigo: detalle.codigo,
+      valor: undefined, // Los detalles de encabezado no tienen valor predeterminado
+      tag: detalle.tag,
+      nombreInput: detalle.nombreInput,
+      catalogo: detalle.catalogo,
+      catalogoHijo: detalle.catalogoHijo,
+      procedimiento: detalle.procedimiento,
+      tipo: detalle.tipo,
+      codigoParametro: detalle.codigoParametro,
+      tipoRespuesta: detalle.tipoRespuesta,
+      tipoInput: detalle.tipoInput,
+      opciones: detalle.opciones,
+      valorDefecto: detalle.valorDefecto,
+      obligatorio: detalle.obligatorio,
+      orden: detalle.orden,
+      visible: detalle.visible,
+      activo: detalle.activo,
+      created_at: detalle.created_at,
+      updated_at: detalle.updated_at,
+      deleted_at: detalle.deleted_at
+    };
   }
 
   construirFormulario(detalles: ITramaDetalle[]) {
@@ -138,7 +236,18 @@ export default class GestionEjecutarPage {
       group[detalle.detalleId] = [valorInicial, validators];
     });
 
-    this.formulario.set(this.fb.group(group));
+    const formulario = this.fb.group(group);
+    
+    // Configurar listeners para filtrado dinámico en cascada
+    detalles.forEach(detalle => {
+      if (detalle.tipoInput === 'SELECT' && detalle.catalogoHijo) {
+        formulario.get(detalle.detalleId)?.valueChanges.subscribe((valorSeleccionado) => {
+          this.filtrarOpcionesEnCascada(detalle, valorSeleccionado, detalles);
+        });
+      }
+    });
+
+    this.formulario.set(formulario);
     this.cdr.markForCheck();
   }
 
@@ -197,6 +306,13 @@ export default class GestionEjecutarPage {
     // Si es SELECT y tiene catálogo, usar las opciones del catálogo
     if (detalle.tipoInput === 'SELECT' && detalle.catalogo) {
       const detalleConOpciones = detalle as DetalleConOpciones;
+      
+      // Si hay opciones filtradas (por cascada), usarlas
+      if (detalleConOpciones.opcionesFiltradas && detalleConOpciones.opcionesFiltradas.length > 0) {
+        return detalleConOpciones.opcionesFiltradas.map(cat => cat.nombre);
+      }
+      
+      // Si no hay opciones filtradas, usar todas las opciones del catálogo
       if (detalleConOpciones.opcionesCatalogo && detalleConOpciones.opcionesCatalogo.length > 0) {
         return detalleConOpciones.opcionesCatalogo.map(cat => cat.nombre);
       }
@@ -241,7 +357,7 @@ export default class GestionEjecutarPage {
     const todosDetalles = [
       ...this.detallesAgrupados().cliente,
       ...this.detallesAgrupados().parametro
-    ];
+    ].filter(detalle => detalle.tipoInput !== 'FILE');
 
     // Crear un mapa de valores finales para cada detalle
     const valoresPorDetalle = new Map<string, any>();
@@ -396,11 +512,209 @@ export default class GestionEjecutarPage {
     });
   }
 
+  onSelectChange(detalleOrigen: ITramaDetalle, event: any) {
+    const valorSeleccionado = event.target.value;
+    const todosDetalles = [
+      ...this.detallesAgrupados().cliente,
+      ...this.detallesAgrupados().parametro
+    ];
+    
+    console.log(`🔍 SELECT cambió: "${detalleOrigen.nombreInput}" = "${valorSeleccionado}"`);
+    console.log(`📌 catalogoHijo: ${detalleOrigen.catalogoHijo}`);
+    
+    this.filtrarOpcionesEnCascada(detalleOrigen, valorSeleccionado, todosDetalles);
+  }
+
+  private filtrarOpcionesEnCascada(detalleOrigen: ITramaDetalle, valorSeleccionado: string, todosDetalles: ITramaDetalle[]) {
+    // Si no hay valor seleccionado, resetear los filtros
+    if (!valorSeleccionado) {
+      this.resetearFiltrosEnCascada(detalleOrigen, todosDetalles);
+      return;
+    }
+
+    // Si no hay catalogoHijo, no hacer nada
+    if (!detalleOrigen.catalogoHijo) {
+      console.log('⚠️ No hay catalogoHijo definido, no se filtra nada');
+      return;
+    }
+
+    console.log(`🔎 Buscando detalles con catalogo="${detalleOrigen.catalogoHijo}"`);
+    console.log(`📊 Total detalles disponibles: ${todosDetalles.length}`);
+    
+    // Buscar todos los detalles que tengan catalogo = catalogoHijo del origen
+    const detallesAfectados = todosDetalles.filter(
+      d => d.tipoInput === 'SELECT' && 
+           d.catalogo === detalleOrigen.catalogoHijo &&
+           d.detalleId !== detalleOrigen.detalleId
+    );
+
+    console.log(`🎯 Detalles afectados encontrados: ${detallesAfectados.length}`);
+    detallesAfectados.forEach(d => console.log(`   - ${d.nombreInput} (catalogo: ${d.catalogo})`));
+
+    if (detallesAfectados.length === 0) {
+      console.warn(`⚠️ No se encontraron detalles con catalogo="${detalleOrigen.catalogoHijo}"`);
+      return;
+    }
+
+    detallesAfectados.forEach(detalleAfectado => {
+      const detalleConOpciones = detalleAfectado as DetalleConOpciones;
+      
+      if (!detalleConOpciones.opcionesCatalogo || detalleConOpciones.opcionesCatalogo.length === 0) {
+        console.warn(`⚠️ "${detalleAfectado.nombreInput}" no tiene opcionesCatalogo`);
+        return;
+      }
+
+      console.log(`📦 Obteniendo catálogo padre: "${detalleOrigen.catalogo}"`);
+      const catalogoPadre = this.catalogosService.obtenerLocal(detalleOrigen.catalogo || '');
+      
+      if (!catalogoPadre || catalogoPadre.length === 0) {
+        console.error(`❌ No se pudo cargar el catálogo "${detalleOrigen.catalogo}" del localStorage`);
+        return;
+      }
+
+      console.log(`✅ Catálogo padre cargado: ${catalogoPadre.length} elementos`);
+      
+      // Buscar el catálogo padre que tenga el nombre igual al valor seleccionado
+      const catalogoEncontrado = catalogoPadre.find(cat => cat.nombre === valorSeleccionado);
+      
+      if (!catalogoEncontrado) {
+        console.warn(`⚠️ No se encontró catálogo con nombre "${valorSeleccionado}" en "${detalleOrigen.catalogo}"`);
+        console.log(`   Primeros 3 nombres disponibles:`, catalogoPadre.slice(0, 3).map(c => c.nombre));
+        return;
+      }
+
+      const valorCoreDelPadre = catalogoEncontrado.valorCore;
+      console.log(`🔑 Encontrado valorCore del padre: "${valorCoreDelPadre}"`);
+      
+      // Filtrar las opciones del catálogo hijo donde el padre tenga el mismo valorCore
+      const opcionesFiltradas = detalleConOpciones.opcionesCatalogo.filter(
+        cat => cat.padreValorCore === valorCoreDelPadre
+      );
+      
+      detalleConOpciones.opcionesFiltradas = opcionesFiltradas;
+      console.log(`✅ Filtradas opciones de "${detalleAfectado.nombreInput}": ${opcionesFiltradas.length} elementos (padreValorCore="${valorCoreDelPadre}")`);
+      
+      if (opcionesFiltradas.length === 0) {
+        console.warn(`  📋 Muestra de padreValorCore en opciones hijo:`, 
+          detalleConOpciones.opcionesCatalogo.slice(0, 3).map(c => ({ nombre: c.nombre, padreValorCore: c.padreValorCore }))
+        );
+      } else {
+        console.log(`  🎉 Primeras 3 opciones filtradas:`, opcionesFiltradas.slice(0, 3).map(c => c.nombre));
+      }
+    });
+
+    this.cdr.markForCheck();
+  }
+
+  private resetearFiltrosEnCascada(detalleOrigen: ITramaDetalle, todosDetalles: ITramaDetalle[]) {
+    // Buscar todos los detalles que tengan catalogo = catalogoHijo del origen
+    const detallesAfectados = todosDetalles.filter(
+      d => d.tipoInput === 'SELECT' && 
+           d.catalogo === detalleOrigen.catalogoHijo &&
+           d.detalleId !== detalleOrigen.detalleId
+    );
+
+    detallesAfectados.forEach(detalleAfectado => {
+      const detalleConOpciones = detalleAfectado as DetalleConOpciones;
+      detalleConOpciones.opcionesFiltradas = undefined;
+      // Resetear el valor del formulario
+      this.formulario().get(detalleAfectado.detalleId)?.reset('', { emitEvent: false });
+    });
+
+    this.cdr.markForCheck();
+  }
+
   reiniciarFormulario() {
     this.formulario().reset();
     this.mostrarResultado.set(false);
     this.resultadoJSON.set(null);
     this.resultadoXML.set('');
     this.cdr.markForCheck();
+  }
+
+  async enviarFormulario() {
+    if (!this.resultadoJSON()) {
+      this.toastr.error('Primero debes generar el XML', 'Error');
+      return;
+    }
+
+    this.enviandoFormulario.set(true);
+
+    try {
+      // Generar operación aleatoria de 5 dígitos
+      const operacion = Math.floor(10000 + Math.random() * 90000);
+
+      // Obtener todos los detalles para buscar los campos necesarios
+      const todosDetalles = [
+        ...this.detallesAgrupados().cliente,
+        ...this.detallesAgrupados().parametro
+      ];
+
+      // Obtener valores del formulario
+      const valoresFormulario = this.formulario().value;
+
+      // Buscar campos para nombreCliente: "primer nombre", "segundo nombre", "primer apellido"
+      const nombresCompletos: string[] = [];
+      
+      const detallesPrimerNombre = todosDetalles.filter(d => 
+        d.nombreInput?.toLowerCase().includes('primer nombre')
+      );
+      const detallesSegundoNombre = todosDetalles.filter(d => 
+        d.nombreInput?.toLowerCase().includes('segundo nombre')
+      );
+      const detallesPrimerApellido = todosDetalles.filter(d => 
+        d.nombreInput?.toLowerCase().includes('primer apellido')
+      );
+
+      // Recopilar valores en orden: primer nombre, segundo nombre, primer apellido
+      detallesPrimerNombre.forEach(d => {
+        const valor = valoresFormulario[d.detalleId];
+        if (valor) nombresCompletos.push(valor);
+      });
+      detallesSegundoNombre.forEach(d => {
+        const valor = valoresFormulario[d.detalleId];
+        if (valor) nombresCompletos.push(valor);
+      });
+      detallesPrimerApellido.forEach(d => {
+        const valor = valoresFormulario[d.detalleId];
+        if (valor) nombresCompletos.push(valor);
+      });
+
+      const nombreCliente = nombresCompletos.join(' ').trim() || undefined;
+
+      // Buscar campo para documento
+      const detalleDocumento = todosDetalles.find(d => 
+        d.nombreInput?.toLowerCase().includes('documento')
+      );
+      const documento = detalleDocumento ? valoresFormulario[detalleDocumento.detalleId] : undefined;
+
+      // Preparar datos para enviar
+      const datosGestion = {
+        tramaEjecucionId: '', // Se genera en el backend
+        operacion: 1401,
+        trama: JSON.stringify(this.resultadoJSON()), // JSON como string
+        nombreCliente,
+        documento,
+        created_at: new Date()
+      };
+
+      console.log('📤 Enviando gestión:', datosGestion);
+
+      const resultado = await this.gestionService.createGestion(datosGestion);
+
+      if (resultado) {
+        this.toastr.success('Formulario enviado correctamente', 'Éxito');
+        console.log('✅ Gestión creada:', resultado);
+        
+        // Opcionalmente, resetear el formulario después de enviar
+        // this.reiniciarFormulario();
+      }
+    } catch (error) {
+      console.error('❌ Error al enviar formulario:', error);
+      this.toastr.error('Error al enviar el formulario', 'Error');
+    } finally {
+      this.enviandoFormulario.set(false);
+      this.cdr.markForCheck();
+    }
   }
 }

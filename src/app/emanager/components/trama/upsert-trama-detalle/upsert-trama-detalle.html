@@ -92,12 +92,17 @@
 
   @if (form().get('tipoInput')?.value === 'SELECT') {
   <div class="row">
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
       <label class="form-label">Catálogo (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="catalogo" />
     </div>
 
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Catálogo Hijo (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="catalogoHijo" placeholder="ej: municipio, agencia" />
+    </div>
+
+    <div class="col-md-4 mb-3">
       <label class="form-label">Procedimiento (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="procedimiento" />
     </div>
@@ -189,7 +194,7 @@
   </div>
 
   <div class="row">
-    <div class="col-md-3 mb-3">
+    <div class="col-md-6 mb-3">
       <label class="form-label">Tipo Respuesta <span class="text-danger">*</span></label>
       <select class="form-select form-select-sm" formControlName="tipoRespuesta">
         @for (option of tipoRespuestaOptions; track option) {
@@ -206,7 +211,7 @@
       }
     </div>
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-6 mb-3">
       <label class="form-label">Tipo Input <span class="text-danger">*</span></label>
       <select class="form-select form-select-sm" formControlName="tipoInput">
         @for (option of tipoInputOptions; track option) {
@@ -221,21 +226,27 @@
         }
       </div>
       }
-    </div>
+    </div>   
+  </div>
 
+  <div class="row">
     @if (form().get('tipoInput')?.value === 'SELECT') {
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
       <label class="form-label">Catálogo (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="catalogo" />
     </div>
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Catálogo hijo (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="catalogoHijo" />
+    </div>
+
+    <div class="col-md-4 mb-3">
       <label class="form-label">Procedimiento (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="procedimiento" />
     </div>
     }
   </div>
-
 
 
   <div class="row">
