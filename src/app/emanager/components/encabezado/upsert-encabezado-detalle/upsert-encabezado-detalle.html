@@ -109,8 +109,25 @@
   </div>
   }
 
+  
   <div class="row">
-    <div class="col-md-12 mb-3">
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Orden <span class="text-danger">*</span></label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden" />
+
+      @if (form().get('orden')?.touched && form().get('orden')?.invalid) {
+      <div class="text-danger small">
+        @if (form().get('orden')?.errors?.['required']) {
+        <div>Orden es requerido</div>
+        }
+        @if (form().get('orden')?.errors?.['min']) {
+        <div>El orden debe ser mayor o igual a 0</div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="col-md-9 mb-3">
       <label class="form-label">Valor por Defecto (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="valorDefecto" />
     </div>

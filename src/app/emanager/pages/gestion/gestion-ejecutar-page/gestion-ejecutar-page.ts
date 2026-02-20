@@ -46,10 +46,14 @@ export default class GestionEjecutarPage {
   trama = signal<ITrama | null>(null);
   isLoading = signal(false);
   
+  // Detalles visibles para mostrar en el formulario
   detallesAgrupados = signal<DetalleAgrupado>({
     cliente: [],
     parametro: []
   });
+  
+  // Todos los detalles (incluye no visibles) para generar XML
+  todosLosDetallesCompletos = signal<ITramaDetalle[]>([]);
 
   formulario = signal<FormGroup>(this.fb.group({}));
   resultadoJSON = signal<any>(null);
@@ -117,7 +121,7 @@ export default class GestionEjecutarPage {
             if (detallesResult?.data) {
               // Convertir detalles de encabezado a formato ITramaDetalle
               const detallesConvertidos = detallesResult.data
-                .filter(d => d.activo && d.visible)
+                .filter(d => d.activo)
                 .map(detalle => this.convertirEncabezadoDetalleATramaDetalle(detalle));
               
               detallesEncabezado.push(...detallesConvertidos);
@@ -134,8 +138,8 @@ export default class GestionEjecutarPage {
 
       let detallesTrama: ITramaDetalle[] = [];
       if (resultado?.data) {
-        // Filtrar solo los visibles y activos
-        const detallesVisibles = resultado.data.filter(d => d.activo && d.visible);
+        // Filtrar solo los activos (incluye visibles y no visibles)
+        const detallesActivos = resultado.data.filter(d => d.activo);
         
         // Calcular el máximo orden de los detalles de encabezado
         const maxOrdenEncabezado = detallesEncabezado.length > 0 
@@ -143,7 +147,7 @@ export default class GestionEjecutarPage {
           : 0;
         
         // Incrementar el orden de los detalles de trama para que aparezcan después
-        detallesTrama = detallesVisibles.map(detalle => ({
+        detallesTrama = detallesActivos.map(detalle => ({
           ...detalle,
           orden: detalle.orden + maxOrdenEncabezado + 10
         }));
@@ -165,13 +169,17 @@ export default class GestionEjecutarPage {
         return detalle;
       });
 
-      // Agrupar por tipo
+      // Guardar todos los detalles (incluye no visibles)
+      this.todosLosDetallesCompletos.set(detallesConCatalogos);
+
+      // Agrupar solo los visibles por tipo para mostrar en el formulario
       const agrupados: DetalleAgrupado = {
-        cliente: detallesConCatalogos.filter(d => d.tipo === 'CLIENTE'),
-        parametro: detallesConCatalogos.filter(d => d.tipo === 'PARAMETRO')
+        cliente: detallesConCatalogos.filter(d => d.tipo === 'CLIENTE' && d.visible),
+        parametro: detallesConCatalogos.filter(d => d.tipo === 'PARAMETRO' && d.visible)
       };
 
       this.detallesAgrupados.set(agrupados);
+      // Construir formulario con TODOS los detalles (visibles y no visibles)
       this.construirFormulario(detallesConCatalogos);
       
       this.cdr.markForCheck();
@@ -260,8 +268,11 @@ export default class GestionEjecutarPage {
     const fecha = this.parsearFecha(valorDefecto);
     
     if (fecha && !isNaN(fecha.getTime())) {
-      // Si es una fecha válida, formatearla a dd/mm/yyyy
-      return this.formatearFecha(fecha);
+      // Formatear a yyyy-mm-dd para inputs de tipo date
+      const year = fecha.getFullYear();
+      const month = String(fecha.getMonth() + 1).padStart(2, '0');
+      const day = String(fecha.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     } else {
       // Si no es una fecha válida (es texto como "HOY()", "Now", etc.), retornar fecha actual
       return new Date().toISOString().split('T')[0]; // Formato yyyy-mm-dd para inputs de tipo date
@@ -354,24 +365,28 @@ export default class GestionEjecutarPage {
     }
 
     const formValues = this.formulario().value;
-    const todosDetalles = [
-      ...this.detallesAgrupados().cliente,
-      ...this.detallesAgrupados().parametro
-    ].filter(detalle => detalle.tipoInput !== 'FILE');
+    // Usar TODOS los detalles (incluye no visibles)
+    const todosDetalles = this.todosLosDetallesCompletos()
+      .filter(detalle => detalle.tipoInput !== 'FILE');
 
     // Crear un mapa de valores finales para cada detalle
     const valoresPorDetalle = new Map<string, any>();
 
     // Primero, asignar todos los valores del formulario
     todosDetalles.forEach(detalle => {
-      valoresPorDetalle.set(detalle.detalleId, formValues[detalle.detalleId]);
+      let valor = formValues[detalle.detalleId];
+      valoresPorDetalle.set(detalle.detalleId, valor);
     });
 
     // Aplicar la lógica de asignación: CLIENTE con codigoParametro obtiene valor de PARAMETRO
-    this.detallesAgrupados().cliente.forEach(detalleCliente => {
+    // Usar todos los detalles completos, no solo los visibles
+    const todosClientes = this.todosLosDetallesCompletos().filter(d => d.tipo === 'CLIENTE');
+    const todosParametros = this.todosLosDetallesCompletos().filter(d => d.tipo === 'PARAMETRO');
+    
+    todosClientes.forEach(detalleCliente => {
       if (detalleCliente.codigoParametro) {
         // Buscar el detalle PARAMETRO que tenga código igual a codigoParametro del cliente
-        const detalleParametroEncontrado = this.detallesAgrupados().parametro.find(
+        const detalleParametroEncontrado = todosParametros.find(
           detalleParam => detalleParam.codigo === detalleCliente.codigoParametro
         );
 
@@ -442,8 +457,10 @@ export default class GestionEjecutarPage {
   }
 
   generarXML(valoresPorDetalle: Map<string, any>, todosDetalles: ITramaDetalle[]): string {
-    const detallesCliente = this.detallesAgrupados().cliente;
-    const detallesParametro = this.detallesAgrupados().parametro;
+    // Usar TODOS los detalles (incluye no visibles)
+    const todosCompletos = this.todosLosDetallesCompletos();
+    const detallesCliente = todosCompletos.filter(d => d.tipo === 'CLIENTE');
+    const detallesParametro = todosCompletos.filter(d => d.tipo === 'PARAMETRO');
     const trama = this.trama();
     
     let xml = '<emanager.input>\n';
