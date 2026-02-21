@@ -39,6 +39,7 @@ export interface ITrama {
   tramaId: string;
   procesoId: number;
   codigo: number;
+  gestion?: number;
   codigoInterno: number; // Nuevo campo
   sistemaId: number;
   nombre: string;
