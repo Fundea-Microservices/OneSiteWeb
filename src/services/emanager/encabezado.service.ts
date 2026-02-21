@@ -18,11 +18,14 @@ export class EncabezadoService extends HttpService {
     super(http);
   }
 
-  async getEncabezados({ page = 1, limit = 10, search = '', all = false } = {}) {
+  async getEncabezados({ page = 1, limit = 10, search = '', all = false, procesoId = 0 } = {}) {
     try {
       let params: any = { page, limit, search };
       if (all) {
         params = { ...params, all: all };
+      }
+      if (procesoId) {
+        params = { ...params, procesoId };
       }
       const resp = await firstValueFrom(this.get<EncabezadosResponse>(`${this.endpoints.encabezado}`, params));
       if (resp.body?.success) {
