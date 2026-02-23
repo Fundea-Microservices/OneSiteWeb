@@ -715,7 +715,7 @@ export default class GestionEjecutarPage {
         operacion: 1401,
         trama: JSON.stringify(this.resultadoJSON()), // JSON como string
         nombreCliente,
-        documento,
+        documento: documento?.toString(),
         created_at: new Date()
       };
 
