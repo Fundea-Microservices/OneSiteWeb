@@ -459,8 +459,12 @@ export default class GestionEjecutarPage {
   generarXML(valoresPorDetalle: Map<string, any>, todosDetalles: ITramaDetalle[]): string {
     // Usar TODOS los detalles (incluye no visibles)
     const todosCompletos = this.todosLosDetallesCompletos();
-    const detallesCliente = todosCompletos.filter(d => d.tipo === 'CLIENTE');
-    const detallesParametro = todosCompletos.filter(d => d.tipo === 'PARAMETRO');
+    const detallesCliente = todosCompletos
+      .filter(d => d.tipo === 'CLIENTE')
+      .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+    const detallesParametro = todosCompletos
+      .filter(d => d.tipo === 'PARAMETRO')
+      .sort((a, b) => (a.codigo || 0) - (b.codigo || 0));
     const trama = this.trama();
     
     let xml = '<emanager.input>\n';
@@ -480,7 +484,7 @@ export default class GestionEjecutarPage {
     xml += '    </cliente>\n';
     
     // Sección PROCESO con PARAMETROS
-    const procesoId = trama?.codigo || '13';
+    const procesoId = trama?.procesoId || '13';
     xml += `    <proceso id="${procesoId}">\n`;
     xml += '      <parametros>\n';
     
