@@ -8,6 +8,7 @@ export interface ITramaDetalle {
   
   // Campos opcionales (?) porque en SQL aceptan NULL
   codigo?: number;
+  codigoInterno?: string;
   valor?: string;
   tag?: string;           // Nuevo campo
   nombreInput?: string;   // Nuevo campo

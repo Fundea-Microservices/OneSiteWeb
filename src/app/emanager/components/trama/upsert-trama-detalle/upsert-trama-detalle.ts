@@ -41,6 +41,7 @@ export class UpsertTramaDetalleComponent {
     detalleId: '',
     tramaId: '',
     codigo: undefined,
+    codigoInterno: undefined,
     valor: undefined,
     tag: undefined,
     nombreInput: undefined,
@@ -91,6 +92,7 @@ export class UpsertTramaDetalleComponent {
       const newForm = this.fb.group({
         tramaId: [tramaDetalle.tramaId, this.validationRules.tramaId],
         codigo: [tramaDetalle.codigo, this.validationRules.codigo],
+        codigoInterno: [tramaDetalle.codigoInterno],
         valor: [tramaDetalle.valor, this.validationRules.valor],
         tag: [tramaDetalle.tag, this.validationRules.tag],
         nombreInput: [tramaDetalle.nombreInput, this.validationRules.nombreInput],
@@ -113,6 +115,7 @@ export class UpsertTramaDetalleComponent {
         newForm.reset({
           tramaId: tramaDetalle.tramaId,
           codigo: undefined,
+          codigoInterno: undefined,
           valor: '',
           tag: '',
           nombreInput: '',

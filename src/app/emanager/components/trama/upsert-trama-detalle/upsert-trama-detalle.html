@@ -19,6 +19,14 @@
     </div>
   </div>
 
+  <!-- CÓDIGO INTERNO (SIEMPRE VISIBLE) -->
+  <div class="row">
+    <div class="col-md-12 mb-3">
+      <label class="form-label">Código Interno (Opcional)</label>
+      <input type="text" class="form-control form-control-sm" formControlName="codigoInterno" />
+    </div>
+  </div>
+
   <!-- CAMPOS PARA TIPO CLIENTE -->
   @if (form().get('tipo')?.value === 'CLIENTE') {
   <div class="row">

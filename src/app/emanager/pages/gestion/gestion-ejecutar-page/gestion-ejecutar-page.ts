@@ -711,8 +711,7 @@ export default class GestionEjecutarPage {
 
       // Preparar datos para enviar
       const datosGestion = {
-        tramaEjecucionId: '', // Se genera en el backend
-        operacion: 1401,
+        tramaEjecucionId: '', 
         trama: JSON.stringify(this.resultadoJSON()), // JSON como string
         nombreCliente,
         documento: documento?.toString(),

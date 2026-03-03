@@ -11,7 +11,7 @@ import { IGestion, ITrama, TramaResponse, TramasResponse } from '../../interface
 export class TramaService extends HttpService {
 
   private readonly endpoints = {
-    gestion: '/emanager/gestion',
+    gestion: '/emanager/gestion/gestion-onesite',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {

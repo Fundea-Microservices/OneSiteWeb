@@ -37,6 +37,7 @@
                         <tr>
                             <th class="text-center" scope="col">#</th>
                             <th class="text-center" scope="col">Código</th>
+                            <th class="text-center" scope="col">Cód. Interno</th>
                             <th class="text-center" scope="col">Label</th>
                             <th class="text-center" scope="col">Obligatorio</th>
                             <th class="text-center" scope="col">Tipo</th>
@@ -50,7 +51,7 @@
                     <tbody class="text-[0.85em]">
                         @if (isLoading()) {
                         <tr>
-                            <td colspan="10" class="text-center py-4">
+                            <td colspan="11" class="text-center py-4">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                                     <span class="visually-hidden">Cargando...</span>
                                 </div>
@@ -59,7 +60,7 @@
                         </tr>
                         } @else if (tramaDetallesList().length === 0) {
                         <tr>
-                            <td colspan="10" class="text-center py-4 text-gray-500">
+                            <td colspan="11" class="text-center py-4 text-gray-500">
                                 No se encontraron detalles de trama
                             </td>
                         </tr>
@@ -68,6 +69,7 @@
                         <tr>
                             <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
                             <td>{{ item.codigo }}</td>
+                            <td>{{ item.codigoInterno }}</td>
                             <td>{{ item.nombreInput }}</td>
                             <td class="text-center">
                                 <div class="form-check form-switch d-inline-block">
@@ -159,6 +161,10 @@
                 </div>
 
                 <div class="space-y-2 text-sm text-gray-700 mb-4">
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Cód. Interno:</span>
+                        <span>{{ item.codigoInterno }}</span>
+                    </div>
                     <div class="flex justify-between">
                         <span class="font-medium text-gray-600">Valor:</span>
                         <span>{{ item.valor }}</span>
