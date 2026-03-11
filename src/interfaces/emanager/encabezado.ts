@@ -13,7 +13,7 @@ export interface IEncabezadoDetalle {
   procedimiento?: string;
   tipo: TipoTrama;
   
-  codigoParametro?: number; // Nullable en SQL
+  codigoParametro?: number | null; // Nullable en SQL
   
   tipoRespuesta: TipoRespuesta;
   tipoInput: TipoInput;

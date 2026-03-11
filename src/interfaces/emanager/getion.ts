@@ -17,7 +17,7 @@ export interface ITramaDetalle {
   procedimiento?: string;
   tipo: TipoTrama;
   
-  codigoParametro?: number; // Nullable en SQL
+  codigoParametro?: number | null; // Nullable en SQL
   
   tipoRespuesta: TipoRespuesta;
   tipoInput: TipoInput;
@@ -48,6 +48,10 @@ export interface ITrama {
   
   usuario: string;       // Nuevo campo
   usuarioGlobal: boolean; // Nuevo campo (BIT en SQL)
+
+  verApp: boolean;
+  icono?: string;
+  color?: string;
   
   activo: boolean;
   

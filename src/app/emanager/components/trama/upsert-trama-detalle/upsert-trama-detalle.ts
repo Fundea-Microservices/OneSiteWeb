@@ -171,9 +171,9 @@ export class UpsertTramaDetalleComponent {
       const value: ITramaDetalle = {
         ...this.tramaDetalle(),
         ...formValue,
-        codigo: formValue.codigo ? Number(formValue.codigo) : undefined,
+        codigo: (formValue.codigo != null && formValue.codigo !== '') ? Number(formValue.codigo) : undefined,
         orden: Number(formValue.orden ?? 0),
-        codigoParametro: formValue.codigoParametro ? Number(formValue.codigoParametro) : undefined,
+        codigoParametro: (formValue.codigoParametro != null && formValue.codigoParametro !== '') ? Number(formValue.codigoParametro) : null,
       };
       this.save.emit(value);
     }

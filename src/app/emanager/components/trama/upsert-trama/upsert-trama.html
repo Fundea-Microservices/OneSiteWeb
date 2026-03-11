@@ -1,6 +1,6 @@
 <form [formGroup]="form()" (ngSubmit)="onSubmit()">
   <div class="row">
-    <div class="col-md-3 mb-3">
+    <div class="col-md-2 mb-3">
       <label class="form-label">Proceso</label>
       <input type="number" class="form-control form-control-sm" formControlName="procesoId" />
 
@@ -16,7 +16,7 @@
       }
     </div>
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-2 mb-3">
       <label class="form-label">Sistema ID</label>
       <input type="number" class="form-control form-control-sm" formControlName="sistemaId" />
 
@@ -32,7 +32,7 @@
       }
     </div>
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-2 mb-3">
       <label class="form-label">Código</label>
       <input type="number" class="form-control form-control-sm" formControlName="codigo" />
 
@@ -48,8 +48,8 @@
       }
     </div>
 
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Código Interno</label>
+    <div class="col-md-2 mb-3">
+      <label class="form-label">Cod. Interno</label>
       <input type="number" class="form-control form-control-sm" formControlName="codigoInterno" />
 
       @if (form().get('codigoInterno')?.touched && form().get('codigoInterno')?.invalid) {
@@ -63,10 +63,8 @@
         </div>
       }
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
       <label class="form-label">Usuario</label>
       <input type="text" class="form-control form-control-sm" formControlName="usuario" />
 
@@ -81,22 +79,62 @@
         </div>
       }
     </div>
+  </div>
 
-    <div class="col-md-3 mb-3">
-      <label class="form-label">Usuario Global</label>
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" formControlName="usuarioGlobal" />
-        <label class="form-check-label">Usuario Global</label>
+
+  <div class="row">
+    <div class="col-md-5 mb-3">
+      <label class="form-label">Ícono (Lucide Icons)</label>
+      <div class="input-group input-group-sm">
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          formControlName="icono"
+          placeholder="ej: circle, star, home"
+          (input)="onIconInput($event)"
+        />
+        <span class="input-group-text" style="min-width: 42px; justify-content: center;">
+          @if (iconPreview()) {
+            <app-custom-icon [name]="iconPreview()" [color]="colorPreview()" [size]="20"></app-custom-icon>
+          } @else {
+            <span class="text-muted" style="font-size: 0.75rem;">sin ícono</span>
+          }
+        </span>
       </div>
+      <div class="form-text">Nombre del ícono en kebab-case, ej: <code>building-2</code>, <code>file-text</code></div>
     </div>
 
     <div class="col-md-3 mb-3">
-      <label class="form-label">Activo</label>
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" formControlName="activo" />
-        <label class="form-check-label">Estado Activo</label>
+      <label class="form-label">Color</label>
+      <div class="d-flex align-items-center gap-2">
+        <input
+          type="color"
+          class="form-control form-control-color form-control-sm"
+          formControlName="color"
+          style="width: 48px; height: 36px; padding: 2px; cursor: pointer;"
+          (input)="onColorInput($event)"
+        />
+        <span class="form-control form-control-sm text-muted" style="flex: 1; font-size: 0.8rem;">
+          {{ colorPreview() }}
+        </span>
       </div>
     </div>
+
+    @if (iconPreview()) {
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Vista previa</label>
+        <div class="d-flex align-items-center gap-2 p-2 border rounded" style="background: #f8f9fa;">
+          <div class="d-flex align-items-center justify-content-center rounded"
+               [style.width.px]="40" [style.height.px]="40" [style.backgroundColor]="colorPreview() + '1a'" [style.border]="'1px solid ' + colorPreview() + '4d'">
+            <app-custom-icon [name]="iconPreview()" [color]="colorPreview()" [size]="22"></app-custom-icon>
+          </div>
+          <div>
+            <div [style.fontSize]="'0.8rem'" [style.fontWeight]="'600'">{{ iconPreview() }}</div>
+            <div [style.fontSize]="'0.75rem'" [style.color]="colorPreview()">{{ colorPreview() }}</div>
+          </div>
+        </div>
+      </div>
+    }
   </div>
 
   <div class="row">
@@ -134,6 +172,32 @@
         }
       </div>
     }
+  </div>
+
+    <div class="row">    
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Usuario Global</label>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="usuarioGlobal" />
+        <label class="form-check-label">Usuario Global</label>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Ver en App</label>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="verApp" />
+        <label class="form-check-label">Visible en la App</label>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Activo</label>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="activo" />
+        <label class="form-check-label">Estado Activo</label>
+      </div>
+    </div>
   </div>
 
   <div class="row justify-content-end">

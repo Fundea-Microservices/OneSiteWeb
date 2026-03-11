@@ -5,12 +5,13 @@ import {
   Output,
   inject,
   input,
-  effect,
-  signal
+  computed,
+  linkedSignal
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ITrama } from '../../../../../interfaces/emanager/getion';
+import { CustomIconComponent } from '../../../../shared/components/custom-icon/custom-icon.component';
 
 export interface TramaValidationRules {
   procesoId?: any[];
@@ -25,7 +26,7 @@ export interface TramaValidationRules {
 @Component({
   selector: 'app-upsert-trama',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CustomIconComponent],
   templateUrl: './upsert-trama.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -42,6 +43,7 @@ export class UpsertTramaComponent {
     codigoInterno: 0,
     usuario: '',
     usuarioGlobal: false,
+    verApp: false,
     activo: true,
     created_at: new Date(),
   });
@@ -61,41 +63,36 @@ export class UpsertTramaComponent {
   @Output() save = new EventEmitter<ITrama>();
   @Output() cancel = new EventEmitter<void>();
 
-  form = signal<FormGroup>(this.fb.group({}));
-
-  constructor() {
-    effect(() => {
-      const isNuevo = this.nuevo();
-      const trama = this.trama();
-
-      const newForm = this.fb.group({
-        procesoId: [trama.procesoId, this.validationRules.procesoId],
-        sistemaId: [trama.sistemaId, this.validationRules.sistemaId],
-        nombre: [trama.nombre, this.validationRules.nombre],
-        descripcion: [trama.descripcion, this.validationRules.descripcion],
-        codigo: [trama.codigo, this.validationRules.codigo],
-        codigoInterno: [trama.codigoInterno, this.validationRules.codigoInterno],
-        usuario: [trama.usuario, this.validationRules.usuario],
-        usuarioGlobal: [trama.usuarioGlobal],
-        activo: [trama.activo],
-      });
-
-      if (isNuevo) {
-        newForm.reset({
-          procesoId: 0,
-          sistemaId: 2,
-          nombre: '',
-          descripcion: '',
-          codigo: 0,
-          codigoInterno: 0,
-          usuario: '',
-          usuarioGlobal: false,
-          activo: true,
-        });
-      }
-
-      this.form.set(newForm);
+  // computed() garantiza valores síncronos y correctos siempre, sin problemas de timing en zoneless
+  form = computed<FormGroup>(() => {
+    const isNuevo = this.nuevo();
+    const t = this.trama();
+    return this.fb.group({
+      procesoId:    [isNuevo ? 0          : t.procesoId,              this.validationRules.procesoId],
+      sistemaId:    [isNuevo ? 2          : t.sistemaId,              this.validationRules.sistemaId],
+      nombre:       [isNuevo ? ''         : t.nombre,                 this.validationRules.nombre],
+      descripcion:  [isNuevo ? ''         : t.descripcion,            this.validationRules.descripcion],
+      codigo:       [isNuevo ? 0          : t.codigo,                 this.validationRules.codigo],
+      codigoInterno:[isNuevo ? 0          : t.codigoInterno,          this.validationRules.codigoInterno],
+      usuario:      [isNuevo ? ''         : t.usuario,                this.validationRules.usuario],
+      usuarioGlobal:[isNuevo ? false      : t.usuarioGlobal],
+      verApp:       [isNuevo ? false      : (t.verApp ?? false)],
+      icono:        [isNuevo ? ''         : (t.icono ?? '')],
+      color:        [isNuevo ? '#3b82f6'  : (t.color ?? '#3b82f6')],
+      activo:       [isNuevo ? true       : t.activo],
     });
+  });
+
+  // linkedSignal: se resetea automáticamente cuando cambia trama/nuevo, pero también acepta escritura manual
+  iconPreview  = linkedSignal(() => this.nuevo() ? '' : (this.trama().icono  ?? ''));
+  colorPreview = linkedSignal(() => this.nuevo() ? '#3b82f6' : (this.trama().color ?? '#3b82f6'));
+
+  onIconInput(event: Event) {
+    this.iconPreview.set((event.target as HTMLInputElement).value);
+  }
+
+  onColorInput(event: Event) {
+    this.colorPreview.set((event.target as HTMLInputElement).value);
   }
 
   get btnText(): string {

@@ -5,10 +5,11 @@ import { TramaService } from '../../../../../services/emanager/trama.service';
 import { ITrama } from '../../../../../interfaces/emanager/getion';
 import { PaginationAllComponent } from '../../../../shared/components/pagination-all/pagination-all';
 import { UpsertTramaComponent } from '../../../components/trama/upsert-trama/upsert-trama';
+import { CustomIconComponent } from '../../../../shared/components/custom-icon/custom-icon.component';
 
 @Component({
   selector: 'app-gestion-listado-page',
-  imports: [RouterLink, PaginationAllComponent, UpsertTramaComponent],
+  imports: [RouterLink, PaginationAllComponent, UpsertTramaComponent, CustomIconComponent],
   templateUrl: './gestion-listado-page.html',  
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,9 +58,20 @@ export default class GestionListadoPage {
       codigoInterno: 0,
       usuario: 'usuarioapp',
       usuarioGlobal: false,
+      verApp: false,
+      icono: '',
+      color: '#3b82f6',
       activo: true,
       created_at: new Date(),
     };
+  }
+
+  async toggleVerApp(trama: ITrama) {
+    const updated = { ...trama, verApp: !trama.verApp };
+    const resp = await this.tramaService.updateTrama(updated);
+    if (resp?.success) {
+      this.fetchData();
+    }
   }
 
   async fetchData() {

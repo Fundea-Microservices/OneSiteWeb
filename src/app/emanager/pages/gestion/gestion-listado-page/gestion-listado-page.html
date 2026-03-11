@@ -23,6 +23,8 @@
                             <th class="text-center" scope="col">Nombre</th>
                             <th class="text-center" scope="col">Descripción</th>
                             <th class="text-center" scope="col">Código</th>
+                            <th class="text-center" scope="col">Ícono</th>
+                            <th class="text-center" scope="col">Ver App</th>
                             <th class="text-center" scope="col">Activo</th>
                             <th class="text-center" scope="col">Acciones</th>
                         </tr>
@@ -30,7 +32,7 @@
                     <tbody class="text-[0.85em]">
                         @if (isLoading()) {
                         <tr>
-                            <td colspan="7" class="text-center py-4">
+                            <td colspan="9" class="text-center py-4">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                                     <span class="visually-hidden">Cargando...</span>
                                 </div>
@@ -39,7 +41,7 @@
                         </tr>
                         } @else if (tramasList().length === 0) {
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-gray-500">
+                            <td colspan="9" class="text-center py-4 text-gray-500">
                                 No se encontraron tramas
                             </td>
                         </tr>
@@ -51,6 +53,26 @@
                             <td>{{ item.nombre }}</td>
                             <td>{{ item.descripcion }}</td>
                             <td>{{ item.codigo }}</td>
+                            <td class="text-center">
+                                @if (item.icono) {
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <app-custom-icon [name]="item.icono" [color]="item.color || '#3b82f6'" [size]="18"></app-custom-icon>
+                                </div>
+                                } @else {
+                                <span class="text-muted" style="font-size: 0.75rem;">—</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check form-switch d-inline-block">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        [checked]="item.verApp"
+                                        (change)="toggleVerApp(item)"
+                                        [id]="'switchVerApp' + item.tramaId"
+                                        style="cursor: pointer;" />
+                                </div>
+                            </td>
                             <td class="text-center">
                                 @if (item.activo) {
                                 <span class="badge text-bg-success">Activo</span>
@@ -120,6 +142,27 @@
                     <div class="flex justify-between">
                         <span class="font-medium text-gray-600">Código:</span>
                         <span>{{ item.codigo }}</span>
+                    </div>
+                    @if (item.icono) {
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-600">Ícono:</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <app-custom-icon [name]="item.icono" [color]="item.color || '#3b82f6'" [size]="18"></app-custom-icon>
+                            <span class="text-gray-500 text-xs">{{ item.icono }}</span>
+                        </div>
+                    </div>
+                    }
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-600">Ver App:</span>
+                        <div class="form-check form-switch mb-0">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                [checked]="item.verApp"
+                                (change)="toggleVerApp(item)"
+                                [id]="'switchVerAppMobile' + item.tramaId"
+                                style="cursor: pointer;" />
+                        </div>
                     </div>
                     <div class="flex justify-between">
                         <span class="font-medium text-gray-600">Estado:</span>
