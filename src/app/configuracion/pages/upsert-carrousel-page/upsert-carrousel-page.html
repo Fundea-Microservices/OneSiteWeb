@@ -27,7 +27,8 @@
                     [nuevo]="nuevo()"
                     (save)="onSave($event)"
                     (cancel)="onCancel()"
-                    (liveChange)="onLiveChange($event)" />
+                    (liveChange)="onLiveChange($event)"
+                    (photoFile)="onPhotoFile($event)" />
             </div>
         </div>
     </div>
@@ -45,7 +46,7 @@
 
                     <!-- Imagen -->
                     @if (preview().fotoUrl) {
-                    <img [src]="preview().fotoUrl" alt="preview" class="cp-img" />
+                    <img [src]="resolverFoto(preview().fotoUrl)" alt="preview" class="cp-img" />
                     } @else {
                     <div class="cp-img-placeholder">
                         <ion-icon name="image-outline"></ion-icon>

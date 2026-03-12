@@ -47,7 +47,7 @@ export class CarouselService extends HttpService {
   async getCarouselById(carouselId: string) {
     try {
       const resp = await firstValueFrom(
-        this.get<CarouselResponse>(`${this.endpoints.carousel}/${carouselId}`)
+        this.get<CarouselResponse>(`${this.endpoints.carousel}/by-id/${carouselId}`)
       );
       if (resp.body?.success) {
         return resp.body;
@@ -110,6 +110,26 @@ export class CarouselService extends HttpService {
     } catch (error: any) {
       console.log('🚀 ~ CarouselService ~ deleteCarousel ~ error:', error);
       this.toastr.error(error?.error?.message || '', 'Error al eliminar carousel');
+      return null;
+    }
+  }
+
+  async subirFotoCarousel(carouselId: string, file: File) {
+    try {
+      const formData = new FormData();
+      formData.append('foto', file);
+      formData.append('carouselId', carouselId);
+      const resp = await firstValueFrom(
+        this.postFormData<CarouselResponse>(`${this.endpoints.carousel}/foto`, formData)
+      );
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Success');
+        return resp.body;
+      }
+      return null;
+    } catch (error: any) {
+      console.log('🚀 ~ CarouselService ~ subirFotoCarousel ~ error:', error);
+      this.toastr.error(error?.error?.message || '', 'Error al subir foto del carousel');
       return null;
     }
   }

@@ -7,6 +7,7 @@ import {
   inject,
   input,
   Output,
+  signal,
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -38,6 +39,12 @@ export class UpsertCarrouselComponent {
   @Output() save = new EventEmitter<CreateCarouselDto | UpdateCarouselDto>();
   @Output() cancel = new EventEmitter<void>();
   @Output() liveChange = new EventEmitter<Partial<Carousel>>();
+  @Output() photoFile = new EventEmitter<File | null>();
+
+  fotoMode = signal<'url' | 'file'>('url');
+  selectedFile = signal<File | null>(null);
+  previewDataUrl = signal<string | null>(null);
+  fileError = signal(false);
 
   form = computed<FormGroup>(() => {
     const isNuevo = this.nuevo();
@@ -61,9 +68,10 @@ export class UpsertCarrouselComponent {
   constructor() {
     effect((onCleanup) => {
       const f = this.form();
-      // Emit initial values after render
-      queueMicrotask(() => this.liveChange.emit(f.getRawValue()));
-      const sub = f.valueChanges.subscribe(() => this.liveChange.emit(f.getRawValue()));
+      queueMicrotask(() => this.liveChange.emit(this.buildLivePayload(f.getRawValue())));
+      const sub = f.valueChanges.subscribe(() =>
+        this.liveChange.emit(this.buildLivePayload(f.getRawValue()))
+      );
       onCleanup(() => sub.unsubscribe());
     });
   }
@@ -77,16 +85,71 @@ export class UpsertCarrouselComponent {
     return d.toISOString().split('T')[0];
   }
 
+  private buildLivePayload(formValues: any): Partial<Carousel> {
+    const fotoUrl =
+      this.fotoMode() === 'file'
+        ? (this.previewDataUrl() ?? this.carousel().fotoUrl ?? '')
+        : formValues.fotoUrl;
+    return { ...formValues, fotoUrl };
+  }
+
+  setFotoMode(mode: 'url' | 'file'): void {
+    this.fotoMode.set(mode);
+    this.selectedFile.set(null);
+    this.previewDataUrl.set(null);
+    this.fileError.set(false);
+    this.photoFile.emit(null);
+    const ctrl = this.form().get('fotoUrl');
+    if (mode === 'url') {
+      ctrl?.setValidators([Validators.required]);
+    } else {
+      ctrl?.clearValidators();
+    }
+    ctrl?.updateValueAndValidity();
+    const fotoUrl = mode === 'url' ? this.form().get('fotoUrl')?.value ?? '' : (this.carousel().fotoUrl ?? '');
+    this.liveChange.emit({ ...this.form().getRawValue(), fotoUrl });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.selectedFile.set(file);
+    this.fileError.set(false);
+    this.photoFile.emit(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        this.previewDataUrl.set(dataUrl);
+        this.liveChange.emit({ ...this.form().getRawValue(), fotoUrl: dataUrl });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      this.previewDataUrl.set(null);
+      this.liveChange.emit(this.buildLivePayload(this.form().getRawValue()));
+    }
+  }
+
   onSubmit(): void {
     const f = this.form();
     f.markAllAsTouched();
+
+    if (this.fotoMode() === 'file' && this.nuevo() && !this.selectedFile()) {
+      this.fileError.set(true);
+      return;
+    }
+    this.fileError.set(false);
+
     if (f.invalid) return;
 
     const values = f.getRawValue();
+    const fotoUrl =
+      this.fotoMode() === 'url' ? values.fotoUrl : (this.carousel().fotoUrl || 'archivo seleccionado');
+
     if (!this.nuevo()) {
-      this.save.emit({ ...values, carouselId: this.carousel().carouselId } as UpdateCarouselDto);
+      this.save.emit({ ...values, fotoUrl, carouselId: this.carousel().carouselId } as UpdateCarouselDto);
     } else {
-      this.save.emit(values as CreateCarouselDto);
+      this.save.emit({ ...values, fotoUrl } as CreateCarouselDto);
     }
   }
 
@@ -94,3 +157,4 @@ export class UpsertCarrouselComponent {
     this.cancel.emit();
   }
 }
+

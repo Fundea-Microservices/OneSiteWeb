@@ -14,6 +14,7 @@ import { Modal } from 'bootstrap';
 import { CarouselService } from '../../../../services/config/carousel.service';
 import { Carousel } from '../../../../interfaces/carousel';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-carrousel-page',
@@ -41,6 +42,11 @@ export default class CarrouselPage {
 
   ngAfterViewInit() {
     this.deleteModalInstance = new Modal(this.deleteModalRef.nativeElement);
+  }
+
+  resolverFoto(fotoUrl: string): string {
+    if (!fotoUrl || fotoUrl.startsWith('http')) return fotoUrl;
+    return `${environment.path}v1/config/carousel/imagen?fotoUrl=${encodeURIComponent(fotoUrl)}`;
   }
 
   private emptyCarousel(): Carousel {

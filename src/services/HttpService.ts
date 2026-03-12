@@ -68,4 +68,11 @@ export class HttpService {
       observe: 'response'
     });
   }
+
+  public postFormData<T>(url: string, data: FormData): Observable<HttpResponse<T>> {
+    return this.http.post<T>(this.baseUrl + url, data, {
+      headers: new HttpHeaders({ 'Authorization': `Bearer ${this.getToken()}` }),
+      observe: 'response'
+    });
+  }
 }

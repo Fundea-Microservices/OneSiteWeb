@@ -59,7 +59,7 @@
                             <td class="text-center">{{ item.orden }}</td>
                             <td class="text-center">
                                 @if (item.fotoUrl) {
-                                <img [src]="item.fotoUrl" alt="img" style="height:36px;object-fit:cover;border-radius:4px;" />
+                                <img [src]="resolverFoto(item.fotoUrl)" alt="img" style="height:36px;object-fit:cover;border-radius:4px;" />
                                 } @else {
                                 <span class="text-muted">&#8212;</span>
                                 }
@@ -167,7 +167,7 @@
                     </div>
                     @if (item.fotoUrl) {
                     <div>
-                        <img [src]="item.fotoUrl" alt="img" class="w-full rounded" style="max-height:80px;object-fit:cover;" />
+                        <img [src]="resolverFoto(item.fotoUrl)" alt="img" class="w-full rounded" style="max-height:80px;object-fit:cover;" />
                     </div>
                     }
                 </div>

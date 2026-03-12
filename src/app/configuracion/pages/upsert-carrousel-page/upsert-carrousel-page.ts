@@ -11,6 +11,7 @@ import { DatePipe } from '@angular/common';
 import { CarouselService } from '../../../../services/config/carousel.service';
 import { Carousel, CreateCarouselDto, UpdateCarouselDto } from '../../../../interfaces/carousel';
 import { UpsertCarrouselComponent } from '../../components/carrousel/upsert-carrousel/upsert-carrousel';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-upsert-carrousel-page',
@@ -29,6 +30,7 @@ export default class UpsertCarrouselPage {
   nuevo = signal(true);
   carouselData = signal<Carousel>(this.emptyCarousel());
   preview = signal<Partial<Carousel>>({});
+  pendingFile = signal<File | null>(null);
 
   private emptyCarousel(): Carousel {
     return {
@@ -67,6 +69,10 @@ export default class UpsertCarrouselPage {
     this.cdr.markForCheck();
   }
 
+  onPhotoFile(file: File | null) {
+    this.pendingFile.set(file);
+  }
+
   async onSave(payload: CreateCarouselDto | UpdateCarouselDto) {
     try {
       const resp = this.nuevo()
@@ -74,6 +80,10 @@ export default class UpsertCarrouselPage {
         : await this.carouselService.updateCarousel(payload as UpdateCarouselDto);
 
       if (resp?.success) {
+        const file = this.pendingFile();
+        if (file) {
+          await this.carouselService.subirFotoCarousel(resp.data.carouselId, file);
+        }
         this.router.navigate(['/config/carrousel']);
       }
     } catch (error) {
@@ -83,5 +93,10 @@ export default class UpsertCarrouselPage {
 
   onCancel() {
     this.router.navigate(['/config/carrousel']);
+  }
+
+  resolverFoto(fotoUrl: string | undefined): string {
+    if (!fotoUrl || fotoUrl.startsWith('http')) return fotoUrl ?? '';
+    return `${environment.path}v1/config/carousel/imagen?fotoUrl=${encodeURIComponent(fotoUrl)}`;
   }
 }
