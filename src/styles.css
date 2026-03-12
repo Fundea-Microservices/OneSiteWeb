@@ -48,4 +48,14 @@ textarea:not(:disabled) {
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
 }
 
+/* Switch color naranja para Visible App */
+.form-switch .form-check-input.switch-warning:checked {
+  background-color: #f97316 !important;
+  border-color: #f97316 !important;
+}
+
+.form-switch .form-check-input.switch-warning:focus {
+  border-color: #fdba74 !important;
+  box-shadow: 0 0 0 0.25rem rgba(249, 115, 22, 0.25) !important;
+}
 

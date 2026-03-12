@@ -1,0 +1,98 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+  <div class="row">
+    <div class="col-md-8 mb-3">
+      <label class="form-label">Título <span class="text-danger">*</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="titulo" />
+      @if (form().get('titulo')?.touched && form().get('titulo')?.invalid) {
+        <div class="text-danger small">
+          @if (form().get('titulo')?.errors?.['required']) { <div>El título es requerido</div> }
+          @if (form().get('titulo')?.errors?.['maxlength']) { <div>Máximo 200 caracteres</div> }
+        </div>
+      }
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Texto del botón</label>
+      <input type="text" class="form-control form-control-sm" formControlName="textoBoton" placeholder="ej: Ver más" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12 mb-3">
+      <label class="form-label">Subtítulo</label>
+      <input type="text" class="form-control form-control-sm" formControlName="subtitulo" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12 mb-3">
+      <label class="form-label">Descripción</label>
+      <textarea class="form-control form-control-sm" formControlName="descripcion" rows="2"></textarea>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12 mb-3">
+      <label class="form-label">URL de la imagen <span class="text-danger">*</span></label>
+      <input type="url" class="form-control form-control-sm" formControlName="fotoUrl" placeholder="https://..." />
+      @if (form().get('fotoUrl')?.touched && form().get('fotoUrl')?.invalid) {
+        <div class="text-danger small">
+          @if (form().get('fotoUrl')?.errors?.['required']) { <div>La URL de imagen es requerida</div> }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-9 mb-3">
+      <label class="form-label">URL de redirección</label>
+      <input type="url" class="form-control form-control-sm" formControlName="redireccionUrl" placeholder="https://..." />
+    </div>
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Orden <span class="text-danger">*</span></label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden" min="1" />
+      @if (form().get('orden')?.touched && form().get('orden')?.invalid) {
+        <div class="text-danger small">
+          @if (form().get('orden')?.errors?.['required']) { <div>El orden es requerido</div> }
+          @if (form().get('orden')?.errors?.['min']) { <div>Debe ser mayor a 0</div> }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Fecha inicio</label>
+      <input type="date" class="form-control form-control-sm" formControlName="fechaInicio" />
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Fecha fin</label>
+      <input type="date" class="form-control form-control-sm" formControlName="fechaFin" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="visibleApp" id="visibleApp" />
+        <label class="form-check-label" for="visibleApp">Visible en App</label>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="esExterno" id="esExterno" />
+        <label class="form-check-label" for="esExterno">Enlace externo</label>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="activo" id="activoCarousel" />
+        <label class="form-check-label" for="activoCarousel">Activo</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end mt-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="submit" class="btn btn-primary btn-sm">{{ btnText }}</button>
+  </div>
+</form>

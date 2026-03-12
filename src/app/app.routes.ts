@@ -83,6 +83,11 @@ export const routes: Routes = [
                         path: 'accesos',
                         loadComponent: () => import('./configuracion/pages/acceso-page/acceso-page.component'),
                         canActivate: [AccessGuard]
+                    },
+                    {
+                        path: 'carrousel',
+                        loadComponent: () => import('./configuracion/pages/carrousel-page/carrousel-page'),
+                        canActivate: [AccessGuard]
                     }
                 ]
             },
