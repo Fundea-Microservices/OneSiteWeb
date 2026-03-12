@@ -5,7 +5,7 @@ import { DatePipe } from '@angular/common';
 import { UpsertMetodoComponent } from '../../components/metodo/upsert-metodo/upsert-metodo.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { IMenu } from '../../../../interfaces/auth';
-import { MenuService } from '../../../../services/menu.service';
+import { MenuService } from '../../../../services/config/menu.service';
 import { MenuTablaComponent } from "../../components/menu/menu-tabla/menu-tabla.component";
 import { UpsertMenuComponent } from "../../components/menu/upsert-menu/upsert-menu.component";
 

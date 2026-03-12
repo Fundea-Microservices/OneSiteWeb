@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { DatePipe } from '@angular/common';
 import { Modal } from 'bootstrap';
-import { MetodoService } from '../../../../services/metodo.service';
+import { MetodoService } from '../../../../services/config/metodo.service';
 import { IMetodo } from '../../../../interfaces/metodo';
 import { UpsertMetodoComponent } from "../../components/metodo/upsert-metodo/upsert-metodo.component";
 import { empty } from 'rxjs';

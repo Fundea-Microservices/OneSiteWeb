@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, sig
 import { AuthService } from '../../../../../services/auth.service';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { SideMenuListItemComponent } from '../side-menu-list-item/side-menu-list-item';
-import { AccesoService } from '../../../../../services/acceso.service';
+import { AccesoService } from '../../../../../services/config/acceso.service';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import { ToastrService } from 'ngx-toastr';

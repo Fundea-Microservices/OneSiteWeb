@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { AuthService } from '../../../../services/auth.service';
 import { Router } from '@angular/router';
 import { IMenu } from '../../../../interfaces/auth';
-import { AccesoService } from '../../../../services/acceso.service';
+import { AccesoService } from '../../../../services/config/acceso.service';
 import { UpperCasePipe } from '@angular/common';
-import { ConfiguracionService } from '../../../../services/configuracion.service';
+import { ConfiguracionService } from '../../../../services/config/configuracion.service';
 import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
 import { LoadingScreenComponent } from '../../../shared/components/loading-screen/loading-screen.component';
 

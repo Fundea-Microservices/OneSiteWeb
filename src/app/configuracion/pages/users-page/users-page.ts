@@ -7,7 +7,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
 import { UserService } from '../../../../services/usuarios/user.service';
 import { UpsertUserComponent } from "../../components/user/upsert-user/upsert-user.component";
 import { IMetodo } from '../../../../interfaces/metodo';
-import { MetodoService } from '../../../../services/metodo.service';
+import { MetodoService } from '../../../../services/config/metodo.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ChangePasswordComponent } from '../../components/user/change-password/change-password.component';
 import { UpsertFotoUsuarioComponent } from '../../components/user/upsert-foto/upsert-foto.component';

@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { HttpService } from './HttpService';
+import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { IMetodo } from '../interfaces/metodo';
-import { MenuResponse } from '../interfaces/menu';
-import { IMenu } from '../interfaces/auth';
+import { IMetodo } from '../../interfaces/metodo';
+import { MenuResponse } from '../../interfaces/menu';
+import { IMenu } from '../../interfaces/auth';
 
 @Injectable({
   providedIn: 'root'

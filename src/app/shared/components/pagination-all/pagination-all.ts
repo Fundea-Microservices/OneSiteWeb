@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, inject, input, Output, output, signal } from '@angular/core';
-import { ConfiguracionService } from '../../../../services/configuracion.service';
+import { ConfiguracionService } from '../../../../services/config/configuracion.service';
 
 
 @Component({

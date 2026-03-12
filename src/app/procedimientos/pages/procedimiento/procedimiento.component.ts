@@ -7,7 +7,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 import { DatePipe } from '@angular/common';
 import { PlantillaService } from '../../../../services/reportes/plantilla.service';
-import { MenuService } from '../../../../services/menu.service';
+import { MenuService } from '../../../../services/config/menu.service';
 import { IMenu } from '../../../../interfaces/auth';
 import { ToastrService } from 'ngx-toastr';
 import { IProcedimiento } from '../../../../interfaces/procedimientos/procedimiento';

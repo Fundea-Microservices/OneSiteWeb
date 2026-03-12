@@ -4,10 +4,10 @@ import { RolService } from '../../../../services/rol.service';
 import { IMenu, IRol } from '../../../../interfaces/auth';
 import { IAcceso } from '../../../../interfaces/acceso';
 import { empty } from 'rxjs';
-import { AccesoService } from '../../../../services/acceso.service';
+import { AccesoService } from '../../../../services/config/acceso.service';
 import { Modal } from 'bootstrap';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
-import { MenuService } from '../../../../services/menu.service';
+import { MenuService } from '../../../../services/config/menu.service';
 import { UpsertAccesoComponent } from "../../components/acceso/upsert-acceso/upsert-acceso.component";
 
 const emptyAcceso: IAcceso = {

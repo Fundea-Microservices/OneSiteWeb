@@ -4,7 +4,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
 import { DatePipe } from '@angular/common';
 import { Modal } from 'bootstrap';
 import { IConfiguracion } from '../../../../interfaces/configuracion';
-import { ConfiguracionService } from '../../../../services/configuracion.service';
+import { ConfiguracionService } from '../../../../services/config/configuracion.service';
 import { UpsertAccesoComponent } from "../../components/acceso/upsert-acceso/upsert-acceso.component";
 import { UpsertConfigComponent } from "../../components/configuraciones/upsert-config/upsert-config.component";
 

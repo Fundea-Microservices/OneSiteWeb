@@ -9,7 +9,7 @@ import { DatePipe } from '@angular/common';
 import { UpsertReporteComponent } from '../../components/upsert-reporte/upsert-reporte.component';
 import { UpsertPlantillaComponent } from "../../components/upsert-plantilla/upsert-plantilla.component";
 import { PlantillaService } from '../../../../services/reportes/plantilla.service';
-import { MenuService } from '../../../../services/menu.service';
+import { MenuService } from '../../../../services/config/menu.service';
 import { IMenu } from '../../../../interfaces/auth';
 import { ToastrService } from 'ngx-toastr';
 

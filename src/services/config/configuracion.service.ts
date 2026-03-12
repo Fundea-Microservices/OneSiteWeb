@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { HttpService } from './HttpService';
+import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { ConfiguracionByKeyResponse, ConfiguracionResponse, IConfiguracion } from '../interfaces/configuracion';
+import { ConfiguracionByKeyResponse, ConfiguracionResponse, IConfiguracion } from '../../interfaces/configuracion';
 
 @Injectable({
   providedIn: 'root'

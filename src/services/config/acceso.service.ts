@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { HttpService } from './HttpService';
-import { AccesoResponse, AuthResponse, IUser } from '../interfaces/auth';
+import { HttpService } from '../HttpService';
+import { AccesoResponse, AuthResponse, IUser } from '../../interfaces/auth';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { IAcceso } from '../interfaces/acceso';
+import { IAcceso } from '../../interfaces/acceso';
 
 @Injectable({
   providedIn: 'root'

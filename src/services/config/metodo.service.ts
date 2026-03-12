@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { HttpService } from './HttpService';
+import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { IMetodo, MetodoResponse } from '../interfaces/metodo';
+import { IMetodo, MetodoResponse } from '../../interfaces/metodo';
 
 @Injectable({
   providedIn: 'root'
