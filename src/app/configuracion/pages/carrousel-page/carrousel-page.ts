@@ -9,16 +9,15 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { CarouselService } from '../../../../services/config/carousel.service';
-import { Carousel, CreateCarouselDto, UpdateCarouselDto } from '../../../../interfaces/carousel';
+import { Carousel } from '../../../../interfaces/carousel';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
-import { UpsertCarrouselComponent } from '../../components/carrousel/upsert-carrousel/upsert-carrousel';
 
 @Component({
   selector: 'app-carrousel-page',
-  imports: [RouterLink, DatePipe, PaginationAllComponent, UpsertCarrouselComponent],
+  imports: [RouterLink, DatePipe, PaginationAllComponent],
   templateUrl: './carrousel-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,18 +25,14 @@ import { UpsertCarrouselComponent } from '../../components/carrousel/upsert-carr
 export default class CarrouselPage {
   private carouselService = inject(CarouselService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
 
   isLoading = signal(false);
   carouselList = signal<Carousel[]>([]);
   pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 0 });
-
-  nuevo = signal(true);
   carouselEdit = signal<Carousel>(this.emptyCarousel());
-  modal = signal({ titulo: 'Crear Carrusel', visible: false });
 
-  @ViewChild('upsertModal') modalRef!: ElementRef;
   @ViewChild('deleteModal') deleteModalRef!: ElementRef;
-  private modalInstance!: Modal;
   private deleteModalInstance!: Modal;
 
   ngOnInit() {
@@ -45,7 +40,6 @@ export default class CarrouselPage {
   }
 
   ngAfterViewInit() {
-    this.modalInstance = new Modal(this.modalRef.nativeElement);
     this.deleteModalInstance = new Modal(this.deleteModalRef.nativeElement);
   }
 
@@ -116,40 +110,18 @@ export default class CarrouselPage {
     if (resp?.success) this.fetchData();
   }
 
-  openModal(nuevo: boolean, item: Carousel = this.emptyCarousel()) {
-    this.nuevo.set(nuevo);
-    this.carouselEdit.set(nuevo ? this.emptyCarousel() : { ...item });
-    this.modal.set({ titulo: nuevo ? 'Crear Carrusel' : 'Editar Carrusel', visible: true });
-    if (!this.modalInstance) this.modalInstance = new Modal(this.modalRef.nativeElement);
-    this.modalInstance.show();
+  goToCreate() {
+    this.router.navigate(['/config/carrousel/nuevo']);
   }
 
-  closeModal() {
-    this.modalInstance?.hide();
+  goToEdit(item: Carousel) {
+    this.router.navigate(['/config/carrousel/editar', item.carouselId]);
   }
 
   openDeleteModal(item: Carousel) {
     this.carouselEdit.set(item);
     if (!this.deleteModalInstance) this.deleteModalInstance = new Modal(this.deleteModalRef.nativeElement);
     this.deleteModalInstance.show();
-  }
-
-  async upsertCarousel(payload: CreateCarouselDto | UpdateCarouselDto) {
-    try {
-      const resp = this.nuevo()
-        ? await this.carouselService.createCarousel(payload as CreateCarouselDto)
-        : await this.carouselService.updateCarousel(payload as UpdateCarouselDto);
-
-      if (resp?.success) {
-        this.closeModal();
-        this.carouselEdit.set(this.emptyCarousel());
-        this.fetchData();
-      }
-      // Si resp es null o success es false, el modal permanece abierto
-    } catch (error) {
-      console.error('Error inesperado en upsertCarousel:', error);
-      // El modal permanece abierto ante cualquier error inesperado
-    }
   }
 
   async deleteCarousel() {

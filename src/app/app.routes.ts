@@ -86,8 +86,21 @@ export const routes: Routes = [
                     },
                     {
                         path: 'carrousel',
-                        loadComponent: () => import('./configuracion/pages/carrousel-page/carrousel-page'),
-                        canActivate: [AccessGuard]
+                        canActivate: [AccessGuard],
+                        children: [
+                            {
+                                path: '',
+                                loadComponent: () => import('./configuracion/pages/carrousel-page/carrousel-page'),
+                            },
+                            {
+                                path: 'nuevo',
+                                loadComponent: () => import('./configuracion/pages/upsert-carrousel-page/upsert-carrousel-page'),
+                            },
+                            {
+                                path: 'editar/:id',
+                                loadComponent: () => import('./configuracion/pages/upsert-carrousel-page/upsert-carrousel-page'),
+                            },
+                        ]
                     }
                 ]
             },

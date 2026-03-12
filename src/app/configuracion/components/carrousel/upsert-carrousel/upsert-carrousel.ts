@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   EventEmitter,
   inject,
   input,
@@ -36,6 +37,7 @@ export class UpsertCarrouselComponent {
 
   @Output() save = new EventEmitter<CreateCarouselDto | UpdateCarouselDto>();
   @Output() cancel = new EventEmitter<void>();
+  @Output() liveChange = new EventEmitter<Partial<Carousel>>();
 
   form = computed<FormGroup>(() => {
     const isNuevo = this.nuevo();
@@ -55,6 +57,16 @@ export class UpsertCarrouselComponent {
       activo:        [isNuevo ? true : c.activo],
     });
   });
+
+  constructor() {
+    effect((onCleanup) => {
+      const f = this.form();
+      // Emit initial values after render
+      queueMicrotask(() => this.liveChange.emit(f.getRawValue()));
+      const sub = f.valueChanges.subscribe(() => this.liveChange.emit(f.getRawValue()));
+      onCleanup(() => sub.unsubscribe());
+    });
+  }
 
   get btnText(): string {
     return this.nuevo() ? 'Crear' : 'Actualizar';

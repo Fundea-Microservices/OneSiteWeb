@@ -1,0 +1,92 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/config/carrousel']">Carrusel</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ nuevo() ? 'Nuevo' : 'Editar' }}</li>
+    </ol>
+</nav>
+
+@if (isLoading()) {
+<div class="d-flex justify-content-center align-items-center py-5">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+</div>
+} @else {
+<div class="row g-4">
+
+    <!-- Columna izquierda: Formulario -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">
+                {{ nuevo() ? 'Crear nuevo carrusel' : 'Editar carrusel' }}
+            </div>
+            <div class="card-body overflow-auto">
+                <app-upsert-carrousel
+                    [carousel]="carouselData()"
+                    [nuevo]="nuevo()"
+                    (save)="onSave($event)"
+                    (cancel)="onCancel()"
+                    (liveChange)="onLiveChange($event)" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna derecha: Vista previa -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header fw-semibold">Vista previa</div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
+
+                <p class="text-muted small mb-3">Así se verá en la aplicación</p>
+
+                <!-- Tarjeta de preview -->
+                <div class="cp-card">
+
+                    <!-- Imagen -->
+                    @if (preview().fotoUrl) {
+                    <img [src]="preview().fotoUrl" alt="preview" class="cp-img" />
+                    } @else {
+                    <div class="cp-img-placeholder">
+                        <ion-icon name="image-outline"></ion-icon>
+                        <span>Sin imagen</span>
+                    </div>
+                    }
+
+                    <!-- Contenido -->
+                    <div class="cp-body">
+                        @if (preview().subtitulo) {
+                        <p class="cp-subtitulo">{{ preview().subtitulo }}</p>
+                        }
+
+                        <h3 class="cp-titulo">{{ preview().titulo || 'Título del carrusel' }}</h3>
+
+                        @if (preview().descripcion) {
+                        <p class="cp-descripcion">{{ preview().descripcion }}</p>
+                        }
+
+                        <div class="cp-footer">
+                            @if (preview().textoBoton) {
+                            <button class="cp-btn">{{ preview().textoBoton }}</button>
+                            }
+                            @if (preview().fechaInicio) {
+                            <span class="cp-date">{{ preview().fechaInicio | date:'dd MMM yyyy' }}</span>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Indicador de carousel (dots) -->
+                <div class="cp-dots mt-3">
+                    <span class="cp-dot cp-dot--active"></span>
+                    <span class="cp-dot"></span>
+                    <span class="cp-dot"></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+}

@@ -8,7 +8,7 @@
 <div class="card">
     <div class="card-header">
         Carrusel
-        <button class="btn btn-primary btn-sm float-end" (click)="openModal(true)">
+        <button class="btn btn-primary btn-sm float-end" (click)="goToCreate()">
             <ion-icon name="add-outline"></ion-icon> Crear nuevo
         </button>
     </div>
@@ -94,7 +94,7 @@
                                 }
                             </td>
                             <td class="text-center">
-                                <a class="btn btn-sm btn-success mx-1" (click)="openModal(false, item)" title="Editar">
+                                <a class="btn btn-sm btn-success mx-1" (click)="goToEdit(item)" title="Editar">
                                     <ion-icon name="create-outline"></ion-icon>
                                 </a>
                                 <a class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)" title="Eliminar">
@@ -174,7 +174,7 @@
 
                 <div class="flex gap-2 pt-3 border-t border-gray-200">
                     <a class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                        (click)="openModal(false, item)">
+                        (click)="goToEdit(item)">
                         <ion-icon name="create-outline" class="text-lg"></ion-icon> Editar
                     </a>
                     <a class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
@@ -192,26 +192,6 @@
             }
         </div>
 
-    </div>
-</div>
-
-<!-- Modal Crear / Editar -->
-<div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5">{{ modal().titulo }}</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <app-upsert-carrousel
-                    [carousel]="carouselEdit()"
-                    [nuevo]="nuevo()"
-                    (save)="upsertCarousel($event)"
-                    (cancel)="closeModal()" />
-            </div>
-            <div class="modal-footer"></div>
-        </div>
     </div>
 </div>
 
