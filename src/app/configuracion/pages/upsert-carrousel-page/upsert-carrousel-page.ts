@@ -97,6 +97,6 @@ export default class UpsertCarrouselPage {
 
   resolverFoto(fotoUrl: string | undefined): string {
     if (!fotoUrl || fotoUrl.startsWith('http')) return fotoUrl ?? '';
-    return `${environment.path}v1/config/carousel/imagen?fotoUrl=${encodeURIComponent(fotoUrl)}`;
+    return `${environment.apiPath}/config/carousel/imagen?fotoUrl=${encodeURIComponent(fotoUrl)}`;
   }
 }
