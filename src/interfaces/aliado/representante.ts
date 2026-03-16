@@ -9,6 +9,7 @@ export interface ListarRepresentantesParams {
   nit?: string;
   tipoDocumento?: number;
   activo?: boolean;
+  usuarioId?: string;
 }
 
 /**
@@ -71,6 +72,7 @@ export interface Representante {
   cuentaBT?: number; // Cuenta Bantotal del cliente
   
   usuarioIngreso?: string;
+  usuarioId?: string;
   
   created_at?: Date; // Mapeo de created_at
   updated_at?: Date; // Mapeo de updated_at

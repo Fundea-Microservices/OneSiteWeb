@@ -137,6 +137,7 @@ export class RepresentanteService extends HttpService {
       if (params.tipoDocumento !== undefined) queryParams.tipoDocumento = params.tipoDocumento;
       if (params.nit) queryParams.nit = params.nit;
       if (params.activo !== undefined) queryParams.activo = params.activo;
+      if (params.usuarioId) queryParams.usuarioId = params.usuarioId;
 
       const resp = await firstValueFrom(
         this.get<any>(this.endpoints.representante, queryParams)

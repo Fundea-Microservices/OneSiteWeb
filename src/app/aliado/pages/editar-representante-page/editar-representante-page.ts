@@ -1,5 +1,5 @@
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { UpsertContacto } from '../../components/representante/upsert-contacto/upsert-contacto';
@@ -10,6 +10,7 @@ import { Representante } from '../../../../interfaces/aliado/representante';
 import { UpsertDatosGenerales } from '../../components/representante/upsert-datos-generales/upsert-datos-generales';
 import { ClienteBantotalService } from '../../../../services/api-bantotal/cliente.service';
 import { initFlowbite } from 'flowbite';
+import { AuthService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-editar-representante-page',
@@ -21,10 +22,19 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
 
   private representanteService = inject(RepresentanteService);
   private clienteService = inject(ClienteBantotalService);
+  private authService = inject(AuthService);
   private toastr = inject(ToastrService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  // Solo puede editar si el usuarioId del representante coincide con el del usuario logueado
+  puedeEditar = computed(() => {
+    const rep = this.representante();
+    if (!rep) return false;
+    const usuarioLogueado = this.authService.getUserStorage().userId;
+    return !!usuarioLogueado && rep.usuarioId === usuarioLogueado;
+  });
 
   // Estados
   cargando = signal(false);
@@ -99,6 +109,11 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
     const rep = this.representante();
     if (!rep) {
       this.toastr.error('No hay datos del representante', 'Error');
+      return;
+    }
+
+    if (!this.puedeEditar()) {
+      this.toastr.warning('No tienes permiso para editar este representante', 'Sin permiso');
       return;
     }
 

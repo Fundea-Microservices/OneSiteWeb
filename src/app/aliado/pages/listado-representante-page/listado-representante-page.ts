@@ -6,6 +6,7 @@ import { RepresentanteService } from '../../../../services/aliado/representante.
 import { Representante } from '../../../../interfaces/aliado/representante';
 import { DatePipe } from '@angular/common';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
+import { AuthService } from '../../../../services/auth.service';
 
 export interface IEmpresa {
   empresaId?: string;
@@ -35,7 +36,14 @@ const emptyEmpresa: IEmpresa = {
 })
 export default class ListadoRepresentantePage { 
   private representanteService = inject(RepresentanteService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+
+  private isFirstLoad = true;
+
+  get usuarioId(): string {
+    return this.authService.getUserStorage().userId;
+  }
 
   searchMode: 'nombre' | 'documento' = 'nombre';
   isLoading = signal(false);
@@ -96,13 +104,17 @@ export default class ListadoRepresentantePage {
       // Normalizar número (quita espacios en blanco)
       const numeroDoc = (this.nroDocumento() || '').replace(/\s+/g, '');
 
+      const usuarioId = this.isFirstLoad ? (this.authService.getUserStorage().userId || undefined) : undefined;
+      this.isFirstLoad = false;
+
       if (this.searchMode === 'nombre') {
         // Búsqueda por nombre/apellido
         resultado = await this.representanteService.listarRepresentantes({
           busqueda: this.buscador() || undefined,
           activo: true,
           page: this.pagination().page,
-          limit: this.pagination().pageSize
+          limit: this.pagination().pageSize,
+          usuarioId
         });
       } else {
         // Búsqueda por documento
@@ -113,7 +125,8 @@ export default class ListadoRepresentantePage {
           // Si es NIT (2), envía también el nit normalizado
           nit: this.tipoDocumento() === 2 ? numeroDoc || undefined : undefined,
           page: this.pagination().page,
-          limit: this.pagination().pageSize
+          limit: this.pagination().pageSize,
+          usuarioId
         });
       }
 

@@ -129,11 +129,13 @@
                                         title="Editar representante">
                                         <ion-icon name="create-outline"></ion-icon>
                                     </a>
+                                    @if (item.usuarioId === usuarioId) {
                                     <a class="btn btn-sm btn-primary mx-1"
                                         [routerLink]="['/aliado/empresas-representante', item.representanteId]"
                                         title="Ver empresas">
                                         <ion-icon name="business-outline"></ion-icon>
                                     </a>
+                                    }
                                 </td>
                             </tr>
                             }
@@ -196,12 +198,14 @@
                             <ion-icon name="create-outline" class="text-lg"></ion-icon>
                             Editar
                         </a>
+                        @if (item.usuarioId === usuarioId) {
                         <a class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
                             [routerLink]="['/aliado/empresas-representante', item.representanteId]"
                             title="Ver empresas">
                             <ion-icon name="business-outline" class="text-lg"></ion-icon>
                             Empresas
                         </a>
+                        }
                     </div>
                 </div>
                 }
