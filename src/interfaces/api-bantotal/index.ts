@@ -3,3 +3,4 @@
  */
 export * from './persona';
 export * from './prestamo';
+export * from './sucursales';

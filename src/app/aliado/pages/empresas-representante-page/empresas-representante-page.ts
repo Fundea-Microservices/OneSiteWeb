@@ -19,8 +19,6 @@ import UpsertSolicitudComponent, { SolicitudFormData } from '../../components/up
 import { SeguimientoSolicitudService } from '../../../../services/aliado/seguimiento-solicitud.service';
 import { GeneralidadesService } from '../../../../services/aliado/generalidades.service';
 import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
-import { AgenciaRegionService } from '../../../../services/aliado/agencia-region.service';
-
 
 @Component({
   selector: 'app-empresas-representante-page',
@@ -39,7 +37,6 @@ export default class EmpresasRepresentantePage {
   private solicitudesService = inject(SolicitudesService);
   private seguimientoService = inject(SeguimientoSolicitudService);
   private generalidadesService = inject(GeneralidadesService);
-  private agenciaRegionService = inject(AgenciaRegionService);
   representanteId = signal('');
   representante = signal<Representante | null>(null);
   
@@ -592,23 +589,9 @@ export default class EmpresasRepresentantePage {
     
     if (!solicitud) return undefined;
 
-    // Convertir códigos numéricos del backend a IDs string del frontend
-    let regionId = '';
-    let agenciaId = '';
-
-    if (solicitud.regionId) {
-      // Convertir número de región a formato 'r-001'
-      regionId = `r-${String(solicitud.regionId).padStart(3, '0')}`;
-    }
-
-    if (solicitud.agenciaId) {
-      // Buscar la agencia por su código numérico
-      const agencias = await this.agenciaRegionService.getAgencias();
-      const agencia = agencias.find(a => a.codigo === solicitud.agenciaId);
-      if (agencia) {
-        agenciaId = agencia.agenciaId;
-      }
-    }
+    // Convertir códigos numéricos del backend a strings (valorCore)
+    const regionId = solicitud.regionId ? String(solicitud.regionId) : '';
+    const agenciaId = solicitud.agenciaId ? String(solicitud.agenciaId) : '';
 
     return {
       tipoSolicitudId: solicitud.tipoSolicitudId || '',
@@ -680,37 +663,15 @@ export default class EmpresasRepresentantePage {
           return;
         }
 
-        // Convertir regionId y agenciaId string a códigos numéricos
-        let regionId: number | null = null;
-        let agenciaId: number | null = null;
-
-        // Buscar el código de la región
-        const regionEncontrada = await this.agenciaRegionService.getRegiones().then(regiones => 
-          regiones.find(r => r.regionId === formData.regionId)
-        );
-        
-        // Para región, extraer el número del formato 'r-001' -> 1
-        if (regionEncontrada) {
-          const match = regionEncontrada.regionId.match(/\d+/);
-          regionId = match ? parseInt(match[0], 10) : null;
-        }
-
-        // Buscar el código numérico de la agencia
-        const agenciaEncontrada = await this.agenciaRegionService.getAgencias().then(agencias => 
-          agencias.find(a => a.agenciaId === formData.agenciaId)
-        );
-        
-        if (agenciaEncontrada) {
-          agenciaId = agenciaEncontrada.codigo;
-        }
+        // valorCore ya es el código numérico directamente
+        const regionId: number | null = formData.regionId ? parseInt(formData.regionId, 10) : null;
+        const agenciaId: number | null = formData.agenciaId ? parseInt(formData.agenciaId, 10) : null;
 
         console.log('📝 Editando solicitud:', {
           regionId,
           agenciaId,
           formDataRegion: formData.regionId,
           formDataAgencia: formData.agenciaId,
-          regionEncontrada,
-          agenciaEncontrada
         });
 
         const solicitudData: Partial<Solicitud> = {
@@ -744,26 +705,9 @@ export default class EmpresasRepresentantePage {
             cuentaBancariaId: cuentaBancariaIdDesdeCuenta
           });
 
-          // Convertir regionId y agenciaId string a códigos numéricos
-          let regionId: number | null = null;
-          let agenciaId: number | null = null;
-
-          const regionEncontrada = await this.agenciaRegionService.getRegiones().then(regiones => 
-            regiones.find(r => r.regionId === formData.regionId)
-          );
-          
-          if (regionEncontrada) {
-            const match = regionEncontrada.regionId.match(/\d+/);
-            regionId = match ? parseInt(match[0], 10) : null;
-          }
-
-          const agenciaEncontrada = await this.agenciaRegionService.getAgencias().then(agencias => 
-            agencias.find(a => a.agenciaId === formData.agenciaId)
-          );
-          
-          if (agenciaEncontrada) {
-            agenciaId = agenciaEncontrada.codigo;
-          }
+          // valorCore ya es el código numérico directamente
+          const regionId: number | null = formData.regionId ? parseInt(formData.regionId, 10) : null;
+          const agenciaId: number | null = formData.agenciaId ? parseInt(formData.agenciaId, 10) : null;
 
           const solicitudData: Partial<Solicitud> = {
             representanteId,
@@ -793,37 +737,13 @@ export default class EmpresasRepresentantePage {
           // Creación normal desde empresa
           const cuentaBancaria = this.getCuentaBancariaEmpresa(empresaId);
 
-          // Convertir regionId y agenciaId string a códigos numéricos
-          let regionId: number | null = null;
-          let agenciaId: number | null = null;
-
-          // Buscar el código de la región
-          const regionEncontrada = await this.agenciaRegionService.getRegiones().then(regiones => 
-            regiones.find(r => r.regionId === formData.regionId)
-          );
-          
-          // Para región, extraer el número del formato 'r-001' -> 1
-          if (regionEncontrada) {
-            const match = regionEncontrada.regionId.match(/\d+/);
-            regionId = match ? parseInt(match[0], 10) : null;
-          }
-
-          // Buscar el código numérico de la agencia
-          const agenciaEncontrada = await this.agenciaRegionService.getAgencias().then(agencias => 
-            agencias.find(a => a.agenciaId === formData.agenciaId)
-          );
-          
-          if (agenciaEncontrada) {
-            agenciaId = agenciaEncontrada.codigo;
-          }
+          // valorCore ya es el código numérico directamente
+          const regionId: number | null = formData.regionId ? parseInt(formData.regionId, 10) : null;
+          const agenciaId: number | null = formData.agenciaId ? parseInt(formData.agenciaId, 10) : null;
 
           console.log('✨ Creando nueva solicitud desde empresa:', {
             regionId,
             agenciaId,
-            formDataRegion: formData.regionId,
-            formDataAgencia: formData.agenciaId,
-            regionEncontrada,
-            agenciaEncontrada
           });
 
           const solicitudData: Partial<Solicitud> = {

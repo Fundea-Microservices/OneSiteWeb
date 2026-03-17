@@ -4,3 +4,4 @@
 export * from './persona.service';
 export * from './prestamo.service';
 export * from './cliente.service';
+export * from './sucursales.service';

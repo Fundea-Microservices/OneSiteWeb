@@ -2,12 +2,22 @@ import { Component, OnInit, inject, signal, input, Output, EventEmitter, ChangeD
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TipoSolicitud, EstadoSolicitud, TipoAfiliacion } from '../../../../interfaces/aliado/generalidades';
-import { Agencia, Region } from '../../../../services/aliado/agencia-region.service';
 import { GeneralidadesService } from '../../../../services/aliado/generalidades.service';
-import { AgenciaRegionService } from '../../../../services/aliado/agencia-region.service';
+import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
 import { Representante } from '../../../../interfaces/aliado/representante';
 import { IEmpresaRepresentante } from '../../../../interfaces/aliado/empresa-representante';
 import { ICuentaBancaria } from '../../../../interfaces/aliado/cuenta-bancaria';
+
+export interface Region {
+  regionId: string; // valorCore
+  nombre: string;
+}
+
+export interface Agencia {
+  agenciaId: string; // valorCore
+  nombre: string;
+  regionId: string;  // padreValorCore
+}
 
 export interface SolicitudFormData {
   tipoSolicitudId: string;
@@ -75,7 +85,7 @@ export interface CartaDatos {
 })
 export default class UpsertSolicitudComponent implements OnInit {
   private generalidadesService = inject(GeneralidadesService);
-  private agenciaRegionService = inject(AgenciaRegionService);
+  private catalogosService = inject(CatalogosBantotalService);
 
   // Inputs usando input signals de Angular
   nuevo = input<boolean>(true);
@@ -144,19 +154,38 @@ export default class UpsertSolicitudComponent implements OnInit {
   private async loadData(): Promise<void> {
     this.isLoading.set(true);
     try {
-      const [tipos, estados, afiliaciones, regiones, agencias] = await Promise.all([
+      const [tipos, estados, afiliaciones] = await Promise.all([
         this.generalidadesService.getAllTipoSolicitud({ all: true }),
         this.generalidadesService.getAllEstadoSolicitud({ all: true }),
         this.generalidadesService.getAllTipoAfiliacion({ all: true }),
-        this.agenciaRegionService.getRegiones(),
-        this.agenciaRegionService.getAgencias(),
       ]);
+
+      // Cargar regiones y agencias desde catálogos (grupo=region, hijos=agencias)
+      const regionesResp = await new Promise<{regiones: Region[], agencias: Agencia[]}>((resolve) => {
+        this.catalogosService.listarCatalogos({ grupo: 'region', all: true }).subscribe({
+          next: (result) => {
+            const catalogos: any[] = (result as any)?.data?.data?.catalogos
+              ?? (result as any)?.data?.catalogos
+              ?? [];
+            const regiones: Region[] = [];
+            const agencias: Agencia[] = [];
+            for (const r of catalogos) {
+              regiones.push({ regionId: r.valorCore, nombre: r.nombre });
+              for (const a of (r.hijos ?? [])) {
+                agencias.push({ agenciaId: a.valorCore, nombre: a.nombre, regionId: a.padreValorCore });
+              }
+            }
+            resolve({ regiones, agencias });
+          },
+          error: () => resolve({ regiones: [], agencias: [] }),
+        });
+      });
 
       this.tiposSolicitud.set((tipos?.data as TipoSolicitud[]) ?? []);
       this.estadosSolicitud.set((estados?.data as EstadoSolicitud[]) ?? []);
       this.tiposAfiliacion.set((afiliaciones?.data as TipoAfiliacion[]) ?? []);
-      this.regiones.set(regiones ?? []);
-      this.agencias.set(agencias ?? []);
+      this.regiones.set(regionesResp.regiones);
+      this.agencias.set(regionesResp.agencias);
 
       // Si es nuevo, intentar seleccionar "Espera" después de cargar los estados
       if (this.nuevo()) {
