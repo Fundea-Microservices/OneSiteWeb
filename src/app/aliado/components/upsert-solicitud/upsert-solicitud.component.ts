@@ -29,27 +29,20 @@ export interface SolicitudFormData {
   archivo?: File;
 }
 
-export interface CartaDatos {
-  // Datos Generales
+interface CartaDatos {
   municipio: string;
   departamento: string;
   fechaDia: string;
   fechaMes: string;
   fechaAnio: string;
-
-  // Representante FUNDEA (Parte I)
   fundeaNombreRep: string;
   fundeaDpi: string;
-  fundeaCalidad: string; // Ej: "Mandatario Judicial..."
-
-  // Empresa Afiliada (Parte II)
+  fundeaCalidad: string;
   empresaNombre: string;
   afiliadoNombreRep: string;
   afiliadoDpi: string;
-  afiliadoCalidad: string; // Ej: "Propietario", "Gerente General"
-
-  // Cláusula Sexta
-  nombreAgencia: string; // Para "Jefe(a) de Agencia ____"
+  afiliadoCalidad: string;
+  nombreAgencia: string;
 }
 
 @Component({
@@ -123,7 +116,6 @@ export default class UpsertSolicitudComponent implements OnInit {
   estadoDeshabilitado = signal(false);
 
   isLoading = signal(false);
-  documentoGenerado = signal(false);
 
   async ngOnInit(): Promise<void> {
     await this.loadData();
@@ -253,10 +245,6 @@ export default class UpsertSolicitudComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (!this.documentoGenerado()) {
-      alert('Debe generar el documento antes de crear la solicitud.');
-      return;
-    }
     if (!this.isFormValid()) {
       alert('Por favor completa todos los campos requeridos');
       return;
@@ -342,338 +330,97 @@ export default class UpsertSolicitudComponent implements OnInit {
     }
   }
 
-  // Función principal que llamas desde tu botón
   generarDocumento(): void {
-    // 1. Preparar los datos (Aquí puedes sacarlos de tu formulario reactivo o BD)
-    // Si algún dato no existe, puedes pasar null o string vacío ''
+    const rep = this.representante();
+    const emp = this.empresa();
+
+    const nombres = [rep?.primerNombre, rep?.segundoNombre, rep?.tercerNombre].filter(Boolean).join(' ');
+    const apellidos = [rep?.primerApellido, rep?.segundoApellido].filter(Boolean).join(' ');
+    const nombreCompleto = `${nombres} ${apellidos}`.trim();
+
     const datos: CartaDatos = {
-      municipio: 'Quetzaltenango', // Ejemplo
-      departamento: 'Quetzaltenango',
+      municipio: '',
+      departamento: '',
       fechaDia: new Date().getDate().toString(),
       fechaMes: new Date().toLocaleDateString('es-ES', { month: 'long' }),
       fechaAnio: new Date().getFullYear().toString(),
-      
-      fundeaNombreRep: this.getNombreCompleto(), // Variable asignable
-      fundeaDpi: this.representante()?.documento || '',
+      fundeaNombreRep: nombreCompleto,
+      fundeaDpi: rep?.documento || '',
       fundeaCalidad: 'Representante Legal',
-
-      empresaNombre: this.empresa()?.nombreEmpresa || '', 
-      afiliadoNombreRep: this.representante()?.primerNombre + ' ' + this.representante()?.primerApellido || '',
-      afiliadoDpi: this.representante()?.documento || '',
+      empresaNombre: emp?.nombreEmpresa || '',
+      afiliadoNombreRep: nombreCompleto,
+      afiliadoDpi: rep?.documento || '',
       afiliadoCalidad: 'Propietario',
-
-      nombreAgencia: 'Central'
+      nombreAgencia: this.getAgenciaNombre(this.selectedAgencia()) || 'Central',
     };
 
     const htmlContent = this.crearHTMLDocumento(datos);
-
-    // Proceso de impresión (igual al tuyo, funciona bien)
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     document.body.appendChild(iframe);
-
     const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
     if (iframeDoc) {
       iframeDoc.write(htmlContent);
       iframeDoc.close();
-
-      setTimeout(() => {
-        iframe.contentWindow?.print();
-        // Limpieza opcional: document.body.removeChild(iframe); 
-        this.documentoGenerado.set(true);
-      }, 500); // Aumenté un poco el tiempo para asegurar carga de estilos
+      setTimeout(() => iframe.contentWindow?.print(), 500);
     }
   }
 
   private crearHTMLDocumento(d: CartaDatos): string {
-    // Helper para renderizar texto o línea si está vacío
     const val = (texto: string) => texto ? `<b>${texto}</b>` : '_________________________';
-
-    return `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <title>Carta de Entendimiento FUNDEA</title>
-        <style>
-          @page {
-            size: letter;
-            margin: 1.5cm 2cm; /* Márgenes ajustados al estándar de documentos */
-          }
-          
-          body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 10pt; /* Tamaño más similar a documentos legales */
-            line-height: 1.4;
-            color: #000;
-            margin: 0;
-            padding: 0;
-            -webkit-print-color-adjust: exact; /* CRUCIAL: Imprime fondos de color */
-            print-color-adjust: exact;
-          }
-
-          /* Encabezado Azul */
-          .header {
-            background-color: #005eb8; /* Azul Fundea aproximado */
-            color: white;
-            padding: 15px 40px;
-            margin: -1.5cm -2cm 30px -2cm; /* Se expande fuera de los márgenes de página */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-
-          .logo-text {
-            font-family: Arial, sans-serif;
-            font-weight: 900;
-            font-size: 28pt;
-            letter-spacing: -1px;
-          }
-
-          .slogan {
-            font-style: italic;
-            font-size: 9pt;
-            margin-top: -5px;
-          }
-
-          /* Títulos */
-          .doc-title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 12pt;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-          }
-
-          /* Texto General */
-          p {
-            margin-bottom: 12px;
-            text-align: justify;
-          }
-
-          /* Cláusulas */
-          .clausula-title {
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-top: 15px;
-            margin-bottom: 5px;
-            display: block;
-          }
-
-          ul, ol {
-            margin-top: 5px;
-            margin-bottom: 10px;
-            padding-left: 30px;
-          }
-          
-          li {
-            margin-bottom: 5px;
-            text-align: justify;
-          }
-
-          /* Tabla de Comisiones simulada */
-          .tabla-comisiones {
-            margin-left: 20px;
-            margin-bottom: 10px;
-            font-weight: bold;
-          }
-
-          /* Firmas */
-          .firmas-container {
-            margin-top: 50px;
-            display: flex;
-            justify-content: space-between;
-            page-break-inside: avoid; /* Evita que las firmas se corten */
-          }
-
-          .firma-box {
-            width: 45%;
-            text-align: left;
-          }
-
-          .linea-firma {
-            border-top: 1px solid black;
-            margin-top: 40px;
-            margin-bottom: 5px;
-            width: 100%;
-            display: block;
-          }
-
-          .info-firma {
-            font-size: 9pt;
-            line-height: 1.3;
-          }
-
-          /* Footer */
-          .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 8pt;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
-            background: white;
-          }
-
-          /* Utilidad para saltos de página */
-          .page-break { page-break-before: always; }
-          
-          /* Ocultar footer visual en pantalla, mostrar en impresión si se desea */
-          @media print {
-            .header {
-              -webkit-print-color-adjust: exact;
-            }
-          }
-        </style>
-      </head>
-      <body>
-
-        <div class="header">
-          <div>
-            <div class="logo-text">FUNDEA</div>
-          </div>
-        </div>
-
-        <div class="doc-title">
-          CARTA DE ENTENDIMIENTO<br>
-          RED DE REFERIDOS FUNDEA
-        </div>
-
-        <p>
-          En el municipio de ${val(d.municipio)}, departamento de ${val(d.departamento)}, 
-          el día ${val(d.fechaDia)} de ${val(d.fechaMes)} de ${val(d.fechaAnio)}, comparecen:
-        </p>
-
-        <p>
-          <strong>I. FUNDACIÓN PARA EL DESARROLLO EMPRESARIAL Y AGRÍCOLA -FUNDEA-</strong>, 
-          entidad no lucrativa debidamente constituida conforme las leyes de la República de Guatemala, 
-          representada en este acto por ${val(d.fundeaNombreRep)}, 
-          quien se identifica con DPI No. ${val(d.fundeaDpi)}, 
-          en su calidad de ${val(d.fundeaCalidad)} (acreditar representación legal). [cite: 8, 9]
-        </p>
-
-        <p>
-          <strong>II. ${val(d.empresaNombre)}</strong>, en adelante "LA EMPRESA AFILIADA", 
-          representada por ${val(d.afiliadoNombreRep)}, 
-          quien se identifica con DPI No. ${val(d.afiliadoDpi)}, 
-          en su calidad de ${val(d.afiliadoCalidad)} (acreditar representación legal). [cite: 10, 11]
-        </p>
-
-        <div class="clausula-title">CLÁUSULA PRIMERA - OBJETO</div>
-        <p>
-          El presente documento tiene por finalidad establecer los términos de cooperación mediante los cuales 
-          LA EMPRESA AFILIADA referirá a FUNDEA clientes potenciales interesados en la obtención de crédito, 
-          conforme políticas internas y normativa aplicable. 
-        </p>
-
-        <div class="clausula-title">CLÁUSULA SEGUNDA - RESPONSABILIDADES DE LA EMPRESA AFILIADA</div>
-        <ol>
-          <li>Enviar información de clientes potenciales mediante la aplicación autorizada.</li>
-          <li>Completar toda la información requerida, bajo principio de veracidad.</li>
-          <li>Obtener consentimiento informado del cliente para compartir datos.</li>
-          <li>Capacitar a sus colaboradores según lineamientos de FUNDEA.</li>
-          <li>Abstenerse de prometer aprobaciones o condiciones crediticias.</li>
-          <li>Cumplir legislación de protección de datos. [cite: 20-26]</li>
-        </ol>
-
-        <div class="clausula-title">CLÁUSULA TERCERA - RESPONSABILIDADES DE FUNDEA</div>
-        <ol>
-          <li>Recibir y evaluar solicitudes.</li>
-          <li>Procesar información conforme normativa vigente.</li>
-          <li>Pagar comisiones en los plazos establecidos.</li>
-          <li>Proporcionar capacitación necesaria. [cite: 27-31]</li>
-        </ol>
-        
-        <p>
-          <strong>De la observación especial:</strong> Con los clientes referidos, FUNDEA, a través de su departamento específico o
-          personas designadas, realizarán el estudio crediticio para determinar la aprobación o no de la solicitud de
-          crédito. FUNDEA en ningún caso garantizará la aprobación del crédito que se realice en la forma y modo de
-          esta carta de entendimiento. [cite: 36, 37]
-        </p>
-
-        <div class="clausula-title">CLÁUSULA CUARTA - TABLA DE COMISIONES</div>
-        <p>
-          Cuando LA EMPRESA AFILIADA, proporcione las cantidades de clientes que se detallan a continuación,
-          FUNDEA realizará el pago de las siguientes comisiones de conformidad con el número de desembolsos que
-          se realicen: [cite: 38, 39]
-        </p>
-
-        <div class="tabla-comisiones">
-          <div>• 1-4 desembolsos/mes: Q100 c/u</div>
-          <div>• 5-9 desembolsos/mes: Q150 c/u</div>
-          <div>• 10 desembolsos/mes o más: Q200 c/u [cite: 40-42]</div>
-        </div>
-
-        <p><strong>Condiciones para devengar comisión:</strong></p>
-        <p style="margin-left: 20px;">
-          a) Cliente nuevo.<br>
-          b) Formulario completo.<br>
-          c) Crédito aprobado y desembolsado posterior a la fecha de referencia. [cite: 43-46]
-        </p>
-
-        <div class="clausula-title">CLÁUSULA QUINTA - CONFIDENCIALIDAD Y PROTECCIÓN DE DATOS</div>
-        <p>
-          Ambas partes deberán mantener estricta confidencialidad y cumplir la normativa aplicable, notificando
-          cualquier filtración inmediatamente. [cite: 47, 48]
-        </p>
-
-        <div class="clausula-title">CLÁUSULA SEXTA - SUPERVISIÓN Y COMUNICACIÓN</div>
-        <p>
-          Coordinación a cargo del Jefe(a) de Agencia ${val(d.nombreAgencia)} de FUNDEA y el representante designado de
-          LA EMPRESA AFILIADA. [cite: 49-52]
-        </p>
-
-        <div class="clausula-title">CLÁUSULA SÉPTIMA - LIMITACIÓN DE RESPONSABILIDAD</div>
-        <p>
-          FUNDEA es la única entidad responsable del análisis y aprobación del crédito. No se generan relaciones
-          laborales ni obligaciones adicionales. [cite: 53, 54]
-        </p>
-
-        <div class="clausula-title">CLÁUSULA OCTAVA - TERMINACIÓN</div>
-        <p>
-          FUNDEA podrá revocar la afiliación en cualquier momento mediante notificación escrita. Cualquier
-          modificación deberá hacerse mediante intercambio de cartas. [cite: 59, 60]
-        </p>
-
-        <div class="clausula-title">CLÁUSULA NOVENA - VIGENCIA</div>
-        <p>
-          Esta carta de entendimiento entra en vigencia a partir de su firma y por tiempo indefinido. [cite: 61, 62]
-        </p>
-
-        <div style="text-align: center; font-weight: bold; margin-top: 30px;">FIRMAS</div>
-        
-        <div class="firmas-container">
-          <div class="firma-box">
-            <div style="font-weight: bold; margin-bottom: 40px;">Por FUNDEA:</div>
-            <span class="linea-firma"></span>
-            <div class="info-firma">
-              Nombre: ${val(d.fundeaNombreRep)}<br>
-              Cargo: ${val(d.fundeaCalidad)}<br>
-              DPI: ${val(d.fundeaDpi)}
-            </div>
-          </div>
-
-          <div class="firma-box">
-            <div style="font-weight: bold; margin-bottom: 40px;">Por la Empresa Afiliada:</div>
-            <span class="linea-firma"></span>
-            <div class="info-firma">
-              Nombre: ${val(d.afiliadoNombreRep)}<br>
-              Cargo: ${val(d.afiliadoCalidad)}<br>
-              DPI: ${val(d.afiliadoDpi)}
-            </div>
-          </div>
-        </div>
-        
-        <div class="footer">
-          Oficinas Centrales: 15 avenida 2-09 zona 13, Ciudad de Guatemala. PBX: 2444-2222<br>
-          www.fundea.org.gt
-        </div>
-        
-      </body>
-      </html>
-    `;
+    return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Carta de Entendimiento FUNDEA</title>
+<style>
+@page{size:letter;margin:1.5cm 2cm}
+body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;line-height:1.4;color:#000;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.header{background-color:#005eb8;color:white;padding:15px 40px;margin:-1.5cm -2cm 30px -2cm;display:flex;justify-content:space-between;align-items:center}
+.logo-text{font-family:Arial,sans-serif;font-weight:900;font-size:28pt;letter-spacing:-1px}
+.doc-title{text-align:center;font-weight:bold;font-size:12pt;margin-bottom:20px;text-transform:uppercase}
+p{margin-bottom:12px;text-align:justify}
+.clausula-title{font-weight:bold;text-transform:uppercase;margin-top:15px;margin-bottom:5px;display:block}
+ul,ol{margin-top:5px;margin-bottom:10px;padding-left:30px}
+li{margin-bottom:5px;text-align:justify}
+.tabla-comisiones{margin-left:20px;margin-bottom:10px;font-weight:bold}
+.firmas-container{margin-top:50px;display:flex;justify-content:space-between;page-break-inside:avoid}
+.firma-box{width:45%;text-align:left}
+.linea-firma{border-top:1px solid black;margin-top:40px;margin-bottom:5px;width:100%;display:block}
+.info-firma{font-size:9pt;line-height:1.3}
+.footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:8pt;color:#666;border-top:1px solid #ccc;padding-top:5px;background:white}
+</style></head><body>
+<div class="header"><div><div class="logo-text">FUNDEA</div></div></div>
+<div class="doc-title">CARTA DE ENTENDIMIENTO<br>RED DE REFERIDOS FUNDEA</div>
+<p>En el municipio de ${val(d.municipio)}, departamento de ${val(d.departamento)}, el día ${val(d.fechaDia)} de ${val(d.fechaMes)} de ${val(d.fechaAnio)}, comparecen:</p>
+<p><strong>I. FUNDACIÓN PARA EL DESARROLLO EMPRESARIAL Y AGRÍCOLA -FUNDEA-</strong>, entidad no lucrativa debidamente constituida conforme las leyes de la República de Guatemala, representada en este acto por ${val(d.fundeaNombreRep)}, quien se identifica con DPI No. ${val(d.fundeaDpi)}, en su calidad de ${val(d.fundeaCalidad)} (acreditar representación legal).</p>
+<p><strong>II. ${val(d.empresaNombre)}</strong>, en adelante "LA EMPRESA AFILIADA", representada por ${val(d.afiliadoNombreRep)}, quien se identifica con DPI No. ${val(d.afiliadoDpi)}, en su calidad de ${val(d.afiliadoCalidad)} (acreditar representación legal).</p>
+<div class="clausula-title">CLÁUSULA PRIMERA - OBJETO</div>
+<p>El presente documento tiene por finalidad establecer los términos de cooperación mediante los cuales LA EMPRESA AFILIADA referirá a FUNDEA clientes potenciales interesados en la obtención de crédito, conforme políticas internas y normativa aplicable.</p>
+<div class="clausula-title">CLÁUSULA SEGUNDA - RESPONSABILIDADES DE LA EMPRESA AFILIADA</div>
+<ol><li>Enviar información de clientes potenciales mediante la aplicación autorizada.</li><li>Completar toda la información requerida, bajo principio de veracidad.</li><li>Obtener consentimiento informado del cliente para compartir datos.</li><li>Capacitar a sus colaboradores según lineamientos de FUNDEA.</li><li>Abstenerse de prometer aprobaciones o condiciones crediticias.</li><li>Cumplir legislación de protección de datos.</li></ol>
+<div class="clausula-title">CLÁUSULA TERCERA - RESPONSABILIDADES DE FUNDEA</div>
+<ol><li>Recibir y evaluar solicitudes.</li><li>Procesar información conforme normativa vigente.</li><li>Pagar comisiones en los plazos establecidos.</li><li>Proporcionar capacitación necesaria.</li></ol>
+<p><strong>De la observación especial:</strong> Con los clientes referidos, FUNDEA realizará el estudio crediticio para determinar la aprobación o no de la solicitud de crédito. FUNDEA en ningún caso garantizará la aprobación del crédito.</p>
+<div class="clausula-title">CLÁUSULA CUARTA - TABLA DE COMISIONES</div>
+<p>Cuando LA EMPRESA AFILIADA proporcione las cantidades de clientes que se detallan a continuación, FUNDEA realizará el pago de las siguientes comisiones de conformidad con el número de desembolsos que se realicen:</p>
+<div class="tabla-comisiones"><div>• 1-4 desembolsos/mes: Q100 c/u</div><div>• 5-9 desembolsos/mes: Q150 c/u</div><div>• 10 desembolsos/mes o más: Q200 c/u</div></div>
+<p><strong>Condiciones para devengar comisión:</strong></p>
+<p style="margin-left:20px">a) Cliente nuevo.<br>b) Formulario completo.<br>c) Crédito aprobado y desembolsado posterior a la fecha de referencia.</p>
+<div class="clausula-title">CLÁUSULA QUINTA - CONFIDENCIALIDAD Y PROTECCIÓN DE DATOS</div>
+<p>Ambas partes deberán mantener estricta confidencialidad y cumplir la normativa aplicable, notificando cualquier filtración inmediatamente.</p>
+<div class="clausula-title">CLÁUSULA SEXTA - SUPERVISIÓN Y COMUNICACIÓN</div>
+<p>Coordinación a cargo del Jefe(a) de Agencia ${val(d.nombreAgencia)} de FUNDEA y el representante designado de LA EMPRESA AFILIADA.</p>
+<div class="clausula-title">CLÁUSULA SÉPTIMA - LIMITACIÓN DE RESPONSABILIDAD</div>
+<p>FUNDEA es la única entidad responsable del análisis y aprobación del crédito. No se generan relaciones laborales ni obligaciones adicionales.</p>
+<div class="clausula-title">CLÁUSULA OCTAVA - TERMINACIÓN</div>
+<p>FUNDEA podrá revocar la afiliación en cualquier momento mediante notificación escrita. Cualquier modificación deberá hacerse mediante intercambio de cartas.</p>
+<div class="clausula-title">CLÁUSULA NOVENA - VIGENCIA</div>
+<p>Esta carta de entendimiento entra en vigencia a partir de su firma y por tiempo indefinido.</p>
+<div style="text-align:center;font-weight:bold;margin-top:30px">FIRMAS</div>
+<div class="firmas-container">
+  <div class="firma-box"><div style="font-weight:bold;margin-bottom:40px">Por FUNDEA:</div><span class="linea-firma"></span><div class="info-firma">Nombre: ${val(d.fundeaNombreRep)}<br>Cargo: ${val(d.fundeaCalidad)}<br>DPI: ${val(d.fundeaDpi)}</div></div>
+  <div class="firma-box"><div style="font-weight:bold;margin-bottom:40px">Por la Empresa Afiliada:</div><span class="linea-firma"></span><div class="info-firma">Nombre: ${val(d.afiliadoNombreRep)}<br>Cargo: ${val(d.afiliadoCalidad)}<br>DPI: ${val(d.afiliadoDpi)}</div></div>
+</div>
+<div class="footer">Oficinas Centrales: 15 avenida 2-09 zona 13, Ciudad de Guatemala. PBX: 2444-2222<br>www.fundea.org.gt</div>
+</body></html>`;
   }
+
 }

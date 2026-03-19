@@ -141,6 +141,14 @@
                                         <ion-icon name="trash-outline" class="text-lg"></ion-icon>
                                         <span>Eliminar</span>
                                     </button>
+                                    @if (obtenerCuentasEmpresa(empresa.empresaId).length > 0) {
+                                    <button type="button" (click)="generarCartaEmpresa(empresa.empresaId)"
+                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 rounded-md transition-colors duration-200 shadow-sm text-sm font-medium bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white"
+                                        title="Generar carta de entendimiento">
+                                        <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
+                                        <span>Carta</span>
+                                    </button>
+                                    }
                                 </div>
 
                                 <!-- Layout para desktop -->
@@ -221,6 +229,13 @@
                                             title="Eliminar empresa">
                                             <ion-icon name="trash-outline" class="text-xl"></ion-icon>
                                         </button>
+                                        @if (obtenerCuentasEmpresa(empresa.empresaId).length > 0) {
+                                        <button type="button" (click)="generarCartaEmpresa(empresa.empresaId)"
+                                            class="flex items-center justify-center w-10 h-10 rounded-md transition-colors duration-200 shadow-sm bg-gray-500 hover:bg-gray-600 text-white"
+                                            title="Generar carta de entendimiento">
+                                            <ion-icon name="document-text-outline" class="text-xl"></ion-icon>
+                                        </button>
+                                        }
                                     </div>
                                 </div>
 
@@ -228,8 +243,16 @@
                                 <div class="mt-4 pt-4 border-t border-gray-200">
                                     <h6 class="text-base font-semibold mb-3 text-gray-800">Solicitud</h6>
                                     @if (!getSolicitudPorEmpresa(empresa.empresaId)) {
+                                    @if (!cartaGeneradaParaEmpresa(empresa.empresaId)) {
+                                    <div class="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md mb-2">
+                                        <ion-icon name="information-circle-outline" class="text-yellow-600 text-xl"></ion-icon>
+                                        <span class="text-sm text-yellow-800">Debe generar la carta de entendimiento antes de crear la solicitud. Use el botón <strong>Carta</strong> en los controles de esta empresa.</span>
+                                    </div>
+                                    }
                                     <button type="button" (click)="crearNuevaSolicitud(empresa.empresaId, true)"
-                                        class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors duration-200 shadow-sm font-medium">
+                                        [disabled]="!cartaGeneradaParaEmpresa(empresa.empresaId)"
+                                        class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors duration-200 shadow-sm font-medium"
+                                        [ngClass]="cartaGeneradaParaEmpresa(empresa.empresaId) ? 'bg-purple-500 hover:bg-purple-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'">
                                         <ion-icon name="document-outline" class="text-xl"></ion-icon>
                                         <span>Crear Nueva Solicitud</span>
                                     </button>
@@ -371,6 +394,11 @@
                                                                 <ion-icon name="add-outline"></ion-icon>
                                                             </button>
                                                             }
+                                                            <button type="button"
+                                                                (click)="generarCartaEmpresa(empresa.empresaId)"
+                                                                class="btn btn-sm btn-secondary" title="Generar carta de entendimiento">
+                                                                <ion-icon name="document-text-outline"></ion-icon>
+                                                            </button>
                                                             <!-- <div class="form-check form-switch ms-2">
                                                                         <input 
                                                                             class="form-check-input" 
@@ -418,6 +446,11 @@
                                                             <ion-icon name="create-outline"></ion-icon>
                                                         </button>
                                                         }
+                                                        <button type="button"
+                                                            (click)="generarCartaEmpresa(empresa.empresaId)"
+                                                            class="btn btn-sm btn-secondary" title="Generar carta de entendimiento">
+                                                            <ion-icon name="document-text-outline"></ion-icon>
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 <div>
