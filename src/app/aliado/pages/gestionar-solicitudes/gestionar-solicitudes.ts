@@ -133,7 +133,7 @@ onRegionChange(regionId: string | null): void {
 
 		if (id) {
 			this.agenciasFilterradas.set(
-				this.agencias().filter(a => a.regionId.toString() === id)
+				this.agencias().filter(a => a.regionId != null && a.regionId.toString() === id)
 			);
 		} else {
 			this.agenciasFilterradas.set([]);
@@ -201,7 +201,7 @@ onRegionChange(regionId: string | null): void {
 
 			if (resultado?.data && Array.isArray(resultado.data)) {
 				this.solicitudesList.set(resultado.data as Solicitud[]);
-				console.log(`✅ ${resultado.data.length} solicitud(es) encontrada(s)`);
+				console.log(`${resultado.data.length} solicitud(es) encontrada(s)`);
 				
 				// Actualizar metadata de paginación si existe
 				if (resultado.metadata) {

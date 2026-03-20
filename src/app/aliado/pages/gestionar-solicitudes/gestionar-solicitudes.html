@@ -125,6 +125,7 @@
                             <!-- <th class="text-center" scope="col">Agencia</th> -->
                             <th class="text-center" scope="col">Representante</th>
                             <th class="text-center" scope="col">Documento</th>
+                            <th class="text-center" scope="col">Agencia</th>
                             <th class="text-center" scope="col">Tipo Solicitud</th>
                             <th class="text-center" scope="col">Tipo Afiliación</th>
                             <th class="text-center" scope="col">Estado</th>
@@ -161,6 +162,7 @@
                                 }
                             </td>
                             <td>{{ item.representante?.documento || 'N/A' }}</td>
+                            <td>{{ obtenerNombreAgencia(item.agenciaId) }}</td>
                             <td>{{ item.tipoSolicitud?.nombre || 'N/A' }}</td>
                             <td>{{ item.tipoAfiliacion?.nombre || 'N/A' }}</td>
                             <td>
