@@ -641,6 +641,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       telefonoFijo: input?.telefonoFijo ? String(input.telefonoFijo) : undefined,
       telefonoCelular: input?.telefonoCelular ? String(input.telefonoCelular) : undefined,
       correoElectronico: correo,
+      correoNotificaciones: input?.correoNotificaciones ? String(input.correoNotificaciones).trim() : undefined,
       asesorId: typeof input?.asesorId === 'number' ? input.asesorId : undefined,
       paisDocumento: Number(input?.paisDocumento ?? 320),
       tipoDocumento: Number(input?.tipoDocumento ?? 1),

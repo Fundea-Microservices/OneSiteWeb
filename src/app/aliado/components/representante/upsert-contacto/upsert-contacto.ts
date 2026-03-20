@@ -30,6 +30,7 @@ export class UpsertContacto implements OnInit {
   telefonoCelular = signal<string>('');
   telefonoFijo = signal<string>('');
   correoElectronico = signal<string>('');
+  correoNotificaciones = signal<string>('');
   direccionCompleta = signal<string>('');
 
   // Input de datos extraídos
@@ -68,6 +69,7 @@ export class UpsertContacto implements OnInit {
         this.telefonoCelular.set(rep.telefonoCelular?.toString() || '');
         this.telefonoFijo.set(rep.telefonoFijo?.toString() || '');
         this.correoElectronico.set(rep.correoElectronico || '');
+        this.correoNotificaciones.set(rep.correoNotificaciones || '');
         this.direccionCompleta.set(rep.direccion || '');
         this.selectedPaisCode.set(rep.paisDomicilio?.toString() || '320');
         this.selectedDepartamentoCode.set(rep.departamentoDomicilio?.toString() || '1');
@@ -85,6 +87,7 @@ export class UpsertContacto implements OnInit {
             telefonoCelular: this.telefonoCelular(),
             telefonoFijo: this.telefonoFijo(),
             correoElectronico: this.correoElectronico(),
+            correoNotificaciones: this.correoNotificaciones(),
             direccion: this.direccionCompleta(),
             paisDomicilio: Number(this.selectedPaisCode()),
             departamentoDomicilio: Number(this.selectedDepartamentoCode()),

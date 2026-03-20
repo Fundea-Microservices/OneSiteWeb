@@ -23,6 +23,7 @@ export interface Representante {
   telefonoFijo?: string;   // String para evitar desbordamiento de int
   telefonoCelular?: string;
   correoElectronico: string;
+  correoNotificaciones?: string;
   asesorId?: number;
   paisDocumento: number;
   tipoDocumento: number;
