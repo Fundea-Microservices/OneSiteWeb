@@ -11,7 +11,7 @@ import { ITrama, TramaResponse, TramasResponse } from '../../interfaces/emanager
 export class TramaService extends HttpService {
 
   private readonly endpoints = {
-    trama: 'dev/emanager/gestion/trama',
+    trama: '/dev/emanager/gestion/trama',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
