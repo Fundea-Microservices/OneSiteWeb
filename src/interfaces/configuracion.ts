@@ -35,3 +35,90 @@ export interface ConfiguracionByKeyResponse {
     message:    string;
     data:       IConfiguracion;
 }
+
+export interface FormEncabezado {
+    formId?:         string;
+    nombre:          string;
+    descripcion:     string | null;
+    activo:          boolean;
+    created_at?:     Date;
+    updated_at?:     Date;
+    deleted_at?:     Date | null;
+    totalSecciones?: number;
+    totalPreguntas?: number;
+}
+
+export interface FormEncabezadoResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       FormEncabezado[];
+    metadata:   Metadata;
+}
+
+export interface FormEncabezadoByIdResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       FormEncabezado;
+}
+
+export type TipoPregunta = 'TEXT' | 'NUMBER' | 'SELECT' | 'DATE' | 'TIME' | 'FILE' | 'TEXTAREA' | 'CHECKBOX' | 'RADIO';
+
+export interface FormSeccion {
+    seccionId?:    string;
+    encabezadoId:  string;
+    nombre:        string;
+    titulo:        string;
+    subtitulo?:    string;
+    orden?:        number;
+    activo:        boolean;
+    created_at?:   Date;
+    preguntas?:    FormPregunta[];
+}
+
+export interface FormSeccionResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       FormSeccion[];
+    metadata:   Metadata;
+}
+
+export interface FormSeccionByIdResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       FormSeccion;
+}
+
+export interface FormPregunta {
+    preguntaId?:   string;
+    seccionId:     string;
+    titulo:        string;
+    subtitulo?:    string;
+    tipo:          TipoPregunta;
+    valorDefecto?: string;
+    opciones?:     string;
+    placeholder?:  string;
+    orden?:        number;
+    visible:       boolean;
+    obligatorio:   boolean;
+    activo:        boolean;
+    created_at?:   Date;
+}
+
+export interface FormPreguntaResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       FormPregunta[];
+    metadata:   Metadata;
+}
+
+export interface FormPreguntaByIdResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       FormPregunta;
+}
