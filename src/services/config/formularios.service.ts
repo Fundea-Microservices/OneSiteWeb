@@ -6,7 +6,13 @@ import { ToastrService } from 'ngx-toastr';
 import { 
   FormEncabezado, 
   FormEncabezadoByIdResponse, 
-  FormEncabezadoResponse 
+  FormEncabezadoResponse,
+  FormSeccion,
+  FormSeccionResponse,
+  FormSeccionByIdResponse,
+  FormPregunta,
+  FormPreguntaResponse,
+  FormPreguntaByIdResponse,
 } from '../../interfaces/configuracion';
 
 @Injectable({
@@ -16,6 +22,8 @@ export class FormulariosService extends HttpService {
 
   private readonly endpoints = {
     formularioEncabezado: '/formulario/encabezado',
+    formularioSeccion:    '/formulario/seccion',
+    formularioPregunta:   '/formulario/pregunta',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
@@ -107,6 +115,192 @@ export class FormulariosService extends HttpService {
     } catch (error: any) {
       console.error("Error en deleteFormEncabezado:", error);
       this.toastr.error(error?.error?.message || '', 'Error al eliminar encabezado');
+      return null;
+    }
+  }
+
+  // --- SECCIONES ---
+
+  async getSecciones({ page = 1, limit = 10, search = '', encabezadoId = '', all = false } = {}) {
+    try {
+      const params: any = { page, limit, search, all };
+      if (encabezadoId) params['encabezadoId'] = encabezadoId;
+      const resp = await firstValueFrom(this.get<FormSeccionResponse>(this.endpoints.formularioSeccion, params));
+      return resp.body?.success ? resp.body : null;
+    } catch (error: any) {
+      console.error("Error en getSecciones:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al obtener secciones');
+      return null;
+    }
+  }
+
+  async getSeccionById(id: string) {
+    try {
+      const resp = await firstValueFrom(this.get<FormSeccionByIdResponse>(`${this.endpoints.formularioSeccion}/${id}`));
+      return resp.body?.success ? resp.body : null;
+    } catch (error: any) {
+      console.error("Error en getSeccionById:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al obtener sección');
+      return null;
+    }
+  }
+
+  async createSeccion(data: FormSeccion) {
+    try {
+      const payload = {
+        encabezadoId: data.encabezadoId,
+        nombre:       data.nombre,
+        titulo:       data.titulo,
+        subtitulo:    data.subtitulo,
+        orden:        data.orden,
+        activo:       data.activo,
+      };
+      const resp = await firstValueFrom(this.post<FormSeccionByIdResponse>(this.endpoints.formularioSeccion, payload));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Éxito');
+        return resp.body;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error en createSeccion:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al crear sección');
+      return null;
+    }
+  }
+
+  async updateSeccion(data: FormSeccion) {
+    try {
+      if (!data.seccionId) throw new Error("ID de sección no proporcionado");
+      const payload = {
+        seccionId:  data.seccionId,
+        nombre:     data.nombre,
+        titulo:     data.titulo,
+        subtitulo:  data.subtitulo,
+        orden:      data.orden,
+        activo:     data.activo,
+      };
+      const resp = await firstValueFrom(this.put<FormSeccionByIdResponse>(`${this.endpoints.formularioSeccion}/${data.seccionId}`, payload));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Éxito');
+        return resp.body;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error en updateSeccion:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al actualizar sección');
+      return null;
+    }
+  }
+
+  async deleteSeccion(id: string) {
+    try {
+      const resp = await firstValueFrom(this.delete<FormSeccionByIdResponse>(`${this.endpoints.formularioSeccion}/${id}`));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Éxito');
+        return resp.body;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error en deleteSeccion:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al eliminar sección');
+      return null;
+    }
+  }
+
+  // --- PREGUNTAS ---
+
+  async getPreguntas({ page = 1, limit = 10, search = '', seccionId = '', all = false } = {}) {
+    try {
+      const params: any = { page, limit, search, all };
+      if (seccionId) params['seccionId'] = seccionId;
+      const resp = await firstValueFrom(this.get<FormPreguntaResponse>(this.endpoints.formularioPregunta, params));
+      return resp.body?.success ? resp.body : null;
+    } catch (error: any) {
+      console.error("Error en getPreguntas:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al obtener preguntas');
+      return null;
+    }
+  }
+
+  async getPreguntaById(id: string) {
+    try {
+      const resp = await firstValueFrom(this.get<FormPreguntaByIdResponse>(`${this.endpoints.formularioPregunta}/${id}`));
+      return resp.body?.success ? resp.body : null;
+    } catch (error: any) {
+      console.error("Error en getPreguntaById:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al obtener pregunta');
+      return null;
+    }
+  }
+
+  async createPregunta(data: FormPregunta) {
+    try {
+      const payload = {
+        seccionId:    data.seccionId,
+        titulo:       data.titulo,
+        subtitulo:    data.subtitulo,
+        tipo:         data.tipo,
+        valorDefecto: data.valorDefecto,
+        opciones:     data.opciones,
+        placeholder:  data.placeholder,
+        orden:        data.orden,
+        visible:      data.visible,
+        obligatorio:  data.obligatorio,
+        activo:       data.activo,
+      };
+      const resp = await firstValueFrom(this.post<FormPreguntaByIdResponse>(this.endpoints.formularioPregunta, payload));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Éxito');
+        return resp.body;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error en createPregunta:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al crear pregunta');
+      return null;
+    }
+  }
+
+  async updatePregunta(data: FormPregunta) {
+    try {
+      if (!data.preguntaId) throw new Error("ID de pregunta no proporcionado");
+      const payload = {
+        preguntaId:   data.preguntaId,
+        titulo:       data.titulo,
+        subtitulo:    data.subtitulo,
+        tipo:         data.tipo,
+        valorDefecto: data.valorDefecto,
+        opciones:     data.opciones,
+        placeholder:  data.placeholder,
+        orden:        data.orden,
+        visible:      data.visible,
+        obligatorio:  data.obligatorio,
+        activo:       data.activo,
+      };
+      const resp = await firstValueFrom(this.put<FormPreguntaByIdResponse>(`${this.endpoints.formularioPregunta}/${data.preguntaId}`, payload));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Éxito');
+        return resp.body;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error en updatePregunta:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al actualizar pregunta');
+      return null;
+    }
+  }
+
+  async deletePregunta(id: string) {
+    try {
+      const resp = await firstValueFrom(this.delete<FormPreguntaByIdResponse>(`${this.endpoints.formularioPregunta}/${id}`));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Éxito');
+        return resp.body;
+      }
+      return null;
+    } catch (error: any) {
+      console.error("Error en deletePregunta:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al eliminar pregunta');
       return null;
     }
   }

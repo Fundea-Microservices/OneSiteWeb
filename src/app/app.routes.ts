@@ -114,6 +114,10 @@ export const routes: Routes = [
                                 path: 'gestion',
                                 loadComponent: () => import('./configuracion/pages/formulario-gesion-page/formulario-gesion-page'),
                             },
+                            {
+                                path: 'detalle/:formId',
+                                loadComponent: () => import('./configuracion/pages/formulario-detalle-page/formulario-detalle-page'),
+                            },
                         ]
                     }
 

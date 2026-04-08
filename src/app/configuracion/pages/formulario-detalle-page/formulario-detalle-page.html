@@ -1,0 +1,311 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/config/formularios']">Formularios</a></li>
+        <li class="breadcrumb-item active" aria-current="page">
+            {{ encabezado()?.nombre || 'Detalle' }}
+        </li>
+    </ol>
+</nav>
+
+<!-- Encabezado info -->
+@if (isLoading() && !encabezado()) {
+<div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-2 text-muted">Cargando formulario...</p>
+</div>
+} @else if (encabezado()) {
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            <span class="fw-semibold fs-6">{{ encabezado()!.nombre }}</span>
+            <span class="badge ms-2" [class]="encabezado()!.activo ? 'bg-success' : 'bg-secondary'">
+                {{ encabezado()!.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+        </div>
+        <button class="btn btn-primary btn-sm" (click)="openSeccionModal(true)">
+            <ion-icon name="add-outline"></ion-icon> Nueva sección
+        </button>
+    </div>
+    @if (encabezado()!.descripcion) {
+    <div class="card-body py-2">
+        <p class="text-muted mb-0" style="font-size:0.85rem">{{ encabezado()!.descripcion }}</p>
+    </div>
+    }
+</div>
+
+<!-- Secciones (accordion) -->
+@if (secciones().length === 0 && !isLoading()) {
+<div class="text-center text-muted py-5">
+    <ion-icon name="layers-outline" style="font-size:2rem"></ion-icon>
+    <p class="mt-2">No hay secciones. Crea la primera sección.</p>
+</div>
+}
+
+<div class="accordion" id="seccionesAccordion">
+    @for (seccion of secciones(); track seccion.seccionId; let i = $index) {
+    <div class="accordion-item mb-2 border rounded shadow-sm">
+        <h2 class="accordion-header">
+            <button
+                class="accordion-button"
+                [class.collapsed]="seccionActivaId() !== seccion.seccionId"
+                type="button"
+                (click)="toggleSeccion(seccion.seccionId!)">
+                <div class="d-flex align-items-center gap-2 w-100 me-3">
+                    <span class="badge bg-secondary">{{ i + 1 }}</span>
+                    <div>
+                        <span class="fw-semibold">{{ seccion.titulo }}</span>
+                        <small class="text-muted ms-2">{{ seccion.nombre }}</small>
+                    </div>
+                    @if (!seccion.activo) {
+                    <span class="badge bg-warning text-dark ms-auto me-2">Inactiva</span>
+                    }
+                </div>
+            </button>
+        </h2>
+        <div class="accordion-collapse">
+            @if (seccionActivaId() === seccion.seccionId) {
+            <div class="accordion-body">
+
+                <!-- Acciones sección -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    @if (seccion.subtitulo) {
+                    <p class="text-muted mb-0" style="font-size:0.85rem">{{ seccion.subtitulo }}</p>
+                    } @else {
+                    <span></span>
+                    }
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm"
+                            (click)="openPreguntaModal(true, seccion.seccionId!)">
+                            <ion-icon name="add-outline"></ion-icon> Nueva pregunta
+                        </button>
+                        <button class="btn btn-outline-success btn-sm"
+                            (click)="openSeccionModal(false, seccion)">
+                            <ion-icon name="create-outline"></ion-icon>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm"
+                            (click)="openDeleteSeccionModal(seccion)">
+                            <ion-icon name="trash-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preguntas -->
+                @if (isSeccionLoading(seccion.seccionId!)) {
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-2 text-muted small">Cargando preguntas...</span>
+                </div>
+                } @else if (getPreguntasDeSeccion(seccion.seccionId!).length === 0) {
+                <div class="text-center text-muted py-3">
+                    <ion-icon name="help-circle-outline" style="font-size:1.5rem"></ion-icon>
+                    <p class="mb-0 small">Sin preguntas. Añade la primera.</p>
+                </div>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-bordered align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Título</th>
+                                <th>Tipo</th>
+                                <th>Placeholder</th>
+                                <th class="text-center">Requerida</th>
+                                <th class="text-center">Visible</th>
+                                <th class="text-center">Activa</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (pregunta of getPreguntasDeSeccion(seccion.seccionId!);
+                                  track pregunta.preguntaId; let j = $index) {
+                            <tr>
+                                <td class="text-center">{{ j + 1 }}</td>
+                                <td>
+                                    <div class="fw-semibold" style="font-size:0.85rem">{{ pregunta.titulo }}</div>
+                                    @if (pregunta.subtitulo) {
+                                    <div class="text-muted" style="font-size:0.75rem">{{ pregunta.subtitulo }}</div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark">{{ pregunta.tipo }}</span>
+                                </td>
+                                <td class="text-muted" style="font-size:0.8rem">
+                                    {{ pregunta.placeholder || '—' }}
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                        <input class="form-check-input" type="checkbox"
+                                            [checked]="pregunta.obligatorio"
+                                            (change)="togglePreguntaField(pregunta, 'obligatorio')"
+                                            [id]="'swObl-' + pregunta.preguntaId"
+                                            style="cursor:pointer; accent-color: #f97316;" />
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                        <input class="form-check-input" type="checkbox"
+                                            [checked]="pregunta.visible"
+                                            (change)="togglePreguntaField(pregunta, 'visible')"
+                                            [id]="'swVis-' + pregunta.preguntaId"
+                                            style="cursor:pointer; accent-color: #14b8a6;" />
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                        <input class="form-check-input" type="checkbox"
+                                            [checked]="pregunta.activo"
+                                            (change)="togglePreguntaField(pregunta, 'activo')"
+                                            [id]="'swAct-' + pregunta.preguntaId"
+                                            style="cursor:pointer;" />
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-success mx-1"
+                                        (click)="openPreguntaModal(false, seccion.seccionId!, pregunta)">
+                                        <ion-icon name="create-outline"></ion-icon>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger mx-1"
+                                        (click)="openDeletePreguntaModal(pregunta)">
+                                        <ion-icon name="trash-outline"></ion-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+            </div>
+            } <!-- end @if seccionActivaId -->
+        </div>
+    </div>
+    }
+</div>
+
+} @else {
+<div class="text-center text-muted py-5">Formulario no encontrado.</div>
+}
+
+
+<!-- ═══ MODAL SECCIÓN ══════════════════════════════════════════════ -->
+<div class="modal fade" #seccionModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ nuevoSeccion() ? 'Nueva sección' : 'Editar sección' }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm"
+                        [ngModel]="seccionEdit().nombre"
+                        (ngModelChange)="setSeccion('nombre', $event)"
+                        placeholder="Identificador interno" maxlength="100" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Título <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm"
+                        [ngModel]="seccionEdit().titulo"
+                        (ngModelChange)="setSeccion('titulo', $event)"
+                        placeholder="Título visible" maxlength="100" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Subtítulo</label>
+                    <input type="text" class="form-control form-control-sm"
+                        [ngModel]="seccionEdit().subtitulo"
+                        (ngModelChange)="setSeccion('subtitulo', $event)"
+                        placeholder="Descripción opcional" maxlength="250" />
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label class="form-label">Orden</label>
+                        <input type="number" class="form-control form-control-sm" min="0"
+                            [ngModel]="seccionEdit().orden"
+                            (ngModelChange)="setSeccion('orden', $event)" />
+                    </div>
+                    <div class="col-6 d-flex align-items-end pb-1">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox"
+                                [checked]="seccionEdit().activo"
+                                (change)="setSeccion('activo', !seccionEdit().activo)"
+                                id="switchSeccionActivo" />
+                            <label class="form-check-label" for="switchSeccionActivo">Activa</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm"
+                    [disabled]="!seccionIsValid()"
+                    (click)="saveSeccion()">
+                    {{ nuevoSeccion() ? 'Crear' : 'Guardar' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL ELIMINAR SECCIÓN ════════════════════════════════════ -->
+<div class="modal fade" #deleteSeccionModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Eliminar sección</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Eliminar la sección <strong>{{ seccionEdit().titulo }}</strong>?
+                Se eliminarán también todas sus preguntas.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" (click)="deleteSeccion()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══ MODAL PREGUNTA ════════════════════════════════════════════ -->
+<div class="modal fade" #preguntaModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ nuevaPregunta() ? 'Nueva pregunta' : 'Editar pregunta' }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <app-upsert-pregunta
+                    [pregunta]="preguntaEdit()"
+                    [nuevo]="nuevaPregunta()"
+                    [key]="formKeyPregunta()"
+                    (save)="onSavePregunta($event)"
+                    (cancel)="preguntaModalInstance.hide()" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL ELIMINAR PREGUNTA ═══════════════════════════════════ -->
+<div class="modal fade" #deletePreguntaModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Eliminar pregunta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Eliminar la pregunta <strong>{{ preguntaEdit().titulo }}</strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" (click)="deletePregunta()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
