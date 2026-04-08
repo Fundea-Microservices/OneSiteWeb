@@ -62,6 +62,7 @@ export class UpsertMenuComponent {
     effect(() => {
       const menu = this.menu();
       const isNuevo = this.nuevo();
+      const _key = this.key(); // fuerza re-ejecución cuando cambia el key
 
       this.initForm(menu, isNuevo);
     });
