@@ -101,7 +101,22 @@ export const routes: Routes = [
                                 loadComponent: () => import('./configuracion/pages/upsert-carrousel-page/upsert-carrousel-page'),
                             },
                         ]
+                    },
+                    {
+                        path: 'formularios',
+                        canActivate: [AccessGuard],
+                        children: [
+                            {
+                                path: '',
+                                loadComponent: () => import('./configuracion/pages/formulario-gesion-page/formulario-gesion-page'),
+                            },
+                            {
+                                path: 'gestion',
+                                loadComponent: () => import('./configuracion/pages/formulario-gesion-page/formulario-gesion-page'),
+                            },
+                        ]
                     }
+
                 ]
             },
             {
