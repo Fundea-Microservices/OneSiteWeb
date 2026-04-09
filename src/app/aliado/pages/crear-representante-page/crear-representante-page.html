@@ -314,7 +314,7 @@
                     <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
                         <app-render-formulario
                             encabezadoId="26EB556D-6C24-4FBE-B589-02FAB42518C7"
-                            (listado)="datosAdicionales.set($event.filter(d => d.tipo !== 'FILE'))"
+                            (listado)="onListadoFormDinamico($event)"
                             (mensaje)="mensajeFormDinamico.set($event)" />
                     </div>
                 </div>

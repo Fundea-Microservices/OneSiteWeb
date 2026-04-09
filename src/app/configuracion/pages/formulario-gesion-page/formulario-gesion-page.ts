@@ -18,7 +18,7 @@ import { PaginationAllComponent } from '../../../shared/components/pagination-al
 
 @Component({
   selector: 'app-formulario-gesion-page',
-  imports: [RouterLink, DatePipe, PaginationAllComponent, FormsModule],
+  imports: [RouterLink, PaginationAllComponent, FormsModule],
   templateUrl: './formulario-gesion-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -59,6 +59,10 @@ export default class CrearRepresentantePage implements AfterViewInit {
   datosAdicionales = signal<FormRespuesta[]>([]);
   mensajeFormDinamico = signal<string>('');
 
+  onListadoFormDinamico(listado: FormRespuesta[]) {
+    this.datosAdicionales.set(listado.filter(d => d.tipo !== 'FILE'));
+  }
+
   // Datos de búsqueda Bantotal
   cuentaBT = signal<number | null>(null);
   clienteUId = signal<number | null>(null);
