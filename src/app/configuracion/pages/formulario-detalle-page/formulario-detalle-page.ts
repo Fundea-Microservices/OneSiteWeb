@@ -20,10 +20,11 @@ import {
   TipoPregunta,
 } from '../../../../interfaces/configuracion';
 import { UpsertPreguntaComponent } from '../../components/formulario/upsert-pregunta/upsert-pregunta.component';
+import { RenderFormularioComponent } from '../../components/formulario/render-formulario/render-formulario.component';
 
 @Component({
   selector: 'app-formulario-detalle-page',
-  imports: [RouterLink, FormsModule, UpsertPreguntaComponent],
+  imports: [RouterLink, FormsModule, UpsertPreguntaComponent, RenderFormularioComponent],
   templateUrl: './formulario-detalle-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,6 +73,11 @@ export default class FormularioDetallePage {
   @ViewChild('deletePreguntaModal') deletePreguntaModalRef!: ElementRef;
   private deletePreguntaModalInstance!: Modal;
 
+  // ── Preview modal ──────────────────────────────────────────────
+  showPreview = signal(false);
+  @ViewChild('previewModal') previewModalRef!: ElementRef;
+  private previewModalInstance!: Modal;
+
   // ──────────────────────────────────────────────────────────────
 
   private emptySeccion(encabezadoId: string): FormSeccion {
@@ -94,6 +100,8 @@ export default class FormularioDetallePage {
       valorDefecto: '',
       opciones: '',
       placeholder: '',
+      patronValidacion: '',
+      mensajeError: '',
       orden: 0,
       visible: true,
       obligatorio: false,
@@ -113,6 +121,17 @@ export default class FormularioDetallePage {
     this.deleteSeccionModalInstance = new Modal(this.deleteSeccionModalRef.nativeElement);
     this.preguntaModalInstance = new Modal(this.preguntaModalRef.nativeElement);
     this.deletePreguntaModalInstance = new Modal(this.deletePreguntaModalRef.nativeElement);
+    this.previewModalInstance = new Modal(this.previewModalRef.nativeElement);
+    this.previewModalRef.nativeElement.addEventListener('hidden.bs.modal', () => {
+      this.showPreview.set(false);
+      this.cdr.markForCheck();
+    });
+  }
+
+  openPreviewModal() {
+    this.showPreview.set(true);
+    this.cdr.markForCheck();
+    this.previewModalInstance.show();
   }
 
   async loadEncabezado(formId: string) {
