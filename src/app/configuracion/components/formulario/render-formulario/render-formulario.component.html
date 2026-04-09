@@ -18,26 +18,38 @@
 
   <!-- Tabs (ocultos cuando hay una sola sección) -->
   @if (secciones().length > 1) {
-  <ul class="nav nav-tabs mb-0" role="tablist">
+  <div class="flex flex-wrap gap-1 mb-0 border-b border-gray-200">
     @for (seccion of secciones(); track seccion.seccionId; let i = $index) {
-    <li class="nav-item" role="presentation">
-      <button type="button" class="nav-link"
-        [class.active]="activeTab() === seccion.seccionId"
-        (click)="setTab(seccion.seccionId!)">
-        <span class="badge bg-secondary me-1">{{ i + 1 }}</span>
-        {{ seccion.titulo }}
-      </button>
-    </li>
+    <button type="button"
+      class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-t-lg border border-b-0 transition-all cursor-pointer select-none max-w-[180px]"
+      [class.bg-white]="activeTab() === seccion.seccionId"
+      [class.border-gray-200]="activeTab() === seccion.seccionId"
+      [class.text-blue-600]="activeTab() === seccion.seccionId"
+      [class.shadow-sm]="activeTab() === seccion.seccionId"
+      [class.-mb-px]="activeTab() === seccion.seccionId"
+      [class.bg-gray-50]="activeTab() !== seccion.seccionId"
+      [class.border-transparent]="activeTab() !== seccion.seccionId"
+      [class.text-gray-500]="activeTab() !== seccion.seccionId"
+      [class.hover:text-gray-700]="activeTab() !== seccion.seccionId"
+      [class.hover:bg-gray-100]="activeTab() !== seccion.seccionId"
+      (click)="setTab(seccion.seccionId!)">
+      <span class="inline-flex items-center justify-center shrink-0 w-5 h-5 text-xs rounded-full font-semibold"
+        [class.bg-blue-600]="activeTab() === seccion.seccionId"
+        [class.text-white]="activeTab() === seccion.seccionId"
+        [class.bg-gray-300]="activeTab() !== seccion.seccionId"
+        [class.text-gray-600]="activeTab() !== seccion.seccionId">
+        {{ i + 1 }}
+      </span>
+      <span class="text-left leading-tight">{{ seccion.titulo }}</span>
+    </button>
     }
-  </ul>
+  </div>
   }
 
   <!-- Todas las secciones en el DOM: se alterna con d-none -->
-  <div [class.border]="true"
-       [class.rounded]="secciones().length === 1"
-       [class.border-top-0]="secciones().length > 1"
-       [class.rounded-bottom]="secciones().length > 1"
-       class="p-4">
+  <div class="border border-gray-200 rounded-b-lg p-4"
+       [class.rounded-lg]="secciones().length === 1"
+       [class.rounded-t-none]="secciones().length > 1">
     @for (seccion of secciones(); track seccion.seccionId) {
     <div [class.d-none]="activeTab() !== seccion.seccionId">
       @if (seccion.subtitulo && seccion.subtitulo !== '--') {
@@ -47,13 +59,11 @@
         @for (pregunta of getVisiblePreguntas(seccion); track pregunta.preguntaId) {
         <div>
 
-          <label class="block h-10 items-end text-sm font-medium text-gray-700">
+          <label class="block text-sm font-medium text-gray-700 mb-0.5">
             {{ pregunta.titulo }}
             @if (pregunta.obligatorio) { <span class="text-red-600">*</span> }
           </label>
-          @if (pregunta.subtitulo) {
-          <p class="text-xs text-gray-500 mb-1">{{ pregunta.subtitulo }}</p>
-          }
+          <p class="text-xs text-gray-500 mb-1 h-4">{{ pregunta.subtitulo }}</p>
 
           @switch (pregunta.tipo) {
 
@@ -154,8 +164,38 @@
 
             @case ('FILE') {
               <input type="file"
-                class="w-full text-sm text-gray-700 border border-gray-300 rounded-md cursor-pointer bg-gray-50 focus:outline-none"
-                [id]="pregunta.preguntaId!" />
+                class="hidden"
+                [id]="pregunta.preguntaId!"
+                (change)="onFileSelected(pregunta.preguntaId!, $event)" />
+              <label [for]="pregunta.preguntaId!"
+                class="flex items-center gap-3 w-full px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
+                [class.border-gray-300]="!hasError(pregunta.preguntaId!)"
+                [class.border-red-400]="hasError(pregunta.preguntaId!)"
+                [class.bg-gray-50]="!getFileName(pregunta.preguntaId!)"
+                [class.bg-blue-50]="!!getFileName(pregunta.preguntaId!)"
+                [class.hover:bg-gray-100]="!getFileName(pregunta.preguntaId!)">
+                <svg class="w-5 h-5 shrink-0"
+                  [class.text-gray-400]="!getFileName(pregunta.preguntaId!)"
+                  [class.text-blue-500]="!!getFileName(pregunta.preguntaId!)"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                <div class="flex flex-col min-w-0">
+                  @if (getFileName(pregunta.preguntaId!)) {
+                    <span class="text-sm font-medium text-blue-700 truncate">{{ getFileName(pregunta.preguntaId!) }}</span>
+                    <span class="text-xs text-blue-500">Clic para cambiar el archivo</span>
+                  } @else {
+                    <span class="text-sm font-medium text-gray-600">Seleccionar archivo</span>
+                    <span class="text-xs text-gray-400">Clic para examinar</span>
+                  }
+                </div>
+                @if (getFileName(pregunta.preguntaId!)) {
+                <svg class="w-4 h-4 text-blue-500 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                }
+              </label>
             }
 
           }

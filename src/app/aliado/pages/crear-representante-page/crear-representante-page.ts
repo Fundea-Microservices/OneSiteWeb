@@ -11,11 +11,12 @@ import { Representante } from '../../../../interfaces/aliado/representante';
 import { UpsertDatosGenerales } from '../../components/representante/upsert-datos-generales/upsert-datos-generales';
 import { ClienteBantotalService } from '../../../../services/api-bantotal/cliente.service';
 import { initFlowbite } from 'flowbite';
+import { RenderFormularioComponent } from '../../../configuracion/components/formulario/render-formulario/render-formulario.component';
 
 
 @Component({
   selector: 'app-crear-representante-page',
-  imports: [CommonModule, RouterLink, UpsertDatosGenerales, UpsertContacto, UpsertActividadLaboralFinanciera],
+  imports: [CommonModule, RouterLink, UpsertDatosGenerales, UpsertContacto, UpsertActividadLaboralFinanciera, RenderFormularioComponent],
   templateUrl: './crear-representante-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -47,7 +48,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
   datosFrontalDPI = signal<ValidarDocumentoResponse | null>(null);
   datosReversoDPI = signal<ValidarDocumentoResponse | null>(null);
   camposBloqueados = signal(false);
-  activeSection = signal<'datos' | 'contacto' | 'actividad' | null>('datos');
+  activeSection = signal<'datos' | 'contacto' | 'actividad' | 'formulario' | null>('datos');
   llenadorManualHabilitado = signal(false);
 
   postCreateModalOpen = signal(false);
@@ -102,7 +103,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
     initFlowbite();
   }
 
-  onMouseEnter(section: 'datos' | 'contacto' | 'actividad') {
+  onMouseEnter(section: 'datos' | 'contacto' | 'actividad' | 'formulario') {
     this.activeSection.set(section);
   }
 

@@ -135,4 +135,21 @@ export class RenderFormularioComponent implements OnInit {
   getVisiblePreguntas(seccion: FormSeccion): FormPregunta[] {
     return (seccion.preguntas ?? []).filter(p => p.visible !== false);
   }
+
+  // Mapa de nombre de archivo seleccionado por preguntaId
+  fileNames = new Map<string, string>();
+
+  onFileSelected(preguntaId: string, event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.fileNames.set(preguntaId, file.name);
+      const ctrl = this.getControl(preguntaId);
+      ctrl?.setValue(file.name);
+      ctrl?.markAsDirty();
+    }
+  }
+
+  getFileName(preguntaId: string): string {
+    return this.fileNames.get(preguntaId) ?? '';
+  }
 }
