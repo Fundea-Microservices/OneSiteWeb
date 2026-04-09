@@ -93,19 +93,21 @@ export interface FormSeccionByIdResponse {
 }
 
 export interface FormPregunta {
-    preguntaId?:   string;
-    seccionId:     string;
-    titulo:        string;
-    subtitulo?:    string;
-    tipo:          TipoPregunta;
-    valorDefecto?: string;
-    opciones?:     string;
-    placeholder?:  string;
-    orden?:        number;
-    visible:       boolean;
-    obligatorio:   boolean;
-    activo:        boolean;
-    created_at?:   Date;
+    preguntaId?:        string;
+    seccionId:          string;
+    titulo:             string;
+    subtitulo?:         string;
+    tipo:               TipoPregunta;
+    valorDefecto?:      string;
+    opciones?:          string;
+    placeholder?:       string;
+    patronValidacion?:  string;
+    mensajeError?:      string;
+    orden?:             number;
+    visible:            boolean;
+    obligatorio:        boolean;
+    activo:             boolean;
+    created_at?:        Date;
 }
 
 export interface FormPreguntaResponse {
@@ -121,4 +123,15 @@ export interface FormPreguntaByIdResponse {
     statusCode: number;
     message:    string;
     data:       FormPregunta;
+}
+
+export interface FormEncabezadoCompleto extends FormEncabezado {
+    secciones: FormSeccion[];
+}
+
+export interface FormEncabezadoCompletoResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       FormEncabezadoCompleto;
 }

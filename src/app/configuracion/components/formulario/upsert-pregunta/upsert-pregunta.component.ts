@@ -31,6 +31,8 @@ export class UpsertPreguntaComponent {
     valorDefecto: '',
     opciones: '',
     placeholder: '',
+    patronValidacion: '',
+    mensajeError: '',
     orden: 0,
     visible: true,
     obligatorio: false,

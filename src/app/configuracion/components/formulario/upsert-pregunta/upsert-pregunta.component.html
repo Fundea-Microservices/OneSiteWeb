@@ -58,6 +58,25 @@
         (ngModelChange)="set('valorDefecto', $event)" />
 </div>
 
+<div class="row mb-3">
+    <div class="col-6">
+        <label class="form-label">Patrón de validación
+            <small class="text-muted">(regex)</small>
+        </label>
+        <input type="text" class="form-control form-control-sm"
+            [ngModel]="form().patronValidacion"
+            (ngModelChange)="set('patronValidacion', $event)"
+            placeholder="Ej: ^[0-9]+$" />
+    </div>
+    <div class="col-6">
+        <label class="form-label">Mensaje de error</label>
+        <input type="text" class="form-control form-control-sm"
+            [ngModel]="form().mensajeError"
+            (ngModelChange)="set('mensajeError', $event)"
+            placeholder="Ej: Solo se permiten números" maxlength="250" />
+    </div>
+</div>
+
 <div class="row align-items-end">
     <div class="col-4">
         <label class="form-label">Orden</label>

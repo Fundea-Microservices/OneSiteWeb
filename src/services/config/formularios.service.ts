@@ -7,6 +7,8 @@ import {
   FormEncabezado, 
   FormEncabezadoByIdResponse, 
   FormEncabezadoResponse,
+  FormEncabezadoCompleto,
+  FormEncabezadoCompletoResponse,
   FormSeccion,
   FormSeccionResponse,
   FormSeccionByIdResponse,
@@ -49,6 +51,17 @@ export class FormulariosService extends HttpService {
     } catch (error: any) {
       console.error("Error en getFormEncabezadoById:", error);
       this.toastr.error(error?.error?.message || '', 'Error al obtener encabezado');
+      return null;
+    }
+  }
+
+  async getFormCompleto(id: string) {
+    try {
+      const resp = await firstValueFrom(this.get<FormEncabezadoCompletoResponse>(`${this.endpoints.formularioEncabezado}/${id}`));
+      return resp.body?.success ? resp.body : null;
+    } catch (error: any) {
+      console.error("Error en getFormCompleto:", error);
+      this.toastr.error(error?.error?.message || '', 'Error al obtener formulario completo');
       return null;
     }
   }
@@ -236,17 +249,19 @@ export class FormulariosService extends HttpService {
   async createPregunta(data: FormPregunta) {
     try {
       const payload = {
-        seccionId:    data.seccionId,
-        titulo:       data.titulo,
-        subtitulo:    data.subtitulo,
-        tipo:         data.tipo,
-        valorDefecto: data.valorDefecto,
-        opciones:     data.opciones,
-        placeholder:  data.placeholder,
-        orden:        data.orden,
-        visible:      data.visible,
-        obligatorio:  data.obligatorio,
-        activo:       data.activo,
+        seccionId:         data.seccionId,
+        titulo:            data.titulo,
+        subtitulo:         data.subtitulo,
+        tipo:              data.tipo,
+        valorDefecto:      data.valorDefecto,
+        opciones:          data.opciones,
+        placeholder:       data.placeholder,
+        patronValidacion:  data.patronValidacion,
+        mensajeError:      data.mensajeError,
+        orden:             data.orden,
+        visible:           data.visible,
+        obligatorio:       data.obligatorio,
+        activo:            data.activo,
       };
       const resp = await firstValueFrom(this.post<FormPreguntaByIdResponse>(this.endpoints.formularioPregunta, payload));
       if (resp.body?.success) {
@@ -265,17 +280,19 @@ export class FormulariosService extends HttpService {
     try {
       if (!data.preguntaId) throw new Error("ID de pregunta no proporcionado");
       const payload = {
-        preguntaId:   data.preguntaId,
-        titulo:       data.titulo,
-        subtitulo:    data.subtitulo,
-        tipo:         data.tipo,
-        valorDefecto: data.valorDefecto,
-        opciones:     data.opciones,
-        placeholder:  data.placeholder,
-        orden:        data.orden,
-        visible:      data.visible,
-        obligatorio:  data.obligatorio,
-        activo:       data.activo,
+        preguntaId:        data.preguntaId,
+        titulo:            data.titulo,
+        subtitulo:         data.subtitulo,
+        tipo:              data.tipo,
+        valorDefecto:      data.valorDefecto,
+        opciones:          data.opciones,
+        placeholder:       data.placeholder,
+        patronValidacion:  data.patronValidacion,
+        mensajeError:      data.mensajeError,
+        orden:             data.orden,
+        visible:           data.visible,
+        obligatorio:       data.obligatorio,
+        activo:            data.activo,
       };
       const resp = await firstValueFrom(this.put<FormPreguntaByIdResponse>(`${this.endpoints.formularioPregunta}/${data.preguntaId}`, payload));
       if (resp.body?.success) {
