@@ -74,6 +74,8 @@ export interface Representante {
   
   usuarioIngreso?: string;
   usuarioId?: string;
+
+  datosAdicionales?: { tipo: string; nombre: string; valor: string }[];
   
   created_at?: Date; // Mapeo de created_at
   updated_at?: Date; // Mapeo de updated_at

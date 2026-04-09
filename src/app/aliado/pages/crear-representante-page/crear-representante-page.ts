@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { UpsertContacto } from '../../components/representante/upsert-contacto/upsert-contacto';
@@ -11,7 +11,7 @@ import { Representante } from '../../../../interfaces/aliado/representante';
 import { UpsertDatosGenerales } from '../../components/representante/upsert-datos-generales/upsert-datos-generales';
 import { ClienteBantotalService } from '../../../../services/api-bantotal/cliente.service';
 import { initFlowbite } from 'flowbite';
-import { RenderFormularioComponent } from '../../../configuracion/components/formulario/render-formulario/render-formulario.component';
+import { FormRespuesta, RenderFormularioComponent } from '../../../configuracion/components/formulario/render-formulario/render-formulario.component';
 
 
 @Component({
@@ -53,6 +53,11 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
   postCreateModalOpen = signal(false);
   lastCreatedRepresentanteId = signal<string | null>(null);
+
+  // Formulario dinámico
+  renderFormRef = viewChild(RenderFormularioComponent);
+  datosAdicionales = signal<FormRespuesta[]>([]);
+  mensajeFormDinamico = signal<string>('');
 
   // Datos de búsqueda Bantotal
   cuentaBT = signal<number | null>(null);
@@ -677,6 +682,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       fotoFrontalDpi: input?.fotoFrontalDpi ? String(input.fotoFrontalDpi) : undefined,
       fotoReversoDpi: input?.fotoReversoDpi ? String(input.fotoReversoDpi) : undefined,
       usuarioIngreso: input?.usuarioIngreso ? String(input.usuarioIngreso) : undefined,
+      datosAdicionales: input?.datosAdicionales ?? undefined,
       created_at: input?.created_at ?? undefined,
       updated_at: input?.updated_at ?? undefined,
       deleted_at: input?.deleted_at ?? undefined,
@@ -688,7 +694,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
   async onGuardar() {
     if (!this.frontPreview || !this.backPreview) {
       alert('Las fotos de DPI, de frente y reverso son obligatorias.');
-      return; // Prevent saving if images are not uploaded
+      return;
     }
 
     try {
@@ -720,9 +726,21 @@ export default class CrearRepresentantePage implements AfterViewInit {
       if(payload.localidad === 0) camposFaltantes.push('municipioDomicilio'); 
 
       if (camposFaltantes.length > 0) {
-       this.toastr.error('Por favor completa los campos requeridos: ' + camposFaltantes.join(', '), 'Campos incompletos');
+        this.toastr.error('Por favor completa los campos requeridos: ' + camposFaltantes.join(', '), 'Campos incompletos');
         return;
       }
+
+      // Validar formulario dinámico
+      const formDinamicoValido = this.renderFormRef()?.validarFormulario() ?? true;
+      if (!formDinamicoValido) {
+        const msg = this.mensajeFormDinamico();
+        this.toastr.error(msg || 'Por favor completa los campos obligatorios del formulario.', 'Campos incompletos');
+        this.activeSection.set('formulario');
+        return;
+      }
+
+      // Incluir datos adicionales del formulario dinámico
+      payload.datosAdicionales = this.datosAdicionales();
 
       // Llamar al servicio con el valor del signal (no el signal mismo)
       const resp = await this.representanteService.crearRepresentante(payload);

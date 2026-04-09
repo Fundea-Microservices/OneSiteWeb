@@ -1,11 +1,14 @@
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
+  DestroyRef,
   inject,
   input,
   OnInit,
+  output,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormulariosService } from '../../../../../services/config/formularios.service';
 import {
@@ -13,7 +16,14 @@ import {
   FormEncabezadoCompleto,
   FormPregunta,
   FormSeccion,
+  TipoPregunta,
 } from '../../../../../interfaces/configuracion';
+
+export interface FormRespuesta {
+  tipo: TipoPregunta;
+  nombre: string;
+  valor: string;
+}
 
 @Component({
   selector: 'app-render-formulario',
@@ -23,8 +33,13 @@ import {
 })
 export class RenderFormularioComponent implements OnInit {
   private service = inject(FormulariosService);
+  private destroyRef = inject(DestroyRef);
 
   encabezadoId = input.required<string>();
+
+  listado = output<FormRespuesta[]>();
+  valido = output<boolean>();
+  mensaje = output<string>();
 
   isLoading = signal(true);
   formReady = signal(false);
@@ -56,6 +71,11 @@ export class RenderFormularioComponent implements OnInit {
         this.secciones.set(seccionesList);
         this.buildForm(seccionesList);
         this.formReady.set(true);
+
+        this.form.valueChanges
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe(() => this.emitOutputs());
+        this.emitOutputs();
 
         if (seccionesList.length > 0) {
           this.activeTab.set(seccionesList[0].seccionId!);
@@ -151,5 +171,45 @@ export class RenderFormularioComponent implements OnInit {
 
   getFileName(preguntaId: string): string {
     return this.fileNames.get(preguntaId) ?? '';
+  }
+
+  /** Marca todos los controles como tocados, activa los mensajes de error en el UI
+   *  y emite los outputs. Devuelve true si el formulario es válido. */
+  validarFormulario(): boolean {
+    this.form.markAllAsTouched();
+    this.emitOutputs();
+    return this.form.valid;
+  }
+
+  private emitOutputs() {
+    const listado: FormRespuesta[] = [];
+    this.secciones().forEach(seccion => {
+      this.getVisiblePreguntas(seccion).forEach(pregunta => {
+        if (!pregunta.preguntaId) return;
+        listado.push({
+          tipo: pregunta.tipo,
+          nombre: pregunta.titulo,
+          valor: this.getControl(pregunta.preguntaId)?.value ?? '',
+        });
+      });
+    });
+    this.listado.emit(listado);
+
+    this.valido.emit(this.form.valid);
+
+    const errores: string[] = [];
+    this.secciones().forEach(seccion => {
+      (seccion.preguntas ?? []).forEach(pregunta => {
+        if (!pregunta.preguntaId) return;
+        const ctrl = this.getControl(pregunta.preguntaId);
+        if (!ctrl || !ctrl.invalid) return;
+        if (ctrl.hasError('required')) {
+          errores.push(`El campo "${pregunta.titulo}" es obligatorio`);
+        } else if (ctrl.hasError('pattern')) {
+          errores.push(`El campo "${pregunta.titulo}": ${pregunta.mensajeError || 'El valor ingresado no es válido'}`);
+        }
+      });
+    });
+    this.mensaje.emit(errores.join(', '));
   }
 }
