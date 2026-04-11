@@ -130,6 +130,42 @@
                 </div>
             </div>
 
+            <!-- Otros datos (formulario dinámico) -->
+            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm mt-4">
+                <div class="px-3 py-3 md:px-6 md:py-4 bg-blue-50 border-b border-gray-200">
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <svg class="w-5 h-5 md:w-6 md:h-6 text-blue-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        <h4 class="text-base md:text-lg font-semibold text-blue-700">
+                            Otros datos
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50">
+                    @if (cargandoFormulario()) {
+                    <div class="flex items-center gap-3 py-6 justify-center text-gray-500">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        <span class="text-sm">Cargando formulario...</span>
+                    </div>
+                    } @else if (errorFormulario()) {
+                    <div class="alert alert-danger" role="alert">
+                        {{ errorFormulario() }}
+                    </div>
+                    } @else if (valoresFormDinamico() !== null) {
+                    <app-render-formulario
+                        [encabezadoId]="ENCABEZADO_ID"
+                        [valoresIniciales]="valoresFormDinamico()!"
+                        (listado)="onListadoFormDinamico($event)"
+                        (mensaje)="mensajeFormDinamico.set($event)" />
+                    }
+                </div>
+            </div>
+
             <!-- Botones de acción -->
             <div class="flex gap-4 mt-6 justify-end">
                 <button (click)="cancelar()" type="button"

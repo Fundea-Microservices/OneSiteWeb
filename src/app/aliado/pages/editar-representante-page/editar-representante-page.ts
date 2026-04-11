@@ -1,5 +1,5 @@
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect, OnInit, computed } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect, OnInit, computed, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { UpsertContacto } from '../../components/representante/upsert-contacto/upsert-contacto';
@@ -11,10 +11,12 @@ import { UpsertDatosGenerales } from '../../components/representante/upsert-dato
 import { ClienteBantotalService } from '../../../../services/api-bantotal/cliente.service';
 import { initFlowbite } from 'flowbite';
 import { AuthService } from '../../../../services/auth.service';
+import { FormRespuesta, RenderFormularioComponent } from '../../../configuracion/components/formulario/render-formulario/render-formulario.component';
+import { FormulariosService } from '../../../../services/config/formularios.service';
 
 @Component({
   selector: 'app-editar-representante-page',
-  imports: [CommonModule, RouterLink, UpsertDatosGenerales, UpsertContacto, UpsertActividadLaboralFinanciera],
+  imports: [CommonModule, RouterLink, UpsertDatosGenerales, UpsertContacto, UpsertActividadLaboralFinanciera, RenderFormularioComponent],
   templateUrl: './editar-representante-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -23,10 +25,13 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
   private representanteService = inject(RepresentanteService);
   private clienteService = inject(ClienteBantotalService);
   private authService = inject(AuthService);
+  private formulariosService = inject(FormulariosService);
   private toastr = inject(ToastrService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  readonly ENCABEZADO_ID = '26EB556D-6C24-4FBE-B589-02FAB42518C7';
 
   // Solo puede editar si el usuarioId del representante coincide con el del usuario logueado
   puedeEditar = computed(() => {
@@ -46,6 +51,41 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
 
   representante = signal<Representante | null>(null);
   representanteId = signal<string>('');
+
+  // Formulario dinámico (datos adicionales)
+  renderFormRef = viewChild(RenderFormularioComponent);
+  datosAdicionales = signal<FormRespuesta[]>([]);
+  mensajeFormDinamico = signal<string>('');
+  valoresFormDinamico = signal<{ preguntaId: string; valor: string }[] | null>(null);
+  cargandoFormulario = signal(false);
+  errorFormulario = signal<string | null>(null);
+
+  onListadoFormDinamico(listado: FormRespuesta[]) {
+    this.datosAdicionales.set(listado.filter(d => d.tipo !== 'FILE'));
+  }
+
+  async cargarValoresFormulario(representanteId: string) {
+    this.cargandoFormulario.set(true);
+    this.errorFormulario.set(null);
+    try {
+      const valores = await this.formulariosService.obtenerValoresFormulario(
+        this.ENCABEZADO_ID, representanteId
+      );
+      console.log("🚀 ~ EditarRepresentantePage ~ cargarValoresFormulario ~ valores:", valores)
+      this.valoresFormDinamico.set(valores ?? []);
+    } catch (error: any) {
+      this.valoresFormDinamico.set(null);
+      const apiMsg = error?.error?.message || error?.message || null;
+      const displayMsg = apiMsg
+        ? `No se pudieron cargar los datos adicionales del formulario: ${apiMsg}`
+        : 'No se pudieron cargar los datos adicionales del formulario. Intente más tarde.';
+      this.errorFormulario.set(displayMsg);
+      this.toastr.error(apiMsg || 'No se pudieron cargar los datos adicionales del formulario', 'Error');
+    } finally {
+      this.cargandoFormulario.set(false);
+      this.cdr.markForCheck();
+    }
+  }
 
   ngOnInit(): void {
     // Obtener el ID de la ruta
@@ -80,6 +120,9 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
           const docSinFormato = resultado.data.representante.documento.replace(/\s/g, '');
 
         }
+
+        // Cargar valores del formulario dinámico
+        await this.cargarValoresFormulario(representanteId);
 
         console.log('✅ Representante cargado:', resultado.data.representante);
       } else {
@@ -143,10 +186,18 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
       return;
     }
 
+    // Validar formulario dinámico
+    const formDinamicoValido = this.renderFormRef()?.validarFormulario() ?? true;
+    if (!formDinamicoValido) {
+      const msg = this.mensajeFormDinamico();
+      this.toastr.error(msg || 'Por favor completa los campos obligatorios del formulario.', 'Campos incompletos');
+      return;
+    }
+
     try {
       const resultado = await this.representanteService.actualizarRepresentante(
         this.representanteId(),
-        rep
+        { ...rep, datosAdicionales: this.datosAdicionales() }
       );
 
       if (resultado?.success) {

@@ -37,6 +37,9 @@ export class RenderFormularioComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   encabezadoId = input.required<string>();
+  valoresIniciales = input<{ preguntaId: string; valor: string }[]>([]);
+  /** Tipos de pregunta en los que se ignorará el validador 'obligatorio'. Por defecto: ['FILE'] */
+  ignorarObligatorioEnTipos = input<TipoPregunta[]>(['FILE']);
 
   listado = output<FormRespuesta[]>();
   valido = output<boolean>();
@@ -88,15 +91,23 @@ export class RenderFormularioComponent implements OnInit {
   }
 
   private buildForm(secciones: FormSeccion[]) {
+    // Construir mapa de valores guardados (case-insensitive por si los UUIDs vienen con distinto casing)
+    const savedValues = this.valoresIniciales() ?? [];
+    const valorMap = new Map<string, string>(
+      savedValues.map(v => [v.preguntaId.toLowerCase(), v.valor])
+    );
+
     secciones.forEach(seccion => {
       (seccion.preguntas ?? []).forEach(pregunta => {
         if (!pregunta.preguntaId) return;
         const validators = [];
-        if (pregunta.obligatorio) validators.push(Validators.required);
+        const ignorarObligatorio = this.ignorarObligatorioEnTipos().includes(pregunta.tipo);
+        if (pregunta.obligatorio && !ignorarObligatorio) validators.push(Validators.required);
         if (pregunta.patronValidacion) validators.push(Validators.pattern(pregunta.patronValidacion));
 
-        let defaultValue: string | boolean = pregunta.valorDefecto ?? '';
-        if (pregunta.tipo === 'CHECKBOX' && !pregunta.opciones) {
+        const savedValue = valorMap.get(pregunta.preguntaId.toLowerCase());
+        let defaultValue: string | boolean = savedValue ?? pregunta.valorDefecto ?? '';
+        if (savedValue === undefined && pregunta.tipo === 'CHECKBOX' && !pregunta.opciones) {
           defaultValue = defaultValue === 'true' || defaultValue === '1';
         }
 
