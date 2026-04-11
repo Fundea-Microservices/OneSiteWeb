@@ -40,6 +40,8 @@ export interface FormEncabezado {
     formId?:         string;
     nombre:          string;
     descripcion:     string | null;
+    categoria:       string | null;
+    tabla:           string | null;
     activo:          boolean;
     created_at?:     Date;
     updated_at?:     Date;

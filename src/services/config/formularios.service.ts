@@ -23,9 +23,10 @@ import {
 export class FormulariosService extends HttpService {
 
   private readonly endpoints = {
-    formularioEncabezado: '/formulario/encabezado',
-    formularioSeccion:    '/formulario/seccion',
-    formularioPregunta:   '/formulario/pregunta',
+    formularioEncabezado:    '/formulario/encabezado',
+    formularioSeccion:       '/formulario/seccion',
+    formularioPregunta:      '/formulario/pregunta',
+    formularioObtenerValores: '/formulario/obtener-valores',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
@@ -66,12 +67,30 @@ export class FormulariosService extends HttpService {
     }
   }
 
+  async obtenerValoresFormulario(encabezadoId: string, padreId: string): Promise<{ preguntaId: string; valor: string }[]> {
+    try {
+      const resp = await firstValueFrom(
+        this.post<any>(this.endpoints.formularioObtenerValores, { encabezadoId, padreId })
+      );
+      console.log("🚀 ~ FormulariosService ~ obtenerValoresFormulario ~ resp:", resp)
+      if (resp.body?.success) {
+        return Array.isArray(resp.body.data.datosAdicionales) ? resp.body.data.datosAdicionales : [];
+      }
+      throw new Error(resp.body?.message || 'Error al obtener valores del formulario');
+    } catch (error: any) {
+      console.error('Error en obtenerValoresFormulario:', error);
+      throw error;
+    }
+  }
+
   async createFormEncabezado(data: FormEncabezado) {
     try {
       // 🛡️ Filtramos solo los campos permitidos por el CreateEncabezadoDto
       const payload = {
         nombre: data.nombre,
         descripcion: data.descripcion,
+        categoria: data.categoria,
+        tabla: data.tabla,
         activo: data.activo
       };
 
@@ -98,6 +117,8 @@ export class FormulariosService extends HttpService {
         formId: data.formId,
         nombre: data.nombre,
         descripcion: data.descripcion,
+        categoria: data.categoria,
+        tabla: data.tabla,
         activo: data.activo
       };
 

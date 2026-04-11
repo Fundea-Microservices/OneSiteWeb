@@ -56,6 +56,8 @@ export default class FormularioGesionPage {
     return {
       nombre: '',
       descripcion: '',
+      categoria: null,
+      tabla: null,
       activo: true,
     };
   }
