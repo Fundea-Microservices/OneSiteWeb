@@ -142,6 +142,44 @@
                         </p>
                     </div>
                 </div>
+
+                <!-- Datos Adicionales (Desplegable) -->
+                @if (solicitud()?.representante?.datosAdicionales && solicitud()!.representante!.datosAdicionales!.length > 0) {
+                <hr />
+                <div class="border border-gray-200 rounded-lg overflow-hidden mt-2">
+                    <div class="px-3 py-2 cursor-pointer flex items-center justify-between bg-gray-100 hover:bg-gray-200 transition-colors duration-200 select-none"
+                        (click)="mostrarDatosAdicionales.set(!mostrarDatosAdicionales())">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" [class.text-blue-600]="mostrarDatosAdicionales()" [class.text-gray-500]="!mostrarDatosAdicionales()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="text-sm font-semibold" [class.text-blue-700]="mostrarDatosAdicionales()" [class.text-gray-700]="!mostrarDatosAdicionales()">
+                                Datos Adicionales ({{ solicitud()!.representante!.datosAdicionales!.length }})
+                            </span>
+                        </div>
+                        <svg class="w-4 h-4 transition-transform duration-300" [class.rotate-180]="mostrarDatosAdicionales()" [class.text-blue-600]="mostrarDatosAdicionales()" [class.text-gray-400]="!mostrarDatosAdicionales()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div class="overflow-hidden transition-all duration-400 ease-in-out"
+                        [style.max-height]="mostrarDatosAdicionales() ? '3000px' : '0px'"
+                        [style.opacity]="mostrarDatosAdicionales() ? '1' : '0'">
+                        <div class="px-3 py-3 bg-white">
+                            <div class="row">
+                                @for (dato of solicitud()!.representante!.datosAdicionales; track dato.datoId ?? $index) {
+                                <div class="col-md-6 mb-2">
+                                    <p class="mb-1">
+                                        <strong class="text-gray-600 text-xs uppercase tracking-wide">{{ dato.campo ?? dato.nombre }}</strong><br />
+                                        <span class="text-sm text-gray-800">{{ dato.valor || 'N/A' }}</span>
+                                    </p>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+
             </div>
         </div>
     </div>

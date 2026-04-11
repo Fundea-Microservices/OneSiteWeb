@@ -36,6 +36,7 @@ export default class SeguimientoSolicitudesComponent {
 	mostrarRepresentante = signal(false);
 	mostrarEmpresa = signal(false);
 	mostrarCuentaBancaria = signal(false);
+	mostrarDatosAdicionales = signal(false);
 
 	// Catálogos para mostrar valores
 	catalogoProfesion = signal<CatalogoSimple[]>([]);
