@@ -23,6 +23,7 @@ export interface FormRespuesta {
   tipo: TipoPregunta;
   nombre: string;
   valor: string;
+  preguntaId?: string;
 }
 
 @Component({
@@ -190,6 +191,7 @@ export class RenderFormularioComponent implements OnInit {
           tipo: pregunta.tipo,
           nombre: pregunta.titulo,
           valor: this.getControl(pregunta.preguntaId)?.value ?? '',
+          preguntaId: pregunta.preguntaId,
         });
       });
     });
