@@ -102,13 +102,13 @@
           Tipo de Actividad <span class="text-red-500">*</span>
         </label>
         <select
-          [(ngModel)]="selectedTipoActividadId"
-          [ngModelOptions]="{standalone: true}"
+          [value]="selectedTipoActividadId()"
+          (change)="selectedTipoActividadId.set($any($event.target).value); selectedActividadId.set('')"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Seleccione tipo de actividad</option>
-          @for (tipo of tiposActividad(); track tipo.catalogoId) {
-            <option [value]="tipo.catalogoId">{{ tipo.nombre }}</option>
+          @for (tipo of TIPOS_ACTIVIDAD; track tipo) {
+            <option [value]="tipo">{{ tipo }}</option>
           }
         </select>
       </div>
@@ -118,16 +118,15 @@
           Actividad <span class="text-red-500">*</span>
         </label>
         <select
-          [(ngModel)]="selectedActividadId"
-          [ngModelOptions]="{standalone: true}"
+          [value]="selectedActividadId()"
+          (change)="selectedActividadId.set($any($event.target).value)"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           [disabled]="!selectedTipoActividadId()"
         >
           <option value="">Seleccione actividad</option>
-          @for (act of actividadesFiltradas(); track act.catalogoId) {
-            <option [value]="act.catalogoId">{{ act.nombre }}</option>
-        }
-        <option value="1" > NA</option>
+          @for (act of actividadesFiltradas(); track act) {
+            <option [value]="act">{{ act }}</option>
+          }
         </select>
       </div>
     </div>

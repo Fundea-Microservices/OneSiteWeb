@@ -54,6 +54,23 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
   @Output() save = new EventEmitter<IEmpresaRepresentante>();
   @Output() cancel = new EventEmitter<void>();
 
+  // Listas fijas de tipos y actividades (valor = texto = valor guardado en BD)
+  readonly TIPOS_ACTIVIDAD = ['Comercio', 'Servicios', 'Producción'];
+
+  readonly ACTIVIDADES_POR_TIPO: Record<string, string[]> = {
+    'Comercio': [
+      'Tienda', 'Abarrotería', 'Agroservicio', 'Ferretería', 'Librería',
+      'Venta de Ropa', 'Miscelaneas', 'Compra / Venta de Productos Varios', 'Otros',
+    ],
+    'Servicios': [
+      'Peluquería / Salón de belleza', 'Hotel', 'Restaurante / Cafetería / Venta de Comida',
+      'Carpintería', 'Herrería', 'Academias', 'Aserradero', 'Molino', 'Talavartería', 'Otros',
+    ],
+    'Producción': [
+      'Fabricación de ropa', 'Fabricación de zapatos', 'Otros',
+    ],
+  };
+
   // Formulario dinámico
   renderFormRef = viewChild(RenderFormularioComponent);
   datosAdicionales = signal<FormRespuesta[]>([]);
@@ -61,11 +78,12 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
   valoresFormDinamico = signal<{ preguntaId: string; valor: string }[]>([]);
   cargandoFormulario = signal(false);
   errorFormulario = signal<string | null>(null);
-  // Catálogos
+  // Catálogos (solo departamento y municipio siguen usando catálogo)
   departamentos = signal<CatalogoSimple[]>([]);
   municipios = signal<CatalogoSimple[]>([]);
-  tiposActividad = signal<CatalogoSimple[]>([]);
-  actividades = signal<CatalogoSimple[]>([]);
+  // tiposActividad y actividades ya no usan catálogo
+  // tiposActividad = signal<CatalogoSimple[]>([]);
+  // actividades = signal<CatalogoSimple[]>([]);
 
   // Campos del formulario
   nombreEmpresa = signal<string>('');
@@ -89,11 +107,7 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
   });
 
   actividadesFiltradas = computed(() => {
-    const tipoActId = this.selectedTipoActividadId();
-    const tipoAct = this.tiposActividad().find(t => t.catalogoId === tipoActId);
-    if (!tipoAct) return [];
-
-    return this.actividades().filter(a => a.padreValorCore === tipoAct.valorCore);
+    return this.ACTIVIDADES_POR_TIPO[this.selectedTipoActividadId()] ?? [];
   });
 
   constructor() {}
@@ -130,15 +144,11 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
       this.municipios.set(munis);
     }
 
-    const tiposAct = this.catalogosService.obtenerLocal('sector');
-    if (tiposAct) {
-      this.tiposActividad.set(tiposAct);
-    }
-
-    const acts = this.catalogosService.obtenerLocal('actividad_laboral');
-    if (acts) {
-      this.actividades.set(acts);
-    }
+    // Tipos de actividad y actividades ya no se cargan del cat\u00e1logo
+    // const tiposAct = this.catalogosService.obtenerLocal('sector');
+    // if (tiposAct) { this.tiposActividad.set(tiposAct); }
+    // const acts = this.catalogosService.obtenerLocal('actividad_laboral');
+    // if (acts) { this.actividades.set(acts); }
   }
 
   private resetForm() {
