@@ -123,7 +123,12 @@ export default class EmpresasRepresentantePage {
   // Catálogo de estados de solicitud
   estadosSolicitud = signal<EstadoSolicitud[]>([]);
 
+  // Estado de carga global de la página
+  cargandoPagina = signal(true);
+
   async ngOnInit() {
+    this.cargandoPagina.set(true);
+    try {
     // Cargar catálogos
     this.cargarCatalogos();
     await this.cargarEstadosSolicitud();
@@ -155,6 +160,9 @@ export default class EmpresasRepresentantePage {
       this.representante.set(resp?.data?.representante || null);
       // Cargar empresas del representante
       await this.cargarEmpresas();
+    }
+    } finally {
+      this.cargandoPagina.set(false);
     }
   }
 
@@ -282,6 +290,7 @@ export default class EmpresasRepresentantePage {
   }
 
   async onGuardarEmpresa(empresa: IEmpresaRepresentante) {
+    console.log("🚀 ~ EmpresasRepresentantePage ~ onGuardarEmpresa ~ empresa:", empresa)
     if (this.esNuevaEmpresa()) {
       const resp = await this.empresaService.crearEmpresa(empresa);
       if (resp?.success) {

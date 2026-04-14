@@ -15,6 +15,17 @@
     </div>
     <div class="card-body">
 
+        <!-- Spinner de carga global -->
+        @if (cargandoPagina()) {
+        <div class="flex flex-col items-center justify-center py-16 gap-4">
+            <svg class="w-10 h-10 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <p class="text-sm text-gray-500">Cargando información...</p>
+        </div>
+        } @else {
+
         <!-- Información del Representante -->
         <div class="from-blue-50 to-indigo-50 rounded-lg p-4 md:p-6 mb-4 shadow-sm border border-blue-100">
             <div class="flex items-center mb-3">
@@ -238,6 +249,37 @@
                                         }
                                     </div>
                                 </div>
+
+                                <!-- Datos Adicionales de la Empresa -->
+                                @if (empresa.datosAdicionales && empresa.datosAdicionales.length > 0) {
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <details class="group">
+                                        <summary class="flex items-center justify-between cursor-pointer list-none select-none rounded-md px-3 py-2 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                <span class="text-sm font-semibold text-blue-800">Datos adicionales</span>
+                                                <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium bg-blue-200 text-blue-800 rounded-full">
+                                                    {{ empresa.datosAdicionales.length }}
+                                                </span>
+                                            </div>
+                                            <svg class="w-4 h-4 text-blue-600 transition-transform duration-200 group-open:rotate-180"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </summary>
+                                        <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 px-1">
+                                            @for (dato of empresa.datosAdicionales; track $index) {
+                                            <div class="flex flex-col p-2 bg-gray-50 rounded border border-gray-100">
+                                                <span class="text-xs text-gray-500 font-medium mb-0.5">{{ dato.nombre || dato.campo || 'Campo' }}</span>
+                                                <span class="text-sm text-gray-800 font-medium">{{ dato.valor || '—' }}</span>
+                                            </div>
+                                            }
+                                        </div>
+                                    </details>
+                                </div>
+                                }
 
                                 <!-- Sección de Solicitud -->
                                 <div class="mt-4 pt-4 border-t border-gray-200">
@@ -525,6 +567,8 @@
                 }
             </div>
         </div>
+
+        } <!-- fin @else cargandoPagina -->
 
     </div>
 

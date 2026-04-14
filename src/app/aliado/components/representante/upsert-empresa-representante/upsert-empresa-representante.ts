@@ -5,25 +5,32 @@ import {
   Output,
   inject,
   input,
-  effect,
   signal,
   computed,
-  OnInit
+  OnInit,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IEmpresaRepresentante } from '../../../../../interfaces/aliado/empresa-representante';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos';
+import { FormRespuesta, RenderFormularioComponent } from '../../../../configuracion/components/formulario/render-formulario/render-formulario.component';
+import { FormulariosService } from '../../../../../services/config/formularios.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-upsert-empresa-representante',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RenderFormularioComponent],
   templateUrl: './upsert-empresa-representante.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UpsertEmpresaRepresentanteComponent implements OnInit {
   private catalogosService = inject(CatalogosBantotalService);
+  private formulariosService = inject(FormulariosService);
+  private toastr = inject(ToastrService);
+
+  readonly FORMULARIO_EMPRESA_ID = '34CECDE4-C2E1-43AE-B560-D3D9F22D17AE';
 
   empresa = input<IEmpresaRepresentante>({
     empresaId: '',
@@ -47,6 +54,13 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
   @Output() save = new EventEmitter<IEmpresaRepresentante>();
   @Output() cancel = new EventEmitter<void>();
 
+  // Formulario dinámico
+  renderFormRef = viewChild(RenderFormularioComponent);
+  datosAdicionales = signal<FormRespuesta[]>([]);
+  mensajeFormDinamico = signal<string>('');
+  valoresFormDinamico = signal<{ preguntaId: string; valor: string }[]>([]);
+  cargandoFormulario = signal(false);
+  errorFormulario = signal<string | null>(null);
   // Catálogos
   departamentos = signal<CatalogoSimple[]>([]);
   municipios = signal<CatalogoSimple[]>([]);
@@ -82,22 +96,27 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     return this.actividades().filter(a => a.padreValorCore === tipoAct.valorCore);
   });
 
-  constructor() {
-    effect(() => {
-      const _ = this.key(); // reinicia el form cuando cambia el key
-      const empresaData = this.empresa();
-      const isNuevo = this.nuevo();
-
-      if (isNuevo) {
-        this.resetForm();
-      } else {
-        this.loadEmpresaData(empresaData);
-      }
-    });
-  }
+  constructor() {}
 
   ngOnInit(): void {
     this.cargarCatalogos();
+
+    // El componente se recrea cada vez que el modal se abre (@if showModal en el padre),
+    // así que ngOnInit() es suficiente para inicializar — no se necesita effect().
+    const empresaData = this.empresa();
+    const isNuevo = this.nuevo();
+
+    if (isNuevo) {
+      this.resetForm();
+      this.valoresFormDinamico.set([]);
+    } else {
+      this.loadEmpresaData(empresaData);
+      if (empresaData.empresaId) {
+        void this.cargarValoresFormulario(empresaData.empresaId);
+      } else {
+        this.valoresFormDinamico.set([]);
+      }
+    }
   }
 
   private cargarCatalogos() {
@@ -146,6 +165,36 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     this.selectedActividadId.set(empresa.actividad || '');
     this.detalleActividad.set(empresa.detalleActividad || '');
     this.fechaInicioActividad.set(this.formatFechaParaMostrar(empresa.fechaInicioActividad) || '');
+    if (empresa.datosAdicionales?.length) {
+      this.valoresFormDinamico.set(
+        empresa.datosAdicionales
+          .filter(d => !!d.preguntaId)
+          .map(d => ({ preguntaId: d.preguntaId!, valor: d.valor ?? '' }))
+      );
+    }
+  }
+
+  onListadoFormDinamico(listado: FormRespuesta[]) {
+    this.datosAdicionales.set(listado.filter(d => d.tipo !== 'FILE'));
+  }
+
+  async cargarValoresFormulario(empresaId: string) {
+    this.cargandoFormulario.set(true);
+    this.errorFormulario.set(null);
+    try {
+      const valores = await this.formulariosService.obtenerValoresFormulario(this.FORMULARIO_EMPRESA_ID, empresaId);
+      this.valoresFormDinamico.set(valores ?? []);
+    } catch (error: any) {
+      const apiMsg = error?.error?.message || error?.message || null;
+      this.errorFormulario.set(
+        apiMsg
+          ? `No se pudieron cargar los datos adicionales del formulario: ${apiMsg}`
+          : 'No se pudieron cargar los datos adicionales del formulario. Intente más tarde.'
+      );
+      this.toastr.error(apiMsg || 'No se pudieron cargar los datos adicionales del formulario', 'Error');
+    } finally {
+      this.cargandoFormulario.set(false);
+    }
   }
 
   private formatFechaParaMostrar(fecha: string | Date | undefined): string {
@@ -204,6 +253,15 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
       return;
     }
 
+    const renderRef = this.renderFormRef();
+    const formDinamicoValido = renderRef?.validarFormulario() ?? true;
+    if (!formDinamicoValido) {
+      const msg = this.mensajeFormDinamico();
+      this.toastr.error(msg || 'Por favor completa los campos obligatorios del formulario.', 'Campos incompletos');
+      return;
+    }
+    const datosParaGuardar = this.datosAdicionales();
+
     const deptoCode = this.selectedDepartamentoCode();
     const muniId = this.selectedMunicipioId();
     const depto = this.departamentos().find(d => d.valorCore === deptoCode);
@@ -224,6 +282,7 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
       actividad: this.selectedActividadId(),
       detalleActividad: this.detalleActividad(),
       fechaInicioActividad: fechaParsed ? fechaParsed.toISOString() : undefined,
+      datosAdicionales: datosParaGuardar,
     };
 
     this.save.emit(empresaData);

@@ -193,6 +193,23 @@ export class RenderFormularioComponent implements OnInit {
     return this.form.valid;
   }
 
+  /** Devuelve el listado actual de respuestas sin emitir eventos (para lectura imperativa al guardar). */
+  obtenerListado(): FormRespuesta[] {
+    const listado: FormRespuesta[] = [];
+    this.secciones().forEach(seccion => {
+      this.getVisiblePreguntas(seccion).forEach(pregunta => {
+        if (!pregunta.preguntaId) return;
+        listado.push({
+          tipo: pregunta.tipo,
+          nombre: pregunta.titulo,
+          valor: this.getControl(pregunta.preguntaId)?.value ?? '',
+          preguntaId: pregunta.preguntaId,
+        });
+      });
+    });
+    return listado;
+  }
+
   private emitOutputs() {
     const listado: FormRespuesta[] = [];
     this.secciones().forEach(seccion => {

@@ -120,6 +120,7 @@ export class EmpresaRepresentanteService extends HttpService {
         detalleActividad: empresa.detalleActividad,
         fechaInicioActividad: empresa.fechaInicioActividad,
         usrIngreso: empresa.usrIngreso,
+        datosAdicionales: empresa.datosAdicionales,
       };
 
       const resp = await firstValueFrom(
@@ -161,6 +162,7 @@ export class EmpresaRepresentanteService extends HttpService {
       if (empresa.detalleActividad !== undefined) updatePayload.detalleActividad = empresa.detalleActividad;
       if (empresa.fechaInicioActividad) updatePayload.fechaInicioActividad = empresa.fechaInicioActividad;
       if (empresa.usrIngreso !== undefined) updatePayload.usrIngreso = empresa.usrIngreso;
+      if (empresa.datosAdicionales !== undefined) updatePayload.datosAdicionales = empresa.datosAdicionales;
 
       const resp = await firstValueFrom(
         this.put<EmpresaRepresentanteResponse>(

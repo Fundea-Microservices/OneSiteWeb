@@ -163,6 +163,30 @@
       <p class="text-xs text-gray-500 mt-1">Formato: dd/MM/yyyy (ejemplo: 01/01/2025)</p>
     </div>
 
+    <!-- Datos adicionales (formulario dinámico) -->
+    <div class="border border-gray-200 rounded-md p-4 bg-gray-50">
+      <h4 class="text-sm font-semibold text-gray-800 mb-3">Datos adicionales</h4>
+      @if (!nuevo() && cargandoFormulario()) {
+        <div class="flex items-center gap-2 py-2">
+          <svg class="w-4 h-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          <p class="text-sm text-gray-600">Cargando datos adicionales...</p>
+        </div>
+      }
+      @if (errorFormulario()) {
+        <p class="text-sm text-red-600 mb-2">{{ errorFormulario() }}</p>
+      }
+      <div [style.display]="!nuevo() && cargandoFormulario() ? 'none' : 'block'">
+        <app-render-formulario
+          [encabezadoId]="FORMULARIO_EMPRESA_ID"
+          [valoresIniciales]="valoresFormDinamico()"
+          (listado)="onListadoFormDinamico($event)"
+          (mensaje)="mensajeFormDinamico.set($event)" />
+      </div>
+    </div>
+
     <!-- Botones -->
     <div class="flex justify-end gap-3 mt-6">
       <button

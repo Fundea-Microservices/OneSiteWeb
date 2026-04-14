@@ -12,6 +12,20 @@ export interface IEmpresaRepresentante {
   detalleActividad?: string;   // varchar(300) - Nullable
   fechaInicioActividad?: string; // date - Nullable
   usrIngreso?: string;         // varchar(30) - Nullable
+  datosAdicionales?: {
+    datoId?: string;
+    tipo: string;
+    campo?: string;
+    nombre?: string;
+    valor: string;
+    preguntaId?: string;
+    usuarioId?: string;
+    usuarioNombre?: string;
+    empresaId?: string;
+    empresaNombre?: string;
+    created_at?: string;
+    updated_at?: string | null;
+  }[];
   
   // Auditoría
   created_at?: Date;            // datetime (tiene default)
