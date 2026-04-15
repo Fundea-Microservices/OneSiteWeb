@@ -11,7 +11,7 @@ import { ITramaDetalle, TramaDetalleResponse, TramaDetallesResponse } from '../.
 export class TramaDetalleService extends HttpService {
 
   private readonly endpoints = {
-    trama: '/dev/emanager/gestion/trama-detalle',
+    trama: '/emanager/gestion/trama-detalle',
   };
 
   constructor(http: HttpClient, private toastr: ToastrService) {
