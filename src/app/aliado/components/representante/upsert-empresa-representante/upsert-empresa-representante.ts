@@ -171,8 +171,14 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     this.selectedDepartamentoCode.set(empresa.departamento?.toString() || '0');
     this.selectedMunicipioId.set(empresa.municipio?.toString() || '');
     this.direccion.set(empresa.direccion || '');
-    this.selectedTipoActividadId.set(empresa.tipoActividad || '');
-    this.selectedActividadId.set(empresa.actividad || '');
+
+    // Normaliza valores para que el select haga match aunque vengan con variaciones de formato.
+    const tipoActividad = this.matchOption(this.TIPOS_ACTIVIDAD, empresa.tipoActividad);
+    const actividadesDelTipo = this.ACTIVIDADES_POR_TIPO[tipoActividad] ?? [];
+    const actividad = this.matchOption(actividadesDelTipo, empresa.actividad);
+    this.selectedTipoActividadId.set(tipoActividad);
+    this.selectedActividadId.set(actividad);
+
     this.detalleActividad.set(empresa.detalleActividad || '');
     this.fechaInicioActividad.set(this.formatFechaParaMostrar(empresa.fechaInicioActividad) || '');
     if (empresa.datosAdicionales?.length) {
@@ -182,6 +188,28 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
           .map(d => ({ preguntaId: d.preguntaId!, valor: d.valor ?? '' }))
       );
     }
+  }
+
+  private normalizarTexto(valor: string): string {
+    return valor
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+  }
+
+  private matchOption(opciones: string[], valor: string | null | undefined): string {
+    if (!valor) return '';
+    const valorNormalizado = this.normalizarTexto(valor);
+    return opciones.find(op => this.normalizarTexto(op) === valorNormalizado) ?? '';
+  }
+
+  onTipoActividadChange(tipo: string) {
+    if (tipo === this.selectedTipoActividadId()) {
+      return;
+    }
+    this.selectedTipoActividadId.set(tipo);
+    this.selectedActividadId.set('');
   }
 
   onListadoFormDinamico(listado: FormRespuesta[]) {
