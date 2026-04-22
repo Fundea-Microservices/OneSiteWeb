@@ -7,9 +7,11 @@ import { SeguimientoSolicitudService } from '../../../../services/aliado/seguimi
 import { GeneralidadesService } from '../../../../services/aliado/generalidades.service';
 import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
 import { BancoService } from '../../../../services/aliado/banco.service';
+import { CorreoNotificacionesService } from '../../../../services/config/correo-notificaciones.service';
 import { CatalogoSimple } from '../../../../interfaces/api-bantotal/catalogos';
 import { Solicitud, SeguimientoSolicitud, Empresa } from '../../../../interfaces/aliado/solicitudes';
 import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
+import { ICorreoNotificacion } from '../../../../interfaces/configuracion';
 
 @Component({
 	selector: 'app-seguimiento-solicitudes',
@@ -25,6 +27,7 @@ export default class SeguimientoSolicitudesComponent {
 	private generalidadesService = inject(GeneralidadesService);
 	private catalogosService = inject(CatalogosBantotalService);
 	private bancoService = inject(BancoService);
+	private correoNotificacionesService = inject(CorreoNotificacionesService);
 	private cdr = inject(ChangeDetectorRef);
 
 	solicitud = signal<Solicitud | null>(null);
@@ -51,6 +54,9 @@ export default class SeguimientoSolicitudesComponent {
 	catalogoSector = signal<CatalogoSimple[]>([]);
 	catalogoBancos = signal<any[]>([]);
 	catalogoTiposCuenta = signal<any[]>([]);
+
+	correosNotificacion = signal<ICorreoNotificacion[]>([]);
+	correoSeleccionado = '';
 
 	// Formulario de nuevo seguimiento
 	nuevoSeguimiento = {
@@ -79,6 +85,7 @@ export default class SeguimientoSolicitudesComponent {
 		this.cargarEstadosSolicitud();
 		this.cargarCatalogos();
 		this.cargarCatalogosBancos();
+		this.cargarCorreosNotificacion();
 	}
 
 	private async cargarSolicitud(solicitudId: string) {
@@ -169,6 +176,13 @@ export default class SeguimientoSolicitudesComponent {
 		return tipo?.nombre || 'N/A';
 	}
 
+	esEstadoAprobado(): boolean {
+		const estado = this.estadosSolicitud().find(
+			e => e.estadoSolicitudId === this.nuevoSeguimiento.estadoAprobacionId
+		);
+		return !!estado?.nombre?.toUpperCase().includes('APROBADO');
+	}
+
 	async guardarSeguimiento() {
 		const solicitud = this.solicitud();
 		if (!solicitud || !this.nuevoSeguimiento.estadoAprobacionId || !this.nuevoSeguimiento.observaciones.trim()) {
@@ -180,22 +194,34 @@ export default class SeguimientoSolicitudesComponent {
 		const form = this.formularioAprobacion;
 		const tieneRespuestasFormulario = Object.values(form).some(v => v !== null && v !== '');
 
-		const estadoSeleccionado = this.estadosSolicitud().find(
-			e => e.estadoSolicitudId === this.nuevoSeguimiento.estadoAprobacionId
-		);
-
-		// Si se va a aprobar, requerir documentoCargado
-		if (estadoSeleccionado?.nombre?.includes('APROBADO')) {
-			if (!solicitud.documentoCargado) {
-				alert('Debe adjuntar el documento PDF de la solicitud antes de aprobar.');
-				return;
-			}
+		if (this.esEstadoAprobado()) {
+			// if (!solicitud.documentoCargado) {
+			// 	alert('Debe adjuntar el documento PDF de la solicitud antes de aprobar.');
+			// 	return;
+			// }
 			if (tieneRespuestasFormulario && !this.esFormularioAprobado()) {
 				alert('El formulario de aprobación no está completamente aprobado. Por favor revise todas las preguntas.');
 				return;
 			}
 		}
-	
+
+		await this.ejecutarGuardarSeguimiento();
+	}
+
+	private async cargarCorreosNotificacion() {
+		try {
+			const response = await this.correoNotificacionesService.getCorreosNotificacion();
+			if (response?.data) {
+				this.correosNotificacion.set(response.data);
+			}
+		} catch (error) {
+			console.error('Error al cargar correos de notificación:', error);
+		}
+	}
+
+	private async ejecutarGuardarSeguimiento() {
+		const solicitud = this.solicitud();
+		if (!solicitud) return;
 
 		this.isSavingSeguimiento.set(true);
 		try {
@@ -205,7 +231,8 @@ export default class SeguimientoSolicitudesComponent {
 				solicitudId: solicitud.solicitudId,
 				ordenSeguimiento: nuevoOrden,
 				estadoAprobacionId: this.nuevoSeguimiento.estadoAprobacionId,
-				observaciones: this.nuevoSeguimiento.observaciones
+				observaciones: this.nuevoSeguimiento.observaciones,
+				...(this.esEstadoAprobado() && this.correoSeleccionado ? { correoNotificacion: this.correoSeleccionado } : {})
 			};
 
 			const response = await this.seguimientoService.createSeguimientoSolicitud(seguimientoData);
@@ -215,6 +242,7 @@ export default class SeguimientoSolicitudesComponent {
 				// Recargar la solicitud para ver el nuevo seguimiento
 				await this.cargarSolicitud(solicitud.solicitudId);
 				// Limpiar formulario
+				this.correoSeleccionado = '';
 				this.nuevoSeguimiento = {
 					estadoAprobacionId: '',
 					observaciones: ''

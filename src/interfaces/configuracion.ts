@@ -137,3 +137,25 @@ export interface FormEncabezadoCompletoResponse {
     message:    string;
     data:       FormEncabezadoCompleto;
 }
+
+// ── Correos de Notificación ──────────────────────────────────────────────────
+
+export interface ICorreoNotificacion {
+    correoId?:          string;
+    correo:             string;
+    activo:             boolean;
+    orden:              number;
+    nombreContacto:     string;
+    tipoNotificacion:   string;
+    created_at?:        Date | null;
+    updated_at?:        Date | null;
+    deleted_at?:        Date | null;
+}
+
+export interface CorreoNotificacionResponse {
+    success:    boolean;
+    statusCode: number;
+    message:    string;
+    data:       ICorreoNotificacion[];
+    metadata:   Metadata;
+}

@@ -581,13 +581,34 @@
                         <label for="estadoAprobacion" class="form-label">Estado de la Solicitud <span
                                 class="text-danger">*</span></label>
                         <select id="estadoAprobacion" class="form-select"
-                            [(ngModel)]="nuevoSeguimiento.estadoAprobacionId" name="estadoAprobacion" required>
+                            [(ngModel)]="nuevoSeguimiento.estadoAprobacionId" name="estadoAprobacion"
+                            (ngModelChange)="correoSeleccionado = esEstadoAprobado() ? (solicitud()?.representante?.correoElectronico || '') : ''" required>
                             <option value="">Seleccione un estado</option>
                             @for (estado of estadosSolicitud(); track estado.estadoSolicitudId) {
                             <option [value]="estado.estadoSolicitudId">{{ estado.nombre }}</option>
                             }
                         </select>
                     </div>
+
+                    @if (esEstadoAprobado()) {
+                    <div class="col-md-6 mb-3">
+                        <label for="correoNotificacion" class="form-label">
+                            <i class="bi bi-envelope me-1 text-blue-600"></i>
+                            Correo para notificación de creación de usuario <span class="text-danger">*</span>
+                        </label>
+                        <select id="correoNotificacion" class="form-select" [(ngModel)]="correoSeleccionado" name="correoNotificacion">
+                            @if (solicitud()?.representante?.correoElectronico) {
+                            <option [value]="solicitud()!.representante!.correoElectronico!">
+                                Correo del representante ({{ solicitud()!.representante!.correoElectronico }})
+                            </option>
+                            }
+                            @for (correo of correosNotificacion(); track correo.correoId) {
+                            <option [value]="correo.correo">{{ correo.nombreContacto }} ({{ correo.correo }})</option>
+                            }
+                        </select>
+                        <small class="text-muted">Seleccione el correo para enviar la notificación de la creación de usuario</small>
+                    </div>
+                    }
 
                     <div class="col-md-12 mb-3">
                         <label for="observaciones" class="form-label">Observaciones / Mensaje <span
@@ -618,6 +639,7 @@
     </div>
     }
 </div>
+
 } @else {
 <div class="alert alert-warning text-center" role="alert">
     <i class="bi bi-exclamation-triangle me-2"></i>

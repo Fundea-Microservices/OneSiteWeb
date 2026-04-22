@@ -74,6 +74,7 @@ export interface SeguimientoSolicitud {
   estadoAprobacionId?: string | null; // UUID
   estadoAprobacion?: EstadoSolicitud
   observaciones?: string | null;
+  correoNotificacion?: string | null;
 
   // Auditoría
   usrIngreso?: string | null;
