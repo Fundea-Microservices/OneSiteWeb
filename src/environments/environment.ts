@@ -1,6 +1,6 @@
-//const API_URL = 'http://localhost:3000/'
+const API_URL = 'http://localhost:3000/'
 
-const API_URL = 'https://api.serviciosfundea.org/'
+//const API_URL = 'https://api.serviciosfundea.org/'
 
 const AGENTE = {
     endpoint: 'http://190.100.200.84:5678/webhook/file/v1/analisis',
