@@ -260,6 +260,32 @@ export const routes: Routes = [
                 ]
             },
 
+            {
+                path: 'venta-cartera',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./flujo-fondos/pages/home-flujo-fondos/home-flujo-fondos.component'),
+                    },
+                    {
+                        path: 'titularizacion',
+                        loadComponent: () => import('./venta-cartera/pages/titularizacion-page/titularizacion-page'),
+                    },
+                    {
+                        path: 'titularizacion/ingresar-serie',
+                        loadComponent: () => import('./venta-cartera/pages/ingresar-serie-page/ingresar-serie-page'),
+                    },
+                    {
+                        path: 'titularizacion/ingresar-serie/:serieId',
+                        loadComponent: () => import('./venta-cartera/pages/ingresar-serie-page/ingresar-serie-page'),
+                    },
+                    {
+                        path: '**',
+                        redirectTo: '',
+                    }
+                ]
+            },
+
             
         ]
     },

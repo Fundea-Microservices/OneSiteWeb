@@ -34,6 +34,7 @@ export interface IEncabezadoDetalle {
 
 
 export interface IEncabezado {
+  detalles?: IEncabezadoDetalle[];
   encabezadoId: string; // UUID
   nombre: string;  
   proceso: number;   

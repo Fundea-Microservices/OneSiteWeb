@@ -1,0 +1,286 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/venta-cartera']">Venta de Cartera</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/venta-cartera/titularizacion']">Titularización</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Ingrear Serie</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center gap-3">
+        <div>
+            <div class="fw-semibold">Cargar Datos de Serie</div>
+            <div class="text-muted small">
+                @if (serieEncabezado()) {
+                    Serie: {{ serieEncabezado()?.identificador }}
+                } @else {
+                    Serie ID: {{ serieId() || 'N/A' }}
+                }
+            </div>
+        </div>
+
+        <div>
+            <input #excelInput type="file" accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="d-none" (change)="onExcelSelected($event)">
+            <button class="btn btn-success btn-sm" type="button" (click)="openExcelPicker()" [disabled]="isLoading()">
+                @if (isLoading()) {
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Cargando...
+                } @else {
+                <ion-icon name="cloud-upload" class="me-1"></ion-icon> Cargar Datos
+                }
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
+        @if (isLoading()) {
+        <div class="excel-loading mb-3">
+            <div class="d-flex align-items-center justify-content-center gap-2">
+                <span class="spinner-border spinner-border-sm text-success" role="status" aria-hidden="true"></span>
+                <span>Cargando y procesando archivo de Excel...</span>
+            </div>
+        </div>
+        }
+
+        @if (totalDetalles() === 0) {
+        <div class="text-center py-5 text-muted">
+            Selecciona un archivo Excel para cargar el detalle de la serie.
+        </div>
+        } @else {
+        <div class="card border mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <h5 class="mb-0 fw-bold text-gray-800">Datos de Serie Encabezado</h5>
+                    <button class="btn btn-success btn-sm" type="button" (click)="saveAllData()" [disabled]="isSavingAll()">
+                        @if (isSavingAll()) {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        {{ saveProgressLabel() }}
+                        } @else {
+                        <ion-icon name="save" class="me-1"></ion-icon> Crear y guardar todo
+                        }
+                    </button>
+                </div>
+
+                @if (isSavingAll()) {
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>{{ saveProgressLabel() }}</span>
+                        <span>{{ saveProgress() }}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                            role="progressbar"
+                            [style.width.%]="saveProgress()"
+                            [attr.aria-valuenow]="saveProgress()"
+                            aria-valuemin="0"
+                            aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                }
+
+                <form class="row g-3">
+                    <div class="col-md-6">
+                        <label for="identificador" class="form-label fw-semibold small text-gray-700">Identificador <span class="text-danger">*</span></label>
+                        <input
+                            id="identificador"
+                            name="identificador"
+                            type="text"
+                            required
+                            maxlength="150"
+                            class="form-control border-gray-300 rounded-lg shadow-none"
+                            [value]="encabezadoForm().identificador || ''"
+                            (input)="onEncabezadoIdentificadorChange(txtIdentificador.value)"
+                            #txtIdentificador
+                            placeholder="Ej. VENTA-2024-001">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="estado" class="form-label fw-semibold small text-gray-700">Estado</label>
+                        <input
+                            id="estado"
+                            name="estado"
+                            type="text"
+                            maxlength="150"
+                            class="form-control border-gray-300 rounded-lg shadow-none"
+                            [value]="encabezadoForm().estado || ''"
+                            (input)="onEncabezadoEstadoChange(txtEstado.value)"
+                            #txtEstado
+                            placeholder="Ej. SOLICITUD">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="empresaId" class="form-label fw-semibold small text-gray-700">Empresa</label>
+                        <select
+                            class="form-select border-gray-300 rounded-lg shadow-none"
+                            id="empresaId"
+                            name="empresaId"
+                            [value]="encabezadoForm().empresaId || ''"
+                            (change)="onEncabezadoEmpresaSeleccionada(selectEmpresa.value)"
+                            #selectEmpresa>
+                            <option value="" selected>Seleccione empresa</option>
+                            @for (item of empresasList(); track item.empresaId) {
+                            <option [value]="item.empresaId" [selected]="item.empresaId === encabezadoForm().empresaId">{{ item.name }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="observaciones" class="form-label fw-semibold small text-gray-700">Observaciones</label>
+                        <textarea
+                            id="observaciones"
+                            name="observaciones"
+                            rows="3"
+                            maxlength="250"
+                            class="form-control border-gray-300 rounded-lg shadow-none"
+                            [value]="encabezadoForm().observaciones || ''"
+                            (input)="onEncabezadoObservacionesChange(txtObservaciones.value)"
+                            #txtObservaciones
+                            placeholder="Observaciones generales de la carga..."></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 bg-light-subtle">
+            <div class="card-body py-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <h5 class="mb-1 fw-bold text-gray-800">Detalle cargado desde Excel</h5>
+                        <p class="mb-0 text-muted small">{{ selectedFileName() }}</p>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Registros</div>
+                            <div class="summary-value">{{ totalDetalles() }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Seleccionados</div>
+                            <div class="summary-value text-success">{{ totalDetallesActivos() }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Sin seleccionar</div>
+                            <div class="summary-value text-danger">{{ totalDetallesInactivos() }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-6 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Saldo Capital activo</div>
+                            <div class="summary-value">{{ saldoCapitalActivo() | currency:'GTQ':'symbol':'1.2-2' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-6 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Mora activa</div>
+                            <div class="summary-value">{{ moraActiva() | currency:'GTQ':'symbol':'1.2-2' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detalle-scroll border rounded-lg bg-white">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-sm table-bordered table-hover mb-0 align-middle">
+                            <thead class="sticky-top table-light">
+                                <tr>
+                                    <th class="text-center detalle-activo-col" scope="col">
+                                        <div class="d-flex flex-column align-items-center gap-1 py-1">
+                                            <span class="small fw-semibold">Activos</span>
+                                            <input
+                                                class="form-check-input mt-0"
+                                                type="checkbox"
+                                                [checked]="allDetallesActivos()"
+                                                (change)="toggleAllDetalles(selectAll.checked)"
+                                                #selectAll>
+                                        </div>
+                                    </th>
+                                    <th scope="col">Cuenta / Operación</th>
+                                    <th scope="col">Cliente</th>
+                                    <th scope="col">Otorgamiento</th>
+                                    <th class="text-end" scope="col">Monto</th>
+                                    <th class="text-end" scope="col">Saldo Cap.</th>
+                                    <th class="text-end" scope="col">Mora</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (item of detalleList(); track $index; let i = $index) {
+                                <tr>
+                                    <td class="text-center detalle-activo-col">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            [checked]="!!item.activo"
+                                            (change)="toggleDetalleActivo(i, detalleActivo.checked)"
+                                            #detalleActivo>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ item.cuenta || 'Sin cuenta' }}</div>
+                                        <div class="text-muted small">Operación: {{ item.operacion || 'Sin operación' }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ item.nombreCliente || 'Sin cliente' }}</div>
+                                        <div class="text-muted small">{{ item.tipoOperacion || 'Sin tipo de operación' }}</div>
+                                    </td>
+                                    <td>{{ (item.fechaOtorgamiento || '') | date:'dd/MM/yyyy' }}</td>
+                                    <td class="text-end">{{ (item.montoOtorgado || 0) | currency:'GTQ':'symbol':'1.2-2' }}</td>
+                                    <td class="text-end">{{ (item.saldoCapital || 0) | currency:'GTQ':'symbol':'1.2-2' }}</td>
+                                    <td class="text-end">{{ (item.capitalMora || 0) | currency:'GTQ':'symbol':'1.2-2' }}</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+</div>
+
+<style>
+    .rounded-lg { border-radius: 0.5rem !important; }
+    .text-gray-800 { color: #1f2937; }
+    .summary-box {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 0.9rem 1rem;
+        min-height: 100%;
+    }
+    .summary-label {
+        color: #6b7280;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    .summary-value {
+        color: #111827;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+    .detalle-scroll {
+        max-height: 34rem;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    .detalle-activo-col {
+        width: 6rem;
+        min-width: 6rem;
+    }
+    .excel-loading {
+        border: 1px solid #bbf7d0;
+        background: #f0fdf4;
+        color: #166534;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+</style>
