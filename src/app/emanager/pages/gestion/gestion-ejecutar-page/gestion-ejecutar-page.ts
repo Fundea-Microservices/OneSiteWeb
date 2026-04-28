@@ -213,6 +213,7 @@ export default class GestionEjecutarPage {
       valorDefecto: detalle.valorDefecto,
       obligatorio: detalle.obligatorio,
       orden: detalle.orden,
+      capturaTexto: detalle.capturaTexto,
       visible: detalle.visible,
       activo: detalle.activo,
       created_at: detalle.created_at,
@@ -396,6 +397,28 @@ export default class GestionEjecutarPage {
           valoresPorDetalle.set(detalleCliente.detalleId, valorParametro);
           
           console.log(`🔗 Asignación: Cliente "${detalleCliente.nombreInput}" recibe valor de Parámetro "${detalleParametroEncontrado.nombreInput}": ${valorParametro}`);
+        }
+      }
+    });
+
+    // Para campos SELECT con catálogo, resolver el valor a enviar según capturaTexto:
+    // - capturaTexto === true  → enviar el nombre visible (tal como aparece en el select)
+    // - capturaTexto !== true  → resolver y enviar el valorCore del catálogo
+    todosDetalles.forEach(detalle => {
+      if (detalle.tipoInput === 'SELECT' && detalle.catalogo) {
+        const valorActual = valoresPorDetalle.get(detalle.detalleId);
+        if (valorActual !== null && valorActual !== undefined && valorActual !== '') {
+          if (!detalle.capturaTexto) {
+            const detalleConOpciones = detalle as DetalleConOpciones;
+            const opciones = detalleConOpciones.opcionesFiltradas?.length
+              ? detalleConOpciones.opcionesFiltradas
+              : detalleConOpciones.opcionesCatalogo;
+            const itemCatalogo = opciones?.find(cat => cat.nombre === valorActual);
+            if (itemCatalogo) {
+              valoresPorDetalle.set(detalle.detalleId, itemCatalogo.valorCore);
+            }
+          }
+          // capturaTexto === true → se mantiene el nombre tal cual
         }
       }
     });

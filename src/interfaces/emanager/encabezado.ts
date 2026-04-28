@@ -24,6 +24,7 @@ export interface IEncabezadoDetalle {
   // Campos obligatorios (NOT NULL en SQL)
   obligatorio: boolean;   // Nuevo campo
   orden: number;          // Nuevo campo
+  capturaTexto?: boolean; // Captura texto libre cuando hay catálogo
   visible: boolean;       // Nuevo campo
   activo: boolean;
   

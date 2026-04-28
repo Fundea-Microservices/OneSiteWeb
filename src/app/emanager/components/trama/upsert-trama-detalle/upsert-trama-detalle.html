@@ -114,6 +114,15 @@
       <label class="form-label">Procedimiento (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="procedimiento" />
     </div>
+
+    @if (form().get('catalogo')?.value) {
+    <div class="col-md-12 mb-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="capturaTexto" id="capturaTextoCliente" />
+        <label class="form-check-label" for="capturaTextoCliente">Obtener el texto del catálogo en lugar del código/valor</label>
+      </div>
+    </div>
+    }
   </div>
   }
 
@@ -136,6 +145,7 @@
     <div class="col-md-9 mb-3">
       <label class="form-label">Valor por Defecto (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="valorDefecto" />
+      <small class="text-gray-400 text-sm italic">Para ingresar una variable global, escriba @ seguido del nombre de la variable</small>
     </div>
   </div>
 
@@ -268,6 +278,15 @@
       <label class="form-label">Procedimiento (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="procedimiento" />
     </div>
+
+    @if (form().get('catalogo')?.value) {
+    <div class="col-md-12 mb-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="capturaTexto" id="capturaTextoParametro" />
+        <label class="form-check-label" for="capturaTextoParametro">Obtener el texto del catálogo en lugar del código/valor</label>
+      </div>
+    </div>
+    }
     }
   </div>
 
@@ -276,6 +295,7 @@
     <div class="col-md-12 mb-3">
       <label class="form-label">Valor por Defecto (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="valorDefecto" />
+      <small class="text-gray-400 text-sm italic">Para ingresar una variable global, escriba @ seguido del nombre de la variable</small>
     </div>
   </div>
 

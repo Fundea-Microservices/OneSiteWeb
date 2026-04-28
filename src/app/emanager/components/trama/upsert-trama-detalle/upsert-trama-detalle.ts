@@ -56,6 +56,7 @@ export class UpsertTramaDetalleComponent {
     valorDefecto: undefined,
     obligatorio: false,
     orden: 0,
+    capturaTexto: false,
     visible: true,
     activo: true,
   });
@@ -107,6 +108,7 @@ export class UpsertTramaDetalleComponent {
         valorDefecto: [tramaDetalle.valorDefecto],
         obligatorio: [tramaDetalle.obligatorio],
         orden: [tramaDetalle.orden, this.validationRules.orden],
+        capturaTexto: [tramaDetalle.capturaTexto ?? false],
         visible: [tramaDetalle.visible],
         activo: [tramaDetalle.activo],
       });
@@ -130,6 +132,7 @@ export class UpsertTramaDetalleComponent {
           valorDefecto: '',
           obligatorio: false,
           orden: tramaDetalle.orden,
+          capturaTexto: false,
           visible: true,
           activo: true,
         });
