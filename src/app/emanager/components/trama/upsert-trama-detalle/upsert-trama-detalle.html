@@ -145,7 +145,15 @@
     <div class="col-md-9 mb-3">
       <label class="form-label">Valor por Defecto (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="valorDefecto" />
-      <small class="text-gray-400 text-sm italic">Para ingresar una variable global, escriba @ seguido del nombre de la variable</small>
+      <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+        <small class="text-muted me-1">Variables Globales:</small>
+        @for (v of variablesGlobales; track v.variable) {
+        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size: 0.7rem;"
+          [title]="v.descripcion" (click)="insertarVariable(v.variable)">
+          {{ v.variable }}
+        </button>
+        }
+      </div>
     </div>
   </div>
 
@@ -295,7 +303,15 @@
     <div class="col-md-12 mb-3">
       <label class="form-label">Valor por Defecto (Opcional)</label>
       <input type="text" class="form-control form-control-sm" formControlName="valorDefecto" />
-      <small class="text-gray-400 text-sm italic">Para ingresar una variable global, escriba @ seguido del nombre de la variable</small>
+      <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+        <small class="text-muted me-1">Variables:</small>
+        @for (v of variablesGlobales; track v.variable) {
+        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size: 0.7rem;"
+          [title]="v.descripcion" (click)="insertarVariable(v.variable)">
+          {{ v.variable }}
+        </button>
+        }
+      </div>
     </div>
   </div>
 

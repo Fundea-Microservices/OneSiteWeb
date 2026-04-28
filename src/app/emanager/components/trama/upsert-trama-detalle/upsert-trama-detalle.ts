@@ -68,6 +68,20 @@ export class UpsertTramaDetalleComponent {
   tipoRespuestaOptions: TipoRespuesta[] = ['TEXT', 'NUMBER', 'DATE', 'BOOLEAN', 'FILE'];
   tipoInputOptions: TipoInput[] = ['TEXT', 'NUMBER', 'DATE', 'SELECT', 'EMAIL', 'SWITCH', 'FILE'];
 
+  variablesGlobales: { variable: string; descripcion: string }[] = [
+    { variable: '@UsuarioId',      descripcion: 'ID del usuario autenticado' },
+    { variable: '@UsuarioEmail',   descripcion: 'Email del usuario autenticado' },
+    { variable: '@UsuarioNombre',  descripcion: 'Nombre del usuario autenticado' },
+    { variable: '@CuentaBantotal', descripcion: 'Cuenta Bantotal del usuario' },
+  ];
+
+  insertarVariable(variable: string) {
+    const control = this.form().get('valorDefecto');
+    if (control) {
+      control.setValue(variable);
+    }
+  }
+
   validationRules: TramaDetalleValidationRules = {
     tramaId: [Validators.required],
     codigo: [Validators.min(0)],
