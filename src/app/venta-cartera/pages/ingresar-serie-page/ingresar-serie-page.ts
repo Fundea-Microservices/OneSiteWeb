@@ -10,7 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { SerieDetalle, SerieEncabezado } from '../../../../interfaces/venta-cartera/serie';
 import { SerieService } from '../../../../services/venta-cartera/serie.service';
@@ -78,6 +78,7 @@ const SERIE_DETALLE_ALIASES: Record<keyof SerieDetalle, string[]> = {
 })
 export default class IngresarSeriePage {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private serieService = inject(SerieService);
   private empresaService = inject(EmpresaCastigadosService);
   private cdr = inject(ChangeDetectorRef);
@@ -499,6 +500,7 @@ export default class IngresarSeriePage {
 
       if (savedCount > 0) {
         this.toastr.success(`Se guardaron ${savedCount} registros de detalle`, 'Proceso completado');
+        this.router.navigate(['/venta-cartera/titularizacion']);
       }
       if (failedCount > 0) {
         this.toastr.warning(`${failedCount} registros no se pudieron guardar`, 'Advertencia');

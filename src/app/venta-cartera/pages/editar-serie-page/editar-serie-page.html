@@ -1,0 +1,306 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/venta-cartera']">Venta de Cartera</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/venta-cartera/titularizacion']">Titularización</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Editar Serie</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
+        <div>
+            <div class="fw-semibold">Editar Serie</div>
+            <div class="text-muted small">
+                @if (serieEncabezado()) {
+                    Serie: {{ serieEncabezado()?.identificador }}
+                } @else {
+                    Serie ID: {{ serieId() || 'N/A' }}
+                }
+            </div>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            @if (changesCount() > 0) {
+            <span class="badge bg-warning text-dark py-2 px-3">{{ changesCount() }} cambio(s) pendiente(s)</span>
+            }
+            <button class="btn btn-primary btn-sm" type="button" (click)="saveChanges()"
+                [disabled]="isSaving() || changesCount() === 0">
+                @if (isSaving()) {
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Guardando...
+                } @else {
+                <ion-icon name="save" class="me-1"></ion-icon> Guardar cambios
+                }
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <!-- Save progress -->
+        @if (isSaving()) {
+        <div class="mb-3">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>Guardando cambios...</span>
+                <span>{{ saveProgress() }}%</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                    role="progressbar"
+                    [style.width.%]="saveProgress()"
+                    aria-valuemin="0"
+                    aria-valuemax="100">
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Encabezado card -->
+        @if (isLoadingEncabezado()) {
+        <div class="text-center py-3 mb-3">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2 small text-muted">Cargando encabezado...</span>
+        </div>
+        } @else if (serieEncabezado()) {
+        <div class="card border mb-3">
+            <div class="card-body">
+                <h5 class="mb-3 fw-bold text-gray-800">Datos de Serie Encabezado</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-gray-700">Identificador</label>
+                        <div class="form-control bg-light-subtle text-gray-800">{{ serieEncabezado()?.identificador || '—' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-gray-700">Estado</label>
+                        <div class="form-control bg-light-subtle d-flex align-items-center">
+                            <span class="badge rounded-pill"
+                                [class.bg-warning]="serieEncabezado()?.estado === 'SOLICITUD'"
+                                [class.text-dark]="serieEncabezado()?.estado === 'SOLICITUD'"
+                                [class.bg-success]="serieEncabezado()?.estado === 'APROBADO' || serieEncabezado()?.estado === 'PROCESADO'"
+                                [class.bg-danger]="serieEncabezado()?.estado === 'RECHAZADO'"
+                                [class.bg-secondary]="!serieEncabezado()?.estado">
+                                {{ serieEncabezado()?.estado || 'Sin estado' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-gray-700">Empresa</label>
+                        <div class="form-control bg-light-subtle text-gray-800">{{ serieEncabezado()?.empresaNombre || '—' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-gray-700">Usuario</label>
+                        <div class="form-control bg-light-subtle text-gray-800">{{ serieEncabezado()?.usuarioNombre || '—' }}</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-gray-700">Observaciones</label>
+                        <div class="form-control bg-light-subtle text-gray-800">{{ serieEncabezado()?.observaciones || 'Sin observaciones' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- Detalles section -->
+        <div class="card border-0 bg-light-subtle">
+            <div class="card-body py-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <h5 class="mb-1 fw-bold text-gray-800">Detalle de la Serie</h5>
+                        <p class="mb-0 text-muted small">Activa o desactiva los registros según corresponda</p>
+                    </div>
+                </div>
+
+                <!-- Load progress -->
+                @if (isLoadingDetalles()) {
+                <div class="mb-3">
+                    <div class="excel-loading mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="spinner-border spinner-border-sm text-success" role="status" aria-hidden="true"></span>
+                            <span>{{ loadProgressLabel() }}</span>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                            role="progressbar"
+                            [style.width.%]="loadProgress()"
+                            [attr.aria-valuenow]="loadProgress()"
+                            aria-valuemin="0"
+                            aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                }
+
+                @if (!isLoadingDetalles() && totalDetalles() === 0) {
+                <div class="text-center py-5 text-muted">
+                    No se encontraron detalles para esta serie.
+                </div>
+                } @else if (totalDetalles() > 0) {
+
+                <!-- Summary boxes -->
+                <div class="row g-3 mb-4">
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Registros</div>
+                            <div class="summary-value">{{ totalDetalles() }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Activos</div>
+                            <div class="summary-value text-success">{{ totalActivos() }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Inactivos</div>
+                            <div class="summary-value text-danger">{{ totalInactivos() }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-6 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Saldo Capital activo</div>
+                            <div class="summary-value">{{ saldoCapitalActivo() | currency:'GTQ':'symbol':'1.2-2' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-6 col-sm-6">
+                        <div class="summary-box">
+                            <div class="summary-label">Mora activa</div>
+                            <div class="summary-value">{{ moraActiva() | currency:'GTQ':'symbol':'1.2-2' }}</div>
+                        </div>
+                    </div>
+                    @if (changesCount() > 0) {
+                    <div class="col-xl col-md-6 col-sm-6">
+                        <div class="summary-box summary-box-warning">
+                            <div class="summary-label" style="color:#d97706;">Cambios pendientes</div>
+                            <div class="summary-value" style="color:#d97706;">{{ changesCount() }}</div>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <!-- Table -->
+                <div class="detalle-scroll border rounded-lg bg-white">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-sm table-bordered table-hover mb-0 align-middle">
+                            <thead class="sticky-top table-light">
+                                <tr>
+                                    <th class="text-center detalle-activo-col" scope="col">
+                                        <div class="d-flex flex-column align-items-center gap-1 py-1">
+                                            <span class="small fw-semibold">Activo</span>
+                                            <input
+                                                class="form-check-input mt-0"
+                                                type="checkbox"
+                                                [checked]="allPageActivos()"
+                                                (change)="togglePageActivos(selectAll.checked)"
+                                                #selectAll>
+                                        </div>
+                                    </th>
+                                    <th class="text-center" scope="col" style="width:3.5rem;">#</th>
+                                    <th scope="col">Cuenta / Operación</th>
+                                    <th scope="col">Cliente</th>
+                                    <th scope="col">Otorgamiento</th>
+                                    <th class="text-end" scope="col">Monto</th>
+                                    <th class="text-end" scope="col">Saldo Cap.</th>
+                                    <th class="text-end" scope="col">Mora</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (item of pagedDetalles(); track item.id; let i = $index) {
+                                <tr [class.table-warning]="isChanged(item.id)">
+                                    <td class="text-center detalle-activo-col">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            [checked]="!!item.activo"
+                                            (change)="toggleDetalleActivo(item, detalleActivo.checked)"
+                                            #detalleActivo>
+                                    </td>
+                                    <td class="text-center text-muted small">{{ ((currentPage() - 1) * PAGE_SIZE) + i + 1 }}</td>
+                                    <td>
+                                        <div class="fw-semibold">{{ item.cuenta || 'Sin cuenta' }}</div>
+                                        <div class="text-muted small">Operación: {{ item.operacion || '—' }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ item.nombreCliente || 'Sin cliente' }}</div>
+                                        <div class="text-muted small">{{ item.tipoOperacion || '—' }}</div>
+                                    </td>
+                                    <td>{{ (item.fechaOtorgamiento || '') | date:'dd/MM/yyyy' }}</td>
+                                    <td class="text-end">{{ (item.montoOtorgado || 0) | currency:'GTQ':'symbol':'1.2-2' }}</td>
+                                    <td class="text-end">{{ (item.saldoCapital || 0) | currency:'GTQ':'symbol':'1.2-2' }}</td>
+                                    <td class="text-end">{{ (item.capitalMora || 0) | currency:'GTQ':'symbol':'1.2-2' }}</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Client-side pagination -->
+                @if (totalDisplayPages() > 1) {
+                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                    <span class="text-muted small">
+                        Página {{ currentPage() }} de {{ totalDisplayPages() }}
+                        &mdash; mostrando {{ pagedDetalles().length }} de {{ totalDetalles() }} registros
+                    </span>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="currentPage() === 1">
+                            <ion-icon name="chevron-back"></ion-icon>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="currentPage() === totalDisplayPages()">
+                            <ion-icon name="chevron-forward"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                }
+
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-lg { border-radius: 0.5rem !important; }
+    .text-gray-800 { color: #1f2937; }
+    .summary-box {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 0.9rem 1rem;
+        min-height: 100%;
+    }
+    .summary-box-warning {
+        border-color: #f59e0b !important;
+        background: #fffbeb;
+    }
+    .summary-label {
+        color: #6b7280;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    .summary-value {
+        color: #111827;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+    .detalle-scroll {
+        max-height: 34rem;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    .detalle-activo-col {
+        width: 6rem;
+        min-width: 6rem;
+    }
+    .excel-loading {
+        border: 1px solid #bbf7d0;
+        background: #f0fdf4;
+        color: #166534;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+</style>

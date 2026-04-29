@@ -32,9 +32,12 @@ export default class TitularizacionPage {
   buscador = signal('');
   pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 0 });
   serieEdit = signal<SerieEncabezado>(this.emptySerie());
+  serieToAprobar = signal<SerieEncabezado | null>(null);
 
   @ViewChild('upsertModal') upsertModalRef!: ElementRef;
+  @ViewChild('aprobarModal') aprobarModalRef!: ElementRef;
   private upsertModalInstance!: Modal;
+  private aprobarModalInstance!: Modal;
 
   ngOnInit() {
     this.fetchData();
@@ -43,6 +46,9 @@ export default class TitularizacionPage {
   ngAfterViewInit() {
     if (this.upsertModalRef) {
       this.upsertModalInstance = new Modal(this.upsertModalRef.nativeElement);
+    }
+    if (this.aprobarModalRef) {
+      this.aprobarModalInstance = new Modal(this.aprobarModalRef.nativeElement);
     }
   }
 
@@ -102,6 +108,41 @@ export default class TitularizacionPage {
   buscar() {
     this.pagination.update(current => ({ ...current, page: 1 }));
     this.fetchData();
+  }
+
+  openAprobarModal(serie: SerieEncabezado) {
+    this.serieToAprobar.set(serie);
+
+    if (!this.aprobarModalInstance) {
+      this.aprobarModalInstance = new Modal(this.aprobarModalRef.nativeElement);
+    }
+
+    this.aprobarModalInstance.show();
+  }
+
+  async confirmarAprobacion() {
+    const serie = this.serieToAprobar();
+    if (!serie?.serieId) return;
+
+    this.isLoading.set(true);
+    let aprobado = false;
+    try {
+      const resp = await this.serieService.updateSerieEncabezado({ ...serie, estado: 'APROBADO' });
+      if (resp?.success) {
+        aprobado = true;
+        this.aprobarModalInstance?.hide();
+        this.serieToAprobar.set(null);
+      }
+    } catch (error) {
+      console.error('Error aprobando serie:', error);
+    } finally {
+      this.isLoading.set(false);
+      this.cdr.markForCheck();
+    }
+
+    if (aprobado) {
+      this.fetchData();
+    }
   }
 
   openUpsertModal() {

@@ -31,7 +31,7 @@
                     (keyup.enter)="buscar()">
             </div>
             <div class="col-auto">
-                <button type="button" class="btn btn-success btn-sm" (click)="buscar()">
+                <button type="button" class="btn btn-success px-4" style="height:38px;" (click)="buscar()">
                     Buscar
                 </button>
             </div>
@@ -81,7 +81,7 @@
                                 <span class="badge rounded-pill"
                                     [class.bg-warning]="item.estado === 'SOLICITUD'"
                                     [class.text-dark]="item.estado === 'SOLICITUD'"
-                                    [class.bg-success]="item.estado === 'PROCESADO' || item.estado === 'Procesado'"
+                                    [class.bg-success]="item.estado === 'PROCESADO' || item.estado === 'Procesado' || item.estado === 'APROBADO'"
                                     [class.bg-danger]="item.estado === 'RECHAZADO'"
                                     [class.bg-secondary]="!item.estado">
                                     {{ item.estado || 'Sin estado' }}
@@ -97,9 +97,16 @@
                                 <div class="text-muted line-clamp-2" style="font-size:0.8rem">{{ item.observaciones || 'Sin observaciones' }}</div>
                             </td>
                             <td class="text-center">
-                                <a class="btn btn-sm btn-success" [routerLink]="['/venta-cartera/titularizacion/ingrear-serie', item.serieId]">
-                                    <ion-icon name="cloud-upload" class="me-1"></ion-icon> Cargar datos
-                                </a>
+                                <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                    @if (item.estado === 'SOLICITUD') {
+                                    <a class="btn btn-sm btn-success" [routerLink]="['/venta-cartera/titularizacion/editar-serie', item.serieId]">
+                                        <ion-icon name="create-outline" class="me-1"></ion-icon> Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-primary" (click)="openAprobarModal(item)">
+                                        <ion-icon name="checkmark-circle" class="me-1"></ion-icon> Aprobar
+                                    </button>
+                                    }
+                                </div>
                             </td>
                         </tr>
                         }
@@ -139,7 +146,7 @@
                         <span class="badge rounded-pill"
                             [class.bg-warning]="item.estado === 'SOLICITUD'"
                             [class.text-dark]="item.estado === 'SOLICITUD'"
-                            [class.bg-success]="item.estado === 'PROCESADO' || item.estado === 'Procesado'"
+                            [class.bg-success]="item.estado === 'PROCESADO' || item.estado === 'Procesado' || item.estado === 'APROBADO'"
                             [class.bg-danger]="item.estado === 'RECHAZADO'"
                             [class.bg-secondary]="!item.estado">
                             {{ item.estado || 'Sin estado' }}
@@ -163,10 +170,15 @@
                     </div>
                 </div>
 
-                <div class="pt-3 border-top border-gray-200">
-                    <a class="w-100 btn btn-success btn-sm" [routerLink]="['/venta-cartera/titularizacion/ingrear-serie', item.serieId]">
-                        <ion-icon name="cloud-upload" class="me-1"></ion-icon> Cargar datos
+                <div class="pt-3 border-top border-gray-200 d-flex flex-column gap-2">
+                    @if (item.estado === 'SOLICITUD') {
+                    <a class="w-100 btn btn-success btn-sm" [routerLink]="['/venta-cartera/titularizacion/editar-serie', item.serieId]">
+                        <ion-icon name="create-outline" class="me-1"></ion-icon> Editar
                     </a>
+                    <button class="w-100 btn btn-primary btn-sm" (click)="openAprobarModal(item)">
+                        <ion-icon name="checkmark-circle" class="me-1"></ion-icon> Aprobar
+                    </button>
+                    }
                 </div>
             </div>
             }
@@ -289,10 +301,121 @@
     </div>
 </div>
 
+<!-- Modal: Confirmar Aprobación -->
+<div #aprobarModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg aprobar-modal-content">
+            <!-- Header -->
+            <div class="aprobar-modal-header d-flex align-items-center justify-content-between px-4 py-3">
+                <h5 class="modal-title fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                    <ion-icon name="checkbox-outline" style="font-size:1.3rem;"></ion-icon>
+                    Confirmar Aprobación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body p-4">
+                @if (serieToAprobar()) {
+                <p class="mb-3 small text-muted">
+                    ¿Está seguro de que desea aprobar la serie <strong class="text-dark">{{ serieToAprobar()!.identificador }}</strong>?
+                </p>
+
+                <!-- Stats card -->
+                <div class="aprobar-stats-card rounded-3 p-3 mb-3">
+                    <!-- Top row: Solicitudes / Total créditos -->
+                    <div class="row g-0 mb-3">
+                        <div class="col-6 pe-3">
+                            <div class="aprobar-stat-label">SOLICITUDES</div>
+                            <div class="aprobar-stat-value">{{ serieToAprobar()!.detallesActivos ?? '-' }}</div>
+                        </div>
+                        <div class="col-6 ps-3 border-start border-white border-opacity-50">
+                            <div class="aprobar-stat-label">TOTAL CRÉDITOS</div>
+                            <div class="aprobar-stat-value">{{ serieToAprobar()!.detallesRegistrados ?? '-' }}</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-white border-opacity-25 my-2">
+
+                    <!-- Saldo principal -->
+                    <div class="mb-2">
+                        <div class="aprobar-stat-label">SALDO DE CAPITAL TOTAL</div>
+                        <div class="aprobar-saldo-principal">{{ (serieToAprobar()!.saldo ?? 0) | currency:'Q ':'symbol':'1.2-2' }}</div>
+                    </div>
+                </div>
+
+                <!-- Advertencia -->
+                <div class="d-flex align-items-start gap-2 aprobar-warning p-3 rounded-3">
+                    <ion-icon name="warning-outline" style="font-size:1.1rem; flex-shrink:0; margin-top:1px;"></ion-icon>
+                    <span class="extra-small">Una vez aprobada, la serie <strong>no podrá ser editada</strong>. Esta acción es irreversible.</span>
+                </div>
+                }
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-top px-4 pb-4 pt-2 d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-outline-secondary px-4 rounded-lg" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn aprobar-btn-confirm px-5 rounded-lg fw-semibold" (click)="confirmarAprobacion()" [disabled]="isLoading()">
+                    @if (isLoading()) {
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    }
+                    Aprobar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .rounded-xl { border-radius: 0.75rem !important; }
     .rounded-lg { border-radius: 0.5rem !important; }
     .text-gray-800 { color: #1f2937; }
     .text-gray-700 { color: #374151; }
     .extra-small { font-size: 0.75rem; }
+
+    /* Aprobar modal */
+    .aprobar-modal-content { border-radius: 1rem !important; overflow: hidden; }
+    .aprobar-modal-header { background: linear-gradient(135deg, #3d3db4 0%, #4f46e5 100%); }
+
+    .aprobar-stats-card { background: #eef0f9; }
+    .aprobar-stat-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: #4f46e5;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+    .aprobar-stat-value {
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: #1e1b4b;
+        line-height: 1.1;
+    }
+    .aprobar-saldo-principal {
+        font-size: 2.1rem;
+        font-weight: 800;
+        color: #4f46e5;
+        line-height: 1.1;
+    }
+
+    .aprobar-warning {
+        background: #fff8e1;
+        color: #78350f;
+        border: 1px solid #fde68a;
+        font-size: 0.82rem;
+    }
+
+    .aprobar-btn-confirm {
+        background: linear-gradient(135deg, #3d3db4 0%, #4f46e5 100%);
+        color: #fff;
+        border: none;
+    }
+    .aprobar-btn-confirm:hover:not(:disabled) {
+        background: linear-gradient(135deg, #3730a3 0%, #4338ca 100%);
+        color: #fff;
+    }
+    .aprobar-btn-confirm:disabled { opacity: 0.65; }
 </style>

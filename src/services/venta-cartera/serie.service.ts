@@ -377,6 +377,31 @@ export class SerieService extends HttpService {
 		}
 	}
 
+	async updateSerieDetallesBatch(
+		serieId: string,
+		detalles: Array<{ id: string; activo?: boolean }>,
+		showToast: boolean = false
+	) {
+		try {
+			const payload = { serieId, detalles };
+
+			const resp = await firstValueFrom(
+				this.put<SerieDetalleResponse>(`${this.endpoints.serieDetalle}/${serieId}`, payload)
+			);
+
+			if (resp.body?.success) {
+				if (showToast) this.toastr.success(resp.body.message, 'Éxito');
+				return resp.body;
+			}
+
+			return null;
+		} catch (error: any) {
+			console.error('Error en updateSerieDetallesBatch:', error);
+			this.toastr.error(error?.error?.message || '', 'Error al actualizar detalles de serie');
+			return null;
+		}
+	}
+
 	async deleteSerieDetalle(id: string) {
 		try {
 			const resp = await firstValueFrom(
