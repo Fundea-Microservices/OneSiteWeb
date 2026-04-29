@@ -182,6 +182,17 @@ export class UpsertTramaDetalleComponent {
     return this.nuevo() ? 'Crear Detalle' : 'Actualizar Detalle';
   }
 
+  get valorDefectoInputType(): string {
+    const valor = this.form().get('valorDefecto')?.value;
+    if (valor && typeof valor === 'string' && valor.startsWith('@')) {
+      return 'text';
+    }
+    const tipoInput = this.form().get('tipoInput')?.value;
+    if (tipoInput === 'NUMBER') return 'number';
+    if (tipoInput === 'DATE') return 'date';
+    return 'text';
+  }
+
   onSubmit() {
     if (this.form().valid) {
       const formValue = this.form().value;
