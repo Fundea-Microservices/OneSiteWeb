@@ -280,6 +280,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./venta-cartera/pages/ingresar-serie-page/ingresar-serie-page'),
                     },
                     {
+                        path: 'titularizacion/editar-serie/:serieId',
+                        loadComponent: () => import('./venta-cartera/pages/editar-serie-page/editar-serie-page'),
+                    },
+                    {
                         path: '**',
                         redirectTo: '',
                     }
