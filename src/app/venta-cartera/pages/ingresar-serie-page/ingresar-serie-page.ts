@@ -12,7 +12,7 @@ import {
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { SerieDetalle, SerieEncabezado } from '../../../../interfaces/venta-cartera/serie';
+import { SerieDetalle, SerieEncabezado, ValidarDetalleDuplicadoDto } from '../../../../interfaces/venta-cartera/serie';
 import { SerieService } from '../../../../services/venta-cartera/serie.service';
 import { EmpresaCastigadosService } from '../../../../services/castigados/empresa.service';
 import { IEmpresaAliado } from '../../../../interfaces/aliado/empresa-aliado';
@@ -22,6 +22,7 @@ type ExcelRow = Record<string, ExcelValue>;
 
 const SERIE_DETALLE_ALIASES: Record<keyof SerieDetalle, string[]> = {
   id: ['id'],
+  frontendId: ['frontendid'],
   serieId: ['serie id', 'serieid'],
   activo: ['activo'],
   programa: ['programa'],
@@ -102,9 +103,22 @@ export default class IngresarSeriePage {
   isSavingAll = signal(false);
   saveProgress = signal(0);
 
+  isValidating = signal(false);
+  isValidated = signal(false);
+  validationProgress = signal(0);
+  duplicateIds = signal<Set<string>>(new Set());
+  validationMessage = signal<string | null>(null);
+  validationHasDuplicates = computed(() => this.duplicateIds().size > 0);
+  allDuplicados = computed(() => this.duplicateIds().size > 0 && this.duplicateIds().size >= this.totalDetalles());
+
   saveProgressLabel = computed(() => {
     const p = this.saveProgress();
     return p > 0 ? `Guardando datos ${p}%` : 'Guardando...';
+  });
+
+  validationProgressLabel = computed(() => {
+    const p = this.validationProgress();
+    return p > 0 ? `Validando ${p}%` : 'Validando...';
   });
 
   totalDetalles = computed(() => this.detalleList().length);
@@ -189,7 +203,7 @@ export default class IngresarSeriePage {
       }
 
       const detalleRows = rows
-        .map(row => this.mapExcelRowToDetalle(row, XLSX))
+        .map((row, index) => this.mapExcelRowToDetalle(row, XLSX, index))
         .filter(row => this.hasVisibleData(row));
       console.log('Detalle rows parsed from Excel:', detalleRows[0]);
       if (!detalleRows.length) {
@@ -202,6 +216,10 @@ export default class IngresarSeriePage {
       this.detalleList.set(detalleRows);
       this.selectedFileName.set(file.name);
       this.prefillEncabezadoFromFile(file.name);
+      this.isValidated.set(false);
+      this.duplicateIds.set(new Set());
+      this.validationMessage.set(null);
+      this.validationProgress.set(0);
       this.toastr.success(`Se cargaron ${detalleRows.length} registros desde Excel`, 'Carga exitosa');
     } catch (error) {
       console.error('Error reading excel file:', error);
@@ -256,8 +274,9 @@ export default class IngresarSeriePage {
       .reduce((total, item) => total + (item[field] ?? 0), 0);
   }
 
-  private mapExcelRowToDetalle(row: ExcelRow, XLSX: any): SerieDetalle {
+  private mapExcelRowToDetalle(row: ExcelRow, XLSX: any, index: number): SerieDetalle {
     return {
+      frontendId: `fila-${index + 1}`,
       serieId: this.serieId(),
       activo: true,
       programa: this.readStringField(row, 'programa'),
@@ -453,7 +472,7 @@ export default class IngresarSeriePage {
     try {
       let targetSerieId = this.serieId();
       const payloadDetalles = this.detalleList().map(
-        ({ serieId, id, created_at, updated_at, deleted_at, ...item }) => ({
+        ({ serieId, id, frontendId, created_at, updated_at, deleted_at, ...item }) => ({
           ...item,
           activo: !!item.activo,
         })
@@ -525,5 +544,69 @@ export default class IngresarSeriePage {
 
     console.log('Excel headers detected:', headers);
     console.log('SerieDetalle fields without match in first row:', unresolved);
+  }
+
+  async validateDetalles() {
+    if (this.isValidating()) return;
+
+    const items = this.detalleList();
+    if (!items.length) {
+      this.toastr.warning('No hay detalles cargados para validar', 'Sin datos');
+      return;
+    }
+
+    this.isValidating.set(true);
+    this.isValidated.set(false);
+    this.validationProgress.set(0);
+    this.duplicateIds.set(new Set());
+    this.validationMessage.set(null);
+
+    try {
+      const CHUNK_SIZE = 100;
+      const totalChunks = Math.ceil(items.length / CHUNK_SIZE);
+      const allDuplicateIds: string[] = [];
+
+      for (let i = 0; i < totalChunks; i++) {
+        const chunk = items.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        const dtos: ValidarDetalleDuplicadoDto[] = chunk.map(item => ({
+          frontendId: item.frontendId!,
+          cuenta: item.cuenta,
+          operacion: item.operacion,
+          tipoOperacion: item.tipoOperacion,
+        }));
+
+        const result = await this.serieService.validarDuplicados(dtos);
+        if (result?.data?.ids?.length) {
+          allDuplicateIds.push(...result.data.ids);
+        }
+
+        this.validationProgress.set(Math.round(((i + 1) / totalChunks) * 100));
+        this.cdr.markForCheck();
+      }
+
+      this.duplicateIds.set(new Set(allDuplicateIds));
+      const totalDuplicates = allDuplicateIds.length;
+      const totalItems = items.length;
+
+      if (totalDuplicates > 0 && totalDuplicates >= totalItems) {
+        this.validationMessage.set(
+          `Todos los ${totalDuplicates} crédito${totalDuplicates === 1 ? '' : 's'} ya están titularizado${totalDuplicates === 1 ? '' : 's'}. No es posible guardar esta serie porque no quedan detalles nuevos.`
+        );
+      } else if (totalDuplicates > 0) {
+        this.validationMessage.set(
+          `Hay ${totalDuplicates} crédito${totalDuplicates === 1 ? '' : 's'} ya titularizado${totalDuplicates === 1 ? '' : 's'}, por lo cual estos no se guardarán para esta serie de datos.`
+        );
+      } else {
+        this.validationMessage.set('Validación completada sin inconvenientes.');
+      }
+
+      this.isValidated.set(true);
+    } catch (error) {
+      console.error('Error en validateDetalles:', error);
+      this.toastr.error('No se pudo completar la validación', 'Error');
+    } finally {
+      this.isValidating.set(false);
+      this.cdr.markForCheck();
+    }
   }
 }

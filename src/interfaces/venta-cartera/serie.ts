@@ -39,6 +39,7 @@ export interface SerieEncabezadoByIdResponse {
 
 export interface SerieDetalle {
   id?: string;
+  frontendId?: string;
   serieId: string;
   activo?: boolean;
   programa?: string;
@@ -99,4 +100,22 @@ export interface SerieDetalleByIdResponse {
   statusCode: number;
   message: string;
   data: SerieDetalle;
+}
+
+export interface ValidarDetalleDuplicadoDto {
+  frontendId: string;
+  cuenta?: string;
+  operacion?: string;
+  tipoOperacion?: string;
+}
+
+export interface ValidarDuplicadosResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    ids: string[];
+    registros: number;
+    registrosDuplicados: number;
+  };
 }

@@ -10,6 +10,8 @@ import {
 	SerieEncabezado,
 	SerieEncabezadoByIdResponse,
 	SerieEncabezadoResponse,
+	ValidarDetalleDuplicadoDto,
+	ValidarDuplicadosResponse,
 } from '../../interfaces/venta-cartera/serie';
 
 @Injectable({
@@ -417,6 +419,20 @@ export class SerieService extends HttpService {
 		} catch (error: any) {
 			console.error('Error en deleteSerieDetalle:', error);
 			this.toastr.error(error?.error?.message || '', 'Error al eliminar detalle de serie');
+			return null;
+		}
+	}
+
+	async validarDuplicados(items: ValidarDetalleDuplicadoDto[]): Promise<ValidarDuplicadosResponse | null> {
+		try {
+			const payload = { items };
+			const resp = await firstValueFrom(
+				this.post<ValidarDuplicadosResponse>(`${this.endpoints.serieDetalle}/validar-duplicados`, payload)
+			);
+			return resp.body?.success ? resp.body : null;
+		} catch (error: any) {
+			console.error('Error en validarDuplicados:', error);
+			this.toastr.error(error?.error?.message || '', 'Error al validar duplicados');
 			return null;
 		}
 	}

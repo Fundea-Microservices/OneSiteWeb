@@ -52,14 +52,27 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <h5 class="mb-0 fw-bold text-gray-800">Datos de Serie Encabezado</h5>
-                    <button class="btn btn-success btn-sm" type="button" (click)="saveAllData()" [disabled]="isSavingAll()">
-                        @if (isSavingAll()) {
-                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                        {{ saveProgressLabel() }}
+                    <div class="d-flex gap-2 align-items-center">
+                        @if (!isValidated()) {
+                        <button class="btn btn-warning btn-sm" type="button" (click)="validateDetalles()" [disabled]="isValidating()">
+                            @if (isValidating()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            {{ validationProgressLabel() }}
+                            } @else {
+                            <ion-icon name="shield-checkmark" class="me-1"></ion-icon> Validar
+                            }
+                        </button>
                         } @else {
-                        <ion-icon name="save" class="me-1"></ion-icon> Crear y guardar todo
+                        <button class="btn btn-success btn-sm" type="button" (click)="saveAllData()" [disabled]="isSavingAll() || allDuplicados()">
+                            @if (isSavingAll()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            {{ saveProgressLabel() }}
+                            } @else {
+                            <ion-icon name="save" class="me-1"></ion-icon> Crear y guardar todo
+                            }
+                        </button>
                         }
-                    </button>
+                    </div>
                 </div>
 
                 @if (isSavingAll()) {
@@ -77,6 +90,31 @@
                             aria-valuemax="100">
                         </div>
                     </div>
+                </div>
+                }
+
+                @if (isValidating()) {
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>{{ validationProgressLabel() }}</span>
+                        <span>{{ validationProgress() }}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                            role="progressbar"
+                            [style.width.%]="validationProgress()"
+                            [attr.aria-valuenow]="validationProgress()"
+                            aria-valuemin="0"
+                            aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                }
+
+                @if (validationMessage()) {
+                <div class="mb-3 validation-message" [class.validation-ok]="!validationHasDuplicates()" [class.validation-warn]="validationHasDuplicates() && !allDuplicados()" [class.validation-error]="allDuplicados()">
+                    <ion-icon [name]="allDuplicados() ? 'close-circle' : validationHasDuplicates() ? 'warning' : 'checkmark-circle'" class="me-1"></ion-icon>
+                    {{ validationMessage() }}
                 </div>
                 }
 
@@ -211,7 +249,7 @@
                             </thead>
                             <tbody>
                                 @for (item of detalleList(); track $index; let i = $index) {
-                                <tr>
+                                <tr [class.row-duplicado]="duplicateIds().has(item.frontendId || '')">
                                     <td class="text-center detalle-activo-col">
                                         <input
                                             class="form-check-input"
@@ -221,7 +259,14 @@
                                             #detalleActivo>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold">{{ item.cuenta || 'Sin cuenta' }}</div>
+                                        <div class="fw-semibold d-flex align-items-center gap-1">
+                                            {{ item.cuenta || 'Sin cuenta' }}
+                                            @if (duplicateIds().has(item.frontendId || '')) {
+                                            <span class="duplicado-tooltip-wrapper" data-tooltip="Crédito ya titularizado">
+                                                <ion-icon name="warning" class="duplicado-icon"></ion-icon>
+                                            </span>
+                                            }
+                                        </div>
                                         <div class="text-muted small">Operación: {{ item.operacion || 'Sin operación' }}</div>
                                     </td>
                                     <td>
@@ -282,5 +327,66 @@
         padding: 0.75rem;
         font-size: 0.9rem;
         font-weight: 500;
+    }
+    .row-duplicado {
+        background-color: #fff3cd !important;
+    }
+    .row-duplicado td {
+        color: #856404;
+    }
+    .duplicado-icon {
+        color: #f59e0b;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .duplicado-tooltip-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: default;
+    }
+    .duplicado-tooltip-wrapper::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        background: #1f2937;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.35rem;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        z-index: 10;
+    }
+    .duplicado-tooltip-wrapper:hover::after {
+        opacity: 1;
+    }
+    .validation-message {
+        border-radius: 0.5rem;
+        padding: 0.6rem 0.85rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+    .validation-ok {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
+    .validation-warn {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+    }
+    .validation-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
     }
 </style>
