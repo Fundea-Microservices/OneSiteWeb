@@ -290,6 +290,32 @@ export const routes: Routes = [
                 ]
             },
 
+            {
+                path: 'onesiteex',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./flujo-fondos/pages/home-flujo-fondos/home-flujo-fondos.component'),
+                    },
+                    {
+                        path: 'catalogos',
+                        loadComponent: () => import('./onesite-ex/pages/catalogo-maestro-page/catalogo-maestro-page'),
+                    },
+                    {
+                        path: 'encuestas',
+                        loadComponent: () => import('./onesite-ex/pages/encuesta-page/encuesta-page'),
+                    },
+                    {
+                        path: 'encuestas/detalle/:id',
+                        loadComponent: () => import('./onesite-ex/pages/encuesta-detalle-page/encuesta-detalle-page'),
+                    },
+                    {
+                        path: 'encuestas/seccion/:id',
+                        loadComponent: () => import('./onesite-ex/pages/seccion-detalle-page/seccion-detalle-page'),
+                    },
+                ]
+            },
+
             
         ]
     },
