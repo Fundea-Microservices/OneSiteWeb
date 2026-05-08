@@ -1,0 +1,36 @@
+<form [formGroup]="form()">
+  <div class="row">
+    <div class="mb-3 col-12">
+      <label class="form-label">Nombre de la encuesta</label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombre"
+        placeholder="Ej. Encuesta de Satisfacción 2025" />
+      @if (hasError('nombre', 'required')) {
+        <div class="text-danger small">El nombre es requerido</div>
+      }
+      @if (hasError('nombre', 'maxlength')) {
+        <div class="text-danger small">Máximo 255 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Versión activa <span class="text-muted">(opcional)</span></label>
+      <input type="number" class="form-control form-control-sm" formControlName="versionActiva"
+        placeholder="Ej. 1" min="1" />
+    </div>
+
+    <div class="mb-3 col-md-6 d-flex align-items-center pt-4">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="estado" id="estadoCheck" />
+        <label class="form-check-label" for="estadoCheck">Activa</label>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">{{ btnText }}</button>
+  </div>
+</form>

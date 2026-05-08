@@ -1,0 +1,41 @@
+<form [formGroup]="form()">
+  <div class="row">
+    <div class="mb-3 col-12">
+      <label class="form-label">Título de la sección</label>
+      <input type="text" class="form-control form-control-sm" formControlName="titulo"
+        placeholder="Ej. Datos Personales" />
+      @if (hasError('titulo', 'required')) {
+        <div class="text-danger small">El título es requerido</div>
+      }
+      @if (hasError('titulo', 'maxlength')) {
+        <div class="text-danger small">Máximo 255 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Orden</label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden" min="1" />
+      @if (hasError('orden', 'required')) {
+        <div class="text-danger small">El orden es requerido</div>
+      }
+      @if (hasError('orden', 'min')) {
+        <div class="text-danger small">El orden debe ser mayor a 0</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-6 d-flex align-items-center pt-4">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="esVisibleDefault" id="visibleCheck" />
+        <label class="form-check-label" for="visibleCheck">Visible por defecto</label>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">{{ btnText }}</button>
+  </div>
+</form>

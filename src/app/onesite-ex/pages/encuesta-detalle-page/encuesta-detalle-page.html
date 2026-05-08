@@ -1,0 +1,161 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/onesiteex/encuestas']">Encuestas</a></li>
+    <li class="breadcrumb-item active" aria-current="page">
+      {{ encuesta()?.nombre ?? 'Detalle' }}
+    </li>
+  </ol>
+</nav>
+
+@if (encuesta()) {
+  <div class="alert alert-light border mb-3 py-2">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <strong>{{ encuesta()!.nombre }}</strong>
+        <span class="badge ms-2" [class.bg-success]="encuesta()!.estado" [class.bg-secondary]="!encuesta()!.estado">
+          {{ encuesta()!.estado ? 'Activa' : 'Inactiva' }}
+        </span>
+      </div>
+    </div>
+  </div>
+}
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Secciones</span>
+    <button class="btn btn-primary btn-sm" (click)="openModal(true)">
+      <ion-icon name="add-outline"></ion-icon> Nueva sección
+    </button>
+  </div>
+
+  <div class="card-body">
+    <form class="row g-2 mb-3">
+      <div class="col-12 col-md-auto">
+        <input type="text" class="form-control form-control-sm" placeholder="Buscar por título..."
+          (input)="buscador.set(txtBuscar.value)" (keyup.enter)="fetchData()" #txtBuscar />
+      </div>
+      <div class="col-12 col-md-auto d-grid d-md-block">
+        <button type="button" class="btn btn-success btn-sm" (click)="fetchData()">Buscar</button>
+      </div>
+    </form>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted small">Cargando...</span>
+      </div>
+    }
+
+    <!-- Tabla Desktop -->
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover">
+        <thead>
+          <tr>
+            <th class="text-center" style="width:5%">#</th>
+            <th style="width:50%">Título</th>
+            <th class="text-center" style="width:10%">Orden</th>
+            <th class="text-center" style="width:15%">Visible por defecto</th>
+            <th class="text-center" style="width:20%">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of seccionList(); track item.idSeccion; let i = $index) {
+            <tr>
+              <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
+              <td>{{ item.titulo }}</td>
+              <td class="text-center">{{ item.orden }}</td>
+              <td class="text-center">
+                <div class="form-check form-switch d-inline-flex justify-content-center">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                    [checked]="item.esVisibleDefault"
+                    (change)="toggleVisibleDefault(item, cbxVisible.checked)"
+                    #cbxVisible />
+                </div>
+              </td>
+              <td class="text-center">
+                <a class="btn btn-sm btn-info mx-1" title="Ver preguntas"
+                  [routerLink]="['/onesiteex/encuestas/seccion', item.idSeccion]">
+                  <ion-icon name="help-circle-outline"></ion-icon>
+                </a>
+                <button class="btn btn-sm btn-success mx-1" title="Editar" (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-danger mx-1" title="Eliminar" (click)="openDeleteModal(item)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr><td colspan="5" class="text-center text-muted py-3">No hay secciones registradas</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none d-flex flex-column gap-3">
+      @for (item of seccionList(); track item.idSeccion) {
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <div class="fw-semibold">{{ item.titulo }}</div>
+              <div class="d-flex gap-1">
+                <a class="btn btn-sm btn-info" [routerLink]="['/onesiteex/encuestas/seccion', item.idSeccion]">
+                  <ion-icon name="help-circle-outline"></ion-icon>
+                </a>
+                <button class="btn btn-sm btn-success" (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="openDeleteModal(item)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            <div class="small text-muted">Orden: {{ item.orden }}</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+  </div>
+
+  <!-- Modal Upsert -->
+  <div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ modal().titulo }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <app-upsert-seccion [seccion]="seccionEdit()" [nuevo]="nuevo()" [formKey]="formKey()"
+            (save)="upsertSeccion($event)" (cancel)="closeModal()" />
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Delete -->
+  <div #deleteModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">Eliminar sección</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas eliminar la sección <b>{{ seccionEdit().titulo }}</b>?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger btn-sm" (click)="deleteSeccion()">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,28 @@
+<form [formGroup]="form()">
+  <div class="mb-3">
+    <label class="form-label">Sintaxis de cálculo <span class="text-muted">(opcional)</span></label>
+    <textarea class="form-control form-control-sm" formControlName="sintaxisCalculo" rows="2"
+      placeholder="Ej. campo1 + campo2"></textarea>
+    <div class="form-text text-muted small">Expresión para calcular automáticamente el valor del campo.</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Regla de validación <span class="text-muted">(opcional)</span></label>
+    <textarea class="form-control form-control-sm" formControlName="reglaValidacion" rows="2"
+      placeholder="Ej. value > 0"></textarea>
+    <div class="form-text text-muted small">Expresión que valida el valor ingresado por el usuario.</div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Regla de visibilidad <span class="text-muted">(opcional)</span></label>
+    <textarea class="form-control form-control-sm" formControlName="reglaVisibilidad" rows="2"
+      placeholder="Ej. otroCampo == true"></textarea>
+    <div class="form-text text-muted small">Expresión que determina si la pregunta debe mostrarse.</div>
+  </div>
+
+  <hr />
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">Guardar regla</button>
+  </div>
+</form>

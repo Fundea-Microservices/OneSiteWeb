@@ -1,0 +1,85 @@
+<form [formGroup]="form()">
+  <div class="row">
+    <div class="mb-3 col-12">
+      <label class="form-label">Etiqueta / Texto de la pregunta</label>
+      <textarea class="form-control form-control-sm" formControlName="etiqueta" rows="2"
+        placeholder="Ej. ¿Cuál es su nombre completo?"></textarea>
+      @if (hasError('etiqueta', 'required')) {
+        <div class="text-danger small">La etiqueta es requerida</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Tipo de dato</label>
+      <select class="form-select form-select-sm" formControlName="tipoDato">
+        <option value="" disabled>Seleccione un tipo</option>
+        @for (tipo of tiposDato; track tipo) {
+          <option [value]="tipo">{{ tipo }}</option>
+        }
+      </select>
+      @if (hasError('tipoDato', 'required')) {
+        <div class="text-danger small">El tipo de dato es requerido</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Orden</label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden" min="1" />
+      @if (hasError('orden', 'required')) {
+        <div class="text-danger small">El orden es requerido</div>
+      }
+    </div>
+  </div>
+
+  @if (tieneOrigen) {
+    <div class="row">
+      <div class="mb-3 col-md-6">
+        <label class="form-label">Tipo de origen de datos</label>
+        <select class="form-select form-select-sm" formControlName="origenDatosTipo">
+          <option [ngValue]="null">— Ninguno —</option>
+          @for (o of origenesTipo; track o) {
+            <option [value]="o">{{ o }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="mb-3 col-md-6">
+        <label class="form-label">Comando / Clave del origen</label>
+        <input type="text" class="form-control form-control-sm" formControlName="origenDatosCmd"
+          placeholder="Ej. TIPO_CREDITO" />
+        @if (hasError('origenDatosCmd', 'maxlength')) {
+          <div class="text-danger small">Máximo 255 caracteres</div>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">ID Matriz padre <span class="text-muted">(opcional)</span></label>
+      <input type="number" class="form-control form-control-sm" formControlName="idMatrizPadre"
+        placeholder="Solo para preguntas de matriz" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 d-flex gap-4 mb-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="esEditable" id="editableCheck" />
+        <label class="form-check-label" for="editableCheck">Editable</label>
+      </div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="esVisibleDefault" id="visiblePregCheck" />
+        <label class="form-check-label" for="visiblePregCheck">Visible por defecto</label>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">{{ btnText }}</button>
+  </div>
+</form>
