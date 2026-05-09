@@ -26,6 +26,9 @@ export default class LoginPageComponent {
   public user = this.authService.getUserStorage();
   userName = signal('');
   password = signal('');
+  onPasswordInput(value: string) {
+    this.password.set(value);
+  }
 
   errorObj = signal<{ message: string; code: number, isError: boolean }>({
     message: '',
