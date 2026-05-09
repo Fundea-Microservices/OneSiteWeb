@@ -108,6 +108,22 @@ export class CatalogoService extends HttpService {
       return null;
     }
   }
+
+  async bulkImport(items: { codigoCatalogo: string; codigo: string; opcion: string; orden: number }[]) {
+    try {
+      const resp = await firstValueFrom(
+        this.post<{ success: boolean; message: string; data: { nuevos: number; duplicados: number; total: number } }>(
+          '/onesiteex/catalogo-opcion/cargar-excel',
+          { items }
+        )
+      );
+      return resp.body?.success ? resp.body : null;
+    } catch (error: any) {
+      console.error('Error en bulkImport:', error);
+      this.toastr.error(error?.error?.message || '', 'Error en importación');
+      return null;
+    }
+  }
 }
 
 

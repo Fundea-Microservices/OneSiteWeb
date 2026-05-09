@@ -8,9 +8,14 @@
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <span>Administrar catálogos</span>
-    <button class="btn btn-primary btn-sm" (click)="openModal(true)">
-      <ion-icon name="add-outline"></ion-icon> Nuevo catálogo
-    </button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-success btn-sm" (click)="openImportModal()">
+        <ion-icon name="cloud-upload-outline"></ion-icon> Importar Excel
+      </button>
+      <button class="btn btn-primary btn-sm" (click)="openModal(true)">
+        <ion-icon name="add-outline"></ion-icon> Nuevo catálogo
+      </button>
+    </div>
   </div>
 
   <div class="card-body">
@@ -162,6 +167,106 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-danger btn-sm" (click)="deleteCatalogo()">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Importar Excel -->
+  <div #importModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <ion-icon name="cloud-upload-outline" class="me-1"></ion-icon>
+            Importar catálogos desde Excel
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+            [disabled]="isImporting()"></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Instrucciones -->
+          <div class="alert alert-info py-2 small mb-3">
+            <strong>Formato esperado:</strong> El archivo debe tener 4 columnas (sin encabezado obligatorio):
+            <br />
+            <span class="font-monospace">Columna A</span>: Código del catálogo &nbsp;|
+            <span class="font-monospace">Columna B</span>: Código de la opción &nbsp;|
+            <span class="font-monospace">Columna C</span>: Nombre de la opción &nbsp;|
+            <span class="font-monospace">Columna D</span>: Orden (número, opcional — 0 si se omite)
+          </div>
+
+          <!-- Selector de archivo -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Seleccionar archivo (.xlsx, .xls, .csv)</label>
+            <input type="file" class="form-control form-control-sm"
+              accept=".xlsx,.xls,.csv"
+              [disabled]="isImporting()"
+              (change)="onFileSelected($event)" />
+          </div>
+
+          <!-- Preview de filas leídas -->
+          @if (importRows().length > 0) {
+            <div class="alert alert-success py-2 small mb-3">
+              <ion-icon name="checkmark-circle-outline"></ion-icon>
+              Se detectaron <strong>{{ importRows().length }}</strong> filas de datos en
+              <strong>{{ importFileName() }}</strong>.
+            </div>
+          }
+
+          <!-- Barra de progreso -->
+          @if (importProgress().total > 0) {
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>Progreso</span>
+                <span>{{ importProgress().current }} / {{ importProgress().total }}</span>
+              </div>
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar progress-bar-striped"
+                  [class.progress-bar-animated]="isImporting()"
+                  [style.width.%]="(importProgress().current / importProgress().total) * 100">
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Resultado -->
+          @if (importResult(); as result) {
+            <div class="row g-2">
+              <div class="col-4">
+                <div class="card border-success text-center py-2">
+                  <div class="fw-bold fs-4 text-success">{{ result.nuevos }}</div>
+                  <div class="small text-muted">Nuevos catálogos</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="card border-warning text-center py-2">
+                  <div class="fw-bold fs-4 text-warning">{{ result.duplicados }}</div>
+                  <div class="small text-muted">Ya existían</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="card border-primary text-center py-2">
+                  <div class="fw-bold fs-4 text-primary">{{ result.total }}</div>
+                  <div class="small text-muted">Total procesados</div>
+                </div>
+              </div>
+            </div>
+          }
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"
+            [disabled]="isImporting()">Cerrar</button>
+          <button type="button" class="btn btn-success btn-sm"
+            [disabled]="importRows().length === 0 || isImporting()"
+            (click)="startImport()">
+            @if (isImporting()) {
+              <span class="spinner-border spinner-border-sm me-1"></span> Importando...
+            } @else {
+              <ion-icon name="cloud-upload-outline"></ion-icon> Iniciar importación
+            }
+          </button>
         </div>
       </div>
     </div>

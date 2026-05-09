@@ -45,14 +45,53 @@
         </select>
       </div>
 
-      <div class="mb-3 col-md-6">
-        <label class="form-label">Comando / Clave del origen</label>
-        <input type="text" class="form-control form-control-sm" formControlName="origenDatosCmd"
-          placeholder="Ej. TIPO_CREDITO" />
-        @if (hasError('origenDatosCmd', 'maxlength')) {
-          <div class="text-danger small">Máximo 255 caracteres</div>
-        }
-      </div>
+      @if (esCatalogo) {
+        <!-- Autocomplete de catálogos cuando origen = CATALOGO -->
+        <div class="mb-3 col-md-6">
+          <label class="form-label">Catálogo</label>
+          <div style="position: relative;">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="Buscar catálogo..."
+              [value]="catalogoSearch()"
+              (input)="onCatalogoInput($any($event.target).value)"
+              (focus)="loadCatalogos(); catalogoDropdownOpen.set(true)"
+              (blur)="closeCatalogoDropdown()"
+              autocomplete="off" />
+            @if (catalogoDropdownOpen() && catalogosFiltrados().length > 0) {
+              <div class="border rounded bg-white shadow-sm"
+                style="position: absolute; top: 100%; left: 0; right: 0; max-height: 180px; overflow-y: auto; z-index: 1050;">
+                @for (cat of catalogosFiltrados(); track cat.id) {
+                  <div class="px-2 py-1 small"
+                    style="cursor: pointer;"
+                    (mousedown)="selectCatalogo(cat)"
+                    onmouseover="this.style.backgroundColor='#f0f0f0'"
+                    onmouseout="this.style.backgroundColor=''">
+                    <span class="fw-semibold">{{ cat.codigo }}</span>
+                    <span class="text-muted ms-1">{{ cat.nombre }}</span>
+                  </div>
+                }
+              </div>
+            }
+            @if (catalogoDropdownOpen() && catalogosFiltrados().length === 0 && catalogoSearch()) {
+              <div class="border rounded bg-white px-2 py-1 small text-muted"
+                style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1050;">
+                Sin resultados
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="mb-3 col-md-6">
+          <label class="form-label">Comando / Clave del origen</label>
+          <input type="text" class="form-control form-control-sm" formControlName="origenDatosCmd"
+            placeholder="Ej. TIPO_CREDITO" />
+          @if (hasError('origenDatosCmd', 'maxlength')) {
+            <div class="text-danger small">Máximo 255 caracteres</div>
+          }
+        </div>
+      }
     </div>
   }
 
