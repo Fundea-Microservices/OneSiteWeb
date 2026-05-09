@@ -302,6 +302,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./onesite-ex/pages/catalogo-maestro-page/catalogo-maestro-page'),
                     },
                     {
+                        path: 'catalogos/:id/opciones',
+                        loadComponent: () => import('./onesite-ex/pages/catalogo-opcion-page/catalogo-opcion-page'),
+                    },
+                    {
                         path: 'encuestas',
                         loadComponent: () => import('./onesite-ex/pages/encuesta-page/encuesta-page'),
                     },

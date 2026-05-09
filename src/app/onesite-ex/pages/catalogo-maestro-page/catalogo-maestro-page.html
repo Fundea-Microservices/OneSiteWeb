@@ -1,13 +1,13 @@
 <nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Catálogo Maestro</li>
+    <li class="breadcrumb-item active" aria-current="page">Catálogos</li>
   </ol>
 </nav>
 
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
-    <span>Administrar catálogo maestro</span>
+    <span>Administrar catálogos</span>
     <button class="btn btn-primary btn-sm" (click)="openModal(true)">
       <ion-icon name="add-outline"></ion-icon> Nuevo catálogo
     </button>
@@ -18,12 +18,8 @@
     <!-- Filtros -->
     <form class="row g-2 mb-3">
       <div class="col-12 col-md-auto">
-        <input type="text" class="form-control form-control-sm" placeholder="Buscar..."
+        <input type="text" class="form-control form-control-sm" placeholder="Buscar por nombre o código..."
           (input)="buscador.set(txtBuscar.value)" (keyup.enter)="fetchData()" #txtBuscar />
-      </div>
-      <div class="col-12 col-md-auto">
-        <input type="text" class="form-control form-control-sm" placeholder="Filtrar por nombre catálogo"
-          (input)="nombreCatalogoFilter.set(txtNombre.value)" (keyup.enter)="fetchData()" #txtNombre />
       </div>
       <div class="col-12 col-md-auto d-grid d-md-block">
         <button type="button" class="btn btn-success btn-sm" (click)="fetchData()">Buscar</button>
@@ -43,22 +39,29 @@
         <thead>
           <tr>
             <th class="text-center" style="width: 5%;">#</th>
-            <th class="text-center" style="width: 22%;">Nombre catálogo</th>
-            <th class="text-center" style="width: 15%;">Código opción</th>
-            <th class="text-center" style="width: 35%;">Valor opción</th>
-            <th class="text-center" style="width: 15%;">Código padre</th>
-            <th class="text-center" style="width: 8%;">Acciones</th>
+            <th class="text-center" style="width: 40%;">Nombre</th>
+            <th class="text-center" style="width: 30%;">Código</th>
+            <th class="text-center" style="width: 10%;">Activo</th>
+            <th class="text-center" style="width: 15%;">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          @for (item of catalogoList(); track item.idCatalogo; let i = $index) {
+          @for (item of catalogoList(); track item.id; let i = $index) {
             <tr>
               <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
-              <td class="text-break">{{ item.nombreCatalogo }}</td>
-              <td class="text-center">{{ item.codigoOpcion }}</td>
-              <td class="text-break" style="white-space: normal;">{{ item.valorOpcion }}</td>
-              <td class="text-center">{{ item.idPadreOpcion ?? '—' }}</td>
+              <td class="text-break">{{ item.nombre }}</td>
+              <td class="text-center">{{ item.codigo }}</td>
               <td class="text-center">
+                <div class="form-check form-switch d-flex justify-content-center mb-0">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                    [checked]="item.activo"
+                    (change)="toggleActivo(item)" />
+                </div>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-info mx-1" title="Ver opciones" (click)="verOpciones(item)">
+                  <ion-icon name="list-outline"></ion-icon>
+                </button>
                 <button class="btn btn-sm btn-success mx-1" title="Editar" (click)="openModal(false, item)">
                   <ion-icon name="create-outline"></ion-icon>
                 </button>
@@ -70,7 +73,7 @@
           } @empty {
             @if (!isLoading()) {
               <tr>
-                <td colspan="6" class="text-center text-muted py-3">No hay registros</td>
+                <td colspan="5" class="text-center text-muted py-3">No hay registros</td>
               </tr>
             }
           }
@@ -80,15 +83,18 @@
 
     <!-- Cards Mobile -->
     <div class="d-md-none d-flex flex-column gap-3">
-      @for (item of catalogoList(); track item.idCatalogo; let i = $index) {
+      @for (item of catalogoList(); track item.id; let i = $index) {
         <div class="card shadow-sm">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
-                <div class="small text-muted">Nombre catálogo</div>
-                <div class="fw-semibold text-break">{{ item.nombreCatalogo }}</div>
+                <div class="small text-muted">Nombre</div>
+                <div class="fw-semibold text-break">{{ item.nombre }}</div>
               </div>
               <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-info" title="Ver opciones" (click)="verOpciones(item)">
+                  <ion-icon name="list-outline"></ion-icon>
+                </button>
                 <button class="btn btn-sm btn-success" (click)="openModal(false, item)">
                   <ion-icon name="create-outline"></ion-icon>
                 </button>
@@ -99,18 +105,16 @@
             </div>
             <div class="mb-1">
               <span class="small text-muted">Código: </span>
-              <span>{{ item.codigoOpcion }}</span>
+              <span>{{ item.codigo }}</span>
             </div>
-            <div class="mb-1">
-              <span class="small text-muted">Valor: </span>
-              <span class="text-break">{{ item.valorOpcion }}</span>
-            </div>
-            @if (item.idPadreOpcion) {
-              <div class="mb-1">
-                <span class="small text-muted">Padre: </span>
-                <span>{{ item.idPadreOpcion }}</span>
+            <div class="mb-1 d-flex align-items-center gap-2">
+              <span class="small text-muted">Activo: </span>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch"
+                  [checked]="item.activo"
+                  (change)="toggleActivo(item)" />
               </div>
-            }
+            </div>
           </div>
         </div>
       }
@@ -152,8 +156,7 @@
         <div class="modal-body">
           <p>
             ¿Estás seguro de que deseas eliminar el catálogo
-            <b>{{ catalogoEdit().nombreCatalogo }}</b> — opción
-            <b>{{ catalogoEdit().codigoOpcion }}</b>?
+            <b>{{ catalogoEdit().nombre }}</b> (<b>{{ catalogoEdit().codigo }}</b>)?
           </p>
         </div>
         <div class="modal-footer">
@@ -165,3 +168,4 @@
   </div>
 
 </div>
+

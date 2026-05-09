@@ -1,0 +1,64 @@
+<form [formGroup]="form()">
+
+  <div class="row">
+    <div class="mb-3 col-md-8">
+      <label class="form-label">Nombre</label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombre"
+        placeholder="Ej. Crédito Personal" />
+      @if (hasError('nombre', 'required')) {
+        <div class="text-danger small">Nombre es requerido</div>
+      }
+      @if (hasError('nombre', 'maxlength')) {
+        <div class="text-danger small">Máximo 150 caracteres</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-4">
+      <label class="form-label">Código</label>
+      <input type="text" class="form-control form-control-sm" formControlName="codigo"
+        placeholder="Ej. CP" />
+      @if (hasError('codigo', 'required')) {
+        <div class="text-danger small">Código es requerido</div>
+      }
+      @if (hasError('codigo', 'maxlength')) {
+        <div class="text-danger small">Máximo 15 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-4">
+      <label class="form-label">Orden</label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden"
+        min="0" placeholder="0" />
+      @if (hasError('orden', 'min')) {
+        <div class="text-danger small">El orden no puede ser negativo</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-8">
+      <label class="form-label">ID padre <span class="text-muted">(opcional, UUID)</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="idPadre"
+        placeholder="UUID de la opción padre" />
+    </div>
+  </div>
+
+  <div class="d-flex gap-4 mb-3">
+    <div class="form-check">
+      <input type="checkbox" class="form-check-input" id="opcionActivo" formControlName="activo" />
+      <label class="form-check-label" for="opcionActivo">Activo</label>
+    </div>
+    <div class="form-check">
+      <input type="checkbox" class="form-check-input" id="opcionPorDefecto" formControlName="porDefecto" />
+      <label class="form-check-label" for="opcionPorDefecto">Por defecto</label>
+    </div>
+  </div>
+
+  <hr />
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">{{ btnText }}</button>
+  </div>
+
+</form>

@@ -9,18 +9,18 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
-import { CatalogoMaestroService } from '../../../../services/config/catalogo-maestro.service';
-import { ICatalogoMaestro } from '../../../../interfaces/catalogo-maestro/catalogo-maestro';
+import { CatalogoService } from '../../../../services/config/catalogo-maestro.service';
+import { ICatalogo } from '../../../../interfaces/catalogo-maestro/catalogo-maestro';
 import { UpsertCatalogoMaestroComponent } from '../../components/upsert-catalogo-maestro/upsert-catalogo-maestro.component';
 
-const emptyCatalogo: ICatalogoMaestro = {
-  nombreCatalogo: '',
-  codigoOpcion: '',
-  valorOpcion: '',
-  idPadreOpcion: null,
+const emptyCatalogo: ICatalogo = {
+  id: '',
+  nombre: '',
+  codigo: '',
+  activo: true,
 };
 
 @Component({
@@ -31,19 +31,19 @@ const emptyCatalogo: ICatalogoMaestro = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
-  private catalogoService = inject(CatalogoMaestroService);
+  private catalogoService = inject(CatalogoService);
+  private router = inject(Router);
 
-  catalogoList = signal<ICatalogoMaestro[]>([]);
-  catalogoEdit = signal<ICatalogoMaestro>(emptyCatalogo);
+  catalogoList = signal<ICatalogo[]>([]);
+  catalogoEdit = signal<ICatalogo>(emptyCatalogo);
   nuevo = signal<boolean>(true);
   formKey = signal(Date.now());
 
   pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0 });
   isLoading = signal(false);
   buscador = signal('');
-  nombreCatalogoFilter = signal('');
 
-  modal = signal({ titulo: 'Crear catálogo maestro' });
+  modal = signal({ titulo: 'Crear catálogo' });
 
   @ViewChild('upsertModal') modalElementRef!: ElementRef;
   private modalUpsertInstance!: Modal;
@@ -68,7 +68,6 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
         page: this.pagination().page,
         limit: this.pagination().pageSize,
         search: this.buscador(),
-        nombreCatalogo: this.nombreCatalogoFilter(),
       });
       if (resp?.data) {
         this.catalogoList.set(resp.data ?? []);
@@ -86,15 +85,15 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
     }
   }
 
-  openModal(esNuevo: boolean, catalogo?: ICatalogoMaestro) {
+  openModal(esNuevo: boolean, catalogo?: ICatalogo) {
     this.nuevo.set(esNuevo);
     this.formKey.set(Date.now());
     if (esNuevo) {
       this.catalogoEdit.set({ ...emptyCatalogo });
-      this.modal.set({ titulo: 'Crear catálogo maestro' });
+      this.modal.set({ titulo: 'Crear catálogo' });
     } else {
       this.catalogoEdit.set({ ...catalogo! });
-      this.modal.set({ titulo: 'Editar catálogo maestro' });
+      this.modal.set({ titulo: 'Editar catálogo' });
     }
     this.modalUpsertInstance.show();
   }
@@ -103,12 +102,16 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
     this.modalUpsertInstance.hide();
   }
 
-  openDeleteModal(catalogo: ICatalogoMaestro) {
+  openDeleteModal(catalogo: ICatalogo) {
     this.catalogoEdit.set({ ...catalogo });
     this.modalDeleteInstance.show();
   }
 
-  async upsertCatalogo(catalogo: ICatalogoMaestro) {
+  verOpciones(catalogo: ICatalogo) {
+    this.router.navigate(['/onesiteex/catalogos', catalogo.id, 'opciones']);
+  }
+
+  async upsertCatalogo(catalogo: ICatalogo) {
     if (this.nuevo()) {
       await this.createCatalogo(catalogo);
     } else {
@@ -116,7 +119,7 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
     }
   }
 
-  async createCatalogo(catalogo: ICatalogoMaestro) {
+  async createCatalogo(catalogo: ICatalogo) {
     const resp = await this.catalogoService.createCatalogo(catalogo);
     if (resp?.success) {
       this.closeModal();
@@ -124,7 +127,7 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
     }
   }
 
-  async updateCatalogo(catalogo: ICatalogoMaestro) {
+  async updateCatalogo(catalogo: ICatalogo) {
     const resp = await this.catalogoService.updateCatalogo(catalogo);
     if (resp?.success) {
       this.closeModal();
@@ -132,8 +135,18 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
     }
   }
 
+  async toggleActivo(item: ICatalogo) {
+    const updated = { ...item, activo: !item.activo };
+    const resp = await this.catalogoService.updateCatalogo(updated);
+    if (resp?.success) {
+      this.catalogoList.update(list =>
+        list.map(c => c.id === item.id ? { ...c, activo: !c.activo } : c)
+      );
+    }
+  }
+
   async deleteCatalogo() {
-    const id = this.catalogoEdit().idCatalogo!;
+    const id = this.catalogoEdit().id!;
     const resp = await this.catalogoService.deleteCatalogo(id);
     if (resp?.success) {
       this.modalDeleteInstance.hide();
@@ -146,4 +159,5 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
     this.fetchData();
   }
 }
+
 

@@ -1,65 +1,34 @@
 <form [formGroup]="form()">
 
-  <!-- Datalist de presets -->
-  <datalist id="catalogoPresets">
-    @for (p of catalogoPresets; track p.codigo) {
-      <option [value]="p.nombre">{{ p.codigo }}</option>
-    }
-  </datalist>
-
   <div class="row">
-    <div class="mb-3 col-md-6">
+    <div class="mb-3 col-md-8">
       <label class="form-label">Nombre del catálogo</label>
-      <input
-        type="text"
-        class="form-control form-control-sm"
-        list="catalogoPresets"
-        placeholder="Ej. Departamento o valor libre"
-        [value]="form().get('nombreCatalogo')?.value"
-        (input)="onNombreChange(nombreInput.value)"
-        #nombreInput />
-      @if (hasError('nombreCatalogo', 'required')) {
+      <input type="text" class="form-control form-control-sm" formControlName="nombre"
+        placeholder="Ej. Tipo de Crédito" />
+      @if (hasError('nombre', 'required')) {
         <div class="text-danger small">Nombre del catálogo es requerido</div>
       }
-      @if (hasError('nombreCatalogo', 'maxlength')) {
-        <div class="text-danger small">Máximo 100 caracteres</div>
+      @if (hasError('nombre', 'maxlength')) {
+        <div class="text-danger small">Máximo 200 caracteres</div>
       }
     </div>
 
-    <div class="mb-3 col-md-6">
-      <label class="form-label">Código de opción</label>
-      <input type="text" class="form-control form-control-sm" formControlName="codigoOpcion"
-        placeholder="Ej. TC001" />
-      
-      @if (hasError('codigoOpcion', 'required')) {
-        <div class="text-danger small">Código de opción es requerido</div>
+    <div class="mb-3 col-md-4">
+      <label class="form-label">Código</label>
+      <input type="text" class="form-control form-control-sm" formControlName="codigo"
+        placeholder="Ej. TIPO_CREDITO" />
+      @if (hasError('codigo', 'required')) {
+        <div class="text-danger small">Código es requerido</div>
       }
-      @if (hasError('codigoOpcion', 'maxlength')) {
+      @if (hasError('codigo', 'maxlength')) {
         <div class="text-danger small">Máximo 50 caracteres</div>
       }
     </div>
   </div>
 
-  <div class="row">
-    <div class="mb-3 col-12">
-      <label class="form-label">Valor de la opción</label>
-      <input type="text" class="form-control form-control-sm" formControlName="valorOpcion"
-        placeholder="Ej. Crédito Personal" />
-      @if (hasError('valorOpcion', 'required')) {
-        <div class="text-danger small">Valor de la opción es requerido</div>
-      }
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="mb-3 col-md-6">
-      <label class="form-label">Código padre <span class="text-muted">(opcional)</span></label>
-      <input type="text" class="form-control form-control-sm" formControlName="idPadreOpcion"
-        placeholder="Ej. CAT001" />
-      @if (hasError('idPadreOpcion', 'maxlength')) {
-        <div class="text-danger small">Máximo 50 caracteres</div>
-      }
-    </div>
+  <div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" id="catalogoActivo" formControlName="activo" />
+    <label class="form-check-label" for="catalogoActivo">Activo</label>
   </div>
 
   <hr />
