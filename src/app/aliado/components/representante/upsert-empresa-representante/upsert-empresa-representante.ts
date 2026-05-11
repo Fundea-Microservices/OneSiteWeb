@@ -169,7 +169,8 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     this.nit.set(empresa.nit || '');
     this.telefono.set(empresa.telefono || '');
     this.selectedDepartamentoCode.set(empresa.departamento?.toString() || '0');
-    this.selectedMunicipioId.set(empresa.municipio?.toString() || '');
+    const muniMatch = this.municipios().find(m => m.valorCore === empresa.municipio?.toString());
+    this.selectedMunicipioId.set(muniMatch?.catalogoId || '');
     this.direccion.set(empresa.direccion || '');
 
     // Normaliza valores para que el select haga match aunque vengan con variaciones de formato.

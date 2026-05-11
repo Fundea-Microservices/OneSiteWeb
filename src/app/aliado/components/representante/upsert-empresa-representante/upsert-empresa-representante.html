@@ -179,12 +179,14 @@
       @if (errorFormulario()) {
         <p class="text-sm text-red-600 mb-2">{{ errorFormulario() }}</p>
       }
-      <div [style.display]="!nuevo() && cargandoFormulario() ? 'none' : 'block'">
-        <app-render-formulario
-          [encabezadoId]="FORMULARIO_EMPRESA_ID"
-          [valoresIniciales]="valoresFormDinamico()"
-          (listado)="onListadoFormDinamico($event)"
-          (mensaje)="mensajeFormDinamico.set($event)" />
+      <div>
+        @if (nuevo() || !cargandoFormulario()) {
+          <app-render-formulario
+            [encabezadoId]="FORMULARIO_EMPRESA_ID"
+            [valoresIniciales]="valoresFormDinamico()"
+            (listado)="onListadoFormDinamico($event)"
+            (mensaje)="mensajeFormDinamico.set($event)" />
+        }
       </div>
     </div>
 
