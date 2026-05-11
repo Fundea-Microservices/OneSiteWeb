@@ -63,11 +63,20 @@
         </thead>
         <tbody>
           @for (item of preguntaList(); track item.idPregunta; let i = $index) {
-            <tr>
-              <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
+            <tr
+              draggable="true"
+              style="cursor: grab;"
+              (dragstart)="onDragStart(i)"
+              (dragover)="onDragOver($event)"
+              (drop)="onDrop(i)"
+              (dragend)="onDragEnd()">
+              <td class="text-center">{{ item.idPregunta }}</td>
               <td class="text-break" style="white-space:normal;">{{ item.etiqueta }}</td>
               <td class="text-center"><span class="badge bg-secondary">{{ item.tipoDato }}</span></td>
-              <td class="text-center">{{ item.orden }}</td>
+              <td class="text-center">
+                <ion-icon name="reorder-three-outline" class="text-muted"></ion-icon>
+                {{ item.orden }}
+              </td>
               <td class="text-center">
                 <div class="form-check form-switch d-inline-flex justify-content-center">
                   <input class="form-check-input" type="checkbox" role="switch"

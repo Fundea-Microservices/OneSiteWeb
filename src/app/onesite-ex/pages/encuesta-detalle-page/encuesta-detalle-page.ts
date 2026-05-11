@@ -120,4 +120,34 @@ export default class EncuestaDetallePage implements OnInit, AfterViewInit {
   }
 
   onChangePage(p: IPagination) { this.pagination.set(p); this.fetchData(); }
+
+  // ── Drag & drop reordering ──────────────────────────────────────────────
+  private dragIndex = -1;
+
+  onDragStart(index: number) {
+    this.dragIndex = index;
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  async onDrop(dropIndex: number) {
+    if (this.dragIndex === -1 || this.dragIndex === dropIndex) return;
+
+    const list = [...this.seccionList()];
+    const draggedItem = list[this.dragIndex];
+    const targetOrden = list[dropIndex].orden ?? dropIndex;
+
+    list.splice(this.dragIndex, 1);
+    list.splice(dropIndex, 0, draggedItem);
+    this.seccionList.set(list);
+    this.dragIndex = -1;
+
+    await this.seccionService.updateSeccion({ ...draggedItem, orden: targetOrden });
+  }
+
+  onDragEnd() {
+    this.dragIndex = -1;
+  }
 }

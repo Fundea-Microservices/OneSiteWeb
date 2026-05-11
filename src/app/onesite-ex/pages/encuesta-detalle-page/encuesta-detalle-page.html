@@ -61,10 +61,19 @@
         </thead>
         <tbody>
           @for (item of seccionList(); track item.idSeccion; let i = $index) {
-            <tr>
+            <tr
+              draggable="true"
+              style="cursor: grab;"
+              (dragstart)="onDragStart(i)"
+              (dragover)="onDragOver($event)"
+              (drop)="onDrop(i)"
+              (dragend)="onDragEnd()">
               <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
               <td>{{ item.titulo }}</td>
-              <td class="text-center">{{ item.orden }}</td>
+              <td class="text-center">
+                <ion-icon name="reorder-three-outline" class="text-muted"></ion-icon>
+                {{ item.orden }}
+              </td>
               <td class="text-center">
                 <div class="form-check form-switch d-inline-flex justify-content-center">
                   <input class="form-check-input" type="checkbox" role="switch"
