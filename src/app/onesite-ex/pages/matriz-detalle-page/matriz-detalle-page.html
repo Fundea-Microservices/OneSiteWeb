@@ -14,8 +14,8 @@
 </nav>
 
 @if (matrizPregunta()) {
-  <div class="alert border mb-3 py-2" style="background-color:#ede7f6; border-color:#7b1fa2 !important;">
-    <strong style="color:#7b1fa2;">Pregunta Matriz:</strong>
+  <div class="alert alert-info border mb-3 py-2">
+    <strong>Pregunta Matriz:</strong>
     {{ matrizPregunta()!.etiqueta }}
     <span class="ms-2 text-muted small">Código: {{ matrizPregunta()!.codigo }}</span>
   </div>
@@ -24,7 +24,7 @@
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <span>Preguntas de la matriz</span>
-    <button class="btn btn-sm text-white" style="background-color:#7b1fa2;" (click)="openModal(true)">
+    <button class="btn btn-sm btn-info" (click)="openModal(true)">
       <ion-icon name="add-outline"></ion-icon> Nueva pregunta
     </button>
   </div>
