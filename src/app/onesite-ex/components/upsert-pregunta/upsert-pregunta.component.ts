@@ -80,10 +80,11 @@ export class UpsertPreguntaComponent {
       orden: [preg.orden, [Validators.required, Validators.min(1)]],
       origenDatosTipo: [preg.origenDatosTipo ?? null, [Validators.maxLength(50)]],
       origenDatosCmd: [preg.origenDatosCmd ?? null, [Validators.maxLength(255)]],
+      filtro: [preg.filtro ?? null],
       esEditable: [preg.esEditable ?? true],
       esVisibleDefault: [preg.esVisibleDefault ?? true],
     });
-    if (isNuevo) g.reset({ etiqueta: '', tipoDato: 'TEXT', orden: 1, origenDatosTipo: null, origenDatosCmd: null, esEditable: true, esVisibleDefault: true });
+    if (isNuevo) g.reset({ etiqueta: '', tipoDato: 'TEXT', orden: 1, origenDatosTipo: null, origenDatosCmd: null, filtro: null, esEditable: true, esVisibleDefault: true });
     // Pre-fill search display when editing with a catalog origin
     const searchText = (!isNuevo && preg.origenDatosCmd) ? preg.origenDatosCmd : '';
     this.catalogoSearch.set(searchText);
@@ -98,7 +99,12 @@ export class UpsertPreguntaComponent {
 
   get tieneOrigen(): boolean {
     const t = this.form().get('tipoDato')?.value;
-    return t === 'SELECT' || t === 'MULTISELECT';
+    return t === 'SELECT' || t === 'MULTISELECT' || t === 'MATRIZ';
+  }
+
+  get tieneFiltro(): boolean {
+    const t = this.form().get('tipoDato')?.value;
+    return t === 'SELECT' || t === 'MULTISELECT' || t === 'MATRIZ';
   }
 
   get esCatalogo(): boolean {

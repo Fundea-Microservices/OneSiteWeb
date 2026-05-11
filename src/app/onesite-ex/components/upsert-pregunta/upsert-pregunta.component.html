@@ -95,6 +95,16 @@
     </div>
   }
 
+  @if (tieneFiltro) {
+    <div class="row">
+      <div class="mb-3 col-md-6">
+        <label class="form-label">Filtro <span class="text-muted">(opcional)</span></label>
+        <input type="number" class="form-control form-control-sm" formControlName="filtro"
+          placeholder="Código de filtro" />
+      </div>
+    </div>
+  }
+
   <div class="row">
     <div class="col-md-6 d-flex gap-4 mb-3">
       <div class="form-check form-switch">
