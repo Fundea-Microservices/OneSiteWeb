@@ -17,11 +17,13 @@ export class PreguntaService extends HttpService {
     super(http);
   }
 
-  async getPreguntas({ page = 1, limit = 10, search = '', idSeccion, all }: { page?: number; limit?: number; search?: string; idSeccion?: number; all?: boolean } = {}) {
+  async getPreguntas({ page = 1, limit = 10, search = '', idSeccion, idMatrizPadre, sinPreguntasMatriz, all }: { page?: number; limit?: number; search?: string; idSeccion?: number; idMatrizPadre?: number; sinPreguntasMatriz?: boolean; all?: boolean } = {}) {
     try {
       const params: any = { page, limit };
       if (search) params['search'] = search;
       if (idSeccion != null) params['idSeccion'] = idSeccion;
+      if (idMatrizPadre != null) params['idMatrizPadre'] = idMatrizPadre;
+      if (sinPreguntasMatriz) params['sinPreguntasMatriz'] = sinPreguntasMatriz;
       if (all) params['all'] = all;
       const resp = await firstValueFrom(this.get<PreguntaListResponse>(this.base, params));
       return resp.body?.success ? resp.body : null;

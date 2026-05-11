@@ -65,14 +65,20 @@
           @for (item of preguntaList(); track item.idPregunta; let i = $index) {
             <tr
               draggable="true"
+              [style.background-color]="item.tipoDato === 'MATRIZ' ? '#ede7f6' : ''"
               style="cursor: grab;"
               (dragstart)="onDragStart(i)"
               (dragover)="onDragOver($event)"
               (drop)="onDrop(i)"
               (dragend)="onDragEnd()">
-              <td class="text-center">{{ item.idPregunta }}</td>
+              <td class="text-center">{{ item.codigo }}</td>
               <td class="text-break" style="white-space:normal;">{{ item.etiqueta }}</td>
-              <td class="text-center"><span class="badge bg-secondary">{{ item.tipoDato }}</span></td>
+              <td class="text-center">
+                <span class="badge" [class.bg-secondary]="item.tipoDato !== 'MATRIZ'"
+                  [style.background-color]="item.tipoDato === 'MATRIZ' ? '#7b1fa2' : ''">
+                  {{ item.tipoDato }}
+                </span>
+              </td>
               <td class="text-center">
                 <ion-icon name="reorder-three-outline" class="text-muted"></ion-icon>
                 {{ item.orden }}
@@ -95,6 +101,12 @@
               </td>
               <td class="text-break small">{{ item.origenDatosTipo ?? '—' }}</td>
               <td class="text-center">
+                @if (item.tipoDato === 'MATRIZ') {
+                  <button class="btn btn-sm mx-1" style="background-color:#7b1fa2; color:#fff;" title="Preguntas de la matriz"
+                    (click)="goToMatriz(item)">
+                    <ion-icon name="list-outline"></ion-icon>
+                  </button>
+                }
                 <button class="btn btn-sm btn-warning mx-1" title="Reglas" (click)="openReglaModal(item)">
                   <ion-icon name="git-branch-outline"></ion-icon>
                 </button>
@@ -118,11 +130,16 @@
     <!-- Cards Mobile -->
     <div class="d-md-none d-flex flex-column gap-3">
       @for (item of preguntaList(); track item.idPregunta) {
-        <div class="card shadow-sm">
+        <div class="card shadow-sm" [style.border-left]="item.tipoDato === 'MATRIZ' ? '4px solid #7b1fa2' : ''">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-1">
               <div class="fw-semibold text-break">{{ item.etiqueta }}</div>
-              <div class="d-flex gap-1 flex-shrink-0 ms-2">
+              <div class="d-flex gap-1 flex-shrink-0 ms-2 flex-wrap justify-content-end">
+                @if (item.tipoDato === 'MATRIZ') {
+                  <button class="btn btn-sm" style="background-color:#7b1fa2; color:#fff;" (click)="goToMatriz(item)">
+                    <ion-icon name="list-outline"></ion-icon>
+                  </button>
+                }
                 <button class="btn btn-sm btn-warning" (click)="openReglaModal(item)">
                   <ion-icon name="git-branch-outline"></ion-icon>
                 </button>
@@ -135,7 +152,8 @@
               </div>
             </div>
             <div class="small">
-              <span class="badge bg-secondary me-1">{{ item.tipoDato }}</span>
+              <span class="badge me-1" [class.bg-secondary]="item.tipoDato !== 'MATRIZ'"
+                [style.background-color]="item.tipoDato === 'MATRIZ' ? '#7b1fa2' : ''">{{ item.tipoDato }}</span>
               Orden: {{ item.orden }}
             </div>
           </div>

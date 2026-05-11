@@ -2,7 +2,7 @@ import {
   AfterViewInit, ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA,
   ElementRef, inject, OnInit, signal, ViewChild,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { SeccionService } from '../../../../services/encuesta/seccion.service';
@@ -19,6 +19,7 @@ const emptyPregunta = (idSeccion: number): IPregunta => ({
   orden: 1,
   esEditable: true,
   esVisibleDefault: true,
+  codigo: 0
 });
 
 const emptyRegla = (idPregunta: number): IRegla => ({
@@ -37,6 +38,7 @@ const emptyRegla = (idPregunta: number): IRegla => ({
 })
 export default class SeccionDetallePage implements OnInit, AfterViewInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private seccionService = inject(SeccionService);
   private preguntaService = inject(PreguntaService);
   private reglaService = inject(ReglaService);
@@ -44,7 +46,7 @@ export default class SeccionDetallePage implements OnInit, AfterViewInit {
   idSeccion = signal(0);
   seccion = signal<ISeccion | null>(null);
   preguntaList = signal<IPregunta[]>([]);
-  preguntaEdit = signal<IPregunta>({ idSeccion: 0, etiqueta: '', tipoDato: 'TEXT', orden: 1 });
+  preguntaEdit = signal<IPregunta>({ idSeccion: 0, etiqueta: '', tipoDato: 'TEXT', orden: 1, codigo: 0 });
   reglaEdit = signal<IRegla>({ idPregunta: 0 });
   nuevo = signal(true);
   formKey = signal(Date.now());
@@ -88,6 +90,7 @@ export default class SeccionDetallePage implements OnInit, AfterViewInit {
         limit: this.pagination().pageSize,
         search: this.buscador(),
         idSeccion: this.idSeccion(),
+        sinPreguntasMatriz: true,
       });
       if (resp?.data) {
         this.preguntaList.set(resp.data ?? []);
@@ -154,6 +157,10 @@ export default class SeccionDetallePage implements OnInit, AfterViewInit {
   }
 
   onChangePage(p: IPagination) { this.pagination.set(p); this.fetchData(); }
+
+  goToMatriz(pregunta: IPregunta) {
+    this.router.navigate(['/onesiteex/encuestas/matriz', pregunta.idPregunta]);
+  }
 
   // ── Drag & drop reordering ──────────────────────────────────────────────
   private dragIndex = -1;

@@ -74,6 +74,10 @@ export interface IPregunta {
   orden: number;
   fechaCreacion?: Date;
   fechaModificacion?: Date;
+  opciones?: string | null;
+  codigo: number;
+  filtro?: number | null;
+
 }
 
 export interface PreguntaListResponse {

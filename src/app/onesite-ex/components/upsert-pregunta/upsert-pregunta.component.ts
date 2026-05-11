@@ -4,7 +4,7 @@ import { IPregunta } from '../../../../interfaces/encuesta/encuesta';
 import { CatalogoService } from '../../../../services/config/catalogo-maestro.service';
 import { ICatalogo } from '../../../../interfaces/catalogo-maestro/catalogo-maestro';
 
-export const TIPOS_DATO = ['TEXT', 'NUMBER', 'DATE', 'BOOLEAN', 'SELECT', 'MULTISELECT', 'TEXTAREA', 'FILE'];
+export const TIPOS_DATO = ['TEXT', 'NUMBER', 'DATE', 'BOOLEAN', 'SELECT', 'MULTISELECT', 'TEXTAREA', 'FILE', 'MATRIZ'];
 export const ORIGENES_TIPO = ['CATALOGO', 'API', 'LISTA'];
 
 @Component({
@@ -20,7 +20,7 @@ export class UpsertPreguntaComponent {
   readonly tiposDato = TIPOS_DATO;
   readonly origenesTipo = ORIGENES_TIPO;
 
-  pregunta = input<IPregunta>({ idSeccion: 0, etiqueta: '', tipoDato: 'TEXT', orden: 1 });
+  pregunta = input<IPregunta>({ idSeccion: 0, etiqueta: '', tipoDato: 'TEXT', orden: 1, codigo: 0 });
   nuevo = input<boolean>(true);
   formKey = input<number>(0);
 
@@ -78,13 +78,12 @@ export class UpsertPreguntaComponent {
       etiqueta: [preg.etiqueta, [Validators.required]],
       tipoDato: [preg.tipoDato, [Validators.required, Validators.maxLength(50)]],
       orden: [preg.orden, [Validators.required, Validators.min(1)]],
-      idMatrizPadre: [preg.idMatrizPadre ?? null],
       origenDatosTipo: [preg.origenDatosTipo ?? null, [Validators.maxLength(50)]],
       origenDatosCmd: [preg.origenDatosCmd ?? null, [Validators.maxLength(255)]],
       esEditable: [preg.esEditable ?? true],
       esVisibleDefault: [preg.esVisibleDefault ?? true],
     });
-    if (isNuevo) g.reset({ etiqueta: '', tipoDato: 'TEXT', orden: 1, idMatrizPadre: null, origenDatosTipo: null, origenDatosCmd: null, esEditable: true, esVisibleDefault: true });
+    if (isNuevo) g.reset({ etiqueta: '', tipoDato: 'TEXT', orden: 1, origenDatosTipo: null, origenDatosCmd: null, esEditable: true, esVisibleDefault: true });
     // Pre-fill search display when editing with a catalog origin
     const searchText = (!isNuevo && preg.origenDatosCmd) ? preg.origenDatosCmd : '';
     this.catalogoSearch.set(searchText);
