@@ -56,7 +56,7 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
   private modalImportInstance!: Modal;
 
   // ── Bulk import state ──────────────────────────────────────────────────────
-  importRows = signal<{ codigoCatalogo: string; codigo: string; opcion: string; orden: number; catalogoPadre?: string; opcionPadre?: string }[]>([]);
+  importRows = signal<{ codigoCatalogo: string; nombreCatalogo: string; codigo: string; opcion: string; orden: number; catalogoPadre?: string; opcionPadre?: string }[]>([]);
   importProgress = signal({ current: 0, total: 0 });
   importResult = signal<{ nuevos: number; duplicados: number; total: number } | null>(null);
   isImporting = signal(false);
@@ -194,17 +194,18 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
 
-      // Skip header row; columns: A=codigoCatalogo, B=codigo, C=opcion, D=orden, E=catalogoPadre, F=opcionPadre
+      // Skip header row; columns: A=codigoCatalogo, B=nombreCatalogo, C=codigo, D=opcion, E=orden, F=catalogoPadre, G=opcionPadre
       const items = rows
         .slice(1)
-        .filter(row => row[0] && row[1] && row[2])
+        .filter(row => row[0] && row[2] && row[3])
         .map(row => ({
           codigoCatalogo: String(row[0]).trim(),
-          codigo: String(row[1]).trim(),
-          opcion: String(row[2]).trim(),
-          orden: row[3] !== undefined && row[3] !== null && row[3] !== '' ? Number(row[3]) : 0,
-          catalogoPadre: row[4] !== undefined && row[4] !== null && row[4] !== '' ? String(row[4]).trim() : undefined,
-          opcionPadre: row[5] !== undefined && row[5] !== null && row[5] !== '' ? String(row[5]).trim() : undefined,
+          nombreCatalogo: row[1] !== undefined && row[1] !== null && row[1] !== '' ? String(row[1]).trim() : '',
+          codigo: String(row[2]).trim(),
+          opcion: String(row[3]).trim(),
+          orden: row[4] !== undefined && row[4] !== null && row[4] !== '' ? Number(row[4]) : 0,
+          catalogoPadre: row[5] !== undefined && row[5] !== null && row[5] !== '' ? String(row[5]).trim() : undefined,
+          opcionPadre: row[6] !== undefined && row[6] !== null && row[6] !== '' ? String(row[6]).trim() : undefined,
         }));
 
       this.importRows.set(items);

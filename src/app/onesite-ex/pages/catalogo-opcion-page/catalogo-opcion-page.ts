@@ -52,6 +52,8 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
   pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0 });
   isLoading = signal(false);
   buscador = signal('');
+  todasLasOpciones = signal<ICatalogoOpcion[]>([]);
+  padresExternos = signal<Map<string, string>>(new Map());
 
   modal = signal({ titulo: 'Crear opción' });
 
@@ -65,6 +67,7 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
     this.idCatalogo.set(id);
     this.loadCatalogo(id);
+    this.loadTodasLasOpciones(id);
     this.fetchData();
   }
 
@@ -73,11 +76,41 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
     this.modalDeleteInstance = new Modal(this.modalDeleteElementRef.nativeElement);
   }
 
+  private async resolveNombresPadre(opciones: ICatalogoOpcion[]) {
+    const localIds = new Set(this.todasLasOpciones().map(o => o.id));
+    const mapa = new Map(this.padresExternos());
+    const pendientes = opciones
+      .map(o => o.idPadre)
+      .filter((id): id is string => !!id && !localIds.has(id) && !mapa.has(id));
+    const unicos = [...new Set(pendientes)];
+    await Promise.all(
+      unicos.map(async id => {
+        const resp = await this.opcionService.getOpcionById(id);
+        if (resp?.data) mapa.set(id, resp.data.nombre);
+      })
+    );
+    this.padresExternos.set(mapa);
+  }
+
   async loadCatalogo(id: string) {
     const resp = await this.catalogoService.getCatalogoById(id);
     if (resp?.data) {
       this.catalogo.set(resp.data);
     }
+  }
+
+  async loadTodasLasOpciones(idCatalogo: string) {
+    const resp = await this.opcionService.getOpciones({ idCatalogo, all: true });
+    if (resp?.data) {
+      this.todasLasOpciones.set(resp.data);
+    }
+  }
+
+  nombrePadre(idPadre: string | null | undefined): string {
+    if (!idPadre) return '—';
+    const local = this.todasLasOpciones().find(o => o.id === idPadre);
+    if (local) return local.nombre;
+    return this.padresExternos().get(idPadre) ?? '—';
   }
 
   async fetchData() {
@@ -100,6 +133,7 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
             totalItems: metadata.total,
           });
         }
+        await this.resolveNombresPadre(resp.data);
       }
     } finally {
       this.isLoading.set(false);
@@ -141,6 +175,7 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
     if (resp?.success) {
       this.closeModal();
       this.fetchData();
+      this.loadTodasLasOpciones(this.idCatalogo());
     }
   }
 
@@ -149,6 +184,7 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
     if (resp?.success) {
       this.closeModal();
       this.fetchData();
+      this.loadTodasLasOpciones(this.idCatalogo());
     }
   }
 
@@ -178,6 +214,7 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
     if (resp?.success) {
       this.modalDeleteInstance.hide();
       this.fetchData();
+      this.loadTodasLasOpciones(this.idCatalogo());
     }
   }
 

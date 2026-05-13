@@ -58,7 +58,7 @@
             <th class="text-center" style="width: 8%;">Orden</th>
             <th class="text-center" style="width: 8%;">Activo</th>
             <th class="text-center" style="width: 10%;">Por defecto</th>
-            <th class="text-center" style="width: 17%;">ID Padre</th>
+            <th class="text-center" style="width: 17%;">Padre</th>
             <th class="text-center" style="width: 10%;">Acciones</th>
           </tr>
         </thead>
@@ -92,8 +92,8 @@
                     (change)="togglePorDefecto(item)" />
                 </div>
               </td>
-              <td class="text-center text-truncate" style="max-width: 120px;" [title]="item.idPadre ?? ''">
-                {{ item.idPadre ?? '—' }}
+              <td class="text-center text-truncate" style="max-width: 120px;" [title]="nombrePadre(item.idPadre)">
+                {{ nombrePadre(item.idPadre) }}
               </td>
               <td class="text-center">
                 <button class="btn btn-sm btn-success mx-1" title="Editar" (click)="openModal(false, item)">
@@ -161,7 +161,7 @@
             @if (item.idPadre) {
               <div class="mb-1">
                 <span class="small text-muted">Padre: </span>
-                <span class="small text-break">{{ item.idPadre }}</span>
+                <span class="small text-break">{{ nombrePadre(item.idPadre) }}</span>
               </div>
             }
           </div>

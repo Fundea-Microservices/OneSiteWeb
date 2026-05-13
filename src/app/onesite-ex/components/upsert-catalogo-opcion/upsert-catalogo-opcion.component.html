@@ -35,11 +35,33 @@
         <div class="text-danger small">El orden no puede ser negativo</div>
       }
     </div>
+  </div>
 
-    <div class="mb-3 col-md-8">
-      <label class="form-label">ID padre <span class="text-muted">(opcional, UUID)</span></label>
-      <input type="text" class="form-control form-control-sm" formControlName="idPadre"
-        placeholder="UUID de la opción padre" />
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Catálogo padre <span class="text-muted">(opcional)</span></label>
+      <select class="form-select form-select-sm"
+        [value]="catalogoPadreId()"
+        (change)="onCatalogoPadreChange($any($event.target).value)">
+        <option value="">— Sin padre —</option>
+        @for (cat of catalogosPadre(); track cat.id) {
+          <option [value]="cat.id">{{ cat.nombre }} ({{ cat.codigo }})</option>
+        }
+      </select>
+    </div>
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Opción padre <span class="text-muted">(opcional)</span></label>
+      <select class="form-select form-select-sm" formControlName="idPadre"
+        [attr.disabled]="(!catalogoPadreId() || cargandoOpciones()) ? true : null">
+        <option value="">
+          @if (cargandoOpciones()) { Cargando... } @else { — Sin opción — }
+        </option>
+        @for (op of opcionesPadre(); track op.id) {
+          @if (op.id !== opcion().id) {
+            <option [value]="op.id">{{ op.nombre }} ({{ op.codigo }})</option>
+          }
+        }
+      </select>
     </div>
   </div>
 
