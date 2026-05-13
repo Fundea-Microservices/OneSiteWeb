@@ -109,7 +109,7 @@ export class CatalogoService extends HttpService {
     }
   }
 
-  async bulkImport(items: { codigoCatalogo: string; codigo: string; opcion: string; orden: number }[]) {
+  async bulkImport(items: { codigoCatalogo: string; codigo: string; opcion: string; orden: number; catalogoPadre?: string; opcionPadre?: string }[]) {
     try {
       const resp = await firstValueFrom(
         this.post<{ success: boolean; message: string; data: { nuevos: number; duplicados: number; total: number } }>(

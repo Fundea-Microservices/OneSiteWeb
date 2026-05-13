@@ -56,7 +56,7 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
   private modalImportInstance!: Modal;
 
   // ── Bulk import state ──────────────────────────────────────────────────────
-  importRows = signal<{ codigoCatalogo: string; codigo: string; opcion: string; orden: number }[]>([]);
+  importRows = signal<{ codigoCatalogo: string; codigo: string; opcion: string; orden: number; catalogoPadre?: string; opcionPadre?: string }[]>([]);
   importProgress = signal({ current: 0, total: 0 });
   importResult = signal<{ nuevos: number; duplicados: number; total: number } | null>(null);
   isImporting = signal(false);
@@ -194,7 +194,7 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
 
-      // Skip header row; columns: A=codigoCatalogo, B=codigo, C=opcion, D=orden
+      // Skip header row; columns: A=codigoCatalogo, B=codigo, C=opcion, D=orden, E=catalogoPadre, F=opcionPadre
       const items = rows
         .slice(1)
         .filter(row => row[0] && row[1] && row[2])
@@ -203,6 +203,8 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
           codigo: String(row[1]).trim(),
           opcion: String(row[2]).trim(),
           orden: row[3] !== undefined && row[3] !== null && row[3] !== '' ? Number(row[3]) : 0,
+          catalogoPadre: row[4] !== undefined && row[4] !== null && row[4] !== '' ? String(row[4]).trim() : undefined,
+          opcionPadre: row[5] !== undefined && row[5] !== null && row[5] !== '' ? String(row[5]).trim() : undefined,
         }));
 
       this.importRows.set(items);
