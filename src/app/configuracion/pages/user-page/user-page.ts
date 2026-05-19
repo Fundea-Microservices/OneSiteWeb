@@ -5,7 +5,7 @@ import { ChangePasswordComponent } from "../../components/user/change-password/c
 import { Modal } from 'bootstrap';
 import { Router } from '@angular/router';
 import { UpsertFotoUsuarioComponent } from '../../components/user/upsert-foto/upsert-foto.component';
-import { FotoPerfilService } from '../../../../services/usuarios/foto-usuario.service';
+import { StorageService } from '../../../../services/storage.service';
 
 @Component({
   selector: 'app-user-page',
@@ -17,7 +17,7 @@ import { FotoPerfilService } from '../../../../services/usuarios/foto-usuario.se
 })
 export default class UserPageComponent {
   public authService = inject(AuthService);
-  private fotoPerfilService = inject(FotoPerfilService);
+  private storageService = inject(StorageService);
   private cdr = inject(ChangeDetectorRef);
   conFoto = signal(false)
 
@@ -88,16 +88,28 @@ export default class UserPageComponent {
 
   logout() {
     this.authService.logout();
-    this.router.navigate(['/']);
+    this.router.navigate(['/fundea/login']);
   }
 
   async actualizarFoto() {
     if (!this.user?.userId) return;
-    const nuevaFotoUrl = await this.fotoPerfilService.descargarFotoUsuario(this.user.userId);
-    if (nuevaFotoUrl) {      
+
+    // Refresca el snapshot desde el signal (puede ya tener el blob URL tras una subida)
+    this.user = this.authService.getUserStorage();
+
+    if (this.user.photoUrl?.startsWith('blob:')) {
+      // El componente de subida ya actualizó el signal con el blob URL
+      this.conFoto.set(true);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Carga inicial: descargar blob URL desde el storage
+    const nuevaFotoUrl = await this.storageService.downloadFileAsUrl(this.user.photoUrl);
+    if (nuevaFotoUrl) {
       this.conFoto.set(true);
       const updatedUser = { ...this.user, photoUrl: nuevaFotoUrl };
-      this.authService.updateUser(updatedUser); // 🔑 dispara actualización global
+      this.authService.updateUser(updatedUser);
       this.user = this.authService.getUserStorage();
       this.cdr.detectChanges();
     }

@@ -43,35 +43,51 @@ export default class LoginPageComponent {
     bgColor: '#d1d6f0'
   });
 
+  private readonly ENTORNO_CACHE_KEY = 'entorno_config';
+  refreshingEntorno = signal(false);
+
   ngOnInit() {
     this.fetchData();
   }
 
-  async fetchData() {
-    // Buscamos los parámetros de configuración inicial si es que hay
-    let entornoAmbiente = await this.configService.getConfigByKey('entorno_ambiente');
-    let entornoColor = await this.configService.getConfigByKey('entorno_color');
-    let entornoColorFondo = await this.configService.getConfigByKey('entorno_color_fondo');
+  async fetchData(forceRefresh = false) {
+    if (!forceRefresh) {
+      const cached = localStorage.getItem(this.ENTORNO_CACHE_KEY);
+      if (cached) {
+        try {
+          this.entorno.set({ ...this.entorno(), ...JSON.parse(cached) });
+          return;
+        } catch {
+          // caché corrupto, continuar con el API
+        }
+      }
+    }
 
-    if(entornoAmbiente && entornoAmbiente.data) {
-      this.entorno.set({
-        ...this.entorno(),
-        ambiente: String(entornoAmbiente.data.value)
-      });
-    }
-    if(entornoColor && entornoColor.data) {
-      this.entorno.set({
-        ...this.entorno(),
-        textColor: String(entornoColor.data.value)
-      });
-    }
-    if(entornoColorFondo && entornoColorFondo.data) {
-      this.entorno.set({
-        ...this.entorno(),
-        bgColor: String(entornoColorFondo.data.value)
-      });
-    }
-    
+    const [entornoAmbiente, entornoColor, entornoColorFondo] = await Promise.all([
+      this.configService.getConfigByKey('entorno_ambiente'),
+      this.configService.getConfigByKey('entorno_color'),
+      this.configService.getConfigByKey('entorno_color_fondo'),
+    ]);
+
+    const updates: Partial<{ ambiente: string; textColor: string; bgColor: string }> = {};
+    if (entornoAmbiente?.data) updates.ambiente    = String(entornoAmbiente.data.value);
+    if (entornoColor?.data)     updates.textColor   = String(entornoColor.data.value);
+    if (entornoColorFondo?.data) updates.bgColor    = String(entornoColorFondo.data.value);
+
+    const newEntorno = { ...this.entorno(), ...updates };
+    this.entorno.set(newEntorno);
+    localStorage.setItem(this.ENTORNO_CACHE_KEY, JSON.stringify({
+      ambiente:  newEntorno.ambiente,
+      textColor: newEntorno.textColor,
+      bgColor:   newEntorno.bgColor,
+    }));
+  }
+
+  async refreshEntorno() {
+    this.refreshingEntorno.set(true);
+    localStorage.removeItem(this.ENTORNO_CACHE_KEY);
+    await this.fetchData(true);
+    this.refreshingEntorno.set(false);
   }
 
   loading = signal(false);

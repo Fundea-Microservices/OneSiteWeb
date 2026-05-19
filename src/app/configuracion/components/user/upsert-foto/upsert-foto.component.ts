@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Output, ViewChild, effect, inject, input, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { FotoPerfilService } from '../../../../../services/usuarios/foto-usuario.service';
+import { firstValueFrom } from 'rxjs';
+import { StorageService } from '../../../../../services/storage.service';
+import { UserService } from '../../../../../services/usuarios/user.service';
+import { AuthService } from '../../../../../services/auth.service';
 
 @Component({
   selector: 'app-upsert-foto-usuario',
@@ -16,12 +18,13 @@ export class UpsertFotoUsuarioComponent {
   @Output() closed = new EventEmitter<void>(); // Cuando se cierra sin guardar
   @Output() saved = new EventEmitter<void>();  // Cuando se guarda exitosamente
 
-  fotoService = inject(FotoPerfilService);
+  private storageService = inject(StorageService);
+  private userService = inject(UserService);
+  private authService = inject(AuthService);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   private fb = inject(FormBuilder);
-  private http = inject(HttpClient);
 
   key = input<number>(0);
 
@@ -69,14 +72,26 @@ export class UpsertFotoUsuarioComponent {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('usuarioId', this.usuarioId.toString());
-    formData.append('foto', this.form.value.archivo);
-
+    const file: File = this.form.value.archivo;
     this.cargando.set(true);
 
     try {
-      await this.fotoService.actualizarFotoUsuario(formData);
+      const result = await this.storageService.uploadFile(file, 'perfil');
+      if (!result?.data?.url) {
+        this.mensaje.set('Error al subir la fotografía.');
+        return;
+      }
+
+      const currentUser = this.authService.getUserStorage();
+      const updatedUser = { ...currentUser, photoUrl: result.data.url };
+
+      await this.userService.updateUser(updatedUser);
+
+      // Descargar blob URL y actualizar el signal global para que todos los
+      // componentes que usan authService.user se refresquen automáticamente
+      const blobUrl = await this.storageService.downloadFileAsUrl(result.data.url);
+      this.authService.updateUser({ ...updatedUser, photoUrl: blobUrl ?? result.data.url });
+
       this.mensaje.set('Fotografía actualizada correctamente.');
       this.form.reset();
       this.fileInput.nativeElement.value = '';
