@@ -107,13 +107,32 @@
 
     <div class="col-md-12">
       <label for="archivo" class="form-label">Documento firmado</label>
-      <div class="input-group">        
-        <input type="file" id="archivo" class="form-control" accept=".pdf" (change)="onArchivoSeleccionado($event)"
-          [disabled]="isLoading()" />
-        @if (nombreArchivo()) {
-        <span class="input-group-text text-success">✓ {{ nombreArchivo() }}</span>
+      @if (!nuevo() && solicitudData()?.documentoCargado) {
+      <div class="mb-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="descargarDocumento()"
+          [disabled]="descargandoDocumento()">
+          @if (descargandoDocumento()) {
+          <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          } @else {
+          <i class="bi bi-download me-1"></i>
+          }
+          Descargar documento actual
+        </button>
+      </div>
+      }
+      <div class="input-group">
+        <input type="file" id="archivo" class="form-control" accept=".pdf,.doc,.docx" (change)="onArchivoSeleccionado($event)"
+          [disabled]="isLoading() || subiendoArchivo()" />
+        @if (subiendoArchivo()) {
+        <span class="input-group-text">
+          <span class="spinner-border spinner-border-sm text-primary me-1" role="status" aria-hidden="true"></span>
+          Subiendo...
+        </span>
+        } @else if (nombreArchivo() && documentoCargadoUrl() !== solicitudData()?.documentoCargado) {
+        <span class="input-group-text text-success">&#10003; {{ nombreArchivo() }}</span>
         }
       </div>
+      <small class="text-muted">PDF, DOC o DOCX. Máximo 5MB.</small>
     </div>
   </div>
 
@@ -127,7 +146,7 @@
 
   <div class="row">
     <div class="col-12">
-      <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+      <button type="submit" class="btn btn-primary" [disabled]="isLoading() || subiendoArchivo()">
         @if (isLoading()) {
         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
         } {{ nuevo() ? 'Crear Solicitud' : 'Actualizar Solicitud' }}

@@ -7,6 +7,7 @@ import { CatalogosBantotalService } from '../../../../services/api-bantotal/cata
 import { Representante } from '../../../../interfaces/aliado/representante';
 import { IEmpresaRepresentante } from '../../../../interfaces/aliado/empresa-representante';
 import { ICuentaBancaria } from '../../../../interfaces/aliado/cuenta-bancaria';
+import { StorageService } from '../../../../services/storage.service';
 
 export interface Region {
   regionId: string; // valorCore
@@ -26,7 +27,7 @@ export interface SolicitudFormData {
   regionId: string;
   agenciaId: string;
   observaciones?: string;
-  archivo?: File;
+  documentoCargado?: string; // URL/path del archivo subido al storage
 }
 
 interface CartaDatos {
@@ -79,6 +80,7 @@ interface CartaDatos {
 export default class UpsertSolicitudComponent implements OnInit {
   private generalidadesService = inject(GeneralidadesService);
   private catalogosService = inject(CatalogosBantotalService);
+  private storageService = inject(StorageService);
 
   // Inputs usando input signals de Angular
   nuevo = input<boolean>(true);
@@ -112,6 +114,9 @@ export default class UpsertSolicitudComponent implements OnInit {
   selectedAgencia = signal('');
   archivoSeleccionado = signal<File | null>(null);
   nombreArchivo = signal('');
+  documentoCargadoUrl = signal<string | null>(null);
+  subiendoArchivo = signal(false);
+  descargandoDocumento = signal(false);
   observaciones = signal('');
   estadoDeshabilitado = signal(false);
 
@@ -212,6 +217,10 @@ export default class UpsertSolicitudComponent implements OnInit {
     if (data.observaciones) {
       this.observaciones.set(data.observaciones);
     }
+    // Preservar el documento ya cargado para que no se pierda en el submit
+    if (data.documentoCargado) {
+      this.documentoCargadoUrl.set(data.documentoCargado);
+    }
 
     // Filtrar agencias basándose en la región seleccionada
     if (data.regionId) {
@@ -257,7 +266,7 @@ export default class UpsertSolicitudComponent implements OnInit {
       regionId: this.selectedRegion(),
       agenciaId: this.selectedAgencia(),
       observaciones: this.observaciones() || undefined,
-      archivo: this.archivoSeleccionado() ?? undefined,
+      documentoCargado: this.documentoCargadoUrl() ?? undefined,
     };
 
     this.save.emit(formData);
@@ -316,17 +325,67 @@ export default class UpsertSolicitudComponent implements OnInit {
     return this.agencias().find((a) => a.agenciaId === id)?.nombre ?? '';
   }
 
-  onArchivoSeleccionado(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 1048576) { // 1MB = 1048576 bytes
-        alert('El archivo excede el tamaño máximo permitido de 1MB.');
-        this.archivoSeleccionado.set(null);
-        this.nombreArchivo.set('');
-        return;
+  async descargarDocumento(): Promise<void> {
+    const path = this.solicitudData()?.documentoCargado;
+    if (!path) return;
+
+    this.descargandoDocumento.set(true);
+    try {
+      const url = await this.storageService.downloadFileAsUrl(path);
+      if (url) {
+        const fileName = path.includes('/') ? path.substring(path.lastIndexOf('/') + 1) : path;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
       }
-      this.archivoSeleccionado.set(file);
-      this.nombreArchivo.set(file.name);
+    } finally {
+      this.descargandoDocumento.set(false);
+    }
+  }
+
+  async onArchivoSeleccionado(event: any): Promise<void> {
+    const file: File | undefined = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('El archivo no debe superar los 5MB.');
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
+    this.nombreArchivo.set(file.name);
+    this.documentoCargadoUrl.set(null);
+    this.archivoSeleccionado.set(file);
+    this.subiendoArchivo.set(true);
+
+    try {
+      // Derivar prefijo del nombre del tipo de solicitud
+      const tipoNombre = (
+        this.tipoSolicitudSeleccionado?.nombre ??
+        this.tiposSolicitud().find(t => t.tipoSolicitudId === this.selectedTipoSolicitud())?.nombre ?? ''
+      ).toLowerCase();
+
+      let prefijo = 'solicitud';
+      if (tipoNombre.includes('afiliaci')) {
+        prefijo = 'afiliacion';
+      } else if (tipoNombre.includes('cuenta')) {
+        prefijo = 'cambio_cuenta';
+      }
+
+      const documento = this.representante()?.documento ?? 'sin_documento';
+      const customName = `${prefijo}_${documento}`;
+
+      const result = await this.storageService.uploadFile(file, 'aliados', customName);
+      if (result?.data?.url) {
+        this.documentoCargadoUrl.set(result.data.url);
+      } else {
+        this.nombreArchivo.set('');
+        this.archivoSeleccionado.set(null);
+        (event.target as HTMLInputElement).value = '';
+      }
+    } finally {
+      this.subiendoArchivo.set(false);
     }
   }
 

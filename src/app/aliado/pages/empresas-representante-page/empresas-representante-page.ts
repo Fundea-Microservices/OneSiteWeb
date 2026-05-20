@@ -664,6 +664,7 @@ export default class EmpresasRepresentantePage {
       regionId,
       agenciaId,
       observaciones: solicitud.observaciones || undefined,
+      documentoCargado: solicitud.documentoCargado || undefined,
     };
   }
 
@@ -751,18 +752,17 @@ export default class EmpresasRepresentantePage {
           observaciones: formData.observaciones || null,
         };
 
-        // Si hay archivo, convertirlo a base64
-        if (formData.archivo) {
-          const base64 = await this.convertirArchivoABase64(formData.archivo);
-          solicitudData.documentoCargado = base64;
-        }
+          // Si hay documento cargado, asignarlo directamente
+          if (formData.documentoCargado) {
+            solicitudData.documentoCargado = formData.documentoCargado;
+          }
 
-        const resp = await this.solicitudesService.updateSolicitud(solicitud.solicitudId, solicitudData);
+          const resp = await this.solicitudesService.updateSolicitud(solicitud.solicitudId, solicitudData);
         
-        if (resp?.success) {
-          this.cerrarModalSolicitud();
-          await this.cargarEmpresas();
-        }
+          if (resp?.success) {
+            this.cerrarModalSolicitud();
+            await this.cargarEmpresas();
+          }
       } else {
         // Modo creación
         
@@ -789,10 +789,9 @@ export default class EmpresasRepresentantePage {
             observaciones: formData.observaciones || null,
           };
 
-          // Si hay archivo, convertirlo a base64
-          if (formData.archivo) {
-            const base64 = await this.convertirArchivoABase64(formData.archivo);
-            solicitudData.documentoCargado = base64;
+          // Si hay documento cargado, asignarlo directamente
+          if (formData.documentoCargado) {
+            solicitudData.documentoCargado = formData.documentoCargado;
           }
 
           const resp = await this.solicitudesService.createSolicitud(solicitudData);
@@ -827,10 +826,9 @@ export default class EmpresasRepresentantePage {
             observaciones: formData.observaciones || null,
           };
 
-          // Si hay archivo, convertirlo a base64
-          if (formData.archivo) {
-            const base64 = await this.convertirArchivoABase64(formData.archivo);
-            solicitudData.documentoCargado = base64;
+          // Si hay documento cargado, asignarlo directamente
+          if (formData.documentoCargado) {
+            solicitudData.documentoCargado = formData.documentoCargado;
           }
 
           const resp = await this.solicitudesService.createSolicitud(solicitudData);

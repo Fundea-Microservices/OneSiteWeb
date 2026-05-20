@@ -710,6 +710,12 @@
                     </div>
 
                     <div class="col-12">
+                        @if (esEstadoAprobado() && !solicitud()?.documentoCargado) {
+                        <div class="alert alert-warning d-flex align-items-center gap-2 mb-3 py-2" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                            <span class="text-sm">Para aprobar la solicitud es necesario adjuntar el documento firmado.</span>
+                        </div>
+                        }
                         <button type="submit" class="btn btn-primary me-2"
                             [disabled]="isSavingSeguimiento() || !nuevoSeguimiento.estadoAprobacionId || !nuevoSeguimiento.observaciones.trim()">
                             @if (isSavingSeguimiento()) {

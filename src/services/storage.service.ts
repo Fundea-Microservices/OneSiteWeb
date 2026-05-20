@@ -6,7 +6,7 @@ import { environment } from '../environments/environment';
 
 export interface StorageUploadData {
   fileName: string;
-  categoria: string;
+  categoria: StorageCategoria;
   sizeMB: string;
   mimeType: string;
   url: string;
@@ -19,7 +19,7 @@ export interface StorageUploadResponse {
   data: StorageUploadData;
 }
 
-export type StorageCategoria = 'perfil' | 'dpiRepresentante' | 'documento';
+export type StorageCategoria = 'perfil' | 'dpiRepresentante' | 'documento' | 'aliados';
 
 @Injectable({
   providedIn: 'root',
@@ -54,7 +54,7 @@ export class StorageService {
   /**
    * Sube un archivo a la categoría indicada.
    * @param file       Archivo a subir
-   * @param categoria  Categoría de destino: 'perfil' | 'dpiRepresentante' | 'documento'
+   * @param categoria  Categoría de destino: 'perfil' | 'dpiRepresentante' | 'documento' | 'aliados'
    * @param customName Nombre personalizado (sin extensión, opcional)
    * @returns          Objeto con la URL resultante, o null si falla
    */
