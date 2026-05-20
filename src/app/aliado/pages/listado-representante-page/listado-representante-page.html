@@ -124,18 +124,16 @@
                                 <td>{{ item.nit }}</td>
                                 <td>{{ item.telefonoCelular }}</td>
                                 <td class="text-center">
-                                    <a class="btn btn-sm btn-success mx-1"
-                                        [routerLink]="['/aliado/editar-representante', item.representanteId]"
+                                    <button class="btn btn-sm btn-success mx-1"
+                                        (click)="onAccionRepresentante('editar', item)"
                                         title="Editar representante">
                                         <ion-icon name="create-outline"></ion-icon>
-                                    </a>
-                                    @if (item.usuarioId === usuarioId) {
-                                    <a class="btn btn-sm btn-primary mx-1"
-                                        [routerLink]="['/aliado/empresas-representante', item.representanteId]"
+                                    </button>
+                                    <button class="btn btn-sm btn-primary mx-1"
+                                        (click)="onAccionRepresentante('empresas', item)"
                                         title="Ver empresas">
                                         <ion-icon name="business-outline"></ion-icon>
-                                    </a>
-                                    }
+                                    </button>
                                 </td>
                             </tr>
                             }
@@ -192,20 +190,18 @@
                     </div>
                     
                     <div class="flex gap-2 pt-3 border-t border-gray-200">
-                        <a class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                            [routerLink]="['/aliado/editar-representante', item.representanteId]"
+                        <button class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                            (click)="onAccionRepresentante('editar', item)"
                             title="Editar representante">
                             <ion-icon name="create-outline" class="text-lg"></ion-icon>
                             Editar
-                        </a>
-                        @if (item.usuarioId === usuarioId) {
-                        <a class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                            [routerLink]="['/aliado/empresas-representante', item.representanteId]"
+                        </button>
+                        <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                            (click)="onAccionRepresentante('empresas', item)"
                             title="Ver empresas">
                             <ion-icon name="business-outline" class="text-lg"></ion-icon>
                             Empresas
-                        </a>
-                        }
+                        </button>
                     </div>
                 </div>
                 }
@@ -243,3 +239,32 @@
 
 
 </div>
+
+@if (modalOtroUsuarioOpen()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+        <div class="flex items-start gap-3 mb-4">
+            <svg class="w-6 h-6 text-yellow-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+                <h3 class="text-base font-semibold text-gray-800 mb-1">Representante de otro usuario</h3>
+                <p class="text-sm text-gray-600">Está ingresando al detalle de un representante que fue creado por otro usuario. ¿Desea continuar?</p>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3">
+            <button type="button"
+                class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm"
+                (click)="cancelarNavegacion()">
+                Cancelar
+            </button>
+            <button type="button"
+                class="px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                (click)="confirmarNavegacion()">
+                Continuar
+            </button>
+        </div>
+    </div>
+</div>
+}

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, signal, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { GestionRepresentanteAccordion } from '../../components/representante/gestion-representante-accordion/gestion-representante-accordion';
 import { RepresentanteService } from '../../../../services/aliado/representante.service';
@@ -38,6 +38,7 @@ export default class ListadoRepresentantePage {
   private representanteService = inject(RepresentanteService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
 
   private isFirstLoad = true;
 
@@ -65,6 +66,9 @@ export default class ListadoRepresentantePage {
     titulo: 'Crear Representante',
     visible: false,
   });
+
+  modalOtroUsuarioOpen = signal(false);
+  rutaPendiente = signal<string[] | null>(null);
 
   
   empresasList = signal<IEmpresa[]>([
@@ -174,6 +178,31 @@ export default class ListadoRepresentantePage {
     if (this.modalUpsertInstance) {
       this.modalUpsertInstance.hide();
     }
+  }
+
+  onAccionRepresentante(tipo: 'editar' | 'empresas', item: Representante) {
+    const ruta = tipo === 'editar'
+      ? ['/aliado/editar-representante', item.representanteId]
+      : ['/aliado/empresas-representante', item.representanteId];
+
+    if (item.usuarioId && item.usuarioId !== this.usuarioId) {
+      this.rutaPendiente.set(ruta);
+      this.modalOtroUsuarioOpen.set(true);
+    } else {
+      this.router.navigate(ruta);
+    }
+  }
+
+  confirmarNavegacion() {
+    const ruta = this.rutaPendiente();
+    this.modalOtroUsuarioOpen.set(false);
+    this.rutaPendiente.set(null);
+    if (ruta) this.router.navigate(ruta);
+  }
+
+  cancelarNavegacion() {
+    this.modalOtroUsuarioOpen.set(false);
+    this.rutaPendiente.set(null);
   }
 
   onChangePage(newPagination: IPagination) {

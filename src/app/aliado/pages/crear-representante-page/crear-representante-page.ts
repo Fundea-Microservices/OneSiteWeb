@@ -10,6 +10,7 @@ import { RepresentanteService } from '../../../../services/aliado/representante.
 import { Representante } from '../../../../interfaces/aliado/representante';
 import { UpsertDatosGenerales } from '../../components/representante/upsert-datos-generales/upsert-datos-generales';
 import { ClienteBantotalService } from '../../../../services/api-bantotal/cliente.service';
+import { StorageService } from '../../../../services/storage.service';
 import { initFlowbite } from 'flowbite';
 import { FormRespuesta, RenderFormularioComponent } from '../../../configuracion/components/formulario/render-formulario/render-formulario.component';
 
@@ -26,6 +27,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
   private toastr = inject(ToastrService);
   private representanteService = inject(RepresentanteService);
   private clienteService = inject(ClienteBantotalService);
+  private storageService = inject(StorageService);
   private router = inject(Router);
 
   frontPreview: string | ArrayBuffer | null = null;
@@ -745,6 +747,27 @@ export default class CrearRepresentantePage implements AfterViewInit {
 
       // Incluir datos adicionales del formulario dinámico
       payload.datosAdicionales = this.datosAdicionales();
+
+      // Subir fotos del DPI al storage antes de crear el representante
+      const nombreArchivo = payload.documento || '';
+
+      const [uploadFront, uploadBack] = await Promise.all([
+        this.storageService.uploadFile(this.frontFile!, 'dpiRepresentante', `${nombreArchivo}_frente`),
+        this.storageService.uploadFile(this.backFile!, 'dpiRepresentante', `${nombreArchivo}_reverso`),
+      ]);
+
+      if (!uploadFront || !uploadBack) {
+        this.toastr.error('No se pudieron guardar las fotos del DPI. No se creará el representante.', 'Error');
+        return;
+      }
+
+      payload.fotoFrontalDpi = uploadFront.data.url;
+      payload.fotoReversoDpi = uploadBack.data.url;
+
+      if (!payload.fotoFrontalDpi || !payload.fotoReversoDpi) {
+        this.toastr.error('Las URLs de las fotos del DPI no son válidas. No se creará el representante.', 'Error');
+        return;
+      }
 
       // Llamar al servicio con el valor del signal (no el signal mismo)
       const resp = await this.representanteService.crearRepresentante(payload);

@@ -18,6 +18,9 @@ export class UpsertDatosGenerales implements OnInit, AfterViewInit {
   cuentaBT = input<number | null>(null);
   clienteUId = input<number | null>(null);
   buscandoCliente = input<boolean>(false);
+  llenadorManualHabilitado = input<boolean>(false);
+  mostrarAlertaDocumento = signal(false);
+  private ignorarSiguienteClick = false;
   
   // Output para emitir cambios del documento sin formato
   documentoSinFormatoChange = output<string>();
@@ -38,6 +41,21 @@ export class UpsertDatosGenerales implements OnInit, AfterViewInit {
       formatted += ' ' + digits.substring(9, 13);
     }
     return formatted.trim();
+  }
+
+  onDocumentoClick(): void {
+    if (this.ignorarSiguienteClick) {
+      this.ignorarSiguienteClick = false;
+      return;
+    }
+    if (this.llenadorManualHabilitado() && this.documento()) {
+      this.mostrarAlertaDocumento.set(true);
+    }
+  }
+
+  cerrarAlertaDocumento(): void {
+    this.ignorarSiguienteClick = true;
+    this.mostrarAlertaDocumento.set(false);
   }
 
   // Se llama en el input del documento
