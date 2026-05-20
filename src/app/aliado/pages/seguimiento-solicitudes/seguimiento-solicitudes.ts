@@ -9,6 +9,7 @@ import { CatalogosBantotalService } from '../../../../services/api-bantotal/cata
 import { BancoService } from '../../../../services/aliado/banco.service';
 import { CorreoNotificacionesService } from '../../../../services/config/correo-notificaciones.service';
 import { StorageService } from '../../../../services/storage.service';
+import { FormulariosService } from '../../../../services/config/formularios.service';
 import { CatalogoSimple } from '../../../../interfaces/api-bantotal/catalogos';
 import { Solicitud, SeguimientoSolicitud, Empresa } from '../../../../interfaces/aliado/solicitudes';
 import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
@@ -30,6 +31,7 @@ export default class SeguimientoSolicitudesComponent {
 	private bancoService = inject(BancoService);
 	private correoNotificacionesService = inject(CorreoNotificacionesService);
 	private storageService = inject(StorageService);
+	private formulariosService = inject(FormulariosService);
 	private cdr = inject(ChangeDetectorRef);
 
 	solicitud = signal<Solicitud | null>(null);
@@ -42,6 +44,12 @@ export default class SeguimientoSolicitudesComponent {
 	mostrarEmpresa = signal(false);
 	mostrarCuentaBancaria = signal(false);
 	mostrarDatosAdicionales = signal(false);
+
+	// Datos adicionales de la empresa
+	datosAdicionalesEmpresa = signal<{ nombre: string; valor: string }[]>([]);
+	mostrarDatosAdicionalesEmpresa = signal(false);
+
+	readonly FORMULARIO_EMPRESA_ID = '34CECDE4-C2E1-43AE-B560-D3D9F22D17AE';
 
 	// Fotos DPI del representante
 	fotoDpiFrontalUrl = signal<string | null>(null);
@@ -107,7 +115,11 @@ export default class SeguimientoSolicitudesComponent {
 				this.solicitud.set(response.data);
 				console.log('✅ Solicitud cargada:', response.data);
 
-				// Cargar fotos DPI del representante
+				// Cargar datos adicionales de la empresa
+				const empresaId = response.data.empresa?.empresaId;
+				if (empresaId) {
+					void this.cargarDatosAdicionalesEmpresa(empresaId);
+				}
 				const rep = response.data.representante as any;
 				if (rep?.fotoFrontalDpi || rep?.fotoReversoDpi) {
 					this.cargandoFotosDpi.set(true);
@@ -125,6 +137,33 @@ export default class SeguimientoSolicitudesComponent {
 		} finally {
 			this.isLoading.set(false);
 			this.cdr.markForCheck();
+		}
+	}
+
+	private async cargarDatosAdicionalesEmpresa(empresaId: string) {
+		try {
+			const [valores, formCompleto] = await Promise.all([
+				this.formulariosService.obtenerValoresFormulario(this.FORMULARIO_EMPRESA_ID, empresaId),
+				this.formulariosService.getFormCompleto(this.FORMULARIO_EMPRESA_ID),
+			]);
+			if (!valores.length) return;
+
+			// Construir mapa preguntaId → titulo
+			const mapaPreguntas = new Map<string, string>();
+			formCompleto?.data?.secciones?.forEach(sec =>
+				sec.preguntas?.forEach(p => {
+					if (p.preguntaId) mapaPreguntas.set(p.preguntaId, p.titulo);
+				})
+			);
+
+			const datos = valores.map(v => ({
+				nombre: mapaPreguntas.get(v.preguntaId) ?? v.preguntaId,
+				valor: v.valor ?? '',
+			}));
+			this.datosAdicionalesEmpresa.set(datos);
+			this.cdr.markForCheck();
+		} catch (error) {
+			console.error('Error al cargar datos adicionales de empresa:', error);
 		}
 	}
 
