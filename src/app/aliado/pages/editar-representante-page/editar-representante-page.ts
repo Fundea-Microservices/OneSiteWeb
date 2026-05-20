@@ -11,6 +11,7 @@ import { UpsertDatosGenerales } from '../../components/representante/upsert-dato
 import { ClienteBantotalService } from '../../../../services/api-bantotal/cliente.service';
 import { initFlowbite } from 'flowbite';
 import { AuthService } from '../../../../services/auth.service';
+import { StorageService } from '../../../../services/storage.service';
 import { FormRespuesta, RenderFormularioComponent } from '../../../configuracion/components/formulario/render-formulario/render-formulario.component';
 import { FormulariosService } from '../../../../services/config/formularios.service';
 
@@ -25,6 +26,7 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
   private representanteService = inject(RepresentanteService);
   private clienteService = inject(ClienteBantotalService);
   private authService = inject(AuthService);
+  private storageService = inject(StorageService);
   private formulariosService = inject(FormulariosService);
   private toastr = inject(ToastrService);
   private route = inject(ActivatedRoute);
@@ -51,6 +53,15 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
 
   representante = signal<Representante | null>(null);
   representanteId = signal<string>('');
+
+  // URLs de fotos del DPI (solo lectura)
+  fotoFrontalUrl = signal<string | null>(null);
+  fotoReversoUrl = signal<string | null>(null);
+  cargandoFotos = signal(false);
+
+  // Lightbox de fotos DPI
+  fotoModalUrl = signal<string | null>(null);
+  fotoModalTitulo = signal<string>('');
 
   // Formulario dinámico (datos adicionales)
   renderFormRef = viewChild(RenderFormularioComponent);
@@ -115,7 +126,18 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
       if (resultado?.data?.representante) {
         this.representante.set(resultado.data.representante);
 
-        // Si tiene documento, cargar la cuenta BT
+          // Cargar fotos del DPI
+          const rep = resultado.data.representante;
+          if (rep.fotoFrontalDpi || rep.fotoReversoDpi) {
+            this.cargandoFotos.set(true);
+            const [urlFrontal, urlReverso] = await Promise.all([
+              this.storageService.downloadFileAsUrl(rep.fotoFrontalDpi),
+              this.storageService.downloadFileAsUrl(rep.fotoReversoDpi),
+            ]);
+            this.fotoFrontalUrl.set(urlFrontal);
+            this.fotoReversoUrl.set(urlReverso);
+            this.cargandoFotos.set(false);
+          }
         if (resultado.data.representante.documento) {
           const docSinFormato = resultado.data.representante.documento.replace(/\s/g, '');
 
@@ -254,5 +276,16 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
     fechaVenc.setHours(0, 0, 0, 0);
 
     return fechaVenc < hoy;
+  }
+
+  abrirFotoModal(url: string | null, titulo: string): void {
+    if (!url) return;
+    this.fotoModalUrl.set(url);
+    this.fotoModalTitulo.set(titulo);
+  }
+
+  cerrarFotoModal(): void {
+    this.fotoModalUrl.set(null);
+    this.fotoModalTitulo.set('');
   }
 }

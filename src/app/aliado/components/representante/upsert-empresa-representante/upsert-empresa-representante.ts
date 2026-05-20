@@ -181,7 +181,7 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     this.selectedActividadId.set(actividad);
 
     this.detalleActividad.set(empresa.detalleActividad || '');
-    this.fechaInicioActividad.set(this.formatFechaParaMostrar(empresa.fechaInicioActividad) || '');
+    this.fechaInicioActividad.set(this.formatFechaParaInput(empresa.fechaInicioActividad) || '');
     if (empresa.datosAdicionales?.length) {
       this.valoresFormDinamico.set(
         empresa.datosAdicionales
@@ -234,6 +234,16 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     } finally {
       this.cargandoFormulario.set(false);
     }
+  }
+
+  private formatFechaParaInput(fecha: string | Date | undefined): string {
+    if (!fecha) return '';
+    const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
+    if (isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private formatFechaParaMostrar(fecha: string | Date | undefined): string {
@@ -306,7 +316,8 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     const depto = this.departamentos().find(d => d.valorCore === deptoCode);
     const muni = this.municipios().find(m => m.catalogoId === muniId);
 
-    const fechaParsed = this.parseFechaDDMMYYYY(this.fechaInicioActividad());
+    const fechaStr = this.fechaInicioActividad(); // YYYY-MM-DD (formato nativo de type="date")
+    const fechaInicioIso = fechaStr ? new Date(fechaStr + 'T00:00:00').toISOString() : undefined;
 
     const empresaData: IEmpresaRepresentante = {
       ...this.empresa(),
@@ -320,7 +331,7 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
       tipoActividad: this.selectedTipoActividadId(),
       actividad: this.selectedActividadId(),
       detalleActividad: this.detalleActividad(),
-      fechaInicioActividad: fechaParsed ? fechaParsed.toISOString() : undefined,
+      fechaInicioActividad: fechaInicioIso,
       datosAdicionales: datosParaGuardar,
     };
 
