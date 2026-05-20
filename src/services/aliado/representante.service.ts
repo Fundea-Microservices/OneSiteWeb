@@ -124,8 +124,6 @@ export class RepresentanteService extends HttpService {
    * ```
    */
   async listarRepresentantes(params: ListarRepresentantesParams = {}): Promise<RepresentanteResponse | null> {
-    console.log('🔍 Listando representantes con filtros:', params);
-
     try {
       // Construir query params solo con valores definidos
       const queryParams: any = {};
@@ -149,11 +147,6 @@ export class RepresentanteService extends HttpService {
         const metadata = resp.body.metadata;
 
         if (representantesData && Array.isArray(representantesData)) {
-          console.log(`✅ ${representantesData.length} representante(s) encontrado(s)`);
-          if (metadata) {
-            console.log('📋 Metadata:', metadata);
-          }
-
           // Retornar en el formato esperado por la interfaz
           return {
             success: true,

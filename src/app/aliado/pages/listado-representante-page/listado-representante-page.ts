@@ -91,12 +91,6 @@ export default class ListadoRepresentantePage {
     if (this.isLoading()) return;
     
     this.isLoading.set(true);
-    console.log('🔍 Buscando representantes...', {
-      modo: this.searchMode,
-      busqueda: this.buscador(),
-      documento: this.nroDocumento(),
-      tipoDoc: this.tipoDocumento()
-    });
 
     try {
       let resultado;
@@ -131,12 +125,10 @@ export default class ListadoRepresentantePage {
       }
 
       if (resultado?.data?.representantes) {
-        this.representantesList.set(resultado.data.representantes);
-        console.log(`✅ ${resultado.data.representantes.length} representante(s) encontrado(s)`);
-        
+        this.representantesList.set(resultado.data.representantes);        
         // Actualizar metadata de paginación
-        if (resultado.data.metadata) {
-          const metadata = resultado.data.metadata;
+        if (resultado.metadata) {
+          const metadata = resultado.metadata;
           this.pagination.set({
             page: metadata.page || 1,
             pageSize: metadata.limit || 10,
