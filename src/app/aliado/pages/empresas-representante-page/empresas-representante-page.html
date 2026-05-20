@@ -113,12 +113,14 @@
                                 <!-- Botones de acción - Mobile: horizontal arriba, Desktop: vertical derecha -->
                                 <div class="flex lg:hidden gap-2 pb-3 border-b border-gray-200 flex-wrap">
                                     @if (!getSolicitudPorEmpresa(empresa.empresaId)) {
+                                    @if (esPropietarioRepresentante()) {
                                     <button type="button" (click)="crearNuevaSolicitud(empresa.empresaId, true)"
                                         class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
                                         title="Crear solicitud">
                                         <ion-icon name="document-outline" class="text-lg"></ion-icon>
                                         <span>Solicitud</span>
                                     </button>
+                                    }
                                     } @else {
                                     <div
                                         class="flex-1 min-w-max flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm">
@@ -291,6 +293,7 @@
                                         <span class="text-sm text-yellow-800">Debe generar la carta de entendimiento antes de crear la solicitud. Use el botón <strong>Carta</strong> en los controles de esta empresa. Para que el botón aparezca necesita haber creado una cuenta bancaria.</span>
                                     </div>
                                     }
+                                    @if (esPropietarioRepresentante()) {
                                     <button type="button" (click)="crearNuevaSolicitud(empresa.empresaId, true)"
                                         [disabled]="!cartaGeneradaParaEmpresa(empresa.empresaId)"
                                         class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors duration-200 shadow-sm font-medium"
@@ -298,6 +301,7 @@
                                         <ion-icon name="document-outline" class="text-xl"></ion-icon>
                                         <span>Crear Nueva Solicitud</span>
                                     </button>
+                                    }
                                     } @else {
                                     <div class="p-4 bg-green-50 border border-green-200 rounded-md">
                                         <div class="flex items-center gap-3">
@@ -322,7 +326,7 @@
                                             </div>
                                         </div>
 
-                                        @if (puedeEditarSolicitud(empresa.empresaId)) {
+                                        @if (puedeEditarSolicitud(empresa.empresaId) && esPropietarioRepresentante()) {
                                         <div class="flex gap-2 mt-3">
                                             <button type="button" (click)="editarSolicitud(empresa.empresaId)"
                                                 class="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors duration-200 shadow-sm text-sm font-medium"
@@ -429,7 +433,7 @@
                                                             }
                                                             @if(obtenerEstadoSolicitudPorCuenta(cuenta.cuentaBancariaId
                                                             ||
-                                                            '') === null) {
+                                                            '') === null && esPropietarioRepresentante()) {
                                                             <button type="button"
                                                                 (click)="crearSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '')"
                                                                 class="btn btn-sm btn-primary" title="Crear solicitud">

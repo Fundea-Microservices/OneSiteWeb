@@ -19,6 +19,8 @@ import UpsertSolicitudComponent, { SolicitudFormData } from '../../components/up
 import { SeguimientoSolicitudService } from '../../../../services/aliado/seguimiento-solicitud.service';
 import { GeneralidadesService } from '../../../../services/aliado/generalidades.service';
 import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
+import { AuthService } from '../../../../services/auth.service';
+import { ToastrService } from 'ngx-toastr';
 
 interface CartaDatos {
   municipio: string;
@@ -69,6 +71,8 @@ export default class EmpresasRepresentantePage {
   private solicitudesService = inject(SolicitudesService);
   private seguimientoService = inject(SeguimientoSolicitudService);
   private generalidadesService = inject(GeneralidadesService);
+  private authService = inject(AuthService);
+  private toastr = inject(ToastrService);
   representanteId = signal('');
   representante = signal<Representante | null>(null);
   
@@ -548,7 +552,15 @@ export default class EmpresasRepresentantePage {
     }
   }
 
+  esPropietarioRepresentante(): boolean {
+    return this.representante()?.usuarioId === this.authService.getUserStorage().userId;
+  }
+
   crearNuevaSolicitud(empresaId: string, esEmpresa: boolean = true) {
+    if (!this.esPropietarioRepresentante()) {
+      this.toastr.warning('Solo el usuario que creó este representante puede realizar esta acción.', 'Sin permiso');
+      return;
+    }
     this.empresaIdSolicitud.set(empresaId);
     this.cuentaBancariaIdSolicitud.set(''); // Limpiar
     this.esEditarSolicitud.set(false);
@@ -559,6 +571,10 @@ export default class EmpresasRepresentantePage {
   }
 
   crearSolicitudDesdeCuenta(cuentaBancariaId: string) {
+    if (!this.esPropietarioRepresentante()) {
+      this.toastr.warning('Solo el usuario que creó este representante puede realizar esta acción.', 'Sin permiso');
+      return;
+    }
     this.cuentaBancariaIdSolicitud.set(cuentaBancariaId);
     this.empresaIdSolicitud.set(''); // No necesitamos empresaId
     this.esEditarSolicitud.set(false);
@@ -569,6 +585,10 @@ export default class EmpresasRepresentantePage {
   }
 
   async editarSolicitud(empresaId: string) {
+    if (!this.esPropietarioRepresentante()) {
+      this.toastr.warning('Solo el usuario que creó este representante puede realizar esta acción.', 'Sin permiso');
+      return;
+    }
     this.empresaIdSolicitud.set(empresaId);
     this.esEditarSolicitud.set(true);
     
@@ -648,6 +668,10 @@ export default class EmpresasRepresentantePage {
   }
 
   async confirmarCorrecciones(empresaId: string) {
+    if (!this.esPropietarioRepresentante()) {
+      this.toastr.warning('Solo el usuario que creó este representante puede realizar esta acción.', 'Sin permiso');
+      return;
+    }
     const solicitud = this.getSolicitudPorEmpresa(empresaId);
     if (!solicitud?.solicitudId) {
       alert('No se encontró la solicitud');
