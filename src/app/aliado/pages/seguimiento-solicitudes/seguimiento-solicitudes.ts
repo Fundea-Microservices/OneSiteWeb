@@ -8,6 +8,7 @@ import { GeneralidadesService } from '../../../../services/aliado/generalidades.
 import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
 import { BancoService } from '../../../../services/aliado/banco.service';
 import { CorreoNotificacionesService } from '../../../../services/config/correo-notificaciones.service';
+import { StorageService } from '../../../../services/storage.service';
 import { CatalogoSimple } from '../../../../interfaces/api-bantotal/catalogos';
 import { Solicitud, SeguimientoSolicitud, Empresa } from '../../../../interfaces/aliado/solicitudes';
 import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
@@ -28,6 +29,7 @@ export default class SeguimientoSolicitudesComponent {
 	private catalogosService = inject(CatalogosBantotalService);
 	private bancoService = inject(BancoService);
 	private correoNotificacionesService = inject(CorreoNotificacionesService);
+	private storageService = inject(StorageService);
 	private cdr = inject(ChangeDetectorRef);
 
 	solicitud = signal<Solicitud | null>(null);
@@ -40,6 +42,15 @@ export default class SeguimientoSolicitudesComponent {
 	mostrarEmpresa = signal(false);
 	mostrarCuentaBancaria = signal(false);
 	mostrarDatosAdicionales = signal(false);
+
+	// Fotos DPI del representante
+	fotoDpiFrontalUrl = signal<string | null>(null);
+	fotoDpiReversoUrl = signal<string | null>(null);
+	cargandoFotosDpi = signal(false);
+
+	// Lightbox
+	fotoModalUrl = signal<string | null>(null);
+	fotoModalTitulo = signal<string>('');
 
 	// Catálogos para mostrar valores
 	catalogoProfesion = signal<CatalogoSimple[]>([]);
@@ -95,6 +106,19 @@ export default class SeguimientoSolicitudesComponent {
 			if (response?.data && !Array.isArray(response.data)) {
 				this.solicitud.set(response.data);
 				console.log('✅ Solicitud cargada:', response.data);
+
+				// Cargar fotos DPI del representante
+				const rep = response.data.representante as any;
+				if (rep?.fotoFrontalDpi || rep?.fotoReversoDpi) {
+					this.cargandoFotosDpi.set(true);
+					const [urlFrontal, urlReverso] = await Promise.all([
+						this.storageService.downloadFileAsUrl(rep.fotoFrontalDpi),
+						this.storageService.downloadFileAsUrl(rep.fotoReversoDpi),
+					]);
+					this.fotoDpiFrontalUrl.set(urlFrontal);
+					this.fotoDpiReversoUrl.set(urlReverso);
+					this.cargandoFotosDpi.set(false);
+				}
 			}
 		} catch (error) {
 			console.error('❌ Error al cargar solicitud:', error);
@@ -348,6 +372,17 @@ export default class SeguimientoSolicitudesComponent {
 		hoy.setHours(0, 0, 0, 0);
 		fecha.setHours(0, 0, 0, 0);
 		return fecha < hoy;
+	}
+
+	abrirFotoModal(url: string | null, titulo: string): void {
+		if (!url) return;
+		this.fotoModalUrl.set(url);
+		this.fotoModalTitulo.set(titulo);
+	}
+
+	cerrarFotoModal(): void {
+		this.fotoModalUrl.set(null);
+		this.fotoModalTitulo.set('');
 	}
 
 	/**

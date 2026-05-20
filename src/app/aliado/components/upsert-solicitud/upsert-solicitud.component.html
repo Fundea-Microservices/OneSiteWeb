@@ -107,11 +107,7 @@
 
     <div class="col-md-12">
       <label for="archivo" class="form-label">Documento firmado</label>
-      <div class="input-group">
-        <button type="button" class="btn btn-outline-info" (click)="generarDocumento()"
-          [disabled]="isLoading() || !representante()" title="Generar documento para imprimir y firmar">
-          <i class="bi bi-file-pdf me-2"></i>Generar Documento
-        </button>
+      <div class="input-group">        
         <input type="file" id="archivo" class="form-control" accept=".pdf" (change)="onArchivoSeleccionado($event)"
           [disabled]="isLoading()" />
         @if (nombreArchivo()) {

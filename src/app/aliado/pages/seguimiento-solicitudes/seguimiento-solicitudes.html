@@ -52,6 +52,58 @@
             [style.max-height]="mostrarRepresentante() ? '5000px' : '0px'"
             [style.opacity]="mostrarRepresentante() ? '1' : '0'">
             <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+
+                <!-- Fotos DPI -->
+                @if (cargandoFotosDpi() || fotoDpiFrontalUrl() || fotoDpiReversoUrl()) {
+                <div class="row mb-3">
+                    <div class="col-12 mb-2">
+                        <strong>Fotos del DPI:</strong>
+                    </div>
+                    @if (cargandoFotosDpi()) {
+                    <div class="col-12 d-flex align-items-center gap-2">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <span class="text-muted text-sm">Cargando fotos...</span>
+                    </div>
+                    } @else {
+                    <div class="col-auto">
+                        <div class="d-flex flex-column align-items-center">
+                            <span class="text-xs text-gray-500 mb-1">Frontal</span>
+                            @if (fotoDpiFrontalUrl()) {
+                            <img [src]="fotoDpiFrontalUrl()" alt="DPI Frontal"
+                                class="rounded border border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
+                                style="width:160px; height:100px; object-fit:contain; background:#f3f4f6;"
+                                (click)="abrirFotoModal(fotoDpiFrontalUrl(), 'DPI Frontal')" />
+                            <span class="text-xs text-blue-500 mt-1">Click para ampliar</span>
+                            } @else {
+                            <div class="rounded border border-gray-300 d-flex align-items-center justify-content-center text-gray-400"
+                                style="width:160px; height:100px; background:#f3f4f6;">
+                                <span class="text-xs">Sin foto</span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="d-flex flex-column align-items-center">
+                            <span class="text-xs text-gray-500 mb-1">Reverso</span>
+                            @if (fotoDpiReversoUrl()) {
+                            <img [src]="fotoDpiReversoUrl()" alt="DPI Reverso"
+                                class="rounded border border-gray-300 cursor-pointer hover:opacity-80 transition-opacity"
+                                style="width:160px; height:100px; object-fit:contain; background:#f3f4f6;"
+                                (click)="abrirFotoModal(fotoDpiReversoUrl(), 'DPI Reverso')" />
+                            <span class="text-xs text-blue-500 mt-1">Click para ampliar</span>
+                            } @else {
+                            <div class="rounded border border-gray-300 d-flex align-items-center justify-content-center text-gray-400"
+                                style="width:160px; height:100px; background:#f3f4f6;">
+                                <span class="text-xs">Sin foto</span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    }
+                </div>
+                <hr />
+                }
+
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <p class="mb-2"><strong>Nombre Completo:</strong> {{
@@ -644,5 +696,25 @@
 <div class="alert alert-warning text-center" role="alert">
     <i class="bi bi-exclamation-triangle me-2"></i>
     No se encontró la solicitud solicitada.
+</div>
+}
+
+<!-- Lightbox fotos DPI -->
+@if (fotoModalUrl()) {
+<div class="fixed inset-0 z-1000 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+    (click)="cerrarFotoModal()">
+    <div class="relative flex flex-col items-center max-w-[95vw] max-h-[95vh]" (click)="$event.stopPropagation()">
+        <button (click)="cerrarFotoModal()"
+            class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
+            aria-label="Cerrar">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <p class="text-white text-sm font-medium mb-3">{{ fotoModalTitulo() }}</p>
+        <img [src]="fotoModalUrl()" class="max-w-[90vw] max-h-[80vh] object-contain rounded-lg shadow-2xl"
+            [alt]="fotoModalTitulo()" />
+        <p class="text-gray-400 text-xs mt-3">Haz click fuera de la imagen para cerrar</p>
+    </div>
 </div>
 }
