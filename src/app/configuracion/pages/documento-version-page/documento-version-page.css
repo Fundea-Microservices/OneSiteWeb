@@ -1,0 +1,108 @@
+:host {
+  display: block;
+}
+
+/* Layout de dos columnas */
+.version-layout {
+  display: flex;
+  gap: 1rem;
+  height: calc(100vh - 9rem);
+  overflow: hidden;
+}
+
+.left-panel {
+  width: 400px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.variables-scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.right-panel {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Preview word */
+.preview-window-container {
+  background-color: #94a3b8;
+  padding: 32px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 0.75rem;
+}
+
+.preview-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 8px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #64748b; border-radius: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #cbd5e1; }
+
+/* Variables highlight */
+::ng-deep .highlight-var {
+  color: #1d4ed8 !important;
+  background-color: #eff6ff !important;
+  font-weight: bold !important;
+  padding: 0 4px !important;
+  border-radius: 4px !important;
+  display: inline !important;
+  border: 1px solid #dbeafe !important;
+}
+
+/* PagedJS */
+::ng-deep .pagedjs_pages {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  width: 100% !important;
+}
+
+::ng-deep .pagedjs_page {
+  background: white !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18) !important;
+  margin: 12px 0 !important;
+  border: 1px solid #cbd5e1 !important;
+  flex-shrink: 0;
+}
+
+::ng-deep .pagedjs_margin-content,
+::ng-deep .pagedjs_margin,
+::ng-deep [class*="pagedjs_margin"] {
+  display: none !important;
+}
+
+::ng-deep .docx_wrapper { padding: 0 !important; background: transparent !important; width: 100% !important; }
+::ng-deep .docx { padding: 0 !important; margin: 0 !important; width: 100% !important; }
+
+/* Toast animations */
+.animate-slide-in { animation: slideIn 0.4s ease-out forwards; }
+.animate-fade-out { animation: fadeOut 0.4s ease-in forwards; }
+
+@keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }

@@ -1,0 +1,85 @@
+<form (ngSubmit)="onSave(docForm)" #docForm="ngForm" class="row g-3">
+
+    <div class="col-12">
+        <label for="nombre" class="form-label fw-semibold small text-gray-700">
+            Nombre <span class="text-danger">*</span>
+        </label>
+        <input type="text" id="nombre" name="nombre" [(ngModel)]="form().nombre"
+            required maxlength="150"
+            class="form-control rounded-lg shadow-none"
+            placeholder="Ej. Contrato de arrendamiento">
+        @if (docForm.submitted && docForm.controls['nombre']?.invalid) {
+            <div class="text-danger extra-small mt-1">El nombre es obligatorio</div>
+        }
+    </div>
+
+    <div class="col-md-6">
+        <label for="codigo" class="form-label fw-semibold small text-gray-700">
+            Código <span class="text-danger">*</span>
+        </label>
+        <input type="text" id="codigo" name="codigo" [(ngModel)]="form().codigo"
+            required maxlength="50"
+            class="form-control rounded-lg shadow-none"
+            placeholder="Ej. DOC-001">
+        @if (docForm.submitted && docForm.controls['codigo']?.invalid) {
+            <div class="text-danger extra-small mt-1">El código es obligatorio</div>
+        }
+    </div>
+
+    <div class="col-md-6">
+        <label for="categoria" class="form-label fw-semibold small text-gray-700">
+            Categoría <span class="text-danger">*</span>
+        </label>
+        <select id="categoria" name="categoria" [(ngModel)]="form().categoria"
+            required
+            class="form-select rounded-lg shadow-none">
+            <option value="ALIADO">ALIADO</option>
+            <option value="EMANAGER">EMANAGER</option>
+            <option value="ONESITEEX">ONESITEEX</option>
+        </select>
+        @if (docForm.submitted && docForm.controls['categoria']?.invalid) {
+            <div class="text-danger extra-small mt-1">La categoría es obligatoria</div>
+        }
+    </div>
+
+    <div class="col-12">
+        <label for="descripcion" class="form-label fw-semibold small text-gray-700">Descripción</label>
+        <textarea id="descripcion" name="descripcion" [(ngModel)]="form().descripcion"
+            rows="3" maxlength="250"
+            class="form-control rounded-lg shadow-none"
+            placeholder="Describe brevemente el propósito de este documento..."></textarea>
+    </div>
+
+    <div class="col-12">
+        <div class="p-3 bg-light rounded-lg border border-gray-100 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-0 fw-bold small text-gray-800">Estado del Documento</h6>
+                <p class="text-muted extra-small mb-0">Define si el documento estará disponible en el sistema.</p>
+            </div>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input h-5 w-10" type="checkbox" id="activo" name="activo"
+                    [(ngModel)]="form().activo" style="cursor: pointer;">
+                <label class="form-check-label small fw-medium ms-2" for="activo">
+                    {{ form().activo ? 'Activo' : 'Inactivo' }}
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 mt-3 pt-3 border-top d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-outline-secondary px-4 rounded-lg" (click)="onCancel()">
+            Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary px-5 rounded-lg fw-semibold">
+            {{ nuevo() ? 'Guardar Documento' : 'Actualizar Cambios' }}
+        </button>
+    </div>
+
+</form>
+
+<style>
+    .rounded-lg { border-radius: 0.5rem !important; }
+    .text-gray-800 { color: #1f2937; }
+    .text-gray-700 { color: #374151; }
+    .extra-small { font-size: 0.75rem; }
+</style>

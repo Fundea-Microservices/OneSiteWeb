@@ -119,7 +119,35 @@ export const routes: Routes = [
                                 loadComponent: () => import('./configuracion/pages/formulario-detalle-page/formulario-detalle-page'),
                             },
                         ]
+                    },
+                    {
+                        path: 'documentos',
+                        canActivate: [AccessGuard],
+                        children: [
+                            {
+                                path: '',
+                                loadComponent: () => import('./configuracion/pages/documentos-page/documentos-page'),
+                            },
+                            {
+                                path: 'detalle/:documentoId',
+                                children: [
+                                    {
+                                        path: '',
+                                        loadComponent: () => import('./configuracion/pages/documento-detalle-page/documento-detalle-page'),
+                                    },
+                                    {
+                                        path: 'version',
+                                        loadComponent: () => import('./configuracion/pages/documento-version-page/documento-version-page'),
+                                    },
+                                    {
+                                        path: 'version/:versionId',
+                                        loadComponent: () => import('./configuracion/pages/documento-version-page/documento-version-page'),
+                                    },
+                                ]
+                            },
+                        ]
                     }
+                    
 
                 ]
             },

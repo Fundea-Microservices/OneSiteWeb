@@ -1,0 +1,123 @@
+<form (ngSubmit)="onSave(verForm)" #verForm="ngForm" class="row g-3">
+
+    <div class="col-md-6">
+        <label for="correlativo" class="form-label fw-semibold small text-gray-700">
+            Correlativo <span class="text-danger">*</span>
+        </label>
+        <input type="number" id="correlativo" name="correlativo" [(ngModel)]="form().correlativo"
+            required min="1"
+            class="form-control rounded-lg shadow-none"
+            placeholder="Ej. 1">
+        @if (verForm.submitted && verForm.controls['correlativo']?.invalid) {
+            <div class="text-danger extra-small mt-1">El correlativo es obligatorio</div>
+        }
+    </div>
+
+    <div class="col-md-6">
+        <label for="codigoVersion" class="form-label fw-semibold small text-gray-700">Código de versión</label>
+        <input type="text" id="codigoVersion" name="codigoVersion" [(ngModel)]="form().codigoVersion"
+            maxlength="50"
+            class="form-control rounded-lg shadow-none"
+            placeholder="Ej. v1.0">
+    </div>
+
+    <!-- Archivo Word -->
+    <div class="col-12">
+        <label class="form-label fw-semibold small text-gray-700">
+            Archivo Word (.doc / .docx) <span class="text-danger">*</span>
+        </label>
+
+        <div class="border rounded-lg p-3 bg-light">
+            <input type="file" id="archivoWord" accept=".doc,.docx"
+                class="form-control rounded-lg shadow-none"
+                (change)="onFileSelected($event)"
+                [required]="nuevo() && !form().rutaArchivo">
+
+            @if (isUploading()) {
+            <div class="d-flex align-items-center gap-2 mt-2 text-primary">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+                <span class="small">Subiendo archivo...</span>
+            </div>
+            } @else if (form().rutaArchivo) {
+            <div class="d-flex align-items-center gap-2 mt-2 text-success">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+                <span class="small text-truncate" style="max-width:300px" title="{{ form().rutaArchivo }}">
+                    {{ form().rutaArchivo }}
+                </span>
+            </div>
+            }
+        </div>
+        @if (verForm.submitted && nuevo() && !form().rutaArchivo) {
+            <div class="text-danger extra-small mt-1">Debes subir un archivo Word</div>
+        }
+    </div>
+
+    <div class="col-12">
+        <label for="notasCambio" class="form-label fw-semibold small text-gray-700">Notas de cambio</label>
+        <textarea id="notasCambio" name="notasCambio" [(ngModel)]="form().notasCambio"
+            rows="3" maxlength="250"
+            class="form-control rounded-lg shadow-none"
+            placeholder="Describe los cambios realizados en esta versión..."></textarea>
+    </div>
+
+    <div class="col-md-6">
+        <div class="p-3 bg-light rounded-lg border border-gray-100 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-0 fw-bold small text-gray-800">Aprobado</h6>
+                <p class="text-muted extra-small mb-0">Indica si esta versión fue aprobada.</p>
+            </div>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="aprobado" name="aprobado"
+                    [(ngModel)]="form().aprobado" style="cursor: pointer;">
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="p-3 bg-light rounded-lg border border-gray-100 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-0 fw-bold small text-gray-800">Vigente</h6>
+                <p class="text-muted extra-small mb-0">Versión actualmente en uso.</p>
+            </div>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="vigente" name="vigente"
+                    [(ngModel)]="form().vigente" style="cursor: pointer;">
+            </div>
+        </div>
+    </div>
+
+    @if (form().aprobado) {
+    <div class="col-md-6">
+        <label for="fechaAprobacion" class="form-label fw-semibold small text-gray-700">Fecha de aprobación</label>
+        <input type="date" id="fechaAprobacion" name="fechaAprobacion"
+            [(ngModel)]="form().fechaAprobacion"
+            class="form-control rounded-lg shadow-none">
+    </div>
+
+    <div class="col-md-6">
+        <label for="aprobadoPor" class="form-label fw-semibold small text-gray-700">Aprobado por</label>
+        <input type="text" id="aprobadoPor" name="aprobadoPor"
+            [(ngModel)]="form().aprobadoPor" maxlength="100"
+            class="form-control rounded-lg shadow-none"
+            placeholder="Nombre del responsable">
+    </div>
+    }
+
+    <div class="col-12 mt-3 pt-3 border-top d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-outline-secondary px-4 rounded-lg" (click)="onCancel()">
+            Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary px-5 rounded-lg fw-semibold"
+            [disabled]="isUploading()">
+            {{ nuevo() ? 'Guardar Versión' : 'Actualizar Versión' }}
+        </button>
+    </div>
+
+</form>
+
+<style>
+    .rounded-lg { border-radius: 0.5rem !important; }
+    .text-gray-800 { color: #1f2937; }
+    .text-gray-700 { color: #374151; }
+    .extra-small { font-size: 0.75rem; }
+</style>

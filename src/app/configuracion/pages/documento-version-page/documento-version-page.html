@@ -1,0 +1,172 @@
+<!-- Toast -->
+@if (showToast()) {
+  <div
+    class="fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium"
+    [class.animate-slide-in]="!isClosingToast()"
+    [class.animate-fade-out]="isClosingToast()"
+    [class.bg-green-600]="toastType() === 'success' || toastType() === 'info'"
+    [class.bg-red-600]="toastType() === 'error'"
+  >{{ toastMessage() }}</div>
+}
+
+<!-- Breadcrumb -->
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/config/documentos']">Documentos</a></li>
+    <li class="breadcrumb-item">
+      <a [routerLink]="['/config/documentos/detalle', documentoId()]">
+        {{ documento()?.nombre || 'Detalle' }}
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">
+      {{ esNuevo() ? 'Nueva Versión' : 'Editar Versión' }}
+    </li>
+  </ol>
+</nav>
+
+<!-- Layout principal -->
+<div class="version-layout">
+
+  <!-- ── Panel izquierdo ──────────────────────────────── -->
+  <div class="left-panel custom-scrollbar">
+
+    <!-- Card: Cargar archivo -->
+    <div class="card shrink-0">
+      <div class="card-header fw-semibold d-flex align-items-center gap-2">
+        <ion-icon name="document-outline"></ion-icon>
+        Cargar Documento Word
+      </div>
+      <div class="card-body">
+        <input
+          type="file"
+          accept=".doc,.docx"
+          (change)="onFileSelected($event)"
+          class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer"
+        />
+        @if (isLoadingPreview()) {
+          <div class="d-flex align-items-center gap-2 mt-3 text-primary">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <span class="small">Procesando documento...</span>
+          </div>
+        }
+        @if (!archivoOriginal() && !esNuevo()) {
+          <div class="mt-3 p-2 bg-light rounded border text-muted" style="font-size:0.8rem">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            El archivo actual seguirá si no subes uno nuevo.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Card: Datos de la versión -->
+    <div class="card shrink-0">
+      <div class="card-header fw-semibold d-flex align-items-center gap-2">
+        <ion-icon name="layers-outline"></ion-icon>
+        Datos de la versión
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">
+              Correlativo <span class="text-danger">*</span>
+            </label>
+            <input
+              type="number" min="1"
+              [value]="form().correlativo ?? 1"
+              (input)="updateForm('correlativo', +$any($event.target).value)"
+              class="form-control form-control-sm"
+              placeholder="1"
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Código de versión</label>
+            <input
+              type="text" maxlength="50"
+              [value]="form().codigoVersion ?? ''"
+              (input)="updateForm('codigoVersion', $any($event.target).value)"
+              class="form-control form-control-sm"
+              placeholder="Ej. v1.0"
+            />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Notas de cambio</label>
+            <textarea
+              rows="3" maxlength="250"
+              [value]="form().notasCambio ?? ''"
+              (input)="updateForm('notasCambio', $any($event.target).value)"
+              class="form-control form-control-sm"
+              placeholder="Describe los cambios de esta versión..."
+            ></textarea>
+          </div>
+
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm px-4" (click)="cancelar()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary btn-sm px-5 fw-semibold"
+          [disabled]="isSaving() || isLoadingPreview()"
+          (click)="guardar()">
+          @if (isSaving()) {
+            <span class="spinner-border spinner-border-sm me-1"></span> Guardando...
+          } @else {
+            <ion-icon name="save-outline" class="me-1"></ion-icon>
+            {{ esNuevo() ? 'Guardar Versión' : 'Actualizar Versión' }}
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Card: Variables detectadas -->
+    @if (variables().length > 0) {
+      <div class="card shrink-0">
+        <div class="card-header fw-semibold d-flex align-items-center gap-2">
+          <ion-icon name="code-slash-outline"></ion-icon>
+          Variables detectadas
+          <span class="badge bg-primary rounded-pill ms-auto">{{ variables().length }}</span>
+        </div>
+        <div class="card-body variables-scroll custom-scrollbar">
+          <div class="d-flex flex-column gap-2">
+            @for (v of variables(); track v) {
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge"
+                  style="background:#eff6ff;color:#1d4ed8;border:1px solid #dbeafe;font-size:0.72rem;min-width:100px;flex-shrink:0;text-align:left;white-space:normal;word-break:break-all">
+                  {{ '{' + v + '}' }}
+                </span>
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="Valor por defecto"
+                  [value]="variablesDefault()[v] || ''"
+                  (input)="updateVariableDefault(v, $any($event.target).value)"
+                />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <!-- ── Panel derecho: preview ──────────────────────── -->
+  <div class="right-panel">
+    @if (archivoOriginal()) {
+      <div class="preview-window-container custom-scrollbar">
+        <div #previewContainer id="preview-container"></div>
+      </div>
+    } @else {
+      <div class="preview-empty">
+        <ion-icon name="document-text-outline" style="font-size:3rem;color:#94a3b8"></ion-icon>
+        <p class="mt-3 text-slate-400 font-medium">Sube un archivo Word para previsualizar</p>
+        <p class="text-slate-400 text-sm">Las variables <span style="color:#1d4ed8">&#123;variable&#125;</span> serán resaltadas</p>
+      </div>
+    }
+  </div>
+
+</div>
