@@ -146,18 +146,6 @@ export default class LoginPageComponent {
         }
 
         this.loading.set(false);
-        // Cargar catálogos antes de navegar
-        this.loadingMessage.set('Cargando catálogos...');
-        this.loadingSubtitle.set('Esto puede tomar unos segundos');
-        try {
-          await this.catalogosService.actualizarCatalogos();
-          console.log('✅ Catálogos cargados exitosamente');
-        } catch (error) {
-          console.error('❌ Error al cargar catálogos:', error);
-          // Continuar aunque falle la carga de catálogos
-        }
-
-        this.loading.set(false);
         this.router.navigate(['/fundea']);
       } else {
         this.loading.set(false);
