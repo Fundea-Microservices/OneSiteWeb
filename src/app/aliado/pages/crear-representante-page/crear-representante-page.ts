@@ -323,6 +323,12 @@ export default class CrearRepresentantePage implements AfterViewInit {
     const file = event.target.files[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      this.toastr.error('El archivo no debe superar los 5MB.', 'Archivo demasiado grande');
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
+
     // Guardar el archivo para enviar al servicio
     this.frontFile = file;
 
@@ -501,6 +507,12 @@ export default class CrearRepresentantePage implements AfterViewInit {
   onBackImageSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.toastr.error('El archivo no debe superar los 5MB.', 'Archivo demasiado grande');
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
 
     // Guardar el archivo para enviar al servicio
     this.backFile = file;
