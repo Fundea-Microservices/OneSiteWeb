@@ -1,5 +1,5 @@
-const API_URL = 'http://localhost:3000/'
-
+//const API_URL = 'http://localhost:3000/'
+const API_URL = 'http://172.25.5.11:3000/'
 //const API_URL = 'https://api.serviciosfundea.org/'
 
 const AGENTE = {
