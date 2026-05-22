@@ -238,7 +238,9 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
 
   private formatFechaParaInput(fecha: string | Date | undefined): string {
     if (!fecha) return '';
-    const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
+    const date = typeof fecha === 'string'
+      ? new Date(fecha.includes('T') ? fecha : `${fecha}T00:00:00`)
+      : fecha;
     if (isNaN(date.getTime())) return '';
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -248,7 +250,9 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
 
   private formatFechaParaMostrar(fecha: string | Date | undefined): string {
     if (!fecha) return '';
-    const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
+    const date = typeof fecha === 'string'
+      ? new Date(fecha.includes('T') ? fecha : `${fecha}T00:00:00`)
+      : fecha;
     if (isNaN(date.getTime())) return '';
     
     const day = String(date.getDate()).padStart(2, '0');

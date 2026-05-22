@@ -264,10 +264,8 @@ export default class EditarRepresentantePage implements OnInit, AfterViewInit {
       const [dia, mes, anio] = fechaVencimiento.split('/');
       fechaVenc = new Date(parseInt(anio, 10), parseInt(mes, 10) - 1, parseInt(dia, 10));
     } else if (/^\d{4}-\d{2}-\d{2}$/.test(fechaVencimiento)) {
-      // Si está en formato ISO
-      fechaVenc = new Date(fechaVencimiento);
+      fechaVenc = new Date(`${fechaVencimiento}T00:00:00`);
     } else {
-      // Otro formato, intentar parsear directo
       fechaVenc = new Date(fechaVencimiento);
     }
 

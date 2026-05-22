@@ -356,7 +356,8 @@ export default class SeguimientoSolicitudesComponent {
 
 	formatDate(dateString: string | null | undefined): string {
 		if (!dateString) return 'N/A';
-		const date = new Date(dateString);
+		const normalized = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+		const date = new Date(normalized);
 		return date.toLocaleDateString('es-GT', {
 			year: 'numeric',
 			month: 'long',
@@ -366,7 +367,8 @@ export default class SeguimientoSolicitudesComponent {
 
 	estaVencido(dateString: string | null | undefined): boolean {
 		if (!dateString) return false;
-		const fecha = new Date(dateString);
+		const normalized = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+		const fecha = new Date(normalized);
 		const hoy = new Date();
 		hoy.setHours(0, 0, 0, 0);
 		fecha.setHours(0, 0, 0, 0);
