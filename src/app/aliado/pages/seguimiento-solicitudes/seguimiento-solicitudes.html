@@ -163,8 +163,6 @@
                         </p>
                         <p class="mb-2"><strong>Fecha Inicio Actividad:</strong> {{
                             formatDate(solicitud()?.representante?.fechaInicioActividad) }}</p>
-                        <p class="mb-2"><strong>Ingresos:</strong> {{ solicitud()?.representante?.ingresos || 'Sin datos
-                            disponibles' }}</p>
                         <p class="mb-2"><strong>Sector:</strong> {{
                             obtenerNombreCatalogo(solicitud()?.representante?.sectorId, catalogoSector()) }}</p>
                     </div>
@@ -294,8 +292,6 @@
                             formatDate(solicitud()?.empresa?.fechaInicioActividad) }}</p>
                     </div>
                     <div class="col-md-12 mb-3">
-                        <p class="mb-2"><strong>Usuario Ingreso:</strong> {{ solicitud()?.empresa?.usrIngreso || 'N/A'
-                            }}</p>
                         <p class="mb-2"><strong>Fecha Creación:</strong> {{ formatDate(solicitud()?.empresa?.created_at)
                             }}</p>
                     </div>
