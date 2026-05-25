@@ -1,13 +1,20 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
+import { HttpService } from '../HttpService';
 import {
   OrdenGyt,
   EstadoOrdenGyt,
   FiltrosOrdenGyt,
   ResultadoBusquedaOrden,
   ClienteOrden,
-  PrestamoOrden
+  PrestamoOrden,
+  CrearOrdenGytDto,
+  CrearOrdenGytApiResponse,
+  OrdenGytApiDetalle,
+  ObtenerOrdenGytApiResponse
 } from '../../interfaces/ordenes-gyt/orden-gyt';
 
 /**
@@ -19,16 +26,101 @@ import {
 @Injectable({
   providedIn: 'root'
 })
-export class OrdenesGytService {
+export class OrdenesGytService extends HttpService {
   private readonly STORAGE_KEY = 'ordenes-gyt';
   private ordenesSubject = new BehaviorSubject<OrdenGyt[]>(this.cargarOrdenes());
-  
+
+  private readonly endpoints = {
+    crearOrden: '/ordenes/gyt/crear'
+  };
+
   // Observable público para suscribirse a cambios en las órdenes
   public ordenes$ = this.ordenesSubject.asObservable();
 
-  constructor() {
+  constructor(http: HttpClient) {
+    super(http);
     console.log('🏦 [OrdenesGytService] Servicio inicializado');
     console.log('📋 [OrdenesGytService] Órdenes cargadas:', this.ordenesSubject.value.length);
+  }
+
+  /**
+   * Obtener una orden GYT por su número via API REST (ej: OPA-156)
+   */
+  obtenerOrdenPorNumeroApi(numeroOrden: string): Observable<OrdenGytApiDetalle> {
+    return this.get<ObtenerOrdenGytApiResponse>(`/ordenes/gyt/${numeroOrden}`).pipe(
+      map(response => response.body!.data),
+      catchError(error => {
+        console.error('❌ [OrdenesGytService] Error al obtener orden:', {
+          status: error.status,
+          errorData: error.error
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Crear una orden GYT via API REST
+   */
+  crearOrdenApi(dto: CrearOrdenGytDto): Observable<CrearOrdenGytApiResponse> {
+    return this.post<CrearOrdenGytApiResponse>(this.endpoints.crearOrden, dto).pipe(
+      map(response => response.body!),
+      catchError(error => {
+        console.error('❌ [OrdenesGytService] Error al crear orden via API:', {
+          status: error.status,
+          errorData: error.error
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Revisar una orden GYT via API REST
+   */
+  revisarOrdenApi(numeroOrden: string): Observable<any> {
+    return this.post<any>('/ordenes/gyt/revisar', { numeroOrden }).pipe(
+      map(response => response.body!),
+      catchError(error => {
+        console.error('❌ [OrdenesGytService] Error al revisar orden:', {
+          status: error.status,
+          errorData: error.error
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Autorizar una orden GYT via API REST
+   */
+  autorizarOrdenApi(numeroOrden: string): Observable<any> {
+    return this.post<any>('/ordenes/gyt/autorizar', { numeroOrden }).pipe(
+      map(response => response.body!),
+      catchError(error => {
+        console.error('❌ [OrdenesGytService] Error al autorizar orden:', {
+          status: error.status,
+          errorData: error.error
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Pagar una orden GYT via API REST
+   */
+  pagarOrdenApi(numeroOrden: string): Observable<any> {
+    return this.post<any>('/ordenes/gyt/pagar', { numeroOrden }).pipe(
+      map(response => response.body!),
+      catchError(error => {
+        console.error('❌ [OrdenesGytService] Error al pagar orden:', {
+          status: error.status,
+          errorData: error.error
+        });
+        return throwError(() => error);
+      })
+    );
   }
 
   /**

@@ -86,47 +86,47 @@
             <ion-icon name="document-text-outline" class="me-2"></ion-icon>
             Información de la Orden
           </h6>
-          <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning' : (ordenEncontrada()!.estado === 'aprobada' ? 'success' : 'danger') }}">
-            {{ ordenEncontrada()!.estado | uppercase }}
+          <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning text-dark' : (ordenEncontrada()!.estado === 'aprobada' ? 'success' : 'danger') }}">
+            {{ (ordenEncontrada()!.estado ?? 'N/D') | uppercase }}
           </span>
         </div>
-        
+
         <div class="row">
           <div class="col-md-6">
             <p class="mb-2">
-              <strong><ion-icon name="business-outline"></ion-icon> Sucursal:</strong> 
-              {{ ordenEncontrada()!.prestamo.sucursal }}
+              <strong><ion-icon name="document-outline"></ion-icon> Número de Orden:</strong>
+              <span class="badge bg-primary ms-1 px-2 py-1" style="font-size: 0.95rem;">{{ ordenEncontrada()!.numero }}</span>
             </p>
             <p class="mb-2">
-              <strong><ion-icon name="document-outline"></ion-icon> Número de Orden:</strong> 
-              <span class="text-primary">{{ ordenEncontrada()!.id }}</span>
+              <strong><ion-icon name="person-outline"></ion-icon> Cliente:</strong>
+              {{ ordenEncontrada()!.cliente }}
             </p>
             <p class="mb-2">
-              <strong><ion-icon name="person-outline"></ion-icon> Cliente:</strong> 
-              {{ ordenEncontrada()!.cliente.nombres }} {{ ordenEncontrada()!.cliente.apellidos }}
+              <strong><ion-icon name="card-outline"></ion-icon> Tipo de Documento:</strong>
+              {{ ordenEncontrada()!.tipoDocumentoCliente }}
             </p>
             <p class="mb-2">
-              <strong><ion-icon name="card-outline"></ion-icon> Tipo de Documento:</strong> 
-              {{ ordenEncontrada()!.cliente.tipoIdentificacion }}
+              <strong><ion-icon name="keypad-outline"></ion-icon> Número de Documento:</strong>
+              {{ ordenEncontrada()!.documentoCliente }}
             </p>
           </div>
           <div class="col-md-6">
             <p class="mb-2">
-              <strong><ion-icon name="keypad-outline"></ion-icon> Número de Documento:</strong> 
-              {{ ordenEncontrada()!.cliente.numeroIdentificacion }}
+              <strong><ion-icon name="cash-outline"></ion-icon> Monto:</strong>
+              <span class="text-primary fw-bold">Q {{ ordenEncontrada()!.monto | number:'1.2-2' }}</span>
             </p>
             <p class="mb-2">
-              <strong><ion-icon name="cash-outline"></ion-icon> Monto:</strong> 
-              <span class="text-primary fw-bold">Q {{ ordenEncontrada()!.montoDesembolso | number:'1.2-2' }}</span>
+              <strong><ion-icon name="calendar-outline"></ion-icon> Fecha de Creación:</strong>
+              {{ ordenEncontrada()!.createdAt | date:'dd/MM/yyyy HH:mm' }}
             </p>
             <p class="mb-2">
-              <strong><ion-icon name="calendar-outline"></ion-icon> Fecha de Creación:</strong> 
-              {{ ordenEncontrada()!.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
+              <strong><ion-icon name="layers-outline"></ion-icon> Gestión:</strong>
+              {{ ordenEncontrada()!.gestion }}
             </p>
             <p class="mb-2">
-              <strong><ion-icon name="stats-chart-outline"></ion-icon> Estado:</strong> 
-              <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning' : (ordenEncontrada()!.estado === 'aprobada' ? 'success' : 'danger') }}">
-                {{ ordenEncontrada()!.estado | uppercase }}
+              <strong><ion-icon name="stats-chart-outline"></ion-icon> Estado:</strong>
+              <span class="badge bg-{{ ordenEncontrada()!.estado === 'pendiente' ? 'warning text-dark' : (ordenEncontrada()!.estado === 'aprobada' ? 'success' : 'danger') }} ms-1">
+                {{ (ordenEncontrada()!.estado ?? 'N/D') | uppercase }}
               </span>
             </p>
           </div>
@@ -135,7 +135,7 @@
     </div>
 
     <!-- Botones de acción -->
-    @if (ordenEncontrada()!.estado === 'pendiente') {
+    @if (ordenEncontrada()!.estado === 'PENDIENTE' || ordenEncontrada()!.estado === 'pendiente') {
       <div class="d-grid gap-2 mb-4">
         <button 
           class="btn btn-success btn-lg"
@@ -175,15 +175,15 @@
             <div class="card-body">
               <p class="mb-2">
                 <strong><ion-icon name="document-outline"></ion-icon> Número de Orden:</strong>
-                <span class="text-primary ms-2">{{ ordenEncontrada()!.id }}</span>
+                <span class="badge bg-primary ms-2 px-2 py-1" style="font-size: 0.95rem;">{{ ordenEncontrada()!.numero }}</span>
               </p>
               <p class="mb-2">
                 <strong><ion-icon name="person-outline"></ion-icon> Cliente:</strong>
-                <span class="ms-2">{{ ordenEncontrada()!.cliente.nombres }} {{ ordenEncontrada()!.cliente.apellidos }}</span>
+                <span class="ms-2">{{ ordenEncontrada()!.cliente }}</span>
               </p>
               <p class="mb-0">
                 <strong><ion-icon name="cash-outline"></ion-icon> Monto:</strong>
-                <span class="text-primary fw-bold ms-2">Q {{ ordenEncontrada()!.montoDesembolso | number:'1.2-2' }}</span>
+                <span class="text-primary fw-bold ms-2">Q {{ ordenEncontrada()!.monto | number:'1.2-2' }}</span>
               </p>
             </div>
           </div>

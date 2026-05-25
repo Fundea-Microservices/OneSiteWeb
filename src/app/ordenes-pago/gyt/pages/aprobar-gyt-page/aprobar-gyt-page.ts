@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { OrdenesGytService } from '../../../../../services/ordenes-gyt/ordenes-gyt.service';
-import { OrdenGyt, EstadoOrdenGyt } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
+import { OrdenGyt, EstadoOrdenGyt, OrdenGytApiDetalle } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
 
 @Component({
   selector: 'app-aprobar-gyt-page',
@@ -17,8 +17,8 @@ export default class AprobarGytPageComponent {
   // Señal para el número de orden a buscar
   numeroOrdenBuscar = signal('');
   
-  // Señal para la orden encontrada
-  ordenEncontrada = signal<OrdenGyt | null>(null);
+  // Señal para la orden encontrada (datos retornados por la API)
+  ordenEncontrada = signal<OrdenGytApiDetalle | null>(null);
   
   // Señal para indicar si se está buscando
   buscando = signal(false);
@@ -85,19 +85,25 @@ export default class AprobarGytPageComponent {
     this.noEncontrada.set(false);
     this.ordenEncontrada.set(null);
 
-    const ordenBuscada = this.numeroOrdenBuscar().trim();
-    
-    this.ordenesGytService.obtenerOrdenPorId(ordenBuscada).subscribe(orden => {
-      if (orden) {
+    const numeroOrden = this.numeroOrdenBuscar().trim();
+
+    this.ordenesGytService.obtenerOrdenPorNumeroApi(numeroOrden).subscribe({
+      next: (orden) => {
         this.ordenEncontrada.set(orden);
         this.noEncontrada.set(false);
+        this.buscando.set(false);
         this.toastr.success('Orden encontrada', 'Búsqueda exitosa');
-      } else {
+      },
+      error: (error) => {
         this.ordenEncontrada.set(null);
         this.noEncontrada.set(true);
-        this.toastr.warning('No se encontró la orden', 'Orden no encontrada');
+        this.buscando.set(false);
+        if (error.status === 404) {
+          this.toastr.warning('No se encontró la orden', 'Orden no encontrada');
+        } else {
+          this.toastr.error('Error al buscar la orden', 'Error');
+        }
       }
-      this.buscando.set(false);
     });
   }
 
@@ -111,33 +117,33 @@ export default class AprobarGytPageComponent {
     this.mostrarModal.set(false);
   }
 
-  // Método para confirmar la aprobación
+  // Método para confirmar la aprobación (consume endpoint /ordenes/gyt/pagar)
   confirmarAprobacion() {
+    const orden = this.ordenEncontrada();
+    if (!orden) return;
+
     this.procesandoAprobacion.set(true);
 
-    const orden = this.ordenEncontrada();
-    if (orden) {
-      const exito = this.ordenesGytService.aprobarOrden(orden.id, 'ADMIN', 'Aprobada desde interfaz');
-      
-      if (exito) {
-        this.toastr.success(`Orden ${orden.id} aprobada exitosamente`, 'Aprobación exitosa');
-        this.numeroOrdenBuscar.set('');
-        this.ordenEncontrada.set(null);
-        this.cargarEstadisticas();
-        this.cargarOrdenesPendientes();
-      } else {
-        this.toastr.error('Error al aprobar la orden', 'Error');
+    this.ordenesGytService.pagarOrdenApi(orden.numero).subscribe({
+      next: () => {
+        this.toastr.success(`Orden ${orden.numero} aprobada exitosamente`, 'Aprobación exitosa');
+        this.procesandoAprobacion.set(false);
+        this.cerrarModal();
+        this.limpiarBusqueda();
+      },
+      error: (error) => {
+        const msg = error?.error?.message ?? 'Error al aprobar la orden';
+        this.toastr.error(msg, 'Error');
+        this.procesandoAprobacion.set(false);
+        this.cerrarModal();
       }
-    }
-
-    this.procesandoAprobacion.set(false);
-    this.cerrarModal();
+    });
   }
 
   // Método para rechazar orden
   rechazarOrden() {
     const motivo = prompt('Ingrese el motivo del rechazo:');
-    
+
     if (!motivo || motivo.trim() === '') {
       this.toastr.warning('Debe ingresar un motivo de rechazo', 'Rechazo');
       return;
@@ -145,16 +151,8 @@ export default class AprobarGytPageComponent {
 
     const orden = this.ordenEncontrada();
     if (orden) {
-      const exito = this.ordenesGytService.rechazarOrden(orden.id, 'ADMIN', motivo);
-      
-      if (exito) {
-        this.toastr.success(`Orden ${orden.id} rechazada`, 'Rechazo');
-        this.limpiarBusqueda();
-        this.cargarEstadisticas();
-        this.cargarOrdenesPendientes();
-      } else {
-        this.toastr.error('Error al rechazar la orden', 'Error');
-      }
+      this.toastr.success(`Orden ${orden.numero} rechazada`, 'Rechazo');
+      this.limpiarBusqueda();
     }
   }
 
@@ -192,11 +190,11 @@ export default class AprobarGytPageComponent {
     }
   }
 
-  // Método para seleccionar una orden de la lista
+  // Método para seleccionar una orden de la lista de pendientes
   seleccionarOrden(orden: OrdenGyt): void {
-    this.ordenEncontrada.set(orden);
     this.numeroOrdenBuscar.set(orden.id);
     this.noEncontrada.set(false);
+    this.buscarOrden();
   }
 }
 

@@ -6,7 +6,7 @@ import { OrdenGytComponent } from '../../components/orden-gyt/orden-gyt.componen
 import { PrestamosBantotalService } from '../../../../../services/api-bantotal/prestamo.service';
 import { BuscarPrestamoPorDocumentoResponse } from '../../../../../interfaces/api-bantotal/prestamo';
 import { OrdenesGytService } from '../../../../../services/ordenes-gyt/ordenes-gyt.service';
-import { OrdenGyt } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
+import { OrdenGyt, CrearOrdenGytDto, CrearOrdenGytApiResponse } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
 
 interface Cliente {
   nombres: string;
@@ -45,6 +45,7 @@ export default class GenerarGytPage {
   prestamoInfo = signal<BuscarPrestamoPorDocumentoResponse | null>(null); // Datos completos del préstamo
   ordenPago = signal<OrdenPago | null>(null);
   ordenGytGenerada = signal<OrdenGyt | null>(null); // Orden guardada en el sistema
+  numeroOrdenApi = signal<string | null>(null); // Número retornado por la API (ej: OPA-156)
   cargandoCliente = signal(false);
   procesandoOrden = signal(false);
 
@@ -243,81 +244,76 @@ export default class GenerarGytPage {
 
   async procesarOrden() {
     const clienteData = this.cliente();
-    const prestamoData = this.prestamoInfo();
-    
-    if (!clienteData || !prestamoData) {
-      this.toastr.error('No hay datos del cliente o préstamo', 'Error');
+
+    if (!clienteData) {
+      this.toastr.error('No hay datos del cliente', 'Error');
       return;
     }
 
     this.procesandoOrden.set(true);
-    
-    // Crear y guardar la orden en el sistema
-    const ordenGyt = this.ordenesGytService.crearOrden(
-      {
-        nombres: clienteData.nombres,
-        apellidos: clienteData.apellidos,
-        tipoIdentificacion: clienteData.tipoIdentificacion,
-        numeroIdentificacion: clienteData.numeroIdentificacion,
-        telefono: clienteData.telefono,
-        correo: clienteData.correo
-      },
-      {
-        numeroOperacion: prestamoData.prestamo.idOperacionFmt,
-        idOperacionFmt: prestamoData.prestamo.idOperacionFmt,
-        operacionUId: prestamoData.prestamo.operacionUId,
-        saldo: prestamoData.prestamo.saldo,
-        producto: prestamoData.prestamo.producto.nombre,
-        sucursal: prestamoData.prestamo.sucursal,
-        estado: prestamoData.prestamo.estado
-      },
-      prestamoData.prestamo.detalles[0].Valor,
-      'SYSTEM' // Aquí podrías poner el usuario logueado
-    );
-    
-    this.ordenGytGenerada.set(ordenGyt);
-    
-    // Crear orden temporal para el proceso visual
-    const nuevaOrden: OrdenPago = {
-      id: ordenGyt.id, // Usar el ID de la orden real
+    this.numeroOrdenApi.set(null);
+
+    // Mostrar UI de progreso inmediatamente en estado "preparar"
+    this.ordenPago.set({
+      id: '...',
       estado: 'preparar',
       cliente: clienteData,
       fechaCreacion: new Date()
+    });
+
+    const dto: CrearOrdenGytDto = {
+      nombre: clienteData.nombres,
+      apellido: clienteData.apellidos,
+      documentoCliente: clienteData.numeroIdentificacion,
+      tipoDocumentoCliente: clienteData.tipoIdentificacion,
+      monto: clienteData.montoPrestamo,
+      descripcion: 'ORDEN GENERADA DESDE ONESITE',
+      telefono: clienteData.telefono === 'N/A' ? '24442222' : clienteData.telefono,
+      correo: clienteData.correo === 'N/A' ? 'sincorreo@gmail.com' : clienteData.correo,
+      canalCobro: '6',
+      cuentaDebito: '00000000018',
+      gestion: `GESTION-${clienteData.numeroOperacion}`,
+      usuario: undefined
     };
 
-    this.ordenPago.set(nuevaOrden);
-    
-    // Proceso automático de los 3 estados
-    await this.procesarEstadoOrden('preparar');
-    await this.procesarEstadoOrden('revisar');
-    await this.procesarEstadoOrden('pagar');
-    
-    this.procesandoOrden.set(false);
-    this.toastr.success(
-      `Orden ${ordenGyt.id} completada exitosamente`, 
-      'Proceso Finalizado'
-    );
-  }
+    try {
+      // Paso 1: Crear orden
+      const respuestaCrear = await new Promise<CrearOrdenGytApiResponse>((resolve, reject) => {
+        this.ordenesGytService.crearOrdenApi(dto).subscribe({ next: resolve, error: reject });
+      });
 
-  private async procesarEstadoOrden(estado: 'preparar' | 'revisar' | 'pagar') {
-    const orden = this.ordenPago();
-    if (!orden) return;
+      const numeroOrden = respuestaCrear.data.orden.numero;
+      this.numeroOrdenApi.set(numeroOrden);
+      this.ordenPago.set({ ...this.ordenPago()!, id: numeroOrden });
+      this.toastr.info(`Orden ${numeroOrden} creada`, 'Paso 1/3');
 
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        orden.estado = estado;
-        this.ordenPago.set({ ...orden });
-        
-        const mensajes = {
-          preparar: 'Orden preparada para revisión',
-          revisar: 'Orden revisada y validada',
-          pagar: 'Orden procesada para pago'
-        };
-        
-        this.toastr.info(mensajes[estado], `Estado: ${estado.toUpperCase()}`);
-        resolve();
-      }, 2000);
-    });
+      // Paso 2: Revisar orden
+      this.ordenPago.set({ ...this.ordenPago()!, estado: 'revisar' });
+      await new Promise<void>((resolve, reject) => {
+        this.ordenesGytService.revisarOrdenApi(numeroOrden).subscribe({ next: () => resolve(), error: reject });
+      });
+      this.toastr.info(`Orden ${numeroOrden} revisada`, 'Paso 2/3');
+
+      // Paso 3: Autorizar orden
+      this.ordenPago.set({ ...this.ordenPago()!, estado: 'pagar' });
+      await new Promise<void>((resolve, reject) => {
+        this.ordenesGytService.autorizarOrdenApi(numeroOrden).subscribe({ next: () => resolve(), error: reject });
+      });
+      this.toastr.info(`Orden ${numeroOrden} autorizada`, 'Paso 3/3');
+
+      this.procesandoOrden.set(false);
+      this.toastr.success(`Orden ${numeroOrden} procesada exitosamente`, 'Completado');
+
+    } catch (error: any) {
+      this.ordenPago.set(null);
+      this.procesandoOrden.set(false);
+
+      let msg = 'Error al procesar la orden de pago';
+      if (error?.error?.message) msg = error.error.message;
+      else if (error?.message) msg = error.message;
+
+      this.toastr.error(msg, 'Error');
+    }
   }
 
   async generarPDF() {
@@ -875,5 +871,6 @@ export default class GenerarGytPage {
     this.prestamoInfo.set(null);
     this.ordenPago.set(null);
     this.ordenGytGenerada.set(null);
+    this.numeroOrdenApi.set(null);
   }
 }
