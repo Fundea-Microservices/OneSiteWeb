@@ -5,7 +5,7 @@
 /**
  * Estado de una orden de pago GYT
  */
-export type EstadoOrdenGyt = 'pendiente' | 'aprobada' | 'rechazada' | 'pagada';
+export type EstadoOrdenGyt = 'CREADO' | 'REVISADO' | 'PENDIENTE' | 'AUTORIZADO' | 'PAGADO' | 'ELIMINADO';
 
 /**
  * Cliente asociado a la orden
@@ -71,6 +71,18 @@ export interface ResultadoBusquedaOrden {
 }
 
 /**
+ * Estado individual de una orden GYT (historial)
+ */
+export interface EstadoOrdenGytApi {
+  estadoId: string;
+  ordenSecuencia: number;
+  estado: EstadoOrdenGyt;
+  descripcion: string;
+  usuario: string;
+  created_at: string;
+}
+
+/**
  * Detalle de una orden GYT retornada por la API
  */
 export interface OrdenGytApiDetalle {
@@ -86,9 +98,9 @@ export interface OrdenGytApiDetalle {
   canalCobro: string;
   gestion: string;
   usuario: string;
-  estado?: string;
   createdAt: string;
   updatedAt: string;
+  estados: EstadoOrdenGytApi[];
 }
 
 /**
@@ -98,7 +110,9 @@ export interface ObtenerOrdenGytApiResponse {
   success: boolean;
   statusCode: number;
   message: string;
-  data: OrdenGytApiDetalle;
+  data: {
+    orden: OrdenGytApiDetalle;
+  };
 }
 
 /**
@@ -116,6 +130,12 @@ export interface CrearOrdenGytDto {
   canalCobro: string;
   cuentaDebito: string;
   gestion: string;
+  cuenta: number;
+  operacion: number;
+  subOperacion: number;
+  tipoOperacion: number;
+  agenciaId: number;
+  agencia: string;
   usuario: undefined;
 }
 
@@ -155,4 +175,10 @@ export interface CrearOrdenGytApiResponse {
       };
     };
   };
+}
+
+export interface ConsultarPorFechaGytDto {
+  fechaInicio: string;
+  fechaFin: string;
+  etapa?: 'TODOS' | 'FINALIZADA' | 'ERROR' | 'CANCELADA';
 }

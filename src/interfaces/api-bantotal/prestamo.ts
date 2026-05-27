@@ -70,11 +70,13 @@ export interface DetallePrestamo {
   Cuenta_Cliente: number;
   Fecha: string;
   ID_Agencia: number;
+  Nombre_Agencia: string;
   Id_Transaccion: string;
   Itmod: number;
   Itnrel: number;
   Itsuc: number;
   Ittran: number;
+  Ittope: number;
   Numero_Operacion: number;
   Referencia: string;
   Sub_Operacion: number;

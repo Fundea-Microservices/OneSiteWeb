@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal, CUSTOM_ELEMENTS_SCHEMA, ViewContainerRef, ComponentRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal, CUSTOM_ELEMENTS_SCHEMA, ViewContainerRef, ComponentRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
@@ -48,6 +48,38 @@ export default class GenerarGytPage {
   numeroOrdenApi = signal<string | null>(null); // Número retornado por la API (ej: OPA-156)
   cargandoCliente = signal(false);
   procesandoOrden = signal(false);
+
+  etapaActual = signal<'crear' | 'revisar' | 'autorizar' | 'completado' | null>(null);
+  etapaError  = signal(false);
+  mensajeError = signal('');
+
+  etapaLabel = computed(() => {
+    switch (this.etapaActual()) {
+      case 'crear':     return 'Creando orden';
+      case 'revisar':   return 'Revisando orden';
+      case 'autorizar': return 'Autorizando orden';
+      case 'completado': return 'Completado';
+      default: return '';
+    }
+  });
+
+  etapaDescripcion = computed(() => {
+    switch (this.etapaActual()) {
+      case 'crear':     return 'Registrando la orden en el sistema...';
+      case 'revisar':   return 'Enviando la orden a revisión...';
+      case 'autorizar': return 'Autorizando la orden de pago...';
+      default: return '';
+    }
+  });
+
+  etapaLabelCorto = computed(() => {
+    switch (this.etapaActual()) {
+      case 'crear':     return 'crear la orden';
+      case 'revisar':   return 'revisar la orden';
+      case 'autorizar': return 'autorizar la orden';
+      default: return '';
+    }
+  });
 
   constructor(
     private toastr: ToastrService, 
@@ -130,6 +162,10 @@ export default class GenerarGytPage {
     this.prestamoInfo.set(null);
     this.ordenGytGenerada.set(null);
     this.ordenPago.set(null);
+    this.numeroOrdenApi.set(null);
+    this.etapaActual.set(null);
+    this.etapaError.set(false);
+    this.mensajeError.set('');
 
     this.cargandoCliente.set(true);
     
@@ -244,22 +280,21 @@ export default class GenerarGytPage {
 
   async procesarOrden() {
     const clienteData = this.cliente();
-
     if (!clienteData) {
       this.toastr.error('No hay datos del cliente', 'Error');
       return;
     }
 
     this.procesandoOrden.set(true);
+    this.etapaActual.set('crear');
+    this.etapaError.set(false);
+    this.mensajeError.set('');
     this.numeroOrdenApi.set(null);
 
-    // Mostrar UI de progreso inmediatamente en estado "preparar"
-    this.ordenPago.set({
-      id: '...',
-      estado: 'preparar',
-      cliente: clienteData,
-      fechaCreacion: new Date()
-    });
+    this.ordenPago.set({ id: '...', estado: 'preparar', cliente: clienteData, fechaCreacion: new Date() });
+
+    const prestamoData = this.prestamoInfo()!;
+    const detalle = prestamoData.prestamo.detalles[0];
 
     const dto: CrearOrdenGytDto = {
       nombre: clienteData.nombres,
@@ -273,47 +308,79 @@ export default class GenerarGytPage {
       canalCobro: '6',
       cuentaDebito: '00000000018',
       gestion: `GESTION-${clienteData.numeroOperacion}`,
+      cuenta: prestamoData.cliente.clienteUId,
+      operacion: detalle.Numero_Operacion,
+      subOperacion: detalle.Sub_Operacion,
+      tipoOperacion: detalle.Ittope,
+      agenciaId: detalle.ID_Agencia,
+      agencia: detalle.Nombre_Agencia?.trim() ?? '',
       usuario: undefined
     };
 
     try {
-      // Paso 1: Crear orden
       const respuestaCrear = await new Promise<CrearOrdenGytApiResponse>((resolve, reject) => {
         this.ordenesGytService.crearOrdenApi(dto).subscribe({ next: resolve, error: reject });
       });
-
       const numeroOrden = respuestaCrear.data.orden.numero;
       this.numeroOrdenApi.set(numeroOrden);
       this.ordenPago.set({ ...this.ordenPago()!, id: numeroOrden });
-      this.toastr.info(`Orden ${numeroOrden} creada`, 'Paso 1/3');
+    } catch (error: any) {
+      this.etapaError.set(true);
+      this.mensajeError.set(this.extraerMensajeError(error));
+      this.procesandoOrden.set(false);
+      return;
+    }
 
-      // Paso 2: Revisar orden
-      this.ordenPago.set({ ...this.ordenPago()!, estado: 'revisar' });
+    await this.ejecutarRevisar();
+  }
+
+  private async ejecutarRevisar() {
+    this.etapaActual.set('revisar');
+    this.etapaError.set(false);
+    const numeroOrden = this.numeroOrdenApi()!;
+    try {
       await new Promise<void>((resolve, reject) => {
         this.ordenesGytService.revisarOrdenApi(numeroOrden).subscribe({ next: () => resolve(), error: reject });
       });
-      this.toastr.info(`Orden ${numeroOrden} revisada`, 'Paso 2/3');
+    } catch (error: any) {
+      this.etapaError.set(true);
+      this.mensajeError.set(this.extraerMensajeError(error));
+      this.procesandoOrden.set(false);
+      return;
+    }
+    await this.ejecutarAutorizar();
+  }
 
-      // Paso 3: Autorizar orden
-      this.ordenPago.set({ ...this.ordenPago()!, estado: 'pagar' });
+  private async ejecutarAutorizar() {
+    this.etapaActual.set('autorizar');
+    this.etapaError.set(false);
+    const numeroOrden = this.numeroOrdenApi()!;
+    try {
       await new Promise<void>((resolve, reject) => {
         this.ordenesGytService.autorizarOrdenApi(numeroOrden).subscribe({ next: () => resolve(), error: reject });
       });
-      this.toastr.info(`Orden ${numeroOrden} autorizada`, 'Paso 3/3');
-
-      this.procesandoOrden.set(false);
-      this.toastr.success(`Orden ${numeroOrden} procesada exitosamente`, 'Completado');
-
     } catch (error: any) {
-      this.ordenPago.set(null);
+      this.etapaError.set(true);
+      this.mensajeError.set(this.extraerMensajeError(error));
       this.procesandoOrden.set(false);
-
-      let msg = 'Error al procesar la orden de pago';
-      if (error?.error?.message) msg = error.error.message;
-      else if (error?.message) msg = error.message;
-
-      this.toastr.error(msg, 'Error');
+      return;
     }
+    this.etapaActual.set('completado');
+    this.procesandoOrden.set(false);
+    this.toastr.success(`Orden ${numeroOrden} procesada exitosamente`, 'Completado');
+  }
+
+  reintentarEtapa() {
+    this.procesandoOrden.set(true);
+    switch (this.etapaActual()) {
+      case 'crear':     this.procesarOrden();     break;
+      case 'revisar':   this.ejecutarRevisar();   break;
+      case 'autorizar': this.ejecutarAutorizar(); break;
+    }
+  }
+
+  private extraerMensajeError(error: any): string {
+    return error?.error?.message ?? error?.message ?? 'Error desconocido';
   }
 
   async generarPDF() {
@@ -872,5 +939,8 @@ export default class GenerarGytPage {
     this.ordenPago.set(null);
     this.ordenGytGenerada.set(null);
     this.numeroOrdenApi.set(null);
+    this.etapaActual.set(null);
+    this.etapaError.set(false);
+    this.mensajeError.set('');
   }
 }

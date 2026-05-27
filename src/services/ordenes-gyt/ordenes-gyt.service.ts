@@ -14,7 +14,8 @@ import {
   CrearOrdenGytDto,
   CrearOrdenGytApiResponse,
   OrdenGytApiDetalle,
-  ObtenerOrdenGytApiResponse
+  ObtenerOrdenGytApiResponse,
+  ConsultarPorFechaGytDto
 } from '../../interfaces/ordenes-gyt/orden-gyt';
 
 /**
@@ -48,7 +49,9 @@ export class OrdenesGytService extends HttpService {
    */
   obtenerOrdenPorNumeroApi(numeroOrden: string): Observable<OrdenGytApiDetalle> {
     return this.get<ObtenerOrdenGytApiResponse>(`/ordenes/gyt/${numeroOrden}`).pipe(
-      map(response => response.body!.data),
+      map(response => {
+        return response.body!.data.orden;
+      }),
       catchError(error => {
         console.error('❌ [OrdenesGytService] Error al obtener orden:', {
           status: error.status,
@@ -123,6 +126,21 @@ export class OrdenesGytService extends HttpService {
     );
   }
 
+  consultarPorFechaApi(dto: ConsultarPorFechaGytDto): Observable<any> {
+    const params = new URLSearchParams({ fechaInicio: dto.fechaInicio, fechaFin: dto.fechaFin });
+    if (dto.etapa) params.set('etapa', dto.etapa);
+    return this.get<any>(`/ordenes/gyt/historial?${params.toString()}`).pipe(
+      map(response => response.body!),
+      catchError(error => {
+        console.error('❌ [OrdenesGytService] Error al consultar historial:', {
+          status: error.status,
+          errorData: error.error
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+
   /**
    * Cargar órdenes desde localStorage
    */
@@ -177,7 +195,7 @@ export class OrdenesGytService extends HttpService {
   ): OrdenGyt {
     const nuevaOrden: OrdenGyt = {
       id: this.generarIdOrden(),
-      estado: 'pendiente',
+      estado: 'CREADO',
       cliente,
       prestamo,
       montoDesembolso,
@@ -320,12 +338,12 @@ export class OrdenesGytService extends HttpService {
       return false;
     }
 
-    if (orden.estado !== 'pendiente') {
+    if (orden.estado !== 'PENDIENTE') {
       console.error('❌ [OrdenesGytService] Orden no está pendiente:', id);
       return false;
     }
 
-    orden.estado = 'aprobada';
+    orden.estado = 'AUTORIZADO';
     orden.fechaAprobacion = new Date();
     orden.usuarioAprobacion = usuarioAprobacion;
     if (observaciones) {
@@ -351,12 +369,12 @@ export class OrdenesGytService extends HttpService {
       return false;
     }
 
-    if (orden.estado !== 'pendiente') {
+    if (orden.estado !== 'PENDIENTE') {
       console.error('❌ [OrdenesGytService] Orden no está pendiente:', id);
       return false;
     }
 
-    orden.estado = 'rechazada';
+    orden.estado = 'ELIMINADO';
     orden.fechaAprobacion = new Date();
     orden.usuarioAprobacion = usuarioAprobacion;
     orden.motivoRechazo = motivoRechazo;
@@ -380,12 +398,12 @@ export class OrdenesGytService extends HttpService {
       return false;
     }
 
-    if (orden.estado !== 'aprobada') {
-      console.error('❌ [OrdenesGytService] Orden no está aprobada:', id);
+    if (orden.estado !== 'AUTORIZADO') {
+      console.error('❌ [OrdenesGytService] Orden no está autorizada:', id);
       return false;
     }
 
-    orden.estado = 'pagada';
+    orden.estado = 'PAGADO';
 
     this.guardarOrdenes(ordenes);
     this.ordenesSubject.next(ordenes);
@@ -428,18 +446,22 @@ export class OrdenesGytService extends HttpService {
    */
   obtenerEstadisticas(): Observable<{
     total: number;
+    creadas: number;
+    revisadas: number;
     pendientes: number;
-    aprobadas: number;
-    rechazadas: number;
+    autorizadas: number;
     pagadas: number;
+    eliminadas: number;
   }> {
     return this.ordenes$.pipe(
       map(ordenes => ({
         total: ordenes.length,
-        pendientes: ordenes.filter(o => o.estado === 'pendiente').length,
-        aprobadas: ordenes.filter(o => o.estado === 'aprobada').length,
-        rechazadas: ordenes.filter(o => o.estado === 'rechazada').length,
-        pagadas: ordenes.filter(o => o.estado === 'pagada').length
+        creadas: ordenes.filter(o => o.estado === 'CREADO').length,
+        revisadas: ordenes.filter(o => o.estado === 'REVISADO').length,
+        pendientes: ordenes.filter(o => o.estado === 'PENDIENTE').length,
+        autorizadas: ordenes.filter(o => o.estado === 'AUTORIZADO').length,
+        pagadas: ordenes.filter(o => o.estado === 'PAGADO').length,
+        eliminadas: ordenes.filter(o => o.estado === 'ELIMINADO').length,
       }))
     );
   }

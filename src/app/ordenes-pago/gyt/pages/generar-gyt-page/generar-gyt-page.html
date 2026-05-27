@@ -129,121 +129,72 @@
     </div>
 
     <!-- Botón generar orden -->
-    @if (!ordenPago()) {
     <div class="d-grid gap-2 mb-4">
-      <button 
+      <button
         class="btn btn-success btn-lg"
         (click)="procesarOrden()"
         [disabled]="procesandoOrden()">
-        @if (procesandoOrden()) {
-          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-          Procesando...
-        } @else {
-          <ion-icon name="card-outline" class="me-2"></ion-icon>
-          Generar Orden de Pago
-        }
+        <ion-icon name="card-outline" class="me-2"></ion-icon>
+        Generar Orden de Pago
       </button>
     </div>
     }
-    }
 
-    <!-- Estado de la Orden de Pago -->
-    @if (ordenPago()) {
-    <div class="row mb-4">
+    <!-- Estado de la etapa activa -->
+    @if (etapaActual()) {
+    <div class="row mb-3">
       <div class="col-12">
         <h6 class="border-bottom pb-2">
           <ion-icon name="document-text-outline" class="me-2"></ion-icon>
-          Estado de la Orden: {{ ordenPago()!.id }}
+          Orden de Pago{{ numeroOrdenApi() ? ': ' + numeroOrdenApi() : '' }}
         </h6>
       </div>
     </div>
 
-    <!-- Progress Steps -->
     <div class="card mb-4">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="card-body text-center py-5">
 
-          <!-- Paso 1: Crear -->
-          <div class="text-center">
-            <div class="badge {{ ordenPago()!.estado === 'preparar' ? 'bg-warning' : 'bg-success' }} mb-2 p-2">
-              @if (ordenPago()!.estado === 'preparar') {
-                <span class="spinner-border spinner-border-sm" role="status"></span>
-              } @else {
-                <ion-icon name="checkmark-outline"></ion-icon>
-              }
-            </div>
-            <br><small>Crear</small>
+        @if (etapaActual() !== 'completado' && !etapaError()) {
+          <!-- Procesando etapa -->
+          <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Cargando...</span>
           </div>
+          <h5 class="mt-1">{{ etapaLabel() }}</h5>
+          <p class="text-muted mb-0">{{ etapaDescripcion() }}</p>
+        }
 
-          <div class="grow border-top mx-2" style="opacity:.3"></div>
-
-          <!-- Paso 2: Revisar -->
-          <div class="text-center">
-            <div class="badge {{
-              ordenPago()!.estado === 'revisar' ? 'bg-warning' :
-              (ordenPago()!.estado === 'preparar' ? 'bg-secondary' : 'bg-success')
-            }} mb-2 p-2">
-              @if (ordenPago()!.estado === 'revisar') {
-                <span class="spinner-border spinner-border-sm" role="status"></span>
-              } @else if (ordenPago()!.estado !== 'preparar') {
-                <ion-icon name="checkmark-outline"></ion-icon>
-              }
-            </div>
-            <br><small>Revisar</small>
-          </div>
-
-          <div class="grow border-top mx-2" style="opacity:.3"></div>
-
-          <!-- Paso 3: Autorizar -->
-          <div class="text-center">
-            <div class="badge {{
-              ordenPago()!.estado === 'pagar' ? 'bg-warning' :
-              (ordenPago()!.estado === 'preparar' || ordenPago()!.estado === 'revisar' ? 'bg-secondary' : 'bg-success')
-            }} mb-2 p-2">
-              @if (ordenPago()!.estado === 'pagar') {
-                <span class="spinner-border spinner-border-sm" role="status"></span>
-              } @else if (ordenPago()!.estado !== 'preparar' && ordenPago()!.estado !== 'revisar') {
-                <ion-icon name="checkmark-outline"></ion-icon>
-              }
-            </div>
-            <br><small>Autorizar</small>
-          </div>
-
-          <div class="grow border-top mx-2" style="opacity:.3"></div>
-
-          <!-- Paso 4: Completado -->
-          <div class="text-center">
-            <div class="badge {{ !procesandoOrden() ? 'bg-success' : 'bg-secondary' }} mb-2 p-2">
-              @if (!procesandoOrden()) {
-                <ion-icon name="checkmark-outline"></ion-icon>
-              }
-            </div>
-            <br><small>Completado</small>
-          </div>
-
-        </div>
-        
-        @if (!procesandoOrden()) {
-        <div class="text-center mt-4">
-          <div class="alert alert-success" role="alert">
-            <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
-            <strong>¡Orden de pago generada exitosamente!</strong>
-            <div class="mt-3">
-              <span class="text-muted">Número de orden:</span>
-              <span class="badge bg-primary ms-2 px-3 py-2" style="font-size: 1.25rem; letter-spacing: 1px;">
-                {{ numeroOrdenApi() }}
-              </span>
-            </div>
-          </div>
-
+        @if (etapaError()) {
+          <!-- Error con botón de reintentar -->
+          <ion-icon name="close-circle-outline" style="font-size: 3rem; color: var(--bs-danger);"></ion-icon>
+          <h5 class="text-danger mt-2">Error al {{ etapaLabelCorto() }}</h5>
+          <p class="text-muted small mb-4">{{ mensajeError() }}</p>
           <button
-            class="btn btn-primary btn-lg"
+            class="btn btn-warning"
+            (click)="reintentarEtapa()"
+            [disabled]="procesandoOrden()">
+            <ion-icon name="refresh-outline" class="me-2"></ion-icon>
+            Reintentar
+          </button>
+        }
+
+        @if (etapaActual() === 'completado') {
+          <!-- Éxito -->
+          <ion-icon name="checkmark-circle-outline" style="font-size: 3rem; color: var(--bs-success);"></ion-icon>
+          <h5 class="text-success mt-2">¡Orden generada exitosamente!</h5>
+          <div class="my-3">
+            <span class="text-muted">Número de orden:</span>
+            <span class="badge bg-primary ms-2 px-3 py-2" style="font-size: 1.1rem; letter-spacing: 1px;">
+              {{ numeroOrdenApi() }}
+            </span>
+          </div>
+          <button
+            class="btn btn-primary btn-lg mt-1"
             (click)="generarPDF()">
             <ion-icon name="print-outline" class="me-2"></ion-icon>
             Abrir Ventana de Impresión
           </button>
-        </div>
         }
+
       </div>
     </div>
     }

@@ -1,9 +1,9 @@
-import { Component, signal, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, signal, computed, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { OrdenesGytService } from '../../../../../services/ordenes-gyt/ordenes-gyt.service';
-import { OrdenGyt, EstadoOrdenGyt, OrdenGytApiDetalle } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
+import { OrdenGyt, EstadoOrdenGyt, OrdenGytApiDetalle, EstadoOrdenGytApi } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
 
 @Component({
   selector: 'app-aprobar-gyt-page',
@@ -35,13 +35,38 @@ export default class AprobarGytPageComponent {
   // Señal para órdenes pendientes
   ordenesPendientes = signal<OrdenGyt[]>([]);
   
+  // Último estado de la orden (el de mayor ordenSecuencia)
+  ultimoEstado = computed<EstadoOrdenGytApi | null>(() => {
+    const orden = this.ordenEncontrada();
+    if (!orden?.estados?.length) return null;
+    return orden.estados.reduce((prev, curr) =>
+      curr.ordenSecuencia > prev.ordenSecuencia ? curr : prev
+    );
+  });
+
+  // Clase CSS del badge según el último estado
+  estadoBadgeClass = computed<string>(() => {
+    const estado = this.ultimoEstado()?.estado ?? '';
+    switch (estado) {
+      case 'CREADO':    return 'bg-secondary';
+      case 'REVISADO':  return 'bg-info text-dark';
+      case 'PENDIENTE': return 'bg-warning text-dark';
+      case 'AUTORIZADO': return 'bg-primary';
+      case 'PAGADO':    return 'bg-success';
+      case 'ELIMINADO': return 'bg-danger';
+      default:          return 'bg-secondary';
+    }
+  });
+
   // Estadísticas
   estadisticas = signal({
     total: 0,
+    creadas: 0,
+    revisadas: 0,
     pendientes: 0,
-    aprobadas: 0,
-    rechazadas: 0,
-    pagadas: 0
+    autorizadas: 0,
+    pagadas: 0,
+    eliminadas: 0
   });
 
   constructor(
@@ -65,7 +90,7 @@ export default class AprobarGytPageComponent {
    * Cargar órdenes pendientes
    */
   cargarOrdenesPendientes(): void {
-    this.ordenesGytService.obtenerOrdenesPorEstado('pendiente').subscribe(ordenes => {
+    this.ordenesGytService.obtenerOrdenesPorEstado('PENDIENTE').subscribe(ordenes => {
       this.ordenesPendientes.set(ordenes);
     });
   }
@@ -182,11 +207,12 @@ export default class AprobarGytPageComponent {
   // Método para obtener clase de badge según estado
   getEstadoBadgeClass(estado: EstadoOrdenGyt): string {
     switch (estado) {
-      case 'pendiente': return 'bg-warning text-dark';
-      case 'aprobada': return 'bg-success';
-      case 'rechazada': return 'bg-danger';
-      case 'pagada': return 'bg-info';
-      default: return 'bg-secondary';
+      case 'CREADO':    return 'bg-secondary';
+      case 'REVISADO':  return 'bg-info text-dark';
+      case 'PENDIENTE': return 'bg-warning text-dark';
+      case 'AUTORIZADO': return 'bg-primary';
+      case 'PAGADO':    return 'bg-success';
+      case 'ELIMINADO': return 'bg-danger';
     }
   }
 
