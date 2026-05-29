@@ -4,7 +4,19 @@ import { IPregunta } from '../../../../interfaces/encuesta/encuesta';
 import { CatalogoService } from '../../../../services/config/catalogo-maestro.service';
 import { ICatalogo } from '../../../../interfaces/catalogo-maestro/catalogo-maestro';
 
-export const TIPOS_DATO = ['TEXT', 'NUMBER', 'DATE', 'BOOLEAN', 'SELECT', 'MULTISELECT', 'TEXTAREA', 'FILE', 'MATRIZ'];
+export const TIPOS_DATO = [
+  'TEXT', 'NUMBER', 'NUMERO', 'DECIMAL', 'ENTERO',
+  'DATE', 'FECHA',
+  'EMAIL', 'TELEFONO',
+  'BOOLEAN', 'RADIO', 'CHECKBOX',
+  'TEXTAREA',
+  'SELECT', 'MULTISELECT', 'LISTA',
+  'COORDENADAS', 'GEOLOCALIZACION', 'UBICACION',
+  'FILE', 'MATRIZ',
+];
+
+const TIPOS_CON_ORIGEN = new Set(['SELECT', 'MULTISELECT', 'RADIO', 'CHECKBOX', 'LISTA']);
+
 export const ORIGENES_TIPO = ['CATALOGO', 'API', 'LISTA'];
 
 @Component({
@@ -98,17 +110,15 @@ export class UpsertPreguntaComponent {
   }
 
   get tieneOrigen(): boolean {
-    const t = this.form().get('tipoDato')?.value;
-    return t === 'SELECT' || t === 'MULTISELECT' || t === 'MATRIZ';
+    return TIPOS_CON_ORIGEN.has(this.form().get('tipoDato')?.value);
   }
 
   get tieneFiltro(): boolean {
-    const t = this.form().get('tipoDato')?.value;
-    return t === 'SELECT' || t === 'MULTISELECT' || t === 'MATRIZ';
+    return TIPOS_CON_ORIGEN.has(this.form().get('tipoDato')?.value);
   }
 
   get esCatalogo(): boolean {
-    return this.form().get('tipoDato')?.value === 'SELECT'
+    return TIPOS_CON_ORIGEN.has(this.form().get('tipoDato')?.value)
       && this.form().get('origenDatosTipo')?.value === 'CATALOGO';
   }
 
