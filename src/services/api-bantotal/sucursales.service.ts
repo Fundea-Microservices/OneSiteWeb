@@ -17,10 +17,11 @@ export class SucursalesBantotalService extends HttpService {
     super(http);
   }
 
-  async getMisSucursales(): Promise<MisSucursalesResponse | null> {
+  async getMisSucursales(usuario?: string): Promise<MisSucursalesResponse | null> {
     try {
+      const params = usuario ? { usuario } : undefined;
       const resp = await firstValueFrom(
-        this.get<MisSucursalesResponse>(this.endpoints.misSucursales)
+        this.get<MisSucursalesResponse>(this.endpoints.misSucursales, params)
       );
       return resp.body;
     } catch (error: any) {

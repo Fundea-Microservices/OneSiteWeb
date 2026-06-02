@@ -48,6 +48,7 @@ export default class ListadoRepresentantePage {
 
   searchMode: 'nombre' | 'documento' = 'nombre';
   isLoading = signal(false);
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   formKey = signal(Date.now());
   buscador = signal('');
   nuevoRepresentante = signal(true);
@@ -203,6 +204,12 @@ export default class ListadoRepresentantePage {
   cancelarNavegacion() {
     this.modalOtroUsuarioOpen.set(false);
     this.rutaPendiente.set(null);
+  }
+
+  onBuscadorInput(value: string): void {
+    this.buscador.set(value);
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => this.fetchData(), 1000);
   }
 
   onChangePage(newPagination: IPagination) {

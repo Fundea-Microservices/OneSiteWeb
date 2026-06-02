@@ -44,6 +44,7 @@ export default class GestionarSolicitudes {
 
 	searchMode: 'nombre' | 'documento' = 'nombre';
 	isLoading = signal(false);
+	private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 	formKey = signal(Date.now());
 	buscador = signal('');
 	nuevoRepresentante = signal(true);
@@ -60,6 +61,7 @@ export default class GestionarSolicitudes {
 	regiones = signal<Region[]>([]);
 	agencias = signal<Agencia[]>([]);
 	agenciasFilterradas = signal<Agencia[]>([]);
+	todasLasAgencias = signal<Agencia[]>([]);
 	pendingAgenciaSelection = signal(false);
 	pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0 });
 
@@ -84,11 +86,24 @@ export default class GestionarSolicitudes {
 
 	ngOnInit() {
 		this.cargarFiltros();
-		// this.fetchData();
+		this.cargarTodasLasAgencias();
 	}
 
 	ngAfterViewInit() {
 		this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
+	}
+
+	private async cargarTodasLasAgencias() {
+		try {
+			// TODO: reemplazar por getTodasLasSucursales() cuando el endpoint esté disponible
+			const resultado = await this.sucursalesService.getMisSucursales('ralonzo');
+			console.log("🚀 ~ GestionarSolicitudes ~ cargarTodasLasAgencias ~ resultado:", resultado)
+			if (resultado?.data?.agencias) {
+				this.todasLasAgencias.set(resultado.data.agencias);
+			}
+		} catch (error) {
+			console.error('Error al cargar todas las agencias:', error);
+		}
 	}
 
 	private async cargarFiltros() {
@@ -145,6 +160,12 @@ onRegionChange(regionId: string | null): void {
 	onAgenciaChange(): void {
 		this.pendingAgenciaSelection.set(false);
 		this.fetchData();
+	}
+
+	onBuscadorInput(value: string): void {
+		this.buscador.set(value);
+		if (this.debounceTimer) clearTimeout(this.debounceTimer);
+		this.debounceTimer = setTimeout(() => this.fetchData(), 1000);
 	}
 
 	async fetchData() {
@@ -265,7 +286,7 @@ onRegionChange(regionId: string | null): void {
 	 */
 	obtenerNombreAgencia(agenciaId: number | null | undefined): string {
 		if (!agenciaId) return 'N/A';
-		const agencia = this.agencias().find(a => a.id === agenciaId);
+		const agencia = this.todasLasAgencias().find(a => a.id === agenciaId);
 		return agencia?.descripcion || 'N/A';
 	}
 }
