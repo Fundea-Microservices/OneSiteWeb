@@ -276,13 +276,12 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
 
   formatNit(event: Event) {
     const input = event.target as HTMLInputElement;
-    let value = input.value.replace(/\D/g, '');
-    
-    if (value.length >= 8) {
-      value = value.slice(0, 8) + '-' + value.slice(8, 9);
-    }
-    
-    this.nit.set(value);
+    const digits = input.value.replace(/\D/g, '').slice(0, 8);
+    const formatted = digits.length >= 2
+      ? digits.slice(0, -1) + '-' + digits.slice(-1)
+      : digits;
+    this.nit.set(formatted);
+    input.value = formatted;
   }
 
   get btnText(): string {

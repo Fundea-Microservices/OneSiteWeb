@@ -122,6 +122,7 @@
       }
       <div class="input-group">
         <input type="file" id="archivo" class="form-control" accept=".pdf,.doc,.docx" (change)="onArchivoSeleccionado($event)"
+          (cancel)="$event.stopPropagation()"
           [disabled]="isLoading() || subiendoArchivo()" />
         @if (subiendoArchivo()) {
         <span class="input-group-text">

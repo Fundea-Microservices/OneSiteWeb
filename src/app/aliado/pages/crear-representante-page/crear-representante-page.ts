@@ -309,9 +309,19 @@ export default class CrearRepresentantePage implements AfterViewInit {
         error: (error) => {
           console.log('Cliente no encontrado en Bantotal o error en búsqueda:', error.message);
           this.cuentaBT.set(null);
+          this.clienteUId.set(null);
           this.buscandoCliente.set(false);
+          if (!this.dpiValidado()) {
+            this.reiniciarCampos(documentoSinFormato);
+          } else {
+            this.representante.update(current => ({
+              ...current,
+              cuentaBT: undefined,
+              cuentaBantotal: undefined,
+              clienteUId: undefined,
+            }));
+          }
           this.cdr.detectChanges();
-          if(!this.dpiValidado()) this.reiniciarCampos(documentoSinFormato);
         }
       });
     }, 500); // Esperar 500ms antes de hacer la búsqueda
