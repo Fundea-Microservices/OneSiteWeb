@@ -95,11 +95,9 @@ export default class GestionarSolicitudes {
 
 	private async cargarTodasLasAgencias() {
 		try {
-			// TODO: reemplazar por getTodasLasSucursales() cuando el endpoint esté disponible
-			const resultado = await this.sucursalesService.getMisSucursales('ralonzo');
-			console.log("🚀 ~ GestionarSolicitudes ~ cargarTodasLasAgencias ~ resultado:", resultado)
-			if (resultado?.data?.agencias) {
-				this.todasLasAgencias.set(resultado.data.agencias);
+			const resultado = await this.sucursalesService.getTodasLasSucursales();
+			if (resultado?.agencias) {
+				this.todasLasAgencias.set(resultado.agencias);
 			}
 		} catch (error) {
 			console.error('Error al cargar todas las agencias:', error);
