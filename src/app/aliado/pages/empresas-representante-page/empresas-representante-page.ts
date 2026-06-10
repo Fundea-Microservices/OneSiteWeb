@@ -663,6 +663,7 @@ export default class EmpresasRepresentantePage {
       tipoAfiliacionId: solicitud.tipoAfiliacionId || '',
       regionId,
       agenciaId,
+      agenciaNombre: solicitud.agenciaNombre || '',
       observaciones: solicitud.observaciones || undefined,
       documentoCargado: solicitud.documentoCargado || undefined,
     };
@@ -749,6 +750,7 @@ export default class EmpresasRepresentantePage {
           tipoAfiliacionId: formData.tipoAfiliacionId,
           regionId,
           agenciaId,
+          agenciaNombre: formData.agenciaNombre || null,
           observaciones: formData.observaciones || null,
         };
 
@@ -785,6 +787,7 @@ export default class EmpresasRepresentantePage {
             tipoAfiliacionId: formData.tipoAfiliacionId,
             regionId,
             agenciaId,
+            agenciaNombre: formData.agenciaNombre || null,
             fechaSolicitud: new Date().toISOString(),
             observaciones: formData.observaciones || null,
           };
@@ -795,7 +798,7 @@ export default class EmpresasRepresentantePage {
           }
 
           const resp = await this.solicitudesService.createSolicitud(solicitudData);
-          
+
           if (resp?.success) {
             this.cerrarModalSolicitud();
             await this.cargarEmpresas();
@@ -822,6 +825,7 @@ export default class EmpresasRepresentantePage {
             tipoAfiliacionId: formData.tipoAfiliacionId,
             regionId,
             agenciaId,
+            agenciaNombre: formData.agenciaNombre || null,
             fechaSolicitud: new Date().toISOString(),
             observaciones: formData.observaciones || null,
           };
@@ -832,7 +836,7 @@ export default class EmpresasRepresentantePage {
           }
 
           const resp = await this.solicitudesService.createSolicitud(solicitudData);
-          
+
           if (resp?.success) {
             this.cerrarModalSolicitud();
             await this.cargarEmpresas();

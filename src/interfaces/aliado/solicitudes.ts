@@ -35,6 +35,7 @@ export interface Solicitud {
   // IDs Numéricos (Catálogo de Agencias)
   regionId?: number | null;
   agenciaId?: number | null;
+  agenciaNombre?: string | null; 
 
   // Datos
   fechaSolicitud?: string | null; // ISO Date String (ej: "2023-10-25T10:00:00Z")

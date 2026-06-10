@@ -26,6 +26,7 @@ export interface SolicitudFormData {
   tipoAfiliacionId: string;
   regionId: string;
   agenciaId: string;
+  agenciaNombre: string;
   observaciones?: string;
   documentoCargado?: string; // URL/path del archivo subido al storage
 }
@@ -265,6 +266,7 @@ export default class UpsertSolicitudComponent implements OnInit {
       tipoAfiliacionId: this.selectedTipoAfiliacion(),
       regionId: this.selectedRegion(),
       agenciaId: this.selectedAgencia(),
+      agenciaNombre: this.getAgenciaNombre(this.selectedAgencia()),
       observaciones: this.observaciones() || undefined,
       documentoCargado: this.documentoCargadoUrl() ?? undefined,
     };
