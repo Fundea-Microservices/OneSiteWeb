@@ -135,7 +135,7 @@
     </div>
 
     <!-- Botones de acción -->
-    @if (ultimoEstado()?.estado === 'AUTORIZADO') {
+    @if (ultimoEstado()?.estado === 'PENDIENTE') {
       <div class="d-grid gap-2 mb-4">
         <button
           class="btn btn-success btn-lg"
@@ -147,8 +147,8 @@
     } @else {
       <div class="alert alert-warning" role="alert">
         <ion-icon name="warning-outline" class="me-2"></ion-icon>
-        <strong>Orden no autorizada</strong>
-        <br>La orden debe estar en estado <strong>AUTORIZADO</strong> para poder ser aprobada.
+        <strong>Orden no pendiente</strong>
+        <br>La orden debe estar en estado <strong>PENDIENTE</strong> para poder ser aprobada.
         Estado actual: <strong>{{ ultimoEstado()?.estado ?? 'N/D' }}</strong>
       </div>
     }
