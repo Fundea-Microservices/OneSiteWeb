@@ -114,13 +114,10 @@ export default class CrearRepresentantePage implements AfterViewInit {
     initFlowbite();
   }
 
-  onMouseEnter(section: 'datos' | 'contacto' | 'actividad' | 'formulario') {
-    this.activeSection.set(section);
-  }
-
-  onMouseLeave() {
-    // Opcional: descomentar si quieres que se cierre al salir el mouse
-    // this.activeSection.set(null);
+  toggleSection(section: 'datos' | 'contacto' | 'actividad' | 'formulario') {
+    // Si la sección ya está abierta se cierra, de lo contrario se abre y se
+    // cierra automáticamente la que estuviera abierta (solo una a la vez).
+    this.activeSection.update(current => (current === section ? null : section));
   }
 
   toggleLlenadoManual() {
@@ -732,7 +729,7 @@ export default class CrearRepresentantePage implements AfterViewInit {
       const camposRequeridos = [
         'documento', 'primerNombre', 'primerApellido', 'fechaNacimiento', 'sexo',
         'estadoCivil', 'nacionalidad', 'etnia', 'fechaVencimiento', 'nit', 'correoElectronico',
-        'telefonoCelular', 'paisDomicilio', 'departamentoDomicilio', 'direccion',
+        'telefonoCelular', 'telefonoFijo', 'paisDomicilio', 'departamentoDomicilio', 'direccion',
         'actividadLaboral', 'sectorId', 'fechaInicioActividad'
       ];
 

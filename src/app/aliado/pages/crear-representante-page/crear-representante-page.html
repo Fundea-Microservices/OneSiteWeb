@@ -122,9 +122,9 @@
         <div class="w-full px-2 md:w-11/12 mx-auto md:px-0">
 
             <!-- Datos Personales y Demográficos -->
-            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
-                (mouseenter)="onMouseEnter('datos')" (mouseleave)="onMouseLeave()">
+            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300">
                 <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                    (click)="toggleSection('datos')"
                     [class.bg-blue-50]="activeSection() === 'datos'" [class.bg-white]="activeSection() !== 'datos'">
                     <div class="flex items-center gap-2 md:gap-3">
                         <svg class="w-5 h-5 md:w-6 md:h-6" [class.text-blue-600]="activeSection() === 'datos'"
@@ -195,9 +195,9 @@
 
 
             <!-- Contacto y Domicilio (Detalle Geográfico) -->
-            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
-                (mouseenter)="onMouseEnter('contacto')" (mouseleave)="onMouseLeave()">
+            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300">
                 <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                    (click)="toggleSection('contacto')"
                     [class.bg-blue-50]="activeSection() === 'contacto'"
                     [class.bg-white]="activeSection() !== 'contacto'">
                     <div class="flex items-center gap-2 md:gap-3">
@@ -236,9 +236,9 @@
             </div>
 
             <!-- Actividad Laboral, Financiero y Regulatorio -->
-            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
-                (mouseenter)="onMouseEnter('actividad')" (mouseleave)="onMouseLeave()">
+            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300">
                 <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                    (click)="toggleSection('actividad')"
                     [class.bg-blue-50]="activeSection() === 'actividad'"
                     [class.bg-white]="activeSection() !== 'actividad'">
                     <div class="flex items-center gap-2 md:gap-3">
@@ -280,12 +280,11 @@
 
 
             <!-- Formulario Personalizado -->
-            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
-                (mouseenter)="onMouseEnter('formulario')" (mouseleave)="onMouseLeave()">
+            <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300">
                 <div class="px-3 py-3 md:px-6 md:py-4 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                    (click)="toggleSection('formulario')"
                     [class.bg-blue-50]="activeSection() === 'formulario'"
-                    [class.bg-white]="activeSection() !== 'formulario'"
-                    (click)="activeSection.set(activeSection() === 'formulario' ? null : 'formulario')">
+                    [class.bg-white]="activeSection() !== 'formulario'">
                     <div class="flex items-center gap-2 md:gap-3">
                         <svg class="w-5 h-5 md:w-6 md:h-6" [class.text-blue-600]="activeSection() === 'formulario'"
                             [class.text-gray-500]="activeSection() !== 'formulario'" fill="none" stroke="currentColor"
