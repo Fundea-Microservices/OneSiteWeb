@@ -71,11 +71,11 @@ export class GeneralidadesService extends HttpService {
     return this.executeRequest<TipoSolicitud>('get', `${this.base}/tipo-solicitud/${id}`);
   }
 
-  async createTipoSolicitud(data: { nombre: string; mostrarPreguntas?: boolean; activo?: boolean }) {
+  async createTipoSolicitud(data: { nombre: string; codigo?: string | null; mostrarPreguntas?: boolean; activo?: boolean }) {
     return this.executeRequest<TipoSolicitud>('post', `${this.base}/tipo-solicitud`, data);
   }
 
-  async updateTipoSolicitud(id: string, data: { nombre?: string; mostrarPreguntas?: boolean; activo?: boolean }) {
+  async updateTipoSolicitud(id: string, data: { nombre?: string; codigo?: string | null; mostrarPreguntas?: boolean; activo?: boolean }) {
     return this.executeRequest<TipoSolicitud>('patch', `${this.base}/tipo-solicitud/${id}`, data);
   }
 

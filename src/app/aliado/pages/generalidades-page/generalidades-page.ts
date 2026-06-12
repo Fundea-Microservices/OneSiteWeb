@@ -151,17 +151,17 @@ export default class GeneralidadesPage implements AfterViewInit, OnInit {
     }
   }
 
-  upsertGeneralidad(payload: { nombre: string; activo: boolean; mostrarPreguntas?: boolean }) {
+  upsertGeneralidad(payload: { nombre: string; activo: boolean; codigo?: string | null; mostrarPreguntas?: boolean }) {
     const tipo = this.tipoSeleccionado();
     const esNuevo = this.nuevoRegistro();
     const actual = this.generalidadEdit();
     if (tipo === 'tipoSolicitud') {
       if (esNuevo) {
-        this.generalidadesService.createTipoSolicitud({ nombre: payload.nombre, mostrarPreguntas: payload.mostrarPreguntas, activo: payload.activo })
+        this.generalidadesService.createTipoSolicitud({ nombre: payload.nombre, codigo: payload.codigo, mostrarPreguntas: payload.mostrarPreguntas, activo: payload.activo })
           .then(() => this.loadAll())
           .finally(() => this.closeModal());
       } else if (actual && 'tipoSolicitudId' in actual) {
-        this.generalidadesService.updateTipoSolicitud(actual.tipoSolicitudId, { nombre: payload.nombre, mostrarPreguntas: payload.mostrarPreguntas, activo: payload.activo })
+        this.generalidadesService.updateTipoSolicitud(actual.tipoSolicitudId, { nombre: payload.nombre, codigo: payload.codigo, mostrarPreguntas: payload.mostrarPreguntas, activo: payload.activo })
           .then(() => this.loadAll())
           .finally(() => this.closeModal());
       }
@@ -224,7 +224,7 @@ export default class GeneralidadesPage implements AfterViewInit, OnInit {
 
   private getDefaultByTipo(tipo: 'tipoSolicitud' | 'estadoSolicitud' | 'tipoAfiliacion'): Generalidad {
     if (tipo === 'tipoSolicitud') {
-      return { tipoSolicitudId: '', nombre: '', mostrarPreguntas: false, activo: true } as TipoSolicitud;
+      return { tipoSolicitudId: '', nombre: '', codigo: '', mostrarPreguntas: false, activo: true } as TipoSolicitud;
     }
     if (tipo === 'estadoSolicitud') {
       return { estadoSolicitudId: '', nombre: '', activo: true } as EstadoSolicitud;

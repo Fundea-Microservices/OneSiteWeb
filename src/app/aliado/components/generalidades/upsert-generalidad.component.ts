@@ -16,12 +16,13 @@ export class UpsertGeneralidadComponent implements OnChanges {
   @Input() generalidad?: Generalidad;
   @Input() esTipo = false; // Cuando es true se muestra el campo mostrarPreguntas
 
-  @Output() save = new EventEmitter<{ nombre: string; activo: boolean; mostrarPreguntas?: boolean }>();
+  @Output() save = new EventEmitter<{ nombre: string; activo: boolean; codigo?: string | null; mostrarPreguntas?: boolean }>();
   @Output() cancel = new EventEmitter<void>();
 
   form = {
     nombre: '',
     activo: true,
+    codigo: '',
     mostrarPreguntas: false
   };
 
@@ -29,9 +30,10 @@ export class UpsertGeneralidadComponent implements OnChanges {
     if (changes['generalidad'] && this.generalidad) {
       this.form.nombre = this.generalidad.nombre ?? '';
       this.form.activo = this.generalidad.activo ?? true;
-      // Solo aplica mostrarPreguntas cuando es tipo solicitud
+      // Solo aplican codigo y mostrarPreguntas cuando es tipo solicitud
       if (this.esTipo) {
         const tipo = this.generalidad as TipoSolicitud;
+        this.form.codigo = tipo.codigo ?? '';
         this.form.mostrarPreguntas = tipo.mostrarPreguntas ?? false;
       }
     }
@@ -41,12 +43,13 @@ export class UpsertGeneralidadComponent implements OnChanges {
     if (!this.form.nombre.trim()) {
       return;
     }
-    const payload: { nombre: string; activo: boolean; mostrarPreguntas?: boolean } = {
+    const payload: { nombre: string; activo: boolean; codigo?: string | null; mostrarPreguntas?: boolean } = {
       nombre: this.form.nombre.trim(),
       activo: this.form.activo
     };
 
     if (this.esTipo) {
+      payload.codigo = this.form.codigo.trim() || null;
       payload.mostrarPreguntas = this.form.mostrarPreguntas;
     }
 

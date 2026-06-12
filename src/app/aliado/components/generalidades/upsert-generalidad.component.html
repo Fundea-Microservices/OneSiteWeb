@@ -12,6 +12,12 @@
   </div>
 
   @if (esTipo) {
+  <div class="col-12">
+    <label class="form-label">Código</label>
+    <input type="text" class="form-control" [(ngModel)]="form.codigo" name="codigo" placeholder="Ej: AFILIACION, CAMBIO_CUENTA">
+    <small class="text-muted">Identificador estable (slug). No cambia entre entornos.</small>
+  </div>
+
   <div class="col-12 d-flex align-items-center gap-2">
     <div class="form-check form-switch">
       <input class="form-check-input" type="checkbox" role="switch" id="switchMostrarPreg" [(ngModel)]="form.mostrarPreguntas" name="mostrarPreguntas">
