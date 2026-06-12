@@ -667,8 +667,7 @@
                         <label for="estadoAprobacion" class="form-label">Estado de la Solicitud <span
                                 class="text-danger">*</span></label>
                         <select id="estadoAprobacion" class="form-select"
-                            [(ngModel)]="nuevoSeguimiento.estadoAprobacionId" name="estadoAprobacion"
-                            (ngModelChange)="correoSeleccionado = esEstadoAprobado() ? (solicitud()?.representante?.correoElectronico || '') : ''" required>
+                            [(ngModel)]="nuevoSeguimiento.estadoAprobacionId" name="estadoAprobacion" required>
                             <option value="">Seleccione un estado</option>
                             @for (estado of estadosSolicitud(); track estado.estadoSolicitudId) {
                             <option [value]="estado.estadoSolicitudId">{{ estado.nombre }}</option>
@@ -676,11 +675,10 @@
                         </select>
                     </div>
 
-                    @if (esEstadoAprobado()) {
                     <div class="col-md-6 mb-3">
                         <label for="correoNotificacion" class="form-label">
                             <i class="bi bi-envelope me-1 text-blue-600"></i>
-                            Correo para notificación de creación de usuario <span class="text-danger">*</span>
+                            Correo para notificación <span class="text-danger">*</span>
                         </label>
                         <select id="correoNotificacion" class="form-select" [(ngModel)]="correoSeleccionado" name="correoNotificacion">
                             @if (solicitud()?.representante?.correoElectronico) {
@@ -692,9 +690,8 @@
                             <option [value]="correo.correo">{{ correo.nombreContacto }} ({{ correo.correo }})</option>
                             }
                         </select>
-                        <small class="text-muted">Seleccione el correo para enviar la notificación de la creación de usuario</small>
+                        <small class="text-muted">Seleccione el correo al que se enviará la notificación del cambio de estado</small>
                     </div>
-                    }
 
                     <div class="col-md-12 mb-3">
                         <label for="observaciones" class="form-label">Observaciones / Mensaje <span

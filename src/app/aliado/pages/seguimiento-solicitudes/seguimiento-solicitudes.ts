@@ -115,6 +115,11 @@ export default class SeguimientoSolicitudesComponent {
 				this.solicitud.set(response.data);
 				console.log('✅ Solicitud cargada:', response.data);
 
+				// Pre-seleccionar el correo del representante (siempre se envía notificación)
+				if (!this.correoSeleccionado) {
+					this.correoSeleccionado = response.data.representante?.correoElectronico || '';
+				}
+
 				// Cargar datos adicionales de la empresa
 				const empresaId = response.data.empresa?.empresaId;
 				if (empresaId) {
@@ -295,7 +300,7 @@ export default class SeguimientoSolicitudesComponent {
 				ordenSeguimiento: nuevoOrden,
 				estadoAprobacionId: this.nuevoSeguimiento.estadoAprobacionId,
 				observaciones: this.nuevoSeguimiento.observaciones,
-				...(this.esEstadoAprobado() && this.correoSeleccionado ? { correoNotificacion: this.correoSeleccionado } : {})
+				...(this.correoSeleccionado ? { correoNotificacion: this.correoSeleccionado } : {})
 			};
 
 			const response = await this.seguimientoService.createSeguimientoSolicitud(seguimientoData);
