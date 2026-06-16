@@ -28,11 +28,11 @@
     </div>
     
     <form class="row g-3 mb-4">
-      <div class="col-md-6">
-        <label for="numeroOperacion" class="form-label">Número de operacion *</label>
-        <input 
-          type="text" 
-          class="form-control" 
+      <div class="col-md-3">
+        <label for="numeroOperacion" class="form-label search-label">Número de operacion *</label>
+        <input
+          type="text"
+          class="form-control"
           id="numeroOperacion"
           placeholder="Ingrese número de operacion"
           [(ngModel)]="numeroOperacion"
@@ -40,9 +40,9 @@
           [disabled]="cargandoCliente() || procesandoOrden()"
           required>
       </div>
-      
-      <div class="col-md-6">
-        <label for="documentoCliente" class="form-label">
+
+      <div class="col-md-5">
+        <label for="documentoCliente" class="form-label search-label">
           Documento del Cliente (DPI) *
           <small class="text-muted">(13 dígitos)</small>
         </label>
@@ -76,10 +76,11 @@
         }
       </div>
       
-      <div class="col-12">
-        <button 
-          type="button" 
-          class="btn btn-primary"
+      <div class="col-md-3">
+        <label class="form-label search-label d-none d-md-block" aria-hidden="true">&nbsp;</label>
+        <button
+          type="button"
+          class="btn btn-primary w-100"
           (click)="buscarCliente()"
           [disabled]="!formularioValido || cargandoCliente() || procesandoOrden()">
           @if (cargandoCliente()) {
@@ -128,7 +129,8 @@
       </div>
     </div>
 
-    <!-- Botón generar orden -->
+    <!-- Botón generar orden (se oculta al iniciar la orden para evitar duplicados; reaparece al buscar de nuevo) -->
+    @if (!etapaActual()) {
     <div class="d-grid gap-2 mb-4">
       <button
         class="btn btn-success btn-lg"
@@ -138,6 +140,7 @@
         Generar Orden de Pago
       </button>
     </div>
+    }
     }
 
     <!-- Estado de la etapa activa -->
@@ -200,3 +203,12 @@
     }
   </div>
 </div>
+
+<style>
+  /* Etiquetas con altura uniforme para alinear inputs y botón en la misma fila */
+  .search-label {
+    min-height: 24px;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+  }
+</style>

@@ -1,8 +1,9 @@
-import { Component, signal, computed, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, signal, computed, CUSTOM_ELEMENTS_SCHEMA, ViewContainerRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { OrdenesGytService } from '../../../../../services/ordenes-gyt/ordenes-gyt.service';
+import { OrdenGytImpresionService } from '../../../../../services/ordenes-gyt/orden-gyt-impresion.service';
 import { OrdenGyt, EstadoOrdenGyt, OrdenGytApiDetalle, EstadoOrdenGytApi } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
 
 @Component({
@@ -34,6 +35,11 @@ export default class AprobarGytPageComponent {
   
   // Señal para órdenes pendientes
   ordenesPendientes = signal<OrdenGyt[]>([]);
+
+  // Controla si se muestra el botón de "Abrir ventana de impresión".
+  // Por ahora siempre visible; más adelante se puede condicionar según el
+  // estado de la orden (p. ej. solo cuando esté AUTORIZADO/PAGADO).
+  mostrarBotonImpresion = signal(true);
   
   // Último estado de la orden (el de mayor ordenSecuencia)
   ultimoEstado = computed<EstadoOrdenGytApi | null>(() => {
@@ -71,10 +77,37 @@ export default class AprobarGytPageComponent {
 
   constructor(
     private ordenesGytService: OrdenesGytService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private viewContainerRef: ViewContainerRef,
+    private impresionService: OrdenGytImpresionService
   ) {
     this.cargarEstadisticas();
     this.cargarOrdenesPendientes();
+  }
+
+  /**
+   * Abre la ventana de impresión para reimprimir la boleta de la orden encontrada.
+   */
+  imprimirOrden(): void {
+    const orden = this.ordenEncontrada();
+    if (!orden) return;
+
+    this.impresionService.imprimirOrden(this.viewContainerRef, {
+      ordenId: orden.numero,
+      fecha: orden.createdAt ? new Date(orden.createdAt) : new Date(),
+      monto: orden.monto,
+      cliente: {
+        // La API entrega el nombre del cliente como un solo string
+        nombres: orden.cliente,
+        apellidos: '',
+        tipoIdentificacion: orden.tipoDocumentoCliente,
+        numeroIdentificacion: orden.documentoCliente,
+        telefono: orden.telefono,
+        correo: orden.correo,
+        montoPrestamo: orden.monto,
+        numeroOperacion: orden.gestion
+      }
+    });
   }
 
   /**

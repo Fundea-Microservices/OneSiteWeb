@@ -134,6 +134,19 @@
       </div>
     </div>
 
+    <!-- Botón de reimpresión (controlado por variable; se podrá condicionar según estado) -->
+    @if (mostrarBotonImpresion()) {
+      <div class="d-grid gap-2 mb-3">
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          (click)="imprimirOrden()">
+          <ion-icon name="print-outline" class="me-2"></ion-icon>
+          Abrir Ventana de Impresión
+        </button>
+      </div>
+    }
+
     <!-- Botones de acción -->
     @if (ultimoEstado()?.estado === 'PENDIENTE') {
       <div class="d-grid gap-2 mb-4">
