@@ -8,7 +8,7 @@ import { PaginationAllComponent } from '../../../shared/components/pagination-al
 import { DatePipe } from '@angular/common';
 import { UpsertReporteComponent } from '../../components/upsert-reporte/upsert-reporte.component';
 import { UpsertPlantillaComponent } from "../../components/upsert-plantilla/upsert-plantilla.component";
-import { PlantillaService } from '../../../../services/reportes/plantilla.service';
+import { StorageService } from '../../../../services/storage.service';
 import { MenuService } from '../../../../services/config/menu.service';
 import { IMenu } from '../../../../interfaces/auth';
 import { ToastrService } from 'ngx-toastr';
@@ -53,7 +53,7 @@ const emptyMenu: IMenu = {
 export default class ReporteComponent {
   reporteService = inject(ReporteService);
   menuService = inject(MenuService);
-  plantillaService = inject(PlantillaService);
+  storageService = inject(StorageService);
   reporteList = signal<IReporte[]>([]);
   metadata = signal({})// Cambia el tipo según tu modelo de datos
   reporteEdit = signal<IReporte>(emptyReporte)
@@ -261,11 +261,35 @@ export default class ReporteComponent {
     }
   }
 
-  descargarPlantilla(reporteId: string) {
-    let reporte = this.reporteList().find(r => r.reporteId === reporteId);
-    // Obtenemos el nombre del archivo en la rutaPlantilla retirando el .xslx
-    let nombreArchivo = reporte?.rutaPlantilla?.split('/').pop()?.replace('.xlsx', '') || 'plantilla';
-    this.plantillaService.descargarPlantilla(reporteId, nombreArchivo);
+  // Actualiza el registro del reporte con la ruta de la plantilla recibida del storage
+  async onPlantillaSaved(rutaPlantilla: string) {
+    const reporte = this.reporteList().find(r => r.reporteId === this.reporteId());
+    if (reporte) {
+      await this.updateReporte({ ...reporte, rutaPlantilla });
+    }
+    this.closeModalPlantilla();
+  }
+
+  async descargarPlantilla(reporteId: string) {
+    const reporte = this.reporteList().find(r => r.reporteId === reporteId);
+    if (!reporte?.rutaPlantilla) {
+      this.toastr.error('No hay plantilla disponible para descargar', 'Error');
+      return;
+    }
+
+    const blob = await this.storageService.downloadFileAsBlob(reporte.rutaPlantilla);
+    if (!blob) {
+      this.toastr.error('No se pudo descargar la plantilla', 'Error');
+      return;
+    }
+
+    const nombreArchivo = reporte.rutaPlantilla.split('/').pop() || 'plantilla.xlsx';
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 
   openModalAsignarMenu(nuevo: boolean = true, reporte: IReporte = emptyReporte) {

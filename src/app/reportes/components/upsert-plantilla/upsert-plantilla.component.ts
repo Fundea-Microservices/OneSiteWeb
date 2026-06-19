@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Ou
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { PlantillaService } from '../../../../services/reportes/plantilla.service';
+import { StorageService } from '../../../../services/storage.service';
 
 @Component({
   selector: 'app-upsert-plantilla',
@@ -14,9 +14,9 @@ import { PlantillaService } from '../../../../services/reportes/plantilla.servic
 export class UpsertPlantillaComponent {
   @Input() reporteId!: string; // ID del reporte
   @Output() closed = new EventEmitter<void>(); // Cuando se cierra sin guardar
-  @Output() saved = new EventEmitter<void>();  // Cuando se guarda exitosamente
+  @Output() saved = new EventEmitter<string>();  // Emite la ruta de la plantilla almacenada
 
-  plantillaService = inject(PlantillaService);
+  storageService = inject(StorageService);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -79,20 +79,26 @@ export class UpsertPlantillaComponent {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('reporteId', this.reporteId.toString());
-    formData.append('nombre', this.form.value.nombre);
-    formData.append('archivo', this.form.value.archivo);
-
     this.cargando.set(true);
 
     try {
-      await this.plantillaService.guardarPlantilla(formData);
+      // Subimos la plantilla al storage: categoría 'plantillaReporte', nombre 'plantilla'
+      const resp = await this.storageService.uploadFile(
+        this.form.value.archivo,
+        'plantillaReporte',
+        'plantilla'
+      );
+
+      if (!resp?.data?.url) {
+        this.mensaje.set('Error al guardar la plantilla.');
+        return;
+      }
+
       this.mensaje.set('Plantilla cargada correctamente.');
       //Limpiamos los campos
       this.form.reset();
       this.fileInput.nativeElement.value = '';
-      this.saved.emit(); // Avisamos al padre que se guardó correctamente
+      this.saved.emit(resp.data.url); // Avisamos al padre con la ruta almacenada
     } catch (error) {
       console.error(error);
       this.mensaje.set('Error al guardar la plantilla.');

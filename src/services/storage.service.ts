@@ -19,7 +19,7 @@ export interface StorageUploadResponse {
   data: StorageUploadData;
 }
 
-export type StorageCategoria = 'perfil' | 'dpiRepresentante' | 'documento' | 'aliados';
+export type StorageCategoria = 'perfil' | 'dpiRepresentante' | 'documento' | 'aliados' | 'plantillaReporte';
 
 @Injectable({
   providedIn: 'root',
