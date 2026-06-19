@@ -9,6 +9,7 @@ import { ToastrService } from 'ngx-toastr';
 import { EjecutarService } from '../../../../services/reportes/ejecutar.service';
 import { ExportarService } from '../../../../services/reportes/exportar.service';
 import { DatePipe } from '@angular/common';
+import { Dropdown } from 'bootstrap';
 
 interface IParametroSend {
 
@@ -68,6 +69,12 @@ export default class EjecucionComponent {
       });
     }
     this.isLoading.set(false);
+  }
+
+  // Inicializa y alterna el dropdown de ejecución manualmente para que funcione
+  // de forma fiable aunque el botón se renderice dinámicamente (@if) en una SPA.
+  toggleEjecutar(btn: HTMLElement) {
+    Dropdown.getOrCreateInstance(btn).toggle();
   }
 
   changeReporte(idReporte: string) {
