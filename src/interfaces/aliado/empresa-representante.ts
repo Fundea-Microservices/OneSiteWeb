@@ -25,6 +25,8 @@ export interface IEmpresaRepresentante {
     empresaNombre?: string;
     created_at?: string;
     updated_at?: string | null;
+    seccion?: string;
+    orden?: number;
   }[];
   
   // Auditoría

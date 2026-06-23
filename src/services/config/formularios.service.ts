@@ -67,7 +67,7 @@ export class FormulariosService extends HttpService {
     }
   }
 
-  async obtenerValoresFormulario(encabezadoId: string, padreId: string): Promise<{ preguntaId: string; valor: string }[]> {
+  async obtenerValoresFormulario(encabezadoId: string, padreId: string): Promise<{ preguntaId: string; valor: string; campo?: string; seccion?: string; orden?: number; tipo?: string }[]> {
     try {
       const resp = await firstValueFrom(
         this.post<any>(this.endpoints.formularioObtenerValores, { encabezadoId, padreId })

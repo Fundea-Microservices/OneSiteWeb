@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, ChangeDetectorRef, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -46,10 +46,14 @@ export default class SeguimientoSolicitudesComponent {
 	mostrarDatosAdicionales = signal(false);
 
 	// Datos adicionales de la empresa
-	datosAdicionalesEmpresa = signal<{ nombre: string; valor: string }[]>([]);
+	datosAdicionalesEmpresa = signal<{ nombre: string; seccion: string; valor: string }[]>([]);
 	mostrarDatosAdicionalesEmpresa = signal(false);
 
+	// Datos adicionales del representante (mismo flujo que empresa, distinto formulario)
+	datosAdicionalesRepresentante = signal<{ nombre: string; seccion: string; valor: string }[]>([]);
+
 	readonly FORMULARIO_EMPRESA_ID = '34CECDE4-C2E1-43AE-B560-D3D9F22D17AE';
+	readonly FORMULARIO_REPRESENTANTE_ID = '26EB556D-6C24-4FBE-B589-02FAB42518C7';
 
 	// Fotos DPI del representante
 	fotoDpiFrontalUrl = signal<string | null>(null);
@@ -125,6 +129,12 @@ export default class SeguimientoSolicitudesComponent {
 				if (empresaId) {
 					void this.cargarDatosAdicionalesEmpresa(empresaId);
 				}
+
+				// Cargar datos adicionales del representante (mismo endpoint que empresa)
+				const representanteId = response.data.representante?.representanteId;
+				if (representanteId) {
+					void this.cargarDatosAdicionalesRepresentante(representanteId);
+				}
 				const rep = response.data.representante as any;
 				if (rep?.fotoFrontalDpi || rep?.fotoReversoDpi) {
 					this.cargandoFotosDpi.set(true);
@@ -145,15 +155,32 @@ export default class SeguimientoSolicitudesComponent {
 		}
 	}
 
-	private async cargarDatosAdicionalesEmpresa(empresaId: string) {
+	private cargarDatosAdicionalesEmpresa(empresaId: string) {
+		return this.cargarDatosAdicionales(this.FORMULARIO_EMPRESA_ID, empresaId, this.datosAdicionalesEmpresa, 'empresa');
+	}
+
+	private cargarDatosAdicionalesRepresentante(representanteId: string) {
+		return this.cargarDatosAdicionales(this.FORMULARIO_REPRESENTANTE_ID, representanteId, this.datosAdicionalesRepresentante, 'representante');
+	}
+
+	/**
+	 * Carga los datos adicionales de un formulario dinámico (empresa o representante).
+	 * Usa el mismo endpoint (obtenerValoresFormulario) cambiando únicamente el formulario.
+	 */
+	private async cargarDatosAdicionales(
+		formularioId: string,
+		padreId: string,
+		destino: WritableSignal<{ nombre: string; seccion: string; valor: string }[]>,
+		contexto: string,
+	) {
 		try {
 			const [valores, formCompleto] = await Promise.all([
-				this.formulariosService.obtenerValoresFormulario(this.FORMULARIO_EMPRESA_ID, empresaId),
-				this.formulariosService.getFormCompleto(this.FORMULARIO_EMPRESA_ID),
+				this.formulariosService.obtenerValoresFormulario(formularioId, padreId),
+				this.formulariosService.getFormCompleto(formularioId),
 			]);
 			if (!valores.length) return;
 
-			// Construir mapa preguntaId → titulo
+			// Construir mapa preguntaId → titulo (fallback para el nombre)
 			const mapaPreguntas = new Map<string, string>();
 			formCompleto?.data?.secciones?.forEach(sec =>
 				sec.preguntas?.forEach(p => {
@@ -162,13 +189,14 @@ export default class SeguimientoSolicitudesComponent {
 			);
 
 			const datos = valores.map(v => ({
-				nombre: mapaPreguntas.get(v.preguntaId) ?? v.preguntaId,
+				nombre: v.campo ?? mapaPreguntas.get(v.preguntaId) ?? v.preguntaId,
+				seccion: v.seccion ?? '',
 				valor: v.valor ?? '',
 			}));
-			this.datosAdicionalesEmpresa.set(datos);
+			destino.set(datos);
 			this.cdr.markForCheck();
 		} catch (error) {
-			console.error('Error al cargar datos adicionales de empresa:', error);
+			console.error(`Error al cargar datos adicionales de ${contexto}:`, error);
 		}
 	}
 
