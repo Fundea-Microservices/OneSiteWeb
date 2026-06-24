@@ -174,8 +174,10 @@ export class DocumentosService extends HttpService {
 
   async updateVersion(data: Partial<IVersionDocumento>) {
     try {
+
+      const {created_at, updated_at, deleted_at, ...dataSend} = data;
       const resp = await firstValueFrom(
-        this.put<VersionDocumentoByIdResponse>(this.endpoints.version, data)
+        this.put<VersionDocumentoByIdResponse>(this.endpoints.version, dataSend)
       );
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Éxito');

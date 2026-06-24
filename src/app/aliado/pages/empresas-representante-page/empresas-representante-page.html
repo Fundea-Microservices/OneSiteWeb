@@ -156,10 +156,11 @@
                                     </button>
                                     @if (obtenerCuentasEmpresa(empresa.empresaId).length > 0) {
                                     <button type="button" (click)="generarCartaEmpresa(empresa.empresaId)"
-                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 rounded-md transition-colors duration-200 shadow-sm text-sm font-medium bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white"
+                                        [disabled]="estaGenerandoCarta(empresa.empresaId)"
+                                        class="flex-1 min-w-max flex items-center justify-center gap-2 h-10 rounded-md transition-colors duration-200 shadow-sm text-sm font-medium bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white disabled:opacity-60 disabled:cursor-not-allowed"
                                         title="Generar carta de entendimiento">
                                         <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
-                                        <span>Carta</span>
+                                        <span>{{ estaGenerandoCarta(empresa.empresaId) ? 'Generando...' : 'Carta' }}</span>
                                     </button>
                                     }
                                 </div>
@@ -244,7 +245,8 @@
                                         </button>
                                         @if (obtenerCuentasEmpresa(empresa.empresaId).length > 0) {
                                         <button type="button" (click)="generarCartaEmpresa(empresa.empresaId)"
-                                            class="flex items-center justify-center w-10 h-10 rounded-md transition-colors duration-200 shadow-sm bg-gray-500 hover:bg-gray-600 text-white"
+                                            [disabled]="estaGenerandoCarta(empresa.empresaId)"
+                                            class="flex items-center justify-center w-10 h-10 rounded-md transition-colors duration-200 shadow-sm bg-gray-500 hover:bg-gray-600 text-white disabled:opacity-60 disabled:cursor-not-allowed"
                                             title="Generar carta de entendimiento">
                                             <ion-icon name="document-text-outline" class="text-xl"></ion-icon>
                                         </button>
@@ -442,6 +444,7 @@
                                                             }
                                                             <button type="button"
                                                                 (click)="generarCartaEmpresa(empresa.empresaId)"
+                                                                [disabled]="estaGenerandoCarta(empresa.empresaId)"
                                                                 class="btn btn-sm btn-secondary" title="Generar carta de entendimiento">
                                                                 <ion-icon name="document-text-outline"></ion-icon>
                                                             </button>
@@ -494,6 +497,7 @@
                                                         }
                                                         <button type="button"
                                                             (click)="generarCartaEmpresa(empresa.empresaId)"
+                                                            [disabled]="estaGenerandoCarta(empresa.empresaId)"
                                                             class="btn btn-sm btn-secondary" title="Generar carta de entendimiento">
                                                             <ion-icon name="document-text-outline"></ion-icon>
                                                         </button>
