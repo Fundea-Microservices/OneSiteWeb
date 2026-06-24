@@ -188,11 +188,16 @@ export default class SeguimientoSolicitudesComponent {
 				})
 			);
 
-			const datos = valores.map(v => ({
-				nombre: v.campo ?? mapaPreguntas.get(v.preguntaId) ?? v.preguntaId,
-				seccion: v.seccion ?? '',
-				valor: v.valor ?? '',
-			}));
+			const datos = valores.map(v => {
+				const seccion = v.seccion ?? '';
+				// Las secciones de "Referencia" no se muestran como prefijo
+				const seccionVisible = seccion.toLowerCase().includes('referencia') ? seccion : '';
+				return {
+					nombre: v.campo ?? mapaPreguntas.get(v.preguntaId) ?? v.preguntaId,
+					seccion: seccionVisible,
+					valor: v.valor ?? '',
+				};
+			});
 			destino.set(datos);
 			this.cdr.markForCheck();
 		} catch (error) {
