@@ -163,23 +163,63 @@
       placeholder="Opción1,Opción2,Opción3"></textarea>
   </div>
 
+  <div class="mb-3">
+    <label class="form-label">Validación (Opcional)</label>
+    <input type="text" class="form-control form-control-sm" formControlName="validacion"
+      placeholder="ej: expresión regular o regla de validación" />
+
+    @if (form().get('validacion')?.touched && form().get('validacion')?.invalid) {
+    <div class="text-danger small">
+      @if (form().get('validacion')?.errors?.['maxlength']) {
+      <div>Máximo 150 caracteres</div>
+      }
+    </div>
+    }
+  </div>
+
+  @if (form().get('validacion')?.value) {
+  <div class="mb-3">
+    <label class="form-label">Mensaje si falla la validación *</label>
+    <input type="text" class="form-control form-control-sm" formControlName="validacionMsg"
+      placeholder="Mensaje a mostrar cuando la validación falle" />
+
+    @if (form().get('validacionMsg')?.touched && form().get('validacionMsg')?.invalid) {
+    <div class="text-danger small">
+      @if (form().get('validacionMsg')?.errors?.['required']) {
+      <div>El mensaje es obligatorio si se indica una validación</div>
+      }
+      @if (form().get('validacionMsg')?.errors?.['maxlength']) {
+      <div>Máximo 250 caracteres</div>
+      }
+    </div>
+    }
+  </div>
+  }
+
   <!-- Switches en la misma línea para CLIENTE -->
   <div class="row mb-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" formControlName="obligatorio" id="obligatorioCliente" />
         <label class="form-check-label" for="obligatorioCliente">Obligatorio</label>
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" formControlName="visible" id="visibleCliente" />
         <label class="form-check-label" for="visibleCliente">Visible</label>
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="visibleApp" id="visibleAppCliente" />
+        <label class="form-check-label" for="visibleAppCliente">Visible App</label>
+      </div>
+    </div>
+
+    <div class="col-md-3">
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" formControlName="activo" id="activoCliente" />
         <label class="form-check-label" for="activoCliente">Activo</label>
@@ -321,23 +361,63 @@
       placeholder="Opción1,Opción2,Opción3"></textarea>
   </div>
 
+  <div class="mb-3">
+    <label class="form-label">Validación (Opcional)</label>
+    <input type="text" class="form-control form-control-sm" formControlName="validacion"
+      placeholder="ej: expresión regular o regla de validación" />
+
+    @if (form().get('validacion')?.touched && form().get('validacion')?.invalid) {
+    <div class="text-danger small">
+      @if (form().get('validacion')?.errors?.['maxlength']) {
+      <div>Máximo 150 caracteres</div>
+      }
+    </div>
+    }
+  </div>
+
+  @if (form().get('validacion')?.value) {
+  <div class="mb-3">
+    <label class="form-label">Mensaje si falla la validación *</label>
+    <input type="text" class="form-control form-control-sm" formControlName="validacionMsg"
+      placeholder="Mensaje a mostrar cuando la validación falle" />
+
+    @if (form().get('validacionMsg')?.touched && form().get('validacionMsg')?.invalid) {
+    <div class="text-danger small">
+      @if (form().get('validacionMsg')?.errors?.['required']) {
+      <div>El mensaje es obligatorio si se indica una validación</div>
+      }
+      @if (form().get('validacionMsg')?.errors?.['maxlength']) {
+      <div>Máximo 250 caracteres</div>
+      }
+    </div>
+    }
+  </div>
+  }
+
   <!-- Switches en la misma línea para PARAMETRO -->
   <div class="row mb-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" formControlName="obligatorio" id="obligatorioParametro" />
         <label class="form-check-label" for="obligatorioParametro">Obligatorio</label>
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" formControlName="visible" id="visibleParametro" />
         <label class="form-check-label" for="visibleParametro">Visible</label>
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="visibleApp" id="visibleAppParametro" />
+        <label class="form-check-label" for="visibleAppParametro">Visible App</label>
+      </div>
+    </div>
+
+    <div class="col-md-3">
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" formControlName="activo" id="activoParametro" />
         <label class="form-check-label" for="activoParametro">Activo</label>

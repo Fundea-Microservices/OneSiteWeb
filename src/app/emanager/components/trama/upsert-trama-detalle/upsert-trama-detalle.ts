@@ -25,6 +25,8 @@ export interface TramaDetalleValidationRules {
   opciones?: any[];
   valorDefecto?: any[];
   orden?: any[];
+  validacion?: any[];
+  validacionMsg?: any[];
 }
 
 @Component({
@@ -58,6 +60,9 @@ export class UpsertTramaDetalleComponent {
     orden: 0,
     capturaTexto: false,
     visible: true,
+    visibleApp: true,
+    validacion: undefined,
+    validacionMsg: undefined,
     activo: true,
   });
 
@@ -92,6 +97,8 @@ export class UpsertTramaDetalleComponent {
     tipoRespuesta: [Validators.required],
     tipoInput: [Validators.required],
     orden: [Validators.required, Validators.min(0)],
+    validacion: [Validators.maxLength(150)],
+    validacionMsg: [Validators.maxLength(250)],
   };
 
   @Output() save = new EventEmitter<ITramaDetalle>();
@@ -124,6 +131,9 @@ export class UpsertTramaDetalleComponent {
         orden: [tramaDetalle.orden, this.validationRules.orden],
         capturaTexto: [tramaDetalle.capturaTexto ?? false],
         visible: [tramaDetalle.visible],
+        visibleApp: [tramaDetalle.visibleApp],
+        validacion: [tramaDetalle.validacion, this.validationRules.validacion],
+        validacionMsg: [tramaDetalle.validacionMsg, this.validationRules.validacionMsg],
         activo: [tramaDetalle.activo],
       });
 
@@ -148,6 +158,9 @@ export class UpsertTramaDetalleComponent {
           orden: tramaDetalle.orden,
           capturaTexto: false,
           visible: true,
+          visibleApp: true,
+          validacion: '',
+          validacionMsg: '',
           activo: true,
         });
       }
@@ -172,6 +185,24 @@ export class UpsertTramaDetalleComponent {
       toggleSelectFields(newForm.get('tipoInput')?.value as TipoInput | null | undefined);
       newForm.get('tipoInput')?.valueChanges.subscribe((value) => {
         toggleSelectFields(value as TipoInput | null | undefined);
+      });
+
+      // El mensaje de validación es obligatorio solo si se indica una validación
+      const toggleValidacionMsg = (validacion: string | null | undefined) => {
+        const validacionMsgControl = newForm.get('validacionMsg');
+        if (!validacionMsgControl) return;
+
+        if (validacion) {
+          validacionMsgControl.setValidators([Validators.required, Validators.maxLength(250)]);
+        } else {
+          validacionMsgControl.setValidators([Validators.maxLength(250)]);
+        }
+        validacionMsgControl.updateValueAndValidity({ emitEvent: false });
+      };
+
+      toggleValidacionMsg(newForm.get('validacion')?.value as string | null | undefined);
+      newForm.get('validacion')?.valueChanges.subscribe((value) => {
+        toggleValidacionMsg(value as string | null | undefined);
       });
 
       this.form.set(newForm);

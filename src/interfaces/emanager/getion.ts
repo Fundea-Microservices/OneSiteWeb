@@ -30,6 +30,9 @@ export interface ITramaDetalle {
   orden: number;          // Nuevo campo
   capturaTexto?: boolean; // Captura texto libre cuando hay catálogo
   visible: boolean;       // Nuevo campo
+  visibleApp: boolean;    // Nuevo campo
+  validacion?: string;    // Nuevo campo (Nullable)
+  validacionMsg?: string; // Nuevo campo (Nullable)
   activo: boolean;
   
   created_at?: string | Date;

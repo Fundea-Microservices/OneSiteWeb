@@ -72,6 +72,9 @@ export default class GestionDetallePage {
       orden: 0,
       obligatorio: true,
       visible: true,
+      visibleApp: true,
+      validacion: undefined,
+      validacionMsg: undefined,
       activo: true,
     };
   }
@@ -212,6 +215,14 @@ export default class GestionDetallePage {
 
   async toggleVisible(item: ITramaDetalle) {
     const updatedItem = { ...item, visible: !item.visible };
+    const resp = await this.tramaDetalleService.updateTramaDetalle(updatedItem);
+    if (resp?.success) {
+      this.fetchData();
+    }
+  }
+
+  async toggleVisibleApp(item: ITramaDetalle) {
+    const updatedItem = { ...item, visibleApp: !item.visibleApp };
     const resp = await this.tramaDetalleService.updateTramaDetalle(updatedItem);
     if (resp?.success) {
       this.fetchData();
