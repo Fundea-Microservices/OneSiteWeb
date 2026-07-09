@@ -238,6 +238,10 @@ export const routes: Routes = [
                         path: 'aprobar-gyt',
                         loadComponent: () => import('./ordenes-pago/gyt/pages/aprobar-gyt-page/aprobar-gyt-page'),
                     },
+                    {
+                        path: 'historial-gyt',
+                        loadComponent: () => import('./ordenes-pago/gyt/pages/historial-gyt-page/historial-gyt-page'),
+                    },
                 ]
             },
             {
@@ -266,6 +270,20 @@ export const routes: Routes = [
                     {
                         path: 'gestion-ejecutar/:id',
                         loadComponent: () => import('./emanager/pages/gestion/gestion-ejecutar-page/gestion-ejecutar-page'),
+                    },
+                ]
+            },
+
+            {
+                path: 'erp-bc',
+                children: [
+                    {
+                        path: 'configurar-carga-asientos-contables',
+                        loadComponent: () => import('./erp-bc/pages/configurar-carga-asientos-contables-page/configurar-carga-asientos-contables-page'),
+                    },
+                    {
+                        path: 'ejecutar-carga-asientos-contables',
+                        loadComponent: () => import('./erp-bc/pages/ejecutar-carga-asientos-contables-page/ejecutar-carga-asientos-contables-page'),
                     },
                 ]
             },

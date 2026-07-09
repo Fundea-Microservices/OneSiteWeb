@@ -1,0 +1,189 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/fundea">Inicio</a></li>
+    <li class="breadcrumb-item">ERP BC</li>
+    <li class="breadcrumb-item active" aria-current="page">Ejecutar Carga de Asientos Contables</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header">
+    Ejecutar Carga de Asientos Contables
+  </div>
+
+  <div class="card-body">
+
+    <!-- Formulario -->
+    <form class="row g-3 mb-4" (ngSubmit)="ejecutar()">
+
+      <div class="col-md-4">
+        <label for="fecha" class="form-label">Fecha *</label>
+        <input
+          type="date"
+          class="form-control"
+          [class.is-invalid]="fecha() && !fechaValida"
+          id="fecha"
+          name="fecha"
+          [max]="maxFecha"
+          [(ngModel)]="fecha"
+          [disabled]="isLoading()"
+          required>
+        <div class="form-text">
+          Solo se permiten fechas de ayer hacia atrás.
+        </div>
+        @if (fecha() && !fechaValida) {
+          <div class="invalid-feedback d-block">
+            La fecha no puede ser hoy ni una fecha futura.
+          </div>
+        }
+      </div>
+
+      <div class="col-md-4 d-flex align-items-center">
+        <div class="form-check form-switch mt-md-4">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="todos"
+            name="todos"
+            [(ngModel)]="todos"
+            [disabled]="isLoading()">
+          <label class="form-check-label" for="todos">
+            Cargar todos
+          </label>
+        </div>
+      </div>
+
+      <div class="col-md-4 d-flex align-items-end">
+        <button
+          type="submit"
+          class="btn btn-primary w-100"
+          [disabled]="!fechaValida || isLoading()">
+          @if (isLoading()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Procesando...
+          } @else {
+            <ion-icon name="cloud-upload-outline" class="me-2"></ion-icon>
+            Ejecutar carga
+          }
+        </button>
+      </div>
+
+    </form>
+
+    <!-- Error -->
+    @if (errorMsg()) {
+      <div class="alert alert-danger" role="alert">
+        <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+        {{ errorMsg() }}
+      </div>
+    }
+
+    <!-- Resultado -->
+    @if (resultado(); as data) {
+      <div class="alert alert-success" role="alert">
+        <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
+        {{ mensaje() || 'Partidas contables cargadas correctamente' }}
+      </div>
+
+      <div class="row g-3">
+
+        <div class="col-12">
+          <h6 class="text-uppercase text-muted small mb-2">Detalle del proceso</h6>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card border-0 bg-light h-100">
+            <div class="card-body py-2">
+              <div class="text-muted small">Fecha procesada</div>
+              <div class="fs-6 fw-bold">{{ data.fecha }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card border-0 bg-light h-100">
+            <div class="card-body py-2">
+              <div class="text-muted small">Todos</div>
+              <div class="fs-6 fw-bold">{{ data.todos ? 'Sí' : 'No' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card border-0 bg-light h-100">
+            <div class="card-body py-2">
+              <div class="text-muted small">Total de registros</div>
+              <div class="fs-6 fw-bold">{{ data.totalItems | number }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card border-0 bg-light h-100">
+            <div class="card-body py-2">
+              <div class="text-muted small">Páginas ({{ data.paginasProcesadas }}/{{ data.totalPages }})</div>
+              <div class="fs-6 fw-bold">Límite {{ data.limit }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <table class="table table-sm table-bordered mb-0">
+            <tbody>
+              <tr>
+                <th class="table-light" style="width: 40%;">Registros procesados</th>
+                <td>{{ data.registrosProcesados | number }}</td>
+              </tr>
+              <tr>
+                <th class="table-light">Registros insertados</th>
+                <td>
+                  <span class="badge bg-success">{{ data.registrosInsertados | number }}</span>
+                </td>
+              </tr>
+              <tr>
+                <th class="table-light">Registros duplicados</th>
+                <td>
+                  <span class="badge bg-warning text-dark">{{ data.registrosDuplicados | number }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="col-12">
+          <h6 class="text-uppercase text-muted small mb-2 mt-2">Envío a Business Central</h6>
+          <table class="table table-sm table-bordered mb-0">
+            <tbody>
+              <tr>
+                <th class="table-light" style="width: 40%;">Total</th>
+                <td>{{ data.envioBusinessCentral.total | number }}</td>
+              </tr>
+              <tr>
+                <th class="table-light">Cargados</th>
+                <td>
+                  <span class="badge bg-success">{{ data.envioBusinessCentral.cargados | number }}</span>
+                </td>
+              </tr>
+              <tr>
+                <th class="table-light">Errores</th>
+                <td>
+                  <span class="badge {{ data.envioBusinessCentral.errores > 0 ? 'bg-danger' : 'bg-secondary' }}">
+                    {{ data.envioBusinessCentral.errores | number }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    } @else if (ejecutado() && !isLoading() && !errorMsg()) {
+      <div class="alert alert-warning" role="alert">
+        <ion-icon name="information-circle-outline" class="me-2"></ion-icon>
+        No se recibió información del proceso.
+      </div>
+    }
+
+  </div>
+</div>

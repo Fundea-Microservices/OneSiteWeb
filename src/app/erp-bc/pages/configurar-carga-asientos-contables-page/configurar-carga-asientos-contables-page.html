@@ -1,0 +1,120 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/fundea">Inicio</a></li>
+    <li class="breadcrumb-item">ERP BC</li>
+    <li class="breadcrumb-item active" aria-current="page">Configurar Carga de Asientos Contables</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header">
+    Configuración de Carga Automática de Asientos Contables
+  </div>
+
+  <div class="card-body">
+
+    @if (isLoading()) {
+      <div class="d-flex align-items-center gap-2 text-muted">
+        <span class="spinner-border spinner-border-sm" role="status"></span>
+        Cargando configuración...
+      </div>
+    }
+
+    @if (errorMsg()) {
+      <div class="alert alert-danger" role="alert">
+        <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+        {{ errorMsg() }}
+      </div>
+    }
+
+    @if (!isLoading() && config()) {
+      <form class="row g-3" (ngSubmit)="guardar()">
+
+        <div class="col-12">
+          <p class="text-muted small mb-0">
+            <ion-icon name="key-outline" class="me-1"></ion-icon>
+            Clave: <code>{{ config()!.key }}</code>
+          </p>
+        </div>
+
+        <!-- Hora -->
+        <div class="col-md-4">
+          <label for="hora" class="form-label">Hora de ejecución *</label>
+          <input
+            type="time"
+            class="form-control"
+            [class.is-invalid]="hora() && !horaValida"
+            id="hora"
+            name="hora"
+            [min]="horaMin"
+            [max]="horaMax"
+            [(ngModel)]="hora"
+            [disabled]="isSaving()"
+            required>
+          <div class="form-text">
+            Debe estar entre las {{ horaMin }} y las {{ horaMax }} horas (antes de iniciar labores).
+          </div>
+          @if (hora() && !horaValida) {
+            <div class="invalid-feedback d-block">
+              La hora debe estar entre {{ horaMin }} y {{ horaMax }}.
+            </div>
+          }
+        </div>
+
+        <!-- Correo -->
+        <div class="col-md-5">
+          <label for="correo" class="form-label">Correo de notificación *</label>
+          <input
+            type="email"
+            class="form-control"
+            [class.is-invalid]="correo() && !correoValido"
+            id="correo"
+            name="correo"
+            placeholder="correo@fundea.org.gt"
+            [(ngModel)]="correo"
+            [disabled]="isSaving()"
+            required>
+          @if (correo() && !correoValido) {
+            <div class="invalid-feedback d-block">
+              Ingrese un correo electrónico válido.
+            </div>
+          }
+        </div>
+
+        <!-- Activo -->
+        <div class="col-md-3 d-flex align-items-center">
+          <div class="form-check form-switch mt-md-4">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="activo"
+              name="activo"
+              [(ngModel)]="activo"
+              [disabled]="isSaving()">
+            <label class="form-check-label" for="activo">
+              {{ activo() ? 'Activo' : 'Inactivo' }}
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!formularioValido || isSaving()">
+            @if (isSaving()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Guardando...
+            } @else {
+              <ion-icon name="save-outline" class="me-2"></ion-icon>
+              Guardar cambios
+            }
+          </button>
+        </div>
+
+      </form>
+    }
+
+  </div>
+</div>
