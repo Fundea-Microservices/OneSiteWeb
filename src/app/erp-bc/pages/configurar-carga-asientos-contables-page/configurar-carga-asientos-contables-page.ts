@@ -8,6 +8,10 @@ import { JOB_CARGA_ASIENTOS_KEY } from '../../../../interfaces/erp-bc/partidas-c
 const HORA_MIN = '00:00';
 const HORA_MAX = '07:00';
 
+// ⚠️ SOLO PRUEBAS: poner en false para permitir cualquier hora sin restricción.
+// Debe estar en true en producción para forzar la ventana 00:00 - 07:00.
+const VALIDAR_HORAS = false;
+
 @Component({
   selector: 'app-configurar-carga-asientos-contables-page',
   standalone: true,
@@ -23,6 +27,7 @@ export default class ConfigurarCargaAsientosContablesPage {
 
   readonly horaMin = HORA_MIN;
   readonly horaMax = HORA_MAX;
+  readonly validarHoras = VALIDAR_HORAS;
 
   config = signal<IConfiguracion | null>(null);
 
@@ -42,11 +47,14 @@ export default class ConfigurarCargaAsientosContablesPage {
   async cargar() {
     this.isLoading.set(true);
     this.errorMsg.set('');
-    const resp = await this.configService.getConfigByKey(JOB_CARGA_ASIENTOS_KEY);
-    if (resp?.data) {
-      this.config.set(resp.data);
+    // Se obtiene desde el listado (no desde get-by-key) porque el detalle por
+    // clave no devuelve el configId (UUID) que exige el endpoint de update.
+    const resp = await this.configService.getConfiguraciones({ search: JOB_CARGA_ASIENTOS_KEY, limit: 50 });
+    const config = resp?.data?.configuraciones?.find(c => c.key === JOB_CARGA_ASIENTOS_KEY) ?? null;
+    if (config) {
+      this.config.set(config);
       try {
-        const raw = resp.data.value;
+        const raw = config.value;
         const val = typeof raw === 'string' ? JSON.parse(raw) : raw;
         this.hora.set(val?.hora ?? '');
         this.correo.set(val?.correo ?? '');
@@ -63,7 +71,9 @@ export default class ConfigurarCargaAsientosContablesPage {
 
   get horaValida(): boolean {
     const h = this.hora();
-    return !!h && h >= this.horaMin && h <= this.horaMax;
+    if (!h) return false;
+    if (!this.validarHoras) return true; // pruebas: cualquier hora es válida
+    return h >= this.horaMin && h <= this.horaMax;
   }
 
   get correoValido(): boolean {
