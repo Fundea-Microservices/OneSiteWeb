@@ -201,7 +201,7 @@ export default class SeguimientoSolicitudesComponent {
 			destino.set(datos);
 			this.cdr.markForCheck();
 		} catch (error) {
-			console.error(`Error al cargar datos adicionales de ${contexto}:`, error);
+			console.error('Error al cargar datos adicionales de:', contexto, error);
 		}
 	}
 

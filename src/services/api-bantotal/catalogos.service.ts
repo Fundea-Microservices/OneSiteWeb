@@ -240,7 +240,7 @@ export class CatalogosBantotalService extends HttpService {
               const catalogosData = body.data?.data?.catalogos;
 
               if (!catalogosData || !Array.isArray(catalogosData)) {
-                console.error(`⚠️ Estructura inválida para grupo "${grupo}":`, body);
+                console.error('⚠️ Estructura inválida para grupo:', grupo, body);
                 throw new Error(`Estructura de respuesta inválida para el grupo: ${grupo}`);
               }
 
