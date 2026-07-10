@@ -32,12 +32,12 @@ jobs:
           cat <<EOF > src/environments/environment.prod.ts
           export const environment = {
               production: true,
-              path: '${{ secrets.ANGULAR_API_URL }}',
-              apiPath: '${{ secrets.ANGULAR_API_URL }}api',
+              path: '${{ secrets.ANGULAR_DEV_API_URL }}',
+              apiPath: '${{ secrets.ANGULAR_DEV_API_URL }}${{secrets.ANGULAR_DEV_PREFIX}}',
               tokenCheckInterval: 5,
               agente: {
-                  endpoint: '${{ secrets.AGENTE_ENDPOINT }}',
-                  apiKey: '${{ secrets.AGENTE_API_KEY }}'
+                  endpoint: '${{ secrets.AGENTE_DEV_ENDPOINT }}',
+                  apiKey: '${{ secrets.AGENTE_DEV_API_KEY }}'
               }
           };
           EOF
