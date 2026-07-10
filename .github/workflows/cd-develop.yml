@@ -1,0 +1,53 @@
+name: "CD - Despliegue Frontend Angular - FUNDEA"
+
+on:
+  push:
+    branches: [ "develop" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: "Build y Despliegue Frontend a Servidor Develop"
+    runs-on: [self-hosted, Linux, X64]
+
+    steps:
+      - name: Checkout del Código Fuente
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar Dependencias
+        run: npm ci
+
+      - name: Generar environment.prod.ts con Secrets de GitHub
+        run: |
+          # Crea o sobrescribe el archivo de producción usando los secrets
+          cat <<EOF > src/environments/environment.prod.ts
+          export const environment = {
+              production: true,
+              path: '${{ secrets.ANGULAR_DEV_API_URL }}',
+              apiPath: '${{ secrets.ANGULAR_DEV_API_URL }}${{secrets.ANGULAR_DEV_PREFIX}}',
+              tokenCheckInterval: 5,
+              agente: {
+                  endpoint: '${{ secrets.AGENTE_DEV_ENDPOINT }}',
+                  apiKey: '${{ secrets.AGENTE_DEV_API_KEY }}'
+              }
+          };
+          EOF
+
+      - name: Ejecutar Build de Angular
+        run: npx ng build --configuration production
+
+      - name: Desplegar en el Directorio Web
+        run: |
+          # Se usa sudo rsync para sincronizar exactamente la carpeta dist con la de Nginx/Apache
+          # Esto reemplaza al 'rm -rf' y 'cp', siendo más seguro y sin cortes de servicio
+          sudo mkdir -p /var/www/onesiteweb
+          sudo rsync -av --delete dist/OneSiteWeb/ /var/www/onesiteweb/
