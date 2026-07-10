@@ -47,7 +47,6 @@ jobs:
 
       - name: Desplegar en el Directorio Web
         run: |
-          # Se usa sudo rsync para sincronizar exactamente la carpeta dist con la de Nginx/Apache
           # Esto reemplaza al 'rm -rf' y 'cp', siendo más seguro y sin cortes de servicio
-          sudo mkdir -p /var/www/onesiteweb
-          sudo rsync -av --delete dist/OneSiteWeb/ /var/www/onesiteweb/
+          mkdir -p /var/www/onesiteweb
+          rsync -av --delete dist/OneSiteWeb/ /var/www/onesiteweb/
