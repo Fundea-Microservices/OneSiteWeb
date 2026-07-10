@@ -1,0 +1,63 @@
+name: "DevSecOps Security Scan - FUNDEA"
+on:
+  pull_request:
+    branches: [ "develop", "production", "certification" ]
+  push:
+    branches: [ "develop", "production", "certification" ]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  build-validation:
+    name: "Validación de Compilación (Build)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del Código Fuente
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        
+      - name: Configurar Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '20' # Ajusta esta versión según lo que requiera tu proyecto (ej. 16, 18, 20)
+          cache: 'npm'       # Activa el caché para acelerar futuras ejecuciones
+
+      - name: Instalar Dependencias
+        run: npm ci # Recomendado para CI/CD en lugar de 'npm install' para usar versiones exactas
+
+      - name: Ejecutar Build
+        run: npm run build
+
+  sast-scan:
+    name: "Análisis Estático de Código (SAST)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del Código Fuente
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        
+      - name: Ejecutar Escaneo SAST
+        run: |
+          id=$(docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep semgrep scan --config=auto --json -o semgrep-results.json || true)
+          cat semgrep-results.json          
+      
+      - name: Validar Bloqueo por Vulnerabilidades Críticas
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep semgrep scan --config=auto --error
+
+  sca-scan:
+    name: "Análisis de Dependencias Terceras (SCA)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del Código Fuente
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        
+      - name: Ejecutar Escaneo SCA (Trivy)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
