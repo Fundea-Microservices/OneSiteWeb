@@ -384,7 +384,14 @@ export default class EmpresasRepresentantePage {
       console.log('✨ Cuentas recargadas completadas');
 
       const solicitud = this.getSolicitudPorEmpresa(empresaId);
-      if (solicitud?.solicitudId && cuenta.cuentaBancariaId) {
+      // Solo asociar la cuenta con la solicitud de afiliación mientras esta
+      // siga en proceso (no aprobada ni rechazada), es decir, en el flujo de la
+      // primera cuenta. Una vez aprobada, las cuentas nuevas generan su propia
+      // solicitud de cambio de cuenta y NO deben sobrescribir la de afiliación.
+      const estadoSolicitud = solicitud?.estadoSolicitud?.nombre?.toUpperCase();
+      const solicitudEnProceso =
+        !!estadoSolicitud && estadoSolicitud !== 'APROBADO' && estadoSolicitud !== 'RECHAZADO';
+      if (solicitud?.solicitudId && cuenta.cuentaBancariaId && solicitudEnProceso) {
         try {
           await this.solicitudesService.updateSolicitud(solicitud.solicitudId, {
             cuentaBancariaId: cuenta.cuentaBancariaId,
@@ -848,11 +855,12 @@ export default class EmpresasRepresentantePage {
     return this.generandoCartaPorEmpresa().has(empresaId);
   }
 
-  async generarCartaEmpresa(empresaId: string): Promise<void> {
+  async generarCartaEmpresa(empresaId: string, cuentaBancariaIdOverride?: string): Promise<void> {
     if (this.estaGenerandoCarta(empresaId)) return;
 
     const representanteId = this.representanteId() || undefined;
-    const cuentaBancariaId = this.getCuentaBancariaEmpresa(empresaId)?.cuentaBancariaId || undefined;
+    const cuentaBancariaId =
+      cuentaBancariaIdOverride || this.getCuentaBancariaEmpresa(empresaId)?.cuentaBancariaId || undefined;
 
     const generando = new Set(this.generandoCartaPorEmpresa());
     generando.add(empresaId);
@@ -903,10 +911,17 @@ export default class EmpresasRepresentantePage {
       : null;
     const codigo = (tipoSolicitud?.codigo || solicitud?.tipoSolicitud?.codigo || '').toUpperCase();
 
-    if (codigo === 'CAMBIO_CUENTA' && solicitud?.solicitudId) {
+    // Solo la cuenta ligada a la solicitud de AFILIACIÓN genera la carta de
+    // entendimiento. Cualquier otra cuenta genera la carta de cambio de cuenta.
+    if (codigo === 'AFILIACION') {
+      await this.generarCartaEmpresa(empresaId, cuentaBancariaId);
+    } else if (solicitud?.solicitudId) {
       await this.generarCartaCambioCuenta(empresaId, solicitud.solicitudId);
     } else {
-      await this.generarCartaEmpresa(empresaId);
+      this.toastr.warning(
+        'Esta cuenta no tiene una solicitud de cambio de cuenta asociada para generar el documento.',
+        'Sin solicitud'
+      );
     }
   }
 

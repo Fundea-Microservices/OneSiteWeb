@@ -284,6 +284,13 @@ export default class SeguimientoSolicitudesComponent {
 		return !!estado?.nombre?.toUpperCase().includes('APROBADO');
 	}
 
+	esEstadoCorregir(): boolean {
+		const estado = this.estadosSolicitud().find(
+			e => e.estadoSolicitudId === this.nuevoSeguimiento.estadoAprobacionId
+		);
+		return !!estado?.nombre?.toUpperCase().includes('CORREGIR');
+	}
+
 	async guardarSeguimiento() {
 		const solicitud = this.solicitud();
 		if (!solicitud || !this.nuevoSeguimiento.estadoAprobacionId || !this.nuevoSeguimiento.observaciones.trim()) {
@@ -337,7 +344,7 @@ export default class SeguimientoSolicitudesComponent {
 				ordenSeguimiento: nuevoOrden,
 				estadoAprobacionId: this.nuevoSeguimiento.estadoAprobacionId,
 				observaciones: this.nuevoSeguimiento.observaciones,
-				...(this.correoSeleccionado ? { correoNotificacion: this.correoSeleccionado } : {})
+				...(this.correoSeleccionado && !this.esEstadoCorregir() ? { correoNotificacion: this.correoSeleccionado } : {})
 			};
 
 			const response = await this.seguimientoService.createSeguimientoSolicitud(seguimientoData);
