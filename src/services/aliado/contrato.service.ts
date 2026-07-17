@@ -12,6 +12,7 @@ export interface ContratoParams {
 @Injectable({ providedIn: 'root' })
 export class ContratoService {
   private readonly base = '/aliado/solicitud/contrato/afiliacion';
+  private readonly baseCambioCuenta = '/aliado/solicitud/contrato/cambio-cuenta';
   private baseUrl: string = environment.apiPath;
 
   constructor(private http: HttpClient) {}
@@ -54,6 +55,31 @@ export class ContratoService {
       return blob;
     } catch (err: any) {
       // En error el body es JSON pero llega como Blob -> hay que parsearlo
+      const mensaje = await this.leerErrorBlob(err?.error);
+      throw new Error(mensaje);
+    }
+  }
+
+  /**
+   * GET - Descarga el PDF de la carta de cambio de cuenta bancaria.
+   * Basta con enviar el solicitudId; el backend resuelve los demás datos.
+   * @param solicitudId UUID de la solicitud de cambio de cuenta
+   * @returns Blob del PDF
+   * @throws El mensaje de error parseado desde el blob JSON del gateway
+   */
+  async descargarContratoCambioCuenta(solicitudId: string): Promise<Blob> {
+    const params = new HttpParams().set('solicitudId', solicitudId);
+
+    try {
+      const blob = await firstValueFrom(
+        this.http.get(`${this.baseUrl}${this.baseCambioCuenta}`, {
+          headers: this.setHeaders(),
+          params,
+          responseType: 'blob',
+        })
+      );
+      return blob;
+    } catch (err: any) {
       const mensaje = await this.leerErrorBlob(err?.error);
       throw new Error(mensaje);
     }

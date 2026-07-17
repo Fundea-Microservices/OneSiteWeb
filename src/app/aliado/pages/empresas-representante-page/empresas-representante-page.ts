@@ -882,4 +882,55 @@ export default class EmpresasRepresentantePage {
       this.generandoCartaPorEmpresa.set(generando);
     }
   }
+
+  /**
+   * Genera el documento para una cuenta bancaria.
+   * Si la solicitud asociada es de tipo CAMBIO_CUENTA, genera la carta de cambio
+   * de cuenta (endpoint distinto); en cualquier otro caso genera la carta de
+   * entendimiento de afiliación (comportamiento actual).
+   */
+  async generarDocumentoCuenta(empresaId: string, cuenta: ICuentaBancaria): Promise<void> {
+    const cuentaBancariaId = cuenta.cuentaBancariaId || '';
+    const solicitud = this.listadoSolicitudes().find(s => s.cuentaBancariaId === cuentaBancariaId);
+
+    // Resolver el código del tipo de solicitud
+    const tipoSolicitud = solicitud?.tipoSolicitudId
+      ? this.tiposSolicitud().find(t => t.tipoSolicitudId === solicitud.tipoSolicitudId)
+      : null;
+    const codigo = (tipoSolicitud?.codigo || solicitud?.tipoSolicitud?.codigo || '').toUpperCase();
+
+    if (codigo === 'CAMBIO_CUENTA' && solicitud?.solicitudId) {
+      await this.generarCartaCambioCuenta(empresaId, solicitud.solicitudId);
+    } else {
+      await this.generarCartaEmpresa(empresaId);
+    }
+  }
+
+  private async generarCartaCambioCuenta(empresaId: string, solicitudId: string): Promise<void> {
+    if (this.estaGenerandoCarta(empresaId)) return;
+
+    const generando = new Set(this.generandoCartaPorEmpresa());
+    generando.add(empresaId);
+    this.generandoCartaPorEmpresa.set(generando);
+
+    let url: string | null = null;
+    try {
+      const pdf = await this.contratoService.descargarContratoCambioCuenta(solicitudId);
+      url = URL.createObjectURL(pdf);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cambio-cuenta-bancaria-${solicitudId}.pdf`;
+      a.click();
+    } catch (error: any) {
+      this.toastr.error(error?.message || 'Error al generar la carta de cambio de cuenta', 'Error');
+    } finally {
+      if (url) {
+        const objectUrl = url;
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+      }
+      const generando = new Set(this.generandoCartaPorEmpresa());
+      generando.delete(empresaId);
+      this.generandoCartaPorEmpresa.set(generando);
+    }
+  }
 }
