@@ -36,7 +36,7 @@ export interface Solicitud {
   regionId?: number | null;
   agenciaId?: number | null;
   agenciaNombre?: string | null; 
-
+  correoSupervisor?: string | null;
   // Datos
   fechaSolicitud?: string | null; // ISO Date String (ej: "2023-10-25T10:00:00Z")
   observaciones?: string | null;

@@ -140,6 +140,12 @@ export interface FormEncabezadoCompletoResponse {
 
 // ── Correos de Notificación ──────────────────────────────────────────────────
 
+/** Tipos de notificación soportados por los correos de notificación. */
+export enum TipoNotificacion {
+    RepresentanteAliados = 'RepresentanteAliados',
+    SupervisorRegional = 'SupervisorRegional',
+}
+
 export interface ICorreoNotificacion {
     correoId?:          string;
     correo:             string;

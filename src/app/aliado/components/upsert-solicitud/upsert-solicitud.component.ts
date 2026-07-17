@@ -8,6 +8,8 @@ import { Representante } from '../../../../interfaces/aliado/representante';
 import { IEmpresaRepresentante } from '../../../../interfaces/aliado/empresa-representante';
 import { ICuentaBancaria } from '../../../../interfaces/aliado/cuenta-bancaria';
 import { StorageService } from '../../../../services/storage.service';
+import { CorreoNotificacionesService } from '../../../../services/config/correo-notificaciones.service';
+import { ICorreoNotificacion, TipoNotificacion } from '../../../../interfaces/configuracion';
 
 export interface Region {
   regionId: string; // valorCore
@@ -27,6 +29,7 @@ export interface SolicitudFormData {
   regionId: string;
   agenciaId: string;
   agenciaNombre: string;
+  correoSupervisor?: string;
   observaciones?: string;
   documentoCargado?: string; // URL/path del archivo subido al storage
 }
@@ -82,6 +85,7 @@ export default class UpsertSolicitudComponent implements OnInit {
   private generalidadesService = inject(GeneralidadesService);
   private catalogosService = inject(CatalogosBantotalService);
   private storageService = inject(StorageService);
+  private correoNotificacionesService = inject(CorreoNotificacionesService);
 
   // Inputs usando input signals de Angular
   nuevo = input<boolean>(true);
@@ -106,6 +110,7 @@ export default class UpsertSolicitudComponent implements OnInit {
   regiones = signal<Region[]>([]);
   agencias = signal<Agencia[]>([]);
   agenciasFilterradas = signal<Agencia[]>([]);
+  correosSupervisor = signal<ICorreoNotificacion[]>([]);
 
   // Signals para el formulario
   selectedTipoSolicitud = signal('');
@@ -113,6 +118,7 @@ export default class UpsertSolicitudComponent implements OnInit {
   selectedTipoAfiliacion = signal('');
   selectedRegion = signal('');
   selectedAgencia = signal('');
+  selectedCorreoSupervisor = signal('');
   archivoSeleccionado = signal<File | null>(null);
   nombreArchivo = signal('');
   documentoCargadoUrl = signal<string | null>(null);
@@ -125,6 +131,7 @@ export default class UpsertSolicitudComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.loadData();
+    await this.cargarCorreosSupervisor();
     // Si es nuevo, buscar y seleccionar el estado "Espera" automáticamente
     if (this.nuevo()) {
       this.seleccionarEstadoEspera();
@@ -196,6 +203,19 @@ export default class UpsertSolicitudComponent implements OnInit {
     }
   }
 
+  private async cargarCorreosSupervisor(): Promise<void> {
+    try {
+      const response = await this.correoNotificacionesService.getCorreosNotificacion({
+        all: true,
+        activo: true,
+        tipoNotificacion: TipoNotificacion.SupervisorRegional,
+      });
+      this.correosSupervisor.set(response?.data ?? []);
+    } catch (error) {
+      console.error('Error al cargar correos del supervisor regional:', error);
+    }
+  }
+
   private seleccionarEstadoEspera(): void {
     const estadoEspera = this.estadosSolicitud().find(
       estado => estado.nombre?.toLowerCase().includes('espera')
@@ -215,6 +235,7 @@ export default class UpsertSolicitudComponent implements OnInit {
     this.selectedTipoAfiliacion.set(data.tipoAfiliacionId);
     this.selectedRegion.set(data.regionId);
     this.selectedAgencia.set(data.agenciaId);
+    this.selectedCorreoSupervisor.set(data.correoSupervisor ?? '');
     if (data.observaciones) {
       this.observaciones.set(data.observaciones);
     }
@@ -267,6 +288,7 @@ export default class UpsertSolicitudComponent implements OnInit {
       regionId: this.selectedRegion(),
       agenciaId: this.selectedAgencia(),
       agenciaNombre: this.getAgenciaNombre(this.selectedAgencia()),
+      correoSupervisor: this.selectedCorreoSupervisor() || undefined,
       observaciones: this.observaciones() || undefined,
       documentoCargado: this.documentoCargadoUrl() ?? undefined,
     };

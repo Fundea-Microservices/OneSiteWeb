@@ -138,6 +138,22 @@
   </div>
 
   <div class="row mb-3">
+    <div class="col-md-6">
+      <label for="correoSupervisor" class="form-label">
+        <i class="bi bi-envelope me-1 text-blue-600"></i>Correo del supervisor regional
+      </label>
+      <select id="correoSupervisor" class="form-select" [(ngModel)]="selectedCorreoSupervisor"
+        name="correoSupervisor" [disabled]="isLoading()">
+        <option value="">Selecciona un correo</option>
+        @for (correo of correosSupervisor(); track correo.correoId) {
+        <option [value]="correo.correo">{{ correo.nombreContacto }} ({{ correo.correo }})</option>
+        }
+      </select>
+      <small class="text-muted">Supervisor regional al que se notificará sobre la solicitud</small>
+    </div>
+  </div>
+
+  <div class="row mb-3">
     <div class="col-12">
       <label for="observaciones" class="form-label">Observaciones</label>
       <textarea id="observaciones" class="form-control" [(ngModel)]="observaciones" name="observaciones" rows="3"

@@ -418,7 +418,7 @@
                                                         }
                                                     </td>
                                                     <td class="text-center">
-                                                        @if(cuenta.activo) {
+                                                        @if(cuenta.activo == true) {
                                                         <span class="badge bg-success">Sí</span>
                                                         } @else {
                                                         <span class="badge bg-secondary">No</span>
@@ -443,9 +443,9 @@
                                                             </button>
                                                             }
                                                             <button type="button"
-                                                                (click)="generarCartaEmpresa(empresa.empresaId)"
+                                                                (click)="generarDocumentoCuenta(empresa.empresaId, cuenta)"
                                                                 [disabled]="estaGenerandoCarta(empresa.empresaId)"
-                                                                class="btn btn-sm btn-secondary" title="Generar carta de entendimiento">
+                                                                class="btn btn-sm btn-secondary" title="Generar documento">
                                                                 <ion-icon name="document-text-outline"></ion-icon>
                                                             </button>
                                                             <!-- <div class="form-check form-switch ms-2">
@@ -496,9 +496,9 @@
                                                         </button>
                                                         }
                                                         <button type="button"
-                                                            (click)="generarCartaEmpresa(empresa.empresaId)"
+                                                            (click)="generarDocumentoCuenta(empresa.empresaId, cuenta)"
                                                             [disabled]="estaGenerandoCarta(empresa.empresaId)"
-                                                            class="btn btn-sm btn-secondary" title="Generar carta de entendimiento">
+                                                            class="btn btn-sm btn-secondary" title="Generar documento">
                                                             <ion-icon name="document-text-outline"></ion-icon>
                                                         </button>
                                                     </div>

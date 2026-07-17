@@ -384,7 +384,14 @@ export default class EmpresasRepresentantePage {
       console.log('✨ Cuentas recargadas completadas');
 
       const solicitud = this.getSolicitudPorEmpresa(empresaId);
-      if (solicitud?.solicitudId && cuenta.cuentaBancariaId) {
+      // Solo asociar la cuenta con la solicitud de afiliación mientras esta
+      // siga en proceso (no aprobada ni rechazada), es decir, en el flujo de la
+      // primera cuenta. Una vez aprobada, las cuentas nuevas generan su propia
+      // solicitud de cambio de cuenta y NO deben sobrescribir la de afiliación.
+      const estadoSolicitud = solicitud?.estadoSolicitud?.nombre?.toUpperCase();
+      const solicitudEnProceso =
+        !!estadoSolicitud && estadoSolicitud !== 'APROBADO' && estadoSolicitud !== 'RECHAZADO';
+      if (solicitud?.solicitudId && cuenta.cuentaBancariaId && solicitudEnProceso) {
         try {
           await this.solicitudesService.updateSolicitud(solicitud.solicitudId, {
             cuentaBancariaId: cuenta.cuentaBancariaId,
@@ -637,6 +644,7 @@ export default class EmpresasRepresentantePage {
       regionId,
       agenciaId,
       agenciaNombre: solicitud.agenciaNombre || '',
+      correoSupervisor: solicitud.correoSupervisor || undefined,
       observaciones: solicitud.observaciones || undefined,
       documentoCargado: solicitud.documentoCargado || undefined,
     };
@@ -724,6 +732,7 @@ export default class EmpresasRepresentantePage {
           regionId,
           agenciaId,
           agenciaNombre: formData.agenciaNombre || null,
+          correoSupervisor: formData.correoSupervisor || null,
           observaciones: formData.observaciones || null,
         };
 
@@ -761,6 +770,7 @@ export default class EmpresasRepresentantePage {
             regionId,
             agenciaId,
             agenciaNombre: formData.agenciaNombre || null,
+            correoSupervisor: formData.correoSupervisor || null,
             fechaSolicitud: new Date().toISOString(),
             observaciones: formData.observaciones || null,
           };
@@ -799,6 +809,7 @@ export default class EmpresasRepresentantePage {
             regionId,
             agenciaId,
             agenciaNombre: formData.agenciaNombre || null,
+            correoSupervisor: formData.correoSupervisor || null,
             fechaSolicitud: new Date().toISOString(),
             observaciones: formData.observaciones || null,
           };
@@ -844,11 +855,12 @@ export default class EmpresasRepresentantePage {
     return this.generandoCartaPorEmpresa().has(empresaId);
   }
 
-  async generarCartaEmpresa(empresaId: string): Promise<void> {
+  async generarCartaEmpresa(empresaId: string, cuentaBancariaIdOverride?: string): Promise<void> {
     if (this.estaGenerandoCarta(empresaId)) return;
 
     const representanteId = this.representanteId() || undefined;
-    const cuentaBancariaId = this.getCuentaBancariaEmpresa(empresaId)?.cuentaBancariaId || undefined;
+    const cuentaBancariaId =
+      cuentaBancariaIdOverride || this.getCuentaBancariaEmpresa(empresaId)?.cuentaBancariaId || undefined;
 
     const generando = new Set(this.generandoCartaPorEmpresa());
     generando.add(empresaId);
@@ -872,6 +884,64 @@ export default class EmpresasRepresentantePage {
       this.cartaGeneradaPorEmpresa.set(updated);
     } catch (error: any) {
       this.toastr.error(error?.message || 'Error al generar el contrato', 'Error');
+    } finally {
+      if (url) {
+        const objectUrl = url;
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+      }
+      const generando = new Set(this.generandoCartaPorEmpresa());
+      generando.delete(empresaId);
+      this.generandoCartaPorEmpresa.set(generando);
+    }
+  }
+
+  /**
+   * Genera el documento para una cuenta bancaria.
+   * Si la solicitud asociada es de tipo CAMBIO_CUENTA, genera la carta de cambio
+   * de cuenta (endpoint distinto); en cualquier otro caso genera la carta de
+   * entendimiento de afiliación (comportamiento actual).
+   */
+  async generarDocumentoCuenta(empresaId: string, cuenta: ICuentaBancaria): Promise<void> {
+    const cuentaBancariaId = cuenta.cuentaBancariaId || '';
+    const solicitud = this.listadoSolicitudes().find(s => s.cuentaBancariaId === cuentaBancariaId);
+
+    // Resolver el código del tipo de solicitud
+    const tipoSolicitud = solicitud?.tipoSolicitudId
+      ? this.tiposSolicitud().find(t => t.tipoSolicitudId === solicitud.tipoSolicitudId)
+      : null;
+    const codigo = (tipoSolicitud?.codigo || solicitud?.tipoSolicitud?.codigo || '').toUpperCase();
+
+    // Solo la cuenta ligada a la solicitud de AFILIACIÓN genera la carta de
+    // entendimiento. Cualquier otra cuenta genera la carta de cambio de cuenta.
+    if (codigo === 'AFILIACION') {
+      await this.generarCartaEmpresa(empresaId, cuentaBancariaId);
+    } else if (solicitud?.solicitudId) {
+      await this.generarCartaCambioCuenta(empresaId, solicitud.solicitudId);
+    } else {
+      this.toastr.warning(
+        'Esta cuenta no tiene una solicitud de cambio de cuenta asociada para generar el documento.',
+        'Sin solicitud'
+      );
+    }
+  }
+
+  private async generarCartaCambioCuenta(empresaId: string, solicitudId: string): Promise<void> {
+    if (this.estaGenerandoCarta(empresaId)) return;
+
+    const generando = new Set(this.generandoCartaPorEmpresa());
+    generando.add(empresaId);
+    this.generandoCartaPorEmpresa.set(generando);
+
+    let url: string | null = null;
+    try {
+      const pdf = await this.contratoService.descargarContratoCambioCuenta(solicitudId);
+      url = URL.createObjectURL(pdf);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cambio-cuenta-bancaria-${solicitudId}.pdf`;
+      a.click();
+    } catch (error: any) {
+      this.toastr.error(error?.message || 'Error al generar la carta de cambio de cuenta', 'Error');
     } finally {
       if (url) {
         const objectUrl = url;
