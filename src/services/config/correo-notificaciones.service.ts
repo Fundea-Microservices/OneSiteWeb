@@ -18,9 +18,26 @@ export class CorreoNotificacionesService extends HttpService {
     super(http);
   }
 
-  async getCorreosNotificacion({ page = 1, limit = 10, search = '' } = {}) {
+  async getCorreosNotificacion({
+    page = 1,
+    limit = 10,
+    search = '',
+    tipoNotificacion,
+    activo,
+    all,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    tipoNotificacion?: string;
+    activo?: boolean;
+    all?: boolean;
+  } = {}) {
     try {
       const params: any = { page, limit, search };
+      if (tipoNotificacion !== undefined) params.tipoNotificacion = tipoNotificacion;
+      if (activo !== undefined) params.activo = activo;
+      if (all !== undefined) params.all = all;
       const resp = await firstValueFrom(this.get<CorreoNotificacionResponse>(`${this.endpoints.correoNotificaciones}`, params));
       return resp.body?.success ? resp.body : null;
     } catch (error: any) {

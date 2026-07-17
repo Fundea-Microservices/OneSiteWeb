@@ -637,6 +637,7 @@ export default class EmpresasRepresentantePage {
       regionId,
       agenciaId,
       agenciaNombre: solicitud.agenciaNombre || '',
+      correoSupervisor: solicitud.correoSupervisor || undefined,
       observaciones: solicitud.observaciones || undefined,
       documentoCargado: solicitud.documentoCargado || undefined,
     };
@@ -724,6 +725,7 @@ export default class EmpresasRepresentantePage {
           regionId,
           agenciaId,
           agenciaNombre: formData.agenciaNombre || null,
+          correoSupervisor: formData.correoSupervisor || null,
           observaciones: formData.observaciones || null,
         };
 
@@ -761,6 +763,7 @@ export default class EmpresasRepresentantePage {
             regionId,
             agenciaId,
             agenciaNombre: formData.agenciaNombre || null,
+            correoSupervisor: formData.correoSupervisor || null,
             fechaSolicitud: new Date().toISOString(),
             observaciones: formData.observaciones || null,
           };
@@ -799,6 +802,7 @@ export default class EmpresasRepresentantePage {
             regionId,
             agenciaId,
             agenciaNombre: formData.agenciaNombre || null,
+            correoSupervisor: formData.correoSupervisor || null,
             fechaSolicitud: new Date().toISOString(),
             observaciones: formData.observaciones || null,
           };

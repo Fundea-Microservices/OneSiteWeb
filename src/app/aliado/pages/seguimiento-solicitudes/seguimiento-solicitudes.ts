@@ -13,7 +13,7 @@ import { FormulariosService } from '../../../../services/config/formularios.serv
 import { CatalogoSimple } from '../../../../interfaces/api-bantotal/catalogos';
 import { Solicitud, SeguimientoSolicitud, Empresa } from '../../../../interfaces/aliado/solicitudes';
 import { EstadoSolicitud } from '../../../../interfaces/aliado/generalidades';
-import { ICorreoNotificacion } from '../../../../interfaces/configuracion';
+import { ICorreoNotificacion, TipoNotificacion } from '../../../../interfaces/configuracion';
 
 @Component({
 	selector: 'app-seguimiento-solicitudes',
@@ -311,7 +311,11 @@ export default class SeguimientoSolicitudesComponent {
 
 	private async cargarCorreosNotificacion() {
 		try {
-			const response = await this.correoNotificacionesService.getCorreosNotificacion();
+			const response = await this.correoNotificacionesService.getCorreosNotificacion({
+				all: true,
+				activo: true,
+				tipoNotificacion: TipoNotificacion.RepresentanteAliados,
+			});
 			if (response?.data) {
 				this.correosNotificacion.set(response.data);
 			}
