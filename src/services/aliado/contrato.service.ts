@@ -9,6 +9,13 @@ export interface ContratoParams {
   cuentaBancariaId?: string;
 }
 
+export interface ContratoCambioCuentaParams {
+  cuentaBancariaId: string;
+  solicitudId?: string;
+  representanteId?: string;
+  empresaId?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ContratoService {
   private readonly base = '/aliado/solicitud/contrato/afiliacion';
@@ -62,13 +69,18 @@ export class ContratoService {
 
   /**
    * GET - Descarga el PDF de la carta de cambio de cuenta bancaria.
-   * Basta con enviar el solicitudId; el backend resuelve los demás datos.
-   * @param solicitudId UUID de la solicitud de cambio de cuenta
+   * Basta con enviar el cuentaBancariaId; el backend resuelve los demás datos.
+   * Los IDs opcionales (solicitudId, representanteId, empresaId) tienen prioridad
+   * sobre lo que el backend derive.
+   * @param ids cuentaBancariaId (obligatorio) y opcionalmente solicitudId, representanteId, empresaId
    * @returns Blob del PDF
    * @throws El mensaje de error parseado desde el blob JSON del gateway
    */
-  async descargarContratoCambioCuenta(solicitudId: string): Promise<Blob> {
-    const params = new HttpParams().set('solicitudId', solicitudId);
+  async descargarContratoCambioCuenta(ids: ContratoCambioCuentaParams): Promise<Blob> {
+    let params = new HttpParams().set('cuentaBancariaId', ids.cuentaBancariaId);
+    if (ids.solicitudId) params = params.set('solicitudId', ids.solicitudId);
+    if (ids.representanteId) params = params.set('representanteId', ids.representanteId);
+    if (ids.empresaId) params = params.set('empresaId', ids.empresaId);
 
     try {
       const blob = await firstValueFrom(
