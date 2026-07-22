@@ -184,8 +184,10 @@ export default class EmpresasRepresentantePage {
           const cuentasEmpresa = this.obtenerCuentasEmpresa(empresa.empresaId).map(c => c.cuentaBancariaId);
           const solicitudCuenta = solicitudesSinEmpresa.find(s => cuentasEmpresa.includes(s.cuentaBancariaId!));
           console.log("🚀 ~ EmpresasRepresentantePage ~ cargarSolicitudesParaEmpresas ~ solicitudCuenta:", solicitudCuenta)
-          // Solo asignar si no hay ya una solicitud asignada a la empresa
-          if (solicitudCuenta ) {
+          // Solo asignar si no hay ya una solicitud de afiliación asignada a la empresa.
+          // La afiliación es única por empresa y tiene prioridad; las de cambio de cuenta
+          // (empresaId == null) pueden ser varias y no deben sobrescribir la de afiliación.
+          if (solicitudCuenta && !map.get(empresa.empresaId)) {
             map.set(empresa.empresaId, solicitudCuenta);
           }
         });
@@ -344,7 +346,13 @@ export default class EmpresasRepresentantePage {
       solicitud?.estadoSolicitud?.nombre?.toUpperCase() === 'APROBADO';
     const cuentas = this.obtenerCuentasEmpresa(empresaId);
 
-    if (!solicitudAprobada && cuentas.length >= 1) {
+    // Las cuentas rechazadas no cuentan para el límite: se puede registrar una nueva en su lugar
+    const cuentasVigentes = cuentas.filter(
+      c => this.obtenerEstadoSolicitudPorCuenta(c.cuentaBancariaId || '')?.toUpperCase() !== 'RECHAZADO'
+    );
+    console.log("🚀 ~ EmpresasRepresentantePage ~ abrirModalNuevaCuenta ~ cuentasVigentes:", cuentasVigentes)
+
+    if (!solicitudAprobada && cuentasVigentes.length >= 1) {
       alert('Solo puede registrar una cuenta bancaria antes de aprobar la solicitud.');
       return;
     }
@@ -912,20 +920,16 @@ export default class EmpresasRepresentantePage {
     const codigo = (tipoSolicitud?.codigo || solicitud?.tipoSolicitud?.codigo || '').toUpperCase();
 
     // Solo la cuenta ligada a la solicitud de AFILIACIÓN genera la carta de
-    // entendimiento. Cualquier otra cuenta genera la carta de cambio de cuenta.
+    // entendimiento. Cualquier otra cuenta genera la carta de cambio de cuenta,
+    // que ya no requiere una solicitud previa (basta el cuentaBancariaId).
     if (codigo === 'AFILIACION') {
       await this.generarCartaEmpresa(empresaId, cuentaBancariaId);
-    } else if (solicitud?.solicitudId) {
-      await this.generarCartaCambioCuenta(empresaId, solicitud.solicitudId);
     } else {
-      this.toastr.warning(
-        'Esta cuenta no tiene una solicitud de cambio de cuenta asociada para generar el documento.',
-        'Sin solicitud'
-      );
+      await this.generarCartaCambioCuenta(empresaId, cuentaBancariaId, solicitud?.solicitudId);
     }
   }
 
-  private async generarCartaCambioCuenta(empresaId: string, solicitudId: string): Promise<void> {
+  private async generarCartaCambioCuenta(empresaId: string, cuentaBancariaId: string, solicitudId?: string): Promise<void> {
     if (this.estaGenerandoCarta(empresaId)) return;
 
     const generando = new Set(this.generandoCartaPorEmpresa());
@@ -934,11 +938,16 @@ export default class EmpresasRepresentantePage {
 
     let url: string | null = null;
     try {
-      const pdf = await this.contratoService.descargarContratoCambioCuenta(solicitudId);
+      const pdf = await this.contratoService.descargarContratoCambioCuenta({
+        cuentaBancariaId,
+        solicitudId,
+        representanteId: this.representanteId(),
+        empresaId,
+      });
       url = URL.createObjectURL(pdf);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `cambio-cuenta-bancaria-${solicitudId}.pdf`;
+      a.download = `cambio-cuenta-bancaria-${cuentaBancariaId}.pdf`;
       a.click();
     } catch (error: any) {
       this.toastr.error(error?.message || 'Error al generar la carta de cambio de cuenta', 'Error');
