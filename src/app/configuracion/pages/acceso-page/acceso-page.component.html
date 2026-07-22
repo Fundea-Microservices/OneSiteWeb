@@ -58,13 +58,19 @@
                 </div>
                 <div class="mt-4">
                     <h5>Submenús</h5>
+                    <input type="text" class="form-control form-control-sm mt-2"
+                        placeholder="Buscar submenú por nombre o label" aria-label="Buscar submenú"
+                        [value]="submenuSearch()" (input)="submenuSearch.set(txtSubmenuSearch.value)"
+                        #txtSubmenuSearch>
                     <ul class="list-group text-[0.85em] mt-2">
-                        @for (menu of submenusUnused(); track menu.menuId) {
+                        @for (menu of submenusUnusedFiltered(); track menu.menuId) {
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <ion-icon class="mx-2" name="{{ menu.icon }}"></ion-icon>{{ menu.label }}
                             <span class="badge text-bg-success rounded-pill" (click)="addMenu(menu)">{{ 'Añadir'
                                 }}</span>
                         </li>
+                        } @empty {
+                        <li class="list-group-item text-muted">No se encontraron submenús</li>
                         }
                     </ul>
                 </div>

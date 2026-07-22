@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { RolService } from '../../../../services/rol.service';
 import { IMenu, IRol } from '../../../../interfaces/auth';
@@ -85,6 +85,16 @@ export default class AccesoPageComponent {
   });
 
   rolFilter = signal('');
+  submenuSearch = signal('');
+
+  submenusUnusedFiltered = computed(() => {
+    const term = this.submenuSearch().toLowerCase().trim();
+    if (!term) return this.submenusUnused();
+    return this.submenusUnused().filter(submenu =>
+      submenu.name?.toLowerCase().includes(term) ||
+      submenu.label?.toLowerCase().includes(term)
+    );
+  });
 
   constructor() { }
 
@@ -285,6 +295,7 @@ export default class AccesoPageComponent {
 
   changeRolSelected(rolId: string) {
     this.rolFilter.set(rolId)
+    this.submenuSearch.set('');
     this.fetchData();
   }
 

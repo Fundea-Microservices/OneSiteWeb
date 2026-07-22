@@ -370,6 +370,20 @@ export const routes: Routes = [
                 ]
             },
 
+            {
+                path: 'siucom',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./siucom/pages/dashboard-siucom-page/dashboard-siucom-page'),
+                    },
+                    {
+                        path: 'dashboard',
+                        loadComponent: () => import('./siucom/pages/dashboard-siucom-page/dashboard-siucom-page'),
+                    },
+                ]
+            },
+
             
         ]
     },

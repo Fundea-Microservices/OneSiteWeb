@@ -109,7 +109,7 @@ export default class LoginPageComponent {
       let authData = await  this.authService.login({ userName: this.userName(), password: this.password() })
       if(authData.success) {
         localStorage.setItem('token', authData?.data.token || '');
-        localStorage.setItem('user', JSON.stringify(authData?.data.user || {}));
+        localStorage.setItem('user', JSON.stringify({ ...authData?.data.user, siucom: authData?.data.siucom }));
 
         this.errorObj.set({
           message: '',
