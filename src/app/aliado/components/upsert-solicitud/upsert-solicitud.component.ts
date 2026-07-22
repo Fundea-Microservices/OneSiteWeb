@@ -175,9 +175,12 @@ export default class UpsertSolicitudComponent implements OnInit {
             const regiones: Region[] = [];
             const agencias: Agencia[] = [];
             for (const r of catalogos) {
-              regiones.push({ regionId: r.valorCore, nombre: r.nombre });
+              // Normalizar a string: valorCore/padreValorCore pueden venir como número
+              // o string desde el backend, y las comparaciones (filtro de agencias,
+              // preselección con ngModel) deben ser consistentes en tipo.
+              regiones.push({ regionId: String(r.valorCore), nombre: r.nombre });
               for (const a of (r.hijos ?? [])) {
-                agencias.push({ agenciaId: a.valorCore, nombre: a.nombre, regionId: a.padreValorCore });
+                agencias.push({ agenciaId: String(a.valorCore), nombre: a.nombre, regionId: String(a.padreValorCore) });
               }
             }
             resolve({ regiones, agencias });

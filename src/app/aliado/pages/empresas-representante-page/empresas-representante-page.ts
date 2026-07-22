@@ -635,6 +635,65 @@ export default class EmpresasRepresentantePage {
     return solicitud.estadoSolicitud.nombre.toUpperCase() === 'CORREGIR';
   }
 
+  // Indica si la solicitud asociada a una cuenta bancaria (cambio de cuenta)
+  // está en estado CORREGIR.
+  esEstadoCorregirCuenta(cuentaBancariaId: string): boolean {
+    const estado = this.obtenerEstadoSolicitudPorCuenta(cuentaBancariaId);
+    return estado?.toUpperCase() === 'CORREGIR';
+  }
+
+  async confirmarCorreccionesDesdeCuenta(cuentaBancariaId: string) {
+    if (!this.esPropietarioRepresentante()) {
+      this.toastr.warning('Solo el usuario que creó este representante puede realizar esta acción.', 'Sin permiso');
+      return;
+    }
+    const solicitud = this.listadoSolicitudes().find(s => s.cuentaBancariaId === cuentaBancariaId);
+    if (!solicitud?.solicitudId) {
+      alert('No se encontró la solicitud');
+      return;
+    }
+
+    if (!confirm('¿Confirmar que las correcciones han sido realizadas?')) {
+      return;
+    }
+
+    try {
+      // Buscar el estado "ESPERA"
+      const estadoEspera = this.estadosSolicitud().find(
+        estado => estado.nombre?.toUpperCase().includes('ESPERA')
+      );
+
+      if (!estadoEspera) {
+        alert('No se encontró el estado ESPERA');
+        return;
+      }
+
+      // Calcular el orden a partir del último seguimiento de la solicitud
+      const nuevoOrden = (solicitud.seguimientos ?? []).reduce(
+        (max, s) => Math.max(max, s.ordenSeguimiento || 0),
+        0
+      ) + 1;
+
+      // Crear el seguimiento
+      await this.seguimientoService.createSeguimientoSolicitud({
+        solicitudId: solicitud.solicitudId,
+        ordenSeguimiento: nuevoOrden,
+        estadoAprobacionId: estadoEspera.estadoSolicitudId,
+        observaciones: 'Correcciones realizadas',
+      });
+
+      // Actualizar el estado de la solicitud
+      await this.solicitudesService.updateSolicitud(solicitud.solicitudId, {
+        estadoSolicitudId: estadoEspera.estadoSolicitudId,
+      });
+
+      // Recargar las empresas para actualizar la vista
+      await this.cargarEmpresas();
+    } catch (error) {
+      console.error('Error al confirmar correcciones:', error);
+    }
+  }
+
   cerrarModalSolicitud() {
     this.showModalSolicitud.set(false);
     this.empresaIdSolicitud.set('');

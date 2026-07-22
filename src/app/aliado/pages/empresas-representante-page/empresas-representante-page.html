@@ -449,6 +449,13 @@
                                                                 <ion-icon name="pencil-outline"></ion-icon>
                                                             </button>
                                                             }
+                                                            @if (esEstadoCorregirCuenta(cuenta.cuentaBancariaId || '') && esPropietarioRepresentante()) {
+                                                            <button type="button"
+                                                                (click)="confirmarCorreccionesDesdeCuenta(cuenta.cuentaBancariaId || '')"
+                                                                class="btn btn-sm btn-success" title="Confirmar correcciones">
+                                                                <ion-icon name="checkmark-done-outline"></ion-icon>
+                                                            </button>
+                                                            }
                                                             <button type="button"
                                                                 (click)="generarDocumentoCuenta(empresa.empresaId, cuenta)"
                                                                 [disabled]="estaGenerandoCarta(empresa.empresaId)"
@@ -507,6 +514,13 @@
                                                             (click)="editarSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '')"
                                                             class="btn btn-sm btn-warning text-white" title="Editar solicitud">
                                                             <ion-icon name="pencil-outline"></ion-icon>
+                                                        </button>
+                                                        }
+                                                        @if (esEstadoCorregirCuenta(cuenta.cuentaBancariaId || '') && esPropietarioRepresentante()) {
+                                                        <button type="button"
+                                                            (click)="confirmarCorreccionesDesdeCuenta(cuenta.cuentaBancariaId || '')"
+                                                            class="btn btn-sm btn-success" title="Confirmar correcciones">
+                                                            <ion-icon name="checkmark-done-outline"></ion-icon>
                                                         </button>
                                                         }
                                                         <button type="button"
