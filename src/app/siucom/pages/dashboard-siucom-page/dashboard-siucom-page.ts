@@ -69,7 +69,7 @@ export default class DashboardSiucomPage implements OnInit {
         nombre: user.fullName,
         region: region.descripcion.replace(/^REGIONAL/i, 'REGIÓN').trim(),
         agencia: agencia.descripcion.replace(/^AGENCIA\s+/i, '').trim(),
-        rol: 'OneSiteUser',
+        rol: user.rol.name || 'OneSiteUser',
       });
 
       const siucom: ISIUCOM | undefined = resp?.data?.siucom;
