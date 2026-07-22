@@ -572,14 +572,44 @@ export default class EmpresasRepresentantePage {
     this.showModalSolicitud.set(true);
   }
 
+  // Indica si la solicitud asociada a una cuenta bancaria puede editarse
+  // (solo cuando está en estado ESPERA o CORREGIR).
+  puedeEditarSolicitudDesdeCuenta(cuentaBancariaId: string): boolean {
+    const estado = this.obtenerEstadoSolicitudPorCuenta(cuentaBancariaId);
+    if (!estado) return false;
+    const estadoUpper = estado.toUpperCase();
+    return estadoUpper === 'ESPERA' || estadoUpper === 'CORREGIR';
+  }
+
+  async editarSolicitudDesdeCuenta(cuentaBancariaId: string) {
+    if (!this.esPropietarioRepresentante()) {
+      this.toastr.warning('Solo el usuario que creó este representante puede realizar esta acción.', 'Sin permiso');
+      return;
+    }
+    const solicitud = this.listadoSolicitudes().find(s => s.cuentaBancariaId === cuentaBancariaId);
+    if (!solicitud) {
+      this.toastr.warning('No se encontró la solicitud a editar.', 'Sin solicitud');
+      return;
+    }
+
+    this.cuentaBancariaIdSolicitud.set(cuentaBancariaId);
+    this.empresaIdSolicitud.set(''); // No necesitamos empresaId
+    this.esEditarSolicitud.set(true);
+    this.esEmpresa.set(false);
+    this.solicitudFormData.set(this.mapSolicitudToFormData(solicitud));
+    this.modalKeySolicitud.set(this.modalKeySolicitud() + 1);
+    this.showModalSolicitud.set(true);
+  }
+
   async editarSolicitud(empresaId: string) {
     if (!this.esPropietarioRepresentante()) {
       this.toastr.warning('Solo el usuario que creó este representante puede realizar esta acción.', 'Sin permiso');
       return;
     }
     this.empresaIdSolicitud.set(empresaId);
+    this.cuentaBancariaIdSolicitud.set(''); // Limpiar: edición desde empresa
     this.esEditarSolicitud.set(true);
-    
+
     // Cargar los datos de la solicitud de forma async
     const formData = await this.cargarSolicitudFormData(empresaId);
     this.solicitudFormData.set(formData);
@@ -638,7 +668,10 @@ export default class EmpresasRepresentantePage {
 
   private async cargarSolicitudFormData(empresaId: string): Promise<SolicitudFormData | undefined> {
     const solicitud = this.getSolicitudPorEmpresa(empresaId);
-    
+    return this.mapSolicitudToFormData(solicitud);
+  }
+
+  private mapSolicitudToFormData(solicitud: Solicitud | null | undefined): SolicitudFormData | undefined {
     if (!solicitud) return undefined;
 
     // Convertir códigos numéricos del backend a strings (valorCore)
@@ -716,7 +749,11 @@ export default class EmpresasRepresentantePage {
       
       if (this.esEditarSolicitud()) {
         // Modo edición
-        const solicitud = this.getSolicitudPorEmpresa(empresaId);
+        // Si la edición proviene de una cuenta bancaria (solicitud de cambio de
+        // cuenta), resolver la solicitud por cuentaBancariaId; si no, por empresa.
+        const solicitud = cuentaBancariaIdDesdeCuenta
+          ? this.listadoSolicitudes().find(s => s.cuentaBancariaId === cuentaBancariaIdDesdeCuenta)
+          : this.getSolicitudPorEmpresa(empresaId);
         if (!solicitud?.solicitudId) {
           alert('No se encontró la solicitud a editar');
           return;

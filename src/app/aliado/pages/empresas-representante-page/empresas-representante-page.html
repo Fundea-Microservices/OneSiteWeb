@@ -442,6 +442,13 @@
                                                                 <ion-icon name="add-outline"></ion-icon>
                                                             </button>
                                                             }
+                                                            @if (puedeEditarSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '') && esPropietarioRepresentante()) {
+                                                            <button type="button"
+                                                                (click)="editarSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '')"
+                                                                class="btn btn-sm btn-warning text-white" title="Editar solicitud">
+                                                                <ion-icon name="pencil-outline"></ion-icon>
+                                                            </button>
+                                                            }
                                                             <button type="button"
                                                                 (click)="generarDocumentoCuenta(empresa.empresaId, cuenta)"
                                                                 [disabled]="estaGenerandoCarta(empresa.empresaId)"
@@ -493,6 +500,13 @@
                                                             (click)="editarCuenta(empresa.empresaId, cuenta)"
                                                             class="btn btn-sm btn-primary" title="Editar cuenta">
                                                             <ion-icon name="create-outline"></ion-icon>
+                                                        </button>
+                                                        }
+                                                        @if (puedeEditarSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '') && esPropietarioRepresentante()) {
+                                                        <button type="button"
+                                                            (click)="editarSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '')"
+                                                            class="btn btn-sm btn-warning text-white" title="Editar solicitud">
+                                                            <ion-icon name="pencil-outline"></ion-icon>
                                                         </button>
                                                         }
                                                         <button type="button"
