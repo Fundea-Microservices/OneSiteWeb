@@ -1,0 +1,29 @@
+@if (loading()) {
+  <div class="flex h-screen w-full flex-col items-center justify-center gap-3">
+    <div class="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+    <p class="text-slate-600">{{ loadingMessage() }}</p>
+  </div>
+} @else if (errorMessage()) {
+  <div class="flex h-screen w-full flex-col items-center justify-center gap-3 px-4 text-center">
+    <svg class="h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+    </svg>
+    <p class="text-slate-700 font-medium">{{ errorMessage() }}</p>
+    <button (click)="cargarDashboard()"
+      class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+      Reintentar
+    </button>
+  </div>
+} @else if (dashboardUrl()) {
+  <!-- Compensa el padding del layout (px-2, mr-3) y la barra superior móvil (pt-16) para que el iframe use todo el espacio disponible.
+       En escritorio el iframe se renderiza al 125% de ancho/alto y se escala al 80% para compensar los 250px del menú lateral. -->
+  <div class="-mx-2 lg:-mr-5 h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
+    <iframe
+      [src]="dashboardUrl()"
+      class="border-0 w-full h-full lg:w-[125%] lg:h-[125%] lg:scale-[0.8] lg:origin-top-left"
+      title="Dashboard SIUCOM"
+      allowfullscreen
+    ></iframe>
+  </div>
+}

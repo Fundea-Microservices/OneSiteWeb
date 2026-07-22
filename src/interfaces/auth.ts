@@ -8,7 +8,20 @@ export interface AuthResponse {
     message: string;
     data: {
         user: IUser;
+        siucom?: ISIUCOM;
         token:    string;
+    }
+}
+
+export interface SiucomAccesoResponse {
+    success: boolean;
+    statusCode: number;
+    status?: number;
+    message: string;
+    data: {
+        user: IUser;
+        siucom: ISIUCOM;
+        creado: boolean;
     }
 }
 
@@ -46,6 +59,7 @@ export interface IUser {
     puesto?:      null;
     metodoId:    null;
     metodo?:    IMetodo;
+    siucom?: ISIUCOM;
     created_at?:  Date;
     updated_at?:  Date;
     deleted_at?:  Date;
@@ -111,3 +125,28 @@ export interface DataU {
     metadata: Metadata;
 }
 
+export interface ISIUCOM {
+    id:                     string;
+    usuarioId:              string;
+    success?:               boolean;
+    creado?:                boolean;
+    mensaje?:               string;
+    usuarioSiucom:          string;
+    nombreCliente:          string;
+    region:                 string;
+    agencia:                string;
+    rol:                    string;
+    estado:                 string;
+    dashboard:              string;
+    pluviometro:            number;
+    urlAcceso:              string;
+    urlEstado:              string;
+    idRegionFundea:         number;
+    tipoDispositivo:        string;
+    esSedeRegional:         boolean;
+    dispositivoSolicitado:  string;
+    dispositivoResultado:   number;
+    created_at?:            Date;
+    updated_at?:            Date | null;
+    deleted_at?:            Date | null;
+}

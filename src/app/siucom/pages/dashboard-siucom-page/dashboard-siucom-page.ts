@@ -1,0 +1,96 @@
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { AuthService } from '../../../../services/auth.service';
+import { SiucomService } from '../../../../services/config/siucom.service';
+import { SucursalesBantotalService } from '../../../../services/api-bantotal/sucursales.service';
+import { ISIUCOM } from '../../../../interfaces/auth';
+
+@Component({
+  selector: 'app-dashboard-siucom-page',
+  imports: [],
+  templateUrl: './dashboard-siucom-page.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export default class DashboardSiucomPage implements OnInit {
+
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly authService = inject(AuthService);
+  private readonly siucomService = inject(SiucomService);
+  private readonly sucursalesService = inject(SucursalesBantotalService);
+
+  loading = signal(false);
+  loadingMessage = signal('Cargando dashboard...');
+  errorMessage = signal('');
+  dashboardUrl = signal<SafeResourceUrl | null>(null);
+
+  ngOnInit() {
+    this.cargarDashboard();
+  }
+
+  async cargarDashboard() {
+    this.errorMessage.set('');
+    const user = this.authService.getUserStorage();
+
+    // Si el usuario ya tiene acceso SIUCOM, usar su URL directamente
+    if (user.siucom?.urlAcceso) {
+      this.setUrl(user.siucom.urlAcceso);
+      return;
+    }
+
+    // No tiene acceso SIUCOM: hay que crearlo
+    try {
+      this.loading.set(true);
+
+      // 1. Obtener las agencias del usuario desde Bantotal
+      this.loadingMessage.set('Obteniendo agencias del usuario...');
+      const sucursales = await this.sucursalesService.getMisSucursales(user.userName);
+
+      const agencias = sucursales?.data?.agencias ?? [];
+      const regiones = sucursales?.data?.regiones ?? [];
+
+      // 2. Tomar la primera agencia que tenga región asignada
+      const agencia = agencias.find(a => a.regionId !== null);
+      if (!agencia) {
+        this.errorMessage.set('No se encontraron agencias con región asignada para su usuario. Contacte al administrador.');
+        return;
+      }
+
+      const region = regiones.find(r => r.id === agencia.regionId);
+      if (!region) {
+        this.errorMessage.set('No se encontró la región de su agencia. Contacte al administrador.');
+        return;
+      }
+
+      // 3. Crear/obtener el acceso SIUCOM
+      // El endpoint espera "REGIÓN III" (no "REGIONAL III") y "QUETZALTENANGO" (sin el prefijo "AGENCIA")
+      this.loadingMessage.set('Creando acceso SIUCOM...');
+      const resp = await this.siucomService.getOrCreateAcceso({
+        usuarioId: user.userId,
+        nombre: user.fullName,
+        region: region.descripcion.replace(/^REGIONAL/i, 'REGIÓN').trim(),
+        agencia: agencia.descripcion.replace(/^AGENCIA\s+/i, '').trim(),
+        rol: 'OneSiteUser',
+      });
+
+      const siucom: ISIUCOM | undefined = resp?.data?.siucom;
+      if (!resp?.success || !siucom?.urlAcceso) {
+        this.errorMessage.set(resp?.message || 'No fue posible crear el acceso a SIUCOM. Intente de nuevo más tarde.');
+        return;
+      }
+
+      // 4. Guardar el acceso SIUCOM junto al usuario en localStorage
+      this.authService.updateUser({ ...user, siucom });
+
+      this.setUrl(siucom.urlAcceso);
+    } catch (error) {
+      console.error('❌ Error al cargar el dashboard SIUCOM:', error);
+      this.errorMessage.set('Ocurrió un error al cargar el dashboard de SIUCOM.');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  private setUrl(url: string) {
+    this.dashboardUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+  }
+}

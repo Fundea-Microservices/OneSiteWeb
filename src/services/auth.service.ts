@@ -99,9 +99,9 @@ export class AuthService extends HttpService {
     try {
       const resp = await firstValueFrom(this.post<AuthResponse>(this.endpoints.login, data));
       if (resp.body?.success) {
-        // Guardar en signal y storage
+        // Guardar en signal y storage (incluyendo datos de SIUCOM si vienen en la respuesta)
         if (resp.body.data?.user) {
-          this.updateUser(resp.body.data.user);
+          this.updateUser({ ...resp.body.data.user, siucom: resp.body.data.siucom });
         }
         return resp.body;
       }
