@@ -1,0 +1,258 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/fundea">Inicio</a></li>
+    <li class="breadcrumb-item">SIUCOM</li>
+    <li class="breadcrumb-item active" aria-current="page">Historial</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header">
+    Historial de accesos de usuarios
+  </div>
+
+  <div class="card-body">
+
+    <!-- Filtros -->
+    <form class="mb-4" (ngSubmit)="buscar()">
+
+      <!-- Fila superior: rango de fechas -->
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label for="fechaInicio" class="form-label">Fecha Inicio</label>
+          <input
+            type="date"
+            class="form-control"
+            id="fechaInicio"
+            [ngModel]="fechaInicio()"
+            (ngModelChange)="onFechaInicioChange($event)"
+            name="fechaInicio"
+            [max]="hoy"
+            [disabled]="isLoading()">
+        </div>
+
+        <div class="col-md-3">
+          <label for="fechaFin" class="form-label">Fecha Fin</label>
+          <input
+            type="date"
+            class="form-control"
+            [class.is-invalid]="fechaFinInvalida()"
+            id="fechaFin"
+            [(ngModel)]="fechaFin"
+            name="fechaFin"
+            [min]="fechaInicio()"
+            [max]="hoy"
+            [disabled]="isLoading()">
+          @if (fechaFinInvalida()) {
+            <div class="invalid-feedback">
+              La fecha fin no puede ser menor a la fecha inicio.
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Fila inferior: tipo de filtro + campo dinámico -->
+      <div class="row g-3 mt-1 align-items-end">
+        <!-- Selector de tipo de filtro -->
+        <div class="col-md-auto">
+          <label class="form-label d-block">Filtrar por</label>
+          <div class="btn-group" role="group" aria-label="Tipo de filtro">
+            <input type="radio" class="btn-check" name="tipoFiltro" id="filtroUsuario"
+              [checked]="tipoFiltro() === 'usuario'" (change)="onTipoFiltroChange('usuario')"
+              [disabled]="isLoading()">
+            <label class="btn btn-outline-primary" for="filtroUsuario">Usuario</label>
+
+            <input type="radio" class="btn-check" name="tipoFiltro" id="filtroUbicacion"
+              [checked]="tipoFiltro() === 'ubicacion'" (change)="onTipoFiltroChange('ubicacion')"
+              [disabled]="isLoading()">
+            <label class="btn btn-outline-primary" for="filtroUbicacion">Región / Agencia</label>
+
+            <input type="radio" class="btn-check" name="tipoFiltro" id="filtroRol"
+              [checked]="tipoFiltro() === 'rol'" (change)="onTipoFiltroChange('rol')"
+              [disabled]="isLoading()">
+            <label class="btn btn-outline-primary" for="filtroRol">Rol</label>
+          </div>
+        </div>
+
+        <!-- Filtro por usuario (exacto) -->
+        @if (tipoFiltro() === 'usuario') {
+          <div class="col-md-4">
+            <label for="usuario" class="form-label">Usuario</label>
+            <input
+              type="text"
+              class="form-control"
+              id="usuario"
+              [(ngModel)]="usuario"
+              name="usuario"
+              placeholder="Usuario exacto (ej.: jlopez)"
+              [disabled]="isLoading()">
+          </div>
+        }
+
+        <!-- Filtro por región / agencia -->
+        @if (tipoFiltro() === 'ubicacion') {
+          <div class="col-md-4">
+            <label for="region" class="form-label">Región</label>
+            <select
+              class="form-select"
+              id="region"
+              [ngModel]="selectedRegion()"
+              (ngModelChange)="onRegionChange($event)"
+              name="region"
+              [disabled]="isLoading()">
+              <option value="">Seleccione una región</option>
+              @for (region of regiones(); track region.regionId) {
+                <option [value]="region.regionId">{{ region.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="agencia" class="form-label">Agencia</label>
+            <select
+              class="form-select"
+              id="agencia"
+              [(ngModel)]="selectedAgencia"
+              name="agencia"
+              [disabled]="isLoading() || !selectedRegion()">
+              <option value="">Todas</option>
+              @for (agencia of agenciasFilterradas(); track agencia.agenciaId) {
+                <option [value]="agencia.agenciaId">{{ agencia.nombre }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        <!-- Filtro por rol -->
+        @if (tipoFiltro() === 'rol') {
+          <div class="col-md-4">
+            <label for="rol" class="form-label">Rol</label>
+            <select
+              class="form-select"
+              id="rol"
+              [(ngModel)]="selectedRol"
+              name="rol"
+              [disabled]="isLoading()">
+              <option value="">Seleccione un rol</option>
+              @for (rol of roles(); track rol.rolId) {
+                <option [value]="rol.rolId">{{ rol.name }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+
+      <!-- Acciones -->
+      <div class="d-flex gap-2 mt-3">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!formularioValido || isLoading()">
+          @if (isLoading()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Consultando...
+          } @else {
+            <ion-icon name="search-outline" class="me-2"></ion-icon>
+            Buscar
+          }
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="limpiarFiltros()"
+          [disabled]="isLoading()">
+          <ion-icon name="refresh-outline" class="me-2"></ion-icon>
+          Limpiar
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-success ms-auto"
+          (click)="exportarCsv()"
+          [disabled]="isLoading() || descargandoCsv()">
+          @if (descargandoCsv()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Generando...
+          } @else {
+            <ion-icon name="download-outline" class="me-2"></ion-icon>
+            Exportar CSV
+          }
+        </button>
+      </div>
+
+    </form>
+
+    <!-- Error -->
+    @if (errorBusqueda()) {
+      <div class="alert alert-danger" role="alert">
+        <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+        {{ errorBusqueda() }}
+      </div>
+    }
+
+    <!-- Contador de resultados -->
+    @if (buscado() && !errorBusqueda() && sesiones().length > 0) {
+      <p class="text-muted small mb-2">
+        <ion-icon name="list-outline" class="me-1"></ion-icon>
+        {{ sesiones().length }} sesión(es) encontrada(s)
+      </p>
+    }
+
+    <!-- Tabla de resultados -->
+    <div class="table-responsive">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="text-center" scope="col">#</th>
+            <th class="text-center" scope="col">Usuario</th>
+            <th class="text-center" scope="col">Nombre</th>
+            <th class="text-center" scope="col">Rol</th>
+            <th class="text-center" scope="col">Región</th>
+            <th class="text-center" scope="col">Agencia</th>
+            <th class="text-center" scope="col">Ingreso</th>
+            <th class="text-center" scope="col">Última actividad</th>
+            <th class="text-center" scope="col">Estado</th>
+            <th class="text-center" scope="col">Min. sesión</th>
+            <th class="text-center" scope="col">IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sesion of registrosPagina(); track sesion.session_token; let i = $index) {
+            <tr>
+              <th class="text-center" scope="row">
+                {{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}
+              </th>
+              <td>{{ sesion.usuario }}</td>
+              <td>{{ sesion.nombre_cliente }}</td>
+              <td>{{ sesion.rol }}</td>
+              <td>{{ sesion.region }}</td>
+              <td>{{ sesion.agencia }}</td>
+              <td class="text-center text-nowrap">{{ sesion.ingreso }}</td>
+              <td class="text-center text-nowrap">{{ sesion.salida_o_ultima_actividad }}</td>
+              <td class="text-center">
+                <span class="badge" [class.bg-success]="sesion.estado === 'activa'"
+                  [class.bg-secondary]="sesion.estado !== 'activa'">
+                  {{ sesion.estado }}
+                </span>
+              </td>
+              <td class="text-end">{{ sesion.minutos_sesion | number:'1.0-2' }}</td>
+              <td class="text-center text-nowrap">{{ sesion.ip_conexion }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="11" class="text-center text-muted py-4">
+                @if (buscado()) {
+                  No se encontraron registros para los filtros seleccionados.
+                } @else {
+                  Utiliza los filtros y presiona "Buscar" para consultar el historial.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+
+  </div>
+</div>

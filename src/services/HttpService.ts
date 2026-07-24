@@ -39,6 +39,15 @@ export class HttpService {
     return this.http.get<T>(this.baseUrl + url, options);
   }
 
+  public getBlob(url: string, params?: { [key: string]: any }): Observable<HttpResponse<Blob>> {
+    return this.http.get(this.baseUrl + url, {
+      headers: new HttpHeaders({ 'Authorization': `Bearer ${this.getToken()}` }),
+      params: params ? new HttpParams({ fromObject: params }) : undefined,
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
+
   public post<T>(url: string, data: any): Observable<HttpResponse<T>> {
     return this.http.post<T>(this.baseUrl + url, data, {
       headers: this.setHeaders(),

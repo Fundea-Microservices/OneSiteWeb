@@ -381,6 +381,10 @@ export const routes: Routes = [
                         path: 'dashboard',
                         loadComponent: () => import('./siucom/pages/dashboard-siucom-page/dashboard-siucom-page'),
                     },
+                    {
+                        path: 'historial',
+                        loadComponent: () => import('./siucom/pages/historial-siucom-page/historial-siucom-page'),
+                    },
                 ]
             },
 
