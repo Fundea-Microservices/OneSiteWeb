@@ -9,13 +9,15 @@ export const TIPOS_DATO = [
   'DATE', 'FECHA',
   'EMAIL', 'TELEFONO',
   'BOOLEAN', 'RADIO', 'CHECKBOX',
-  'TEXTAREA',
+  'TEXTAREA', 'LABEL',
   'SELECT', 'MULTISELECT', 'LISTA',
   'COORDENADAS', 'GEOLOCALIZACION', 'UBICACION',
   'FILE', 'MATRIZ', 'CALCULO', 'FOTO', 'IMAGEN'
 ];
 
 const TIPOS_CON_ORIGEN = new Set(['SELECT', 'MULTISELECT', 'RADIO', 'CHECKBOX', 'LISTA']);
+
+const TIPOS_CON_CATALOGO_HIJO = new Set(['SELECT', 'MULTISELECT', 'LISTA']);
 
 export const ORIGENES_TIPO = ['CATALOGO', 'API', 'LISTA'];
 
@@ -95,8 +97,10 @@ export class UpsertPreguntaComponent {
       filtro: [preg.filtro ?? null],
       esEditable: [preg.esEditable ?? true],
       esVisibleDefault: [preg.esVisibleDefault ?? true],
+      obligatorio: [preg.obligatorio ?? true],
+      catalogoHijo: [preg.catalogoHijo ?? null, [Validators.maxLength(150)]],
     });
-    if (isNuevo) g.reset({ etiqueta: '', tipoDato: 'TEXT', orden: 1, origenDatosTipo: null, origenDatosCmd: null, filtro: null, esEditable: true, esVisibleDefault: true });
+    if (isNuevo) g.reset({ etiqueta: '', tipoDato: 'TEXT', orden: 1, origenDatosTipo: null, origenDatosCmd: null, filtro: null, esEditable: true, esVisibleDefault: true, obligatorio: true, catalogoHijo: null });
     // Pre-fill search display when editing with a catalog origin
     const searchText = (!isNuevo && preg.origenDatosCmd) ? preg.origenDatosCmd : '';
     this.catalogoSearch.set(searchText);
@@ -120,6 +124,10 @@ export class UpsertPreguntaComponent {
   get esCatalogo(): boolean {
     return TIPOS_CON_ORIGEN.has(this.form().get('tipoDato')?.value)
       && this.form().get('origenDatosTipo')?.value === 'CATALOGO';
+  }
+
+  get tieneCatalogoHijo(): boolean {
+    return TIPOS_CON_CATALOGO_HIJO.has(this.form().get('tipoDato')?.value);
   }
 
   get btnText() { return this.nuevo() ? 'Crear pregunta' : 'Actualizar pregunta'; }

@@ -77,6 +77,8 @@ export interface IPregunta {
   opciones?: string | null;
   codigo: number;
   filtro?: number | null;
+  obligatorio?: boolean;
+  catalogoHijo?: string | null;
 
 }
 
