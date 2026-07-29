@@ -367,6 +367,10 @@ export const routes: Routes = [
                         path: 'encuestas/matriz/:id',
                         loadComponent: () => import('./onesite-ex/pages/matriz-detalle-page/matriz-detalle-page'),
                     },
+                    {
+                        path: 'usuarios',
+                        loadComponent: () => import('./onesite-ex/pages/usuarios-onesiteex-page/usuarios-onesiteex-page'),
+                    },
                 ]
             },
 

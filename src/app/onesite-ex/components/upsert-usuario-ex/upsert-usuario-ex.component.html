@@ -1,0 +1,102 @@
+<form [formGroup]="form()">
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Usuario <span class="text-danger">*</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="username"
+        placeholder="Ej. jperez" autocomplete="off" />
+      @if (hasError('username', 'required')) {
+        <div class="text-danger small">El usuario es requerido</div>
+      }
+      @if (hasError('username', 'maxlength')) {
+        <div class="text-danger small">Máximo 50 caracteres</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Nombre completo <span class="text-danger">*</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombreCompleto"
+        placeholder="Ej. Juan Pérez" />
+      @if (hasError('nombreCompleto', 'required')) {
+        <div class="text-danger small">El nombre completo es requerido</div>
+      }
+      @if (hasError('nombreCompleto', 'maxlength')) {
+        <div class="text-danger small">Máximo 100 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-12">
+      <label class="form-label">
+        Contraseña
+        @if (nuevo()) {
+          <span class="text-danger">*</span>
+        } @else {
+          <span class="text-muted">(dejar vacía para no cambiarla)</span>
+        }
+      </label>
+      <div class="input-group input-group-sm">
+        <input [type]="verPassword() ? 'text' : 'password'" class="form-control form-control-sm"
+          formControlName="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+        <button type="button" class="btn btn-outline-secondary" (click)="toggleVerPassword()"
+          [title]="verPassword() ? 'Ocultar' : 'Mostrar'">
+          <ion-icon [name]="verPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+        </button>
+      </div>
+      @if (hasError('password', 'required')) {
+        <div class="text-danger small">La contraseña es requerida</div>
+      }
+      @if (hasError('password', 'minlength')) {
+        <div class="text-danger small">Mínimo 6 caracteres</div>
+      }
+      @if (hasError('password', 'maxlength')) {
+        <div class="text-danger small">Máximo 72 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Empresa <span class="text-danger">*</span></label>
+      <select class="form-select form-select-sm" formControlName="idEmpresa">
+        <option [ngValue]="null">Seleccione una empresa...</option>
+        @for (e of empresas(); track e.idEmpresa) {
+          <option [ngValue]="e.idEmpresa">{{ e.nombreEmpresa }}</option>
+        }
+      </select>
+      @if (hasError('idEmpresa', 'required')) {
+        <div class="text-danger small">La empresa es requerida</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Rol <span class="text-danger">*</span></label>
+      <select class="form-select form-select-sm" formControlName="idRol">
+        <option [ngValue]="null">Seleccione un rol...</option>
+        @for (r of roles(); track r.idRol) {
+          <option [ngValue]="r.idRol">{{ r.nombreRol }}</option>
+        }
+      </select>
+      @if (hasError('idRol', 'required')) {
+        <div class="text-danger small">El rol es requerido</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-12">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="estado" id="estadoUsuarioCheck" />
+        <label class="form-check-label" for="estadoUsuarioCheck">
+          {{ form().get('estado')?.value ? 'Alta (activo)' : 'Baja (inactivo)' }}
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">{{ btnText }}</button>
+  </div>
+</form>

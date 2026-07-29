@@ -1,0 +1,33 @@
+/* Fila desplegable con el detalle de dispositivos y sesiones */
+.detalle-row > td {
+  border-top: 0;
+}
+
+.detalle-panel {
+  background-color: var(--bs-tertiary-bg, #f8f9fa);
+  border-left: 3px solid var(--bs-primary);
+}
+
+.detalle-panel .nav-pills .nav-link {
+  border: 1px solid var(--bs-border-color);
+  color: var(--bs-body-color);
+  font-size: 0.8rem;
+}
+
+.detalle-panel .nav-pills .nav-link.active {
+  border-color: var(--bs-primary);
+  color: #fff;
+}
+
+/* Velo sobre la tabla de sesiones mientras se carga otra página */
+.sesiones-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index: 2;
+}
+
+.detalle-panel table th {
+  background-color: var(--bs-secondary-bg, #e9ecef);
+  white-space: nowrap;
+}
