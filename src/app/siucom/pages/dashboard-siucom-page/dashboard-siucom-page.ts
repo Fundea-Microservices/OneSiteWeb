@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-// import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AuthService } from '../../../../services/auth.service';
 import { SiucomService } from '../../../../services/config/siucom.service';
 import { SucursalesBantotalService } from '../../../../services/api-bantotal/sucursales.service';
@@ -13,7 +13,7 @@ import { ISIUCOM } from '../../../../interfaces/auth';
 })
 export default class DashboardSiucomPage implements OnInit {
 
-  // private readonly sanitizer = inject(DomSanitizer);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly authService = inject(AuthService);
   private readonly siucomService = inject(SiucomService);
   private readonly sucursalesService = inject(SucursalesBantotalService);
@@ -21,9 +21,7 @@ export default class DashboardSiucomPage implements OnInit {
   loading = signal(false);
   loadingMessage = signal('Cargando dashboard...');
   errorMessage = signal('');
-  // dashboardUrl = signal<SafeResourceUrl | null>(null);
-  // URL del dashboard ya obtenida; se usa para abrir/reabrir la pestaña nueva.
-  dashboardUrl = signal<string | null>(null);
+  dashboardUrl = signal<SafeResourceUrl | null>(null);
 
   ngOnInit() {
     this.cargarDashboard();
@@ -93,19 +91,22 @@ export default class DashboardSiucomPage implements OnInit {
   }
 
   private setUrl(url: string) {
-    // Implementación anterior con iframe (comentada):
-    // this.dashboardUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-
-    // Guardar la URL y abrir el dashboard en una pestaña nueva.
-    this.dashboardUrl.set(url);
-    this.abrirDashboard();
+    this.dashboardUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.conParametroEmbed(url)));
   }
 
-  /** Abre (o reabre) el dashboard de SIUCOM en una pestaña nueva. */
-  abrirDashboard() {
-    const url = this.dashboardUrl();
-    if (url) {
-      window.open(url, '_blank', 'noopener');
+  /**
+   * SIUCOM sólo permite embeber el dashboard desde otro dominio si la URL
+   * lleva el parámetro `embed=1`. Sin él, el iframe queda bloqueado.
+   */
+  private conParametroEmbed(url: string): string {
+    try {
+      const parsed = new URL(url);
+      parsed.searchParams.set('embed', '1');
+      return parsed.toString();
+    } catch {
+      // URL relativa o mal formada: agregar el parámetro manualmente.
+      if (/[?&]embed=/.test(url)) return url;
+      return `${url}${url.includes('?') ? '&' : '?'}embed=1`;
     }
   }
 }

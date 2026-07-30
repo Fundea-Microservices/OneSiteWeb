@@ -16,26 +16,13 @@
     </button>
   </div>
 } @else if (dashboardUrl()) {
-  <!-- Implementación anterior con iframe (comentada). Ahora el dashboard se abre en una pestaña nueva.
   <div class="-mx-2 lg:-mr-5 h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
     <iframe
       [src]="dashboardUrl()"
       class="border-0 w-full h-full lg:w-[125%] lg:h-[125%] lg:scale-[0.8] lg:origin-top-left"
       title="Dashboard SIUCOM"
+      allow="storage-access"
       allowfullscreen
     ></iframe>
-  </div>
-  -->
-  <div class="flex h-screen w-full flex-col items-center justify-center gap-3 px-4 text-center">
-    <svg class="h-12 w-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-    </svg>
-    <p class="text-slate-700 font-medium">El dashboard de SIUCOM se abrió en una pestaña nueva.</p>
-    <p class="text-slate-500 text-sm">Si no se abrió automáticamente, usa el siguiente botón.</p>
-    <button (click)="abrirDashboard()"
-      class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-      Abrir dashboard
-    </button>
   </div>
 }
