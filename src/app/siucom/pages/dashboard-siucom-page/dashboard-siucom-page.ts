@@ -13,6 +13,9 @@ import { ISIUCOM } from '../../../../interfaces/auth';
 })
 export default class DashboardSiucomPage implements OnInit {
 
+  /** Dominios desde los que se acepta cargar el dashboard en el iframe. */
+  private static readonly HOSTS_PERMITIDOS: readonly string[] = ['siucomgt.com'];
+
   private readonly sanitizer = inject(DomSanitizer);
   private readonly authService = inject(AuthService);
   private readonly siucomService = inject(SiucomService);
@@ -91,22 +94,43 @@ export default class DashboardSiucomPage implements OnInit {
   }
 
   private setUrl(url: string) {
-    this.dashboardUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.conParametroEmbed(url)));
+    const urlEmbed = this.construirUrlEmbed(url);
+    if (!urlEmbed) {
+      console.error('❌ URL de dashboard SIUCOM rechazada:', url);
+      this.errorMessage.set('La URL del dashboard de SIUCOM no es válida. Contacte al administrador.');
+      return;
+    }
+
+    // Seguro: construirUrlEmbed() ya validó esquema https y host permitido.
+    this.dashboardUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(urlEmbed));
   }
 
   /**
-   * SIUCOM sólo permite embeber el dashboard desde otro dominio si la URL
-   * lleva el parámetro `embed=1`. Sin él, el iframe queda bloqueado.
+   * Valida la URL recibida del API/localStorage y le agrega el parámetro
+   * `embed=1`, que SIUCOM exige para permitir el iframe desde otro dominio.
+   *
+   * La validación es obligatoria porque la URL termina en
+   * `bypassSecurityTrustResourceUrl`: sin ella, un valor manipulado en
+   * localStorage podría cargar contenido arbitrario (p. ej. `javascript:`)
+   * dentro del iframe. Devuelve null si la URL no es confiable.
    */
-  private conParametroEmbed(url: string): string {
+  private construirUrlEmbed(url: string): string | null {
+    let parsed: URL;
     try {
-      const parsed = new URL(url);
-      parsed.searchParams.set('embed', '1');
-      return parsed.toString();
+      parsed = new URL(url);
     } catch {
-      // URL relativa o mal formada: agregar el parámetro manualmente.
-      if (/[?&]embed=/.test(url)) return url;
-      return `${url}${url.includes('?') ? '&' : '?'}embed=1`;
+      return null;
     }
+
+    if (parsed.protocol !== 'https:') return null;
+
+    const host = parsed.hostname.toLowerCase();
+    const permitido = DashboardSiucomPage.HOSTS_PERMITIDOS.some(
+      permitidoHost => host === permitidoHost || host.endsWith(`.${permitidoHost}`)
+    );
+    if (!permitido) return null;
+
+    parsed.searchParams.set('embed', '1');
+    return parsed.toString();
   }
 }
