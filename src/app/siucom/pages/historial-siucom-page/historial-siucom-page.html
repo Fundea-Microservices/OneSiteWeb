@@ -49,6 +49,20 @@
             </div>
           }
         </div>
+
+        <div class="col-md-3">
+          <label for="dashboard" class="form-label">Tipo de dashboard</label>
+          <select
+            class="form-select"
+            id="dashboard"
+            [(ngModel)]="selectedDashboard"
+            name="dashboard"
+            [disabled]="isLoading()">
+            @for (dash of dashboards; track dash.valor) {
+              <option [value]="dash.valor">{{ dash.nombre }}</option>
+            }
+          </select>
+        </div>
       </div>
 
       <!-- Fila inferior: tipo de filtro + campo dinámico -->

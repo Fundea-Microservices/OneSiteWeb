@@ -5,7 +5,7 @@ import { RolService } from '../../../../services/rol.service';
 import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
 import { SiucomService } from '../../../../services/config/siucom.service';
 import { IRol } from '../../../../interfaces/auth';
-import { AuditoriaResumen, AuditoriaSesion, ConsultaAuditoriaSiucomParams } from '../../../../interfaces/siucom/auditoria';
+import { AuditoriaResumen, AuditoriaSesion, ConsultaAuditoriaSiucomParams, DashboardSiucom } from '../../../../interfaces/siucom/auditoria';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 
 export interface Region {
@@ -21,6 +21,17 @@ export interface Agencia {
 
 /** Tipo de filtro seleccionado en la página. */
 type TipoFiltro = 'usuario' | 'ubicacion' | 'rol';
+
+/** Opciones del filtro por tipo de dashboard. */
+const DASHBOARDS: { valor: DashboardSiucom; nombre: string }[] = [
+  { valor: 'todos',       nombre: 'Todos' },
+  { valor: 'empresarial', nombre: 'Empresarial' },
+  { valor: 'avanzado',    nombre: 'Avanzado' },
+  { valor: 'intermedio',  nombre: 'Intermedio' },
+  { valor: 'basico_pro',  nombre: 'Básico Pro' },
+  { valor: 'basico_plus', nombre: 'Básico Plus' },
+  { valor: 'basico',      nombre: 'Básico' },
+];
 
 @Component({
   selector: 'app-historial-siucom-page',
@@ -49,8 +60,11 @@ export default class HistorialSiucomPage implements OnInit {
   selectedRegion  = signal('');
   selectedAgencia = signal('');
   selectedRol     = signal('');
+  // Tipo de dashboard: independiente del tipo de filtro, aplica siempre
+  selectedDashboard = signal<DashboardSiucom>('todos');
 
   // Catálogos
+  readonly dashboards = DASHBOARDS;
   regiones = signal<Region[]>([]);
   agencias = signal<Agencia[]>([]);
   agenciasFilterradas = signal<Agencia[]>([]);
@@ -212,6 +226,8 @@ export default class HistorialSiucomPage implements OnInit {
       params.filtro = filtro;
     }
 
+    params.dashboard = this.selectedDashboard();
+
     if (this.fechaInicio()) params.fechaInicio = this.fechaInicio();
     if (this.fechaFin())    params.fechaFin    = this.fechaFin();
 
@@ -265,6 +281,7 @@ export default class HistorialSiucomPage implements OnInit {
     this.selectedRegion.set('');
     this.selectedAgencia.set('');
     this.selectedRol.set('');
+    this.selectedDashboard.set('todos');
     this.agenciasFilterradas.set([]);
     this.sesiones.set([]);
     this.resumen.set(null);

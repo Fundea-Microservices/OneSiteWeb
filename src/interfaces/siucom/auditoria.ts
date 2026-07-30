@@ -1,6 +1,17 @@
+/** Dashboards que acepta el filtro de auditoría de SIUCOM. */
+export type DashboardSiucom =
+  | 'todos'
+  | 'empresarial'
+  | 'avanzado'
+  | 'intermedio'
+  | 'basico_pro'
+  | 'basico_plus'
+  | 'basico';
+
 export interface ConsultaAuditoriaSiucomParams {
   usuario?: string;
   filtro?: string;
+  dashboard?: DashboardSiucom;
   fecha?: string;        // YYYY-MM-DD
   fechaInicio?: string;  // YYYY-MM-DD
   fechaFin?: string;     // YYYY-MM-DD
