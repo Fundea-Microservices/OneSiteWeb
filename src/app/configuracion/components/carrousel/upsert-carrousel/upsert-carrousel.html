@@ -1,6 +1,6 @@
 <form [formGroup]="form()" (ngSubmit)="onSubmit()">
   <div class="row">
-    <div class="col-md-8 mb-3">
+    <div class="col-md-5 mb-3">
       <label class="form-label">Título <span class="text-danger">*</span></label>
       <input type="text" class="form-control form-control-sm" formControlName="titulo" />
       @if (form().get('titulo')?.touched && form().get('titulo')?.invalid) {
@@ -9,6 +9,14 @@
           @if (form().get('titulo')?.errors?.['maxlength']) { <div>Máximo 200 caracteres</div> }
         </div>
       }
+    </div>
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Código</label>
+      <select class="form-select form-select-sm" formControlName="codigo">
+        @for (opcion of codigoOpciones; track opcion.value) {
+          <option [value]="opcion.value">{{ opcion.label }}</option>
+        }
+      </select>
     </div>
     <div class="col-md-4 mb-3">
       <label class="form-label">Texto del botón</label>

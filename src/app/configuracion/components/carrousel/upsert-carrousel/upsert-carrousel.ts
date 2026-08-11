@@ -36,6 +36,12 @@ export class UpsertCarrouselComponent {
 
   nuevo = input<boolean>(true);
 
+  readonly codigoOpciones: { value: string; label: string }[] = [
+    { value: '', label: 'Todos' },
+    { value: 'ONE-EX', label: 'OneSiteEx' },
+    { value: 'ALIADOS', label: 'Aliados Fundea' },
+  ];
+
   @Output() save = new EventEmitter<CreateCarouselDto | UpdateCarouselDto>();
   @Output() cancel = new EventEmitter<void>();
   @Output() liveChange = new EventEmitter<Partial<Carousel>>();
@@ -52,6 +58,7 @@ export class UpsertCarrouselComponent {
     return this.fb.group({
       titulo:        [isNuevo ? '' : c.titulo,        [Validators.required, Validators.maxLength(200)]],
       subtitulo:     [isNuevo ? '' : (c.subtitulo ?? '')],
+      codigo:        [isNuevo ? '' : (c.codigo ?? '')],
       descripcion:   [isNuevo ? '' : (c.descripcion ?? '')],
       fotoUrl:       [isNuevo ? '' : c.fotoUrl,      [Validators.required]],
       redireccionUrl:[isNuevo ? '' : (c.redireccionUrl ?? '')],
@@ -90,7 +97,12 @@ export class UpsertCarrouselComponent {
       this.fotoMode() === 'file'
         ? (this.previewDataUrl() ?? this.carousel().fotoUrl ?? '')
         : formValues.fotoUrl;
-    return { ...formValues, fotoUrl };
+    return { ...formValues, fotoUrl, codigo: this.normalizarCodigo(formValues.codigo) };
+  }
+
+  /** 'Todos' se envía como null para limpiar el código en la base de datos */
+  private normalizarCodigo(codigo: string | null | undefined): string | null {
+    return codigo ? codigo : null;
   }
 
   setFotoMode(mode: 'url' | 'file'): void {
@@ -145,11 +157,12 @@ export class UpsertCarrouselComponent {
     const values = f.getRawValue();
     const fotoUrl =
       this.fotoMode() === 'url' ? values.fotoUrl : (this.carousel().fotoUrl || 'archivo seleccionado');
+    const codigo = this.normalizarCodigo(values.codigo);
 
     if (!this.nuevo()) {
-      this.save.emit({ ...values, fotoUrl, carouselId: this.carousel().carouselId } as UpdateCarouselDto);
+      this.save.emit({ ...values, fotoUrl, codigo, carouselId: this.carousel().carouselId } as UpdateCarouselDto);
     } else {
-      this.save.emit({ ...values, fotoUrl } as CreateCarouselDto);
+      this.save.emit({ ...values, fotoUrl, codigo } as CreateCarouselDto);
     }
   }
 

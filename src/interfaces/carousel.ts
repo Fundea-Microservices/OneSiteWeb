@@ -2,6 +2,7 @@ export interface Carousel {
   carouselId: string;
   titulo: string;
   subtitulo?: string;
+  codigo?: string | null;
   descripcion?: string;
   fotoUrl: string;
   redireccionUrl?: string;
