@@ -102,6 +102,7 @@ export default class DashboardSiucomPage implements OnInit {
     }
 
     // Seguro: construirUrlEmbed() ya validó esquema https y host permitido.
+    // nosemgrep: typescript.angular.security.audit.angular-domsanitizer.angular-bypasssecuritytrust
     this.dashboardUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(urlEmbed));
   }
 
