@@ -13,10 +13,10 @@
 
   <div class="card-body">
 
-    <!-- Formulario -->
-    <form class="row g-3 mb-4" (ngSubmit)="ejecutar()">
+    <!-- Búsqueda de la ejecución -->
+    <form class="row g-3 mb-4" (ngSubmit)="buscar()">
 
-      <div class="col-md-4">
+      <div class="col-md-5">
         <label for="fecha" class="form-label">Fecha *</label>
         <input
           type="date"
@@ -25,8 +25,9 @@
           id="fecha"
           name="fecha"
           [max]="maxFecha"
-          [(ngModel)]="fecha"
-          [disabled]="isLoading()"
+          [ngModel]="fecha()"
+          (ngModelChange)="onFechaChange($event)"
+          [disabled]="isBuscando()"
           required>
         <div class="form-text">
           Solo se permiten fechas de ayer hacia atrás.
@@ -38,33 +39,17 @@
         }
       </div>
 
-      <div class="col-md-4 d-flex align-items-center">
-        <div class="form-check form-switch mt-md-4">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="todos"
-            name="todos"
-            [(ngModel)]="todos"
-            [disabled]="isLoading()">
-          <label class="form-check-label" for="todos">
-            Cargar todos
-          </label>
-        </div>
-      </div>
-
-      <div class="col-md-4 d-flex align-items-end">
+      <div class="col-md-4 d-flex align-items-start">
         <button
           type="submit"
-          class="btn btn-primary w-100"
-          [disabled]="!fechaValida || isLoading()">
-          @if (isLoading()) {
+          class="btn btn-primary w-100 mt-md-4"
+          [disabled]="!fechaValida || isBuscando()">
+          @if (isBuscando()) {
             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-            Procesando...
+            Buscando...
           } @else {
-            <ion-icon name="cloud-upload-outline" class="me-2"></ion-icon>
-            Ejecutar carga
+            <ion-icon name="search-outline" class="me-2"></ion-icon>
+            Buscar ejecución
           }
         </button>
       </div>
@@ -79,110 +64,258 @@
       </div>
     }
 
-    <!-- Resultado -->
-    @if (resultado(); as data) {
-      <div class="alert alert-success" role="alert">
-        <ion-icon name="checkmark-circle-outline" class="me-2"></ion-icon>
-        {{ mensaje() || 'Partidas contables cargadas correctamente' }}
-      </div>
-
-      <div class="row g-3">
-
-        <div class="col-12">
-          <h6 class="text-uppercase text-muted small mb-2">Detalle del proceso</h6>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-          <div class="card border-0 bg-light h-100">
-            <div class="card-body py-2">
-              <div class="text-muted small">Fecha procesada</div>
-              <div class="fs-6 fw-bold">{{ data.fecha }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-          <div class="card border-0 bg-light h-100">
-            <div class="card-body py-2">
-              <div class="text-muted small">Todos</div>
-              <div class="fs-6 fw-bold">{{ data.todos ? 'Sí' : 'No' }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-          <div class="card border-0 bg-light h-100">
-            <div class="card-body py-2">
-              <div class="text-muted small">Total de registros</div>
-              <div class="fs-6 fw-bold">{{ data.totalItems | number }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-          <div class="card border-0 bg-light h-100">
-            <div class="card-body py-2">
-              <div class="text-muted small">Páginas ({{ data.paginasProcesadas }}/{{ data.totalPages }})</div>
-              <div class="fs-6 fw-bold">Límite {{ data.limit }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12">
-          <table class="table table-sm table-bordered mb-0">
-            <tbody>
-              <tr>
-                <th class="table-light" style="width: 40%;">Registros procesados</th>
-                <td>{{ data.registrosProcesados | number }}</td>
-              </tr>
-              <tr>
-                <th class="table-light">Registros insertados</th>
-                <td>
-                  <span class="badge bg-success">{{ data.registrosInsertados | number }}</span>
-                </td>
-              </tr>
-              <tr>
-                <th class="table-light">Registros duplicados</th>
-                <td>
-                  <span class="badge bg-warning text-dark">{{ data.registrosDuplicados | number }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="col-12">
-          <h6 class="text-uppercase text-muted small mb-2 mt-2">Envío a Business Central</h6>
-          <table class="table table-sm table-bordered mb-0">
-            <tbody>
-              <tr>
-                <th class="table-light" style="width: 40%;">Total</th>
-                <td>{{ data.envioBusinessCentral.total | number }}</td>
-              </tr>
-              <tr>
-                <th class="table-light">Cargados</th>
-                <td>
-                  <span class="badge bg-success">{{ data.envioBusinessCentral.cargados | number }}</span>
-                </td>
-              </tr>
-              <tr>
-                <th class="table-light">Errores</th>
-                <td>
-                  <span class="badge {{ data.envioBusinessCentral.errores > 0 ? 'bg-danger' : 'bg-secondary' }}">
-                    {{ data.envioBusinessCentral.errores | number }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-      </div>
-    } @else if (ejecutado() && !isLoading() && !errorMsg()) {
-      <div class="alert alert-warning" role="alert">
+    <!-- Aviso (carga disparada / 409) -->
+    @if (avisoMsg()) {
+      <div class="alert alert-info" role="alert">
         <ion-icon name="information-circle-outline" class="me-2"></ion-icon>
-        No se recibió información del proceso.
+        {{ avisoMsg() }}
       </div>
+    }
+
+    @if (consultado()) {
+      @if (estado(); as data) {
+
+      <!-- Sin registros: se puede ejecutar por primera vez -->
+      @if (!data.existe) {
+        <div class="alert alert-secondary d-flex align-items-center" role="alert">
+          <ion-icon name="document-outline" class="me-2"></ion-icon>
+          No existe ninguna carga registrada para el {{ fecha() }}.
+        </div>
+      } @else {
+
+        <!-- Encabezado del estado -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+          <div class="d-flex align-items-center gap-2">
+            @if (data.enEjecucion) {
+              <span class="badge bg-primary">
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                En ejecución
+              </span>
+            } @else if (data.interrumpida) {
+              <span class="badge bg-warning text-dark">Interrumpida</span>
+            } @else if (data.tieneErrores) {
+              <span class="badge bg-danger">Finalizada con errores</span>
+            } @else {
+              <span class="badge bg-success">Finalizada</span>
+            }
+
+            @if (ejecucion(); as ej) {
+              <span class="badge bg-light text-dark border">{{ ej.tipo }}</span>
+              @if (ej.userName) {
+                <span class="text-muted small">por {{ ej.userName }}</span>
+              }
+            }
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            @if (ultimaConsulta(); as ts) {
+              <span class="text-muted small">
+                Actualizado {{ ts | date:'HH:mm:ss' }}
+              </span>
+            }
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="refrescar()"
+              [disabled]="isRefrescando() || isBuscando()">
+              @if (isRefrescando()) {
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+              } @else {
+                <ion-icon name="refresh-outline"></ion-icon>
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Progreso -->
+        @if (ejecucion(); as ej) {
+          @if (data.enEjecucion) {
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small text-muted mb-1">
+                <span>
+                  {{ ej.comentario || (esReenvio() ? 'Reenvío en proceso' : 'Carga en proceso') }}
+                </span>
+                @if (!progresoIndeterminado()) {
+                  <span>{{ ej.porcentaje }}%</span>
+                }
+              </div>
+              <div class="progress" role="progressbar"
+                   [attr.aria-valuenow]="progresoIndeterminado() ? null : ej.porcentaje"
+                   aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                     [style.width.%]="progresoIndeterminado() ? 100 : ej.porcentaje"></div>
+              </div>
+              <div class="form-text">
+                El estado se actualiza automáticamente {{ textoFrecuencia() }}.
+                Puedes salir de la pantalla: el proceso sigue corriendo en el servidor.
+              </div>
+            </div>
+          } @else if (ej.comentario) {
+            <div class="alert alert-light border" role="alert">
+              <ion-icon name="chatbox-ellipses-outline" class="me-2"></ion-icon>
+              {{ ej.comentario }}
+            </div>
+          }
+
+          <!-- Avisos por estado -->
+          @if (data.interrumpida) {
+            <div class="alert alert-warning" role="alert">
+              <ion-icon name="warning-outline" class="me-2"></ion-icon>
+              El proceso quedó sin finalizar y ya superó su tiempo máximo de vida.
+              Puedes reintentar la carga: solo se reprocesará lo que no quedó cargado.
+            </div>
+          } @else if (data.tieneErrores) {
+            <div class="alert alert-danger" role="alert">
+              <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+              El proceso finalizó con {{ ej.registrosConError | number }} asiento(s) en error.
+              El reenvío toma solo esos asientos y no vuelve a recorrer Bantotal.
+            </div>
+          } @else if (reenvioSinErrores()) {
+            <div class="alert alert-success" role="alert">
+              <ion-icon name="checkmark-done-outline" class="me-2"></ion-icon>
+              No había asientos en error para reenviar: no quedó nada pendiente en esta fecha.
+            </div>
+          }
+
+          <!-- Detalle -->
+          <div class="row g-3">
+
+            <div class="col-12">
+              <h6 class="text-uppercase text-muted small mb-2">Detalle del proceso</h6>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+              <div class="card border-0 bg-light h-100">
+                <div class="card-body py-2">
+                  <div class="text-muted small">Inicio</div>
+                  <div class="fs-6 fw-bold">{{ ej.fechaInicio | date:'dd/MM/yyyy HH:mm:ss' }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+              <div class="card border-0 bg-light h-100">
+                <div class="card-body py-2">
+                  <div class="text-muted small">Fin</div>
+                  <div class="fs-6 fw-bold">
+                    {{ ej.fechaFin ? (ej.fechaFin | date:'dd/MM/yyyy HH:mm:ss') : '—' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+              <div class="card border-0 bg-light h-100">
+                <div class="card-body py-2">
+                  <div class="text-muted small">Duración</div>
+                  <div class="fs-6 fw-bold">{{ formatDuracion(ej.duracionSegundos) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+              <div class="card border-0 bg-light h-100">
+                <div class="card-body py-2">
+                  <div class="text-muted small">{{ etiquetaInsertados() }}</div>
+                  <div class="fs-6 fw-bold text-success">
+                    {{ ej.registrosInsertados | number }}
+                    <span class="text-muted fw-normal">/ {{ ej.registrosObtenidos | number }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <table class="table table-sm table-bordered mb-0">
+                <tbody>
+                  <tr>
+                    <th class="table-light" style="width: 40%;">{{ etiquetaObtenidos() }}</th>
+                    <td>{{ ej.registrosObtenidos | number }}</td>
+                  </tr>
+                  <tr>
+                    <th class="table-light">Registros procesados</th>
+                    <td>{{ ej.registrosProcesados | number }}</td>
+                  </tr>
+                  <tr>
+                    <th class="table-light">{{ etiquetaInsertados() }}</th>
+                    <td>
+                      <span class="badge bg-success">{{ ej.registrosInsertados | number }}</span>
+                    </td>
+                  </tr>
+                  @if (!esReenvio()) {
+                    <tr>
+                      <th class="table-light">Registros duplicados</th>
+                      <td>
+                        <span class="badge bg-warning text-dark">{{ ej.registrosDuplicados | number }}</span>
+                      </td>
+                    </tr>
+                  }
+                  <tr>
+                    <th class="table-light">Registros con error</th>
+                    <td>
+                      <span class="badge {{ ej.registrosConError > 0 ? 'bg-danger' : 'bg-secondary' }}">
+                        {{ ej.registrosConError | number }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        }
+      }
+
+      <!-- Job automático activo: no se permite disparo manual -->
+      @if (data.automaticaActiva) {
+        <div class="alert alert-info mt-3" role="alert">
+          <ion-icon name="time-outline" class="me-2"></ion-icon>
+          La carga automática está activa para esta fecha. No se puede ejecutar de forma manual.
+        </div>
+      }
+
+      <!-- Disparo del proceso -->
+      @if (mostrarBotonReenviarErrores() || mostrarBotonEjecutar()) {
+        <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
+
+          <!-- Carga completa: secundaria cuando el reenvío es la opción natural -->
+          @if (mostrarBotonEjecutar()) {
+            <button
+              type="button"
+              class="btn {{ mostrarBotonReenviarErrores() ? 'btn-outline-secondary' : 'btn-primary' }}"
+              (click)="ejecutar()"
+              [disabled]="accion() !== null">
+              @if (accion() === 'carga') {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Iniciando...
+              } @else {
+                <ion-icon name="cloud-upload-outline" class="me-2"></ion-icon>
+                {{ textoBotonEjecutar() }}
+              }
+            </button>
+          }
+
+          <!-- Reenvío de errores: rápido, no vuelve a recorrer Bantotal -->
+          @if (mostrarBotonReenviarErrores()) {
+            <button
+              type="button"
+              class="btn btn-warning"
+              (click)="reenviarErrores()"
+              [disabled]="accion() !== null">
+              @if (accion() === 'reenvio') {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Iniciando...
+              } @else {
+                <ion-icon name="repeat-outline" class="me-2"></ion-icon>
+                {{ textoBotonReenviar() }}
+              }
+            </button>
+          }
+
+        </div>
+      }
+
+      }
     }
 
   </div>
