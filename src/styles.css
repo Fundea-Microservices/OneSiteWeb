@@ -4,16 +4,20 @@
 /* @import 'ngx-toastr/toastr.css'; */
 @import "preline/variants.css";
 
+/* Identidad corporativa OneSite — colores y tipografía.
+   Edita src/styles/identidad/colores.css y tipografia.css. */
+@import "./styles/identidad/index.css";
+
 .bg-custom-sidebar {
-    background-color: #29384d;
+    background-color: var(--ui-sidebar-fondo);
 }
 
 .text-custom-sidebar {
-    color: #636467;
+    color: var(--ui-sidebar-texto);
 }
 
 .bg-custom-sidebar-header {
-    background-color: #f2f2f2;
+    background-color: var(--ui-sidebar-header);
 }
 
 /* Estilos para campos deshabilitados y habilitados */
