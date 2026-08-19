@@ -70,7 +70,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid #E5E7EB;
   border-top-left-radius: calc(0.5rem - 1px);
   border-top-right-radius: calc(0.5rem - 1px);
   background-color: #fff;
@@ -102,7 +102,7 @@
   align-items: center;
   justify-content: flex-end;
   padding: 1rem;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid #E5E7EB;
   border-bottom-right-radius: calc(0.5rem - 1px);
   border-bottom-left-radius: calc(0.5rem - 1px);
   gap: 0.5rem;

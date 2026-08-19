@@ -1,9 +1,9 @@
-<div id="logo" class=" px-8 align-middle justify-center bg-slate-100">
+<div id="logo" class=" px-8 align-middle justify-center bg-custom-sidebar-header">
   <!-- <h1 class="text-lg md:text-2xl font-bold text-slate-900">Dash<span class="text-blue-500">8</span>.</h1> -->
 
   <img src="logos/OneSite_HF_fondo_blanco.svg" alt="Logo" width="160" />
 </div>
-<div class="flex flex-col items-center justify-center text-center border-b-1 mb-2 bg-slate-100">
+<div class="flex flex-col items-center justify-center text-center border-b-1 mb-2 bg-custom-sidebar-header">
   <div id="profile" class="mb-2">
     <a routerLink="/config/user">
       <img
@@ -21,7 +21,7 @@
     {{ user().name1 || 'Usuario' }} {{ user().lastName1 || '' }}
   </span>
 
-  <p class="text-custom-sidebar truncate text-xs">
+  <p class="txt-secundario truncate">
     {{ user().rol.name || 'Rol desconocido' }}
   </p>
 </div>

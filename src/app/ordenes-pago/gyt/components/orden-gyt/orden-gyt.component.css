@@ -7,7 +7,7 @@
   margin: 10mm auto 2mm;
   padding: 8mm;
   background-color: white;
-  /* Cambiado de #e8e8e8 a blanco */
+  /* Cambiado de #E5E7EB a blanco */
   /* border: 2px solid #000; */
   font-family: Arial, sans-serif;
   font-size: 9px;
@@ -22,7 +22,7 @@
   align-items: center;
   margin-bottom: 6mm;
   padding-bottom: 2mm;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #101828;
 }
 
 .logo-banco {
@@ -34,9 +34,9 @@
 .logo-placeholder {
   width: 15mm;
   height: 15mm;
-  background-color: #666;
+  background-color: #4A5565;
   /* Placeholder para logo del banco */
-  border: 1px solid #333;
+  border: 1px solid #101828;
   border-radius: 6px;
   /* Bordes redondeados */
   display: flex;
@@ -311,7 +311,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: #6A7282;
   font-size: 6px;
 }
 
@@ -351,7 +351,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: #6A7282;
   font-size: 6px;
   margin-top: 1mm; /* Espacio entre DPI TESTIGO y FIRMA TESTIGO */
 }
@@ -397,7 +397,7 @@
   font-weight: bold;
   color: #000;
   background-color: white;
-  /* Cambiado de #e8e8e8 a blanco */
+  /* Cambiado de #E5E7EB a blanco */
   text-align: center;
   margin-top: 35px;
 }
@@ -410,7 +410,7 @@
     border: 1px solid #000;
     page-break-after: always;
     background-color: white;
-    /* Cambiado de #e8e8e8 a blanco */
+    /* Cambiado de #E5E7EB a blanco */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

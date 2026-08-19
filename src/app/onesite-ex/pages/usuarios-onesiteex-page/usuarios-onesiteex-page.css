@@ -4,7 +4,7 @@
 }
 
 .detalle-panel {
-  background-color: var(--bs-tertiary-bg, #f8f9fa);
+  background-color: var(--bs-tertiary-bg, #F9FAFB);
   border-left: 3px solid var(--bs-primary);
 }
 
@@ -28,6 +28,6 @@
 }
 
 .detalle-panel table th {
-  background-color: var(--bs-secondary-bg, #e9ecef);
+  background-color: var(--bs-secondary-bg, #F3F4F6);
   white-space: nowrap;
 }

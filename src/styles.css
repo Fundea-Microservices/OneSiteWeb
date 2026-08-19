@@ -4,10 +4,14 @@
 /* @import 'ngx-toastr/toastr.css'; */
 @import "preline/variants.css";
 
-/* Identidad corporativa OneSite — colores y tipografía.
-   Edita src/styles/identidad/colores.css y tipografia.css. */
+/* Identidad corporativa OneSite — Manual de Identidad v1.1 (FUNDEA, ago-2026).
+   Colores, tipografía y componentes viven en src/styles/identidad/.
+   Empieza por src/styles/identidad/colores.css. */
 @import "./styles/identidad/index.css";
 
+/* =============================================
+   Menú lateral (superficies oscuras del manual)
+   ============================================= */
 .bg-custom-sidebar {
     background-color: var(--ui-sidebar-fondo);
 }
@@ -20,47 +24,31 @@
     background-color: var(--ui-sidebar-header);
 }
 
-/* Estilos para campos deshabilitados y habilitados */
+/* =============================================
+   Campos de formulario (manual: "Formularios, tablas y superficies")
+   Campo deshabilitado: fondo #F3F4F6, texto #6A7282 y borde #D1D5DC.
+   ============================================= */
 input:disabled, select:disabled, textarea:disabled {
-  background-color: #e5e7eb !important; /* gris más oscuro */
-  color: #a1a1aa !important;
+  background-color: var(--ui-campo-desactivado) !important;
+  color: var(--ui-texto-tenue) !important;
+  border-color: var(--ui-campo-borde) !important;
   cursor: not-allowed;
 }
 
 /* Excluir switches y checkboxes del estilo de fondo */
-input:not(:disabled):not([type="checkbox"]):not([type="radio"]), 
-select:not(:disabled), 
+input:not(:disabled):not([type="checkbox"]):not([type="radio"]),
+select:not(:disabled),
 textarea:not(:disabled) {
-  background-color: #fff !important; /* blanco */
-  color: #111827;
+  background-color: var(--ui-campo-fondo) !important;
+  color: var(--ui-texto);
 }
 
-/* Estilos específicos para switches de Bootstrap */
+/* Los colores de los switches de Bootstrap se definen en
+   src/styles/identidad/bootstrap-puente.css. */
 .form-switch .form-check-input {
-  background-color: #dee2e6 !important;
-  border: 1px solid #dee2e6 !important;
+  background-color: var(--color-neutro-200) !important;
+  border: 1px solid var(--ui-campo-borde) !important;
   cursor: pointer;
-}
-
-.form-switch .form-check-input:checked {
-  background-color: #0d6efd !important;
-  border-color: #0d6efd !important;
-}
-
-.form-switch .form-check-input:focus {
-  border-color: #86b7fe !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
-}
-
-/* Switch color naranja para Visible App */
-.form-switch .form-check-input.switch-warning:checked {
-  background-color: #f97316 !important;
-  border-color: #f97316 !important;
-}
-
-.form-switch .form-check-input.switch-warning:focus {
-  border-color: #fdba74 !important;
-  box-shadow: 0 0 0 0.25rem rgba(249, 115, 22, 0.25) !important;
 }
 
 /* =============================================
@@ -71,8 +59,8 @@ textarea:not(:disabled) {
   max-width: 340px;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.13);
-  background: #fff;
+  box-shadow: 0 6px 24px rgba(16, 24, 40, 0.13);
+  background: var(--ui-superficie);
 }
 
 .cp-img {
@@ -85,13 +73,13 @@ textarea:not(:disabled) {
 .cp-img-placeholder {
   width: 100%;
   height: 190px;
-  background: #f3f4f6;
+  background: var(--color-neutro-100);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #9ca3af;
+  color: var(--color-neutro-400);
   font-size: 2.5rem;
 }
 
@@ -103,26 +91,29 @@ textarea:not(:disabled) {
   padding: 16px;
 }
 
+/* Vista previa de la tarjeta tal como se muestra en la app móvil; conserva las
+   mayúsculas del diseño original (la regla del manual sobre versalitas aplica a
+   etiquetas de botón y de menú del sistema). */
 .cp-subtitulo {
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #e07b39;
+  color: var(--color-acento-800);
   margin-bottom: 4px;
 }
 
 .cp-titulo {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--ui-texto);
   line-height: 1.3;
   margin-bottom: 8px;
 }
 
 .cp-descripcion {
   font-size: 0.82rem;
-  color: #6b7280;
+  color: var(--ui-texto-suave);
   line-height: 1.55;
   margin-bottom: 12px;
 }
@@ -135,20 +126,22 @@ textarea:not(:disabled) {
   gap: 6px;
 }
 
+/* Llamado a la acción de alta visibilidad: naranja institucional con texto
+   #101828 — el manual prohíbe texto blanco sobre el naranja. */
 .cp-btn {
   border: none;
-  background: #e07b39;
-  color: #fff;
+  background: var(--ui-cta);
+  color: var(--ui-cta-texto);
   padding: 5px 14px;
   border-radius: 5px;
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: default;
 }
 
 .cp-date {
   font-size: 0.72rem;
-  color: #9ca3af;
+  color: var(--ui-texto-tenue);
   margin-left: auto;
 }
 
@@ -162,13 +155,12 @@ textarea:not(:disabled) {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #d1d5db;
+  background: var(--color-neutro-300);
   display: inline-block;
 }
 
 .cp-dot--active {
   width: 22px;
   border-radius: 4px;
-  background: #e07b39;
+  background: var(--ui-cta);
 }
-

@@ -1,7 +1,6 @@
-@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,600');
-
+/* Tipografía: Arial Nova, definida en src/styles/identidad/tipografia.css. */
 body {
-  font-family: "Lato", sans-serif;
+  font-family: var(--tipo-cuerpo);
   font-size: 100%;
   overflow-y: scroll;
   -ms-text-size-adjust: 100%;
@@ -9,7 +8,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  background-color: #fefefe;
+  background-color: var(--ui-fondo);
 }
 
 a {
@@ -35,14 +34,14 @@ Sidebar
   height: 100%;
   top: 0;
   overflow: hidden;
-  background-color: #cdcfd4;
+  background-color: var(--ui-sidebar-fondo);
   transform: translateZ(0);
   visibility: visible;
   backface-visibility: hidden;
 }
 
 .sidebar header {
-  background-color: #09f;
+  background-color: var(--ui-sidebar-activo);
   width: 100%;
   display: block;
   padding: 0.75em 1em;
@@ -53,7 +52,7 @@ Sidebar Nav
 ----------------*/
 .sidebar-nav {
   position: fixed;
-  background-color: #cdcfd4;
+  background-color: var(--ui-sidebar-fondo);
   height: 100%;
   font-weight: 400;
   font-size: 1.2em;
@@ -84,11 +83,11 @@ Sidebar Nav
   position: relative;
   display: block;
   transition: all 0.6s ease;
-  color: black;
+  color: var(--ui-sidebar-texto);
 }
 
 .sidebar-nav ul li a:hover {
-  background-color: rgba(243, 242, 242, 0.9);
+  background-color: var(--ui-sidebar-hover);
   transition: all 0.6s ease;
 }
 
@@ -127,7 +126,7 @@ Nav-Flyout
 ----------------*/
 .sidebar-nav .nav-flyout {
   position: absolute;
-  background-color: #cdcfd4;
+  background-color: var(--ui-sidebar-fondo);
   z-index: 9;
   left: 2.5em;
   top: 0;
