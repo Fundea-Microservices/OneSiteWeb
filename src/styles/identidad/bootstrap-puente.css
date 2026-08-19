@@ -1,0 +1,77 @@
+/* =============================================================================
+   PUENTE BOOTSTRAP → IDENTIDAD ONESITE
+   -----------------------------------------------------------------------------
+   La aplicación carga Bootstrap 5, que trae su propia paleta (azul #0D6EFD).
+   Este archivo reapunta las variables de Bootstrap a la identidad corporativa,
+   de modo que .btn-primary, .badge, .alert, .form-control, etc. adopten el azul
+   institucional #0060AA sin reescribir ninguna plantilla.
+
+   ⚠ DESACTIVADO POR DEFECTO — es un cambio visual GLOBAL: repinta de golpe
+     todos los componentes Bootstrap de la aplicación.
+
+   Para activarlo: descomenta su línea @import en `index.css`.
+   ============================================================================= */
+
+:root {
+  /* Color principal */
+  --bs-primary:        var(--color-primario-700);
+  --bs-primary-rgb:    0, 96, 170;
+  --bs-primary-text-emphasis: var(--color-primario-900);
+  --bs-primary-bg-subtle:     var(--color-primario-50);
+  --bs-primary-border-subtle: var(--color-primario-200);
+
+  /* Secundario → gris institucional */
+  --bs-secondary:      var(--color-neutro-600);
+  --bs-secondary-rgb:  113, 108, 104;
+  --bs-secondary-bg-subtle:     var(--color-neutro-100);
+  --bs-secondary-border-subtle: var(--color-neutro-200);
+
+  /* Advertencia → naranja institucional */
+  --bs-warning:        var(--color-acento-500);
+  --bs-warning-rgb:    248, 178, 24;
+  --bs-warning-text-emphasis: var(--color-acento-900);
+  --bs-warning-bg-subtle:     var(--color-acento-50);
+  --bs-warning-border-subtle: var(--color-acento-200);
+
+  /* Estados */
+  --bs-success:        var(--color-exito-500);
+  --bs-success-rgb:    18, 183, 106;
+  --bs-danger:         var(--color-peligro-500);
+  --bs-danger-rgb:     240, 68, 56;
+  --bs-info:           var(--color-info-500);
+  --bs-info-rgb:       46, 144, 250;
+
+  /* Enlaces */
+  --bs-link-color:       var(--color-primario-700);
+  --bs-link-color-rgb:   0, 96, 170;
+  --bs-link-hover-color: var(--color-primario-900);
+
+  /* Tipografía y superficies */
+  --bs-body-font-family: var(--font-cuerpo);
+  --bs-body-color:       var(--ui-texto);
+  --bs-body-bg:          var(--ui-superficie);
+  --bs-border-color:     var(--ui-borde);
+  --bs-emphasis-color:   var(--color-neutro-950);
+}
+
+/* Los switches de Bootstrap fijan su color en styles.css con !important;
+   estas reglas los alinean con la identidad. */
+.form-switch .form-check-input:checked {
+  background-color: var(--color-primario-700) !important;
+  border-color: var(--color-primario-700) !important;
+}
+
+.form-switch .form-check-input:focus {
+  border-color: var(--color-primario-400) !important;
+  box-shadow: 0 0 0 0.25rem var(--ui-foco-anillo) !important;
+}
+
+.form-switch .form-check-input.switch-warning:checked {
+  background-color: var(--color-acento-500) !important;
+  border-color: var(--color-acento-500) !important;
+}
+
+.form-switch .form-check-input.switch-warning:focus {
+  border-color: var(--color-acento-300) !important;
+  box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-acento-500) 35%, transparent) !important;
+}

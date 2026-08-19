@@ -1,0 +1,158 @@
+/* =============================================================================
+   IDENTIDAD ONESITE — PALETA DE COLORES
+   -----------------------------------------------------------------------------
+   Fuente: "Manual de Identidad OneSite" v1.0 (FUNDEA, agosto 2026), sección 4.
+
+   ESTE ES EL ÚNICO ARCHIVO QUE HAY QUE TOCAR PARA CAMBIAR LOS COLORES DE LA APP.
+
+   Cómo funciona
+     Tailwind 4 lee el bloque `@theme` y genera automáticamente las utilidades.
+     Si defines `--color-primario-700`, obtienes `bg-primario-700`,
+     `text-primario-700`, `border-primario-700`, `ring-primario-700`, etc.
+
+   Cómo cambiar un color
+     Edita el hex y recarga. No hay que tocar ningún componente.
+     Los tres colores oficiales del manual son los marcados con (MANUAL).
+
+   Cómo usarlo en las plantillas
+     Color oficial exacto ...... bg-primario / text-acento / bg-neutro
+     Variaciones ............... bg-primario-100 (fondos), text-primario-800 (texto)
+     Fuera de Tailwind (CSS) ... background: var(--color-primario-700);
+   ============================================================================= */
+
+@theme {
+  /* ---------------------------------------------------------------------------
+     AZUL PRIMARIO — #0060AA (MANUAL)
+     Color institucional. Barra de navegación, botones principales, enlaces,
+     encabezados. Es el color que manda en la interfaz.
+     Contraste sobre blanco: 6.5:1 — apto para texto (WCAG AA).
+     --------------------------------------------------------------------------- */
+  --color-primario-50:  #F0F7FD;
+  --color-primario-100: #E2F0FB;
+  --color-primario-200: #BCDDF7;
+  --color-primario-300: #8BC6F4;
+  --color-primario-400: #4DABF3;
+  --color-primario-500: #0C90F6;
+  --color-primario-600: #0477D0;
+  --color-primario-700: #0060AA;  /* ← oficial del manual */
+  --color-primario-800: #024C85;
+  --color-primario-900: #033B66;
+  --color-primario-950: #03243E;
+  --color-primario: var(--color-primario-700);
+
+  /* ---------------------------------------------------------------------------
+     GRIS PRIMARIO — #EDECEB (MANUAL)
+     Gris cálido. Fondos de página, tarjetas, separadores, estados deshabilitados.
+     El manual lo indica como fondo para la variante clara del logotipo.
+     --------------------------------------------------------------------------- */
+  --color-neutro-50:  #F4F4F3;
+  --color-neutro-100: #EDECEB;  /* ← oficial del manual */
+  --color-neutro-200: #DAD8D6;
+  --color-neutro-300: #C2BFBC;
+  --color-neutro-400: #A5A19C;
+  --color-neutro-500: #88837D;
+  --color-neutro-600: #716C68;
+  --color-neutro-700: #5C5855;
+  --color-neutro-800: #494744;
+  --color-neutro-900: #3A3835;
+  --color-neutro-950: #252322;
+  --color-neutro: var(--color-neutro-100);
+
+  /* ---------------------------------------------------------------------------
+     NARANJA PRIMARIO — #F8B218 (MANUAL)
+     Color de acento. Resaltados, llamadas a la acción secundarias, badges,
+     elemento activo del menú.
+
+     ⚠ ACCESIBILIDAD: sobre blanco da 1.9:1 — NO usar para texto sobre fondo
+       claro. Sí funciona como fondo con texto oscuro encima (11.4:1 con
+       neutro-950). Para texto naranja sobre blanco usa acento-700 o más oscuro.
+     --------------------------------------------------------------------------- */
+  --color-acento-50:  #FEFBF4;
+  --color-acento-100: #FCF5E7;
+  --color-acento-200: #F9E8C2;
+  --color-acento-300: #F6D792;
+  --color-acento-400: #F6C457;
+  --color-acento-500: #F8B218;  /* ← oficial del manual */
+  --color-acento-600: #D7970B;
+  --color-acento-700: #AC7A0C;
+  --color-acento-800: #88610B;
+  --color-acento-900: #6A4C0A;
+  --color-acento-950: #433108;
+  --color-acento: var(--color-acento-500);
+
+  /* ---------------------------------------------------------------------------
+     COLORES DE ESTADO
+     NO están en el manual de identidad — son una extensión necesaria para la
+     aplicación (validaciones, toasts, alertas). Elegidos para convivir con la
+     paleta institucional. Cámbialos si el área de diseño define otros.
+     --------------------------------------------------------------------------- */
+  --color-exito-50:   #ECFDF3;
+  --color-exito-100:  #D1FADF;
+  --color-exito-500:  #12B76A;
+  --color-exito-700:  #027A48;
+  --color-exito-900:  #054F31;
+  --color-exito: var(--color-exito-700);
+
+  --color-peligro-50:  #FEF3F2;
+  --color-peligro-100: #FEE4E2;
+  --color-peligro-500: #F04438;
+  --color-peligro-700: #B42318;
+  --color-peligro-900: #7A271A;
+  --color-peligro: var(--color-peligro-700);
+
+  --color-alerta-50:   #FFFAEB;
+  --color-alerta-100:  #FEF0C7;
+  --color-alerta-500:  #F79009;
+  --color-alerta-700:  #B54708;
+  --color-alerta-900:  #7A2E0E;
+  --color-alerta: var(--color-alerta-700);
+
+  --color-info-50:   #EFF8FF;
+  --color-info-100:  #D1E9FF;
+  --color-info-500:  #2E90FA;
+  --color-info-700:  #175CD3;
+  --color-info-900:  #194185;
+  --color-info: var(--color-info-700);
+}
+
+/* =============================================================================
+   ROLES DE INTERFAZ
+   -----------------------------------------------------------------------------
+   Nombres por FUNCIÓN, no por color. Un componente pide "el fondo de la app" o
+   "el color del texto secundario" sin saber qué hex hay detrás.
+
+   Ventaja: para reestilizar la aplicación entera basta reapuntar estas líneas.
+   Se usan en CSS normal: `color: var(--ui-texto-suave);`
+   ============================================================================= */
+:root {
+  /* Superficies */
+  --ui-fondo:            var(--color-neutro-100);
+  --ui-superficie:       #FFFFFF;
+  --ui-superficie-alta:  var(--color-neutro-50);
+  --ui-borde:            var(--color-neutro-200);
+  --ui-borde-fuerte:     var(--color-neutro-300);
+
+  /* Texto */
+  --ui-texto:            var(--color-neutro-900);
+  --ui-texto-suave:      var(--color-neutro-600);
+  --ui-texto-tenue:      var(--color-neutro-500);
+  --ui-texto-invertido:  #FFFFFF;
+
+  /* Acciones */
+  --ui-accion:           var(--color-primario-700);
+  --ui-accion-hover:     var(--color-primario-800);
+  --ui-accion-activa:    var(--color-primario-900);
+  --ui-accion-suave:     var(--color-primario-50);
+  --ui-accion-texto:     #FFFFFF;
+
+  /* Foco (accesibilidad — visible en navegación por teclado) */
+  --ui-foco:             var(--color-primario-500);
+  --ui-foco-anillo:      color-mix(in srgb, var(--color-primario-500) 35%, transparent);
+
+  /* Menú lateral */
+  --ui-sidebar-fondo:        #29384D;
+  --ui-sidebar-texto:        #636467;
+  --ui-sidebar-texto-activo: #FFFFFF;
+  --ui-sidebar-activo:       var(--color-primario-700);
+  --ui-sidebar-header:       #F2F2F2;
+}

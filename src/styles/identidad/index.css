@@ -1,0 +1,21 @@
+/* =============================================================================
+   IDENTIDAD CORPORATIVA ONESITE — PUNTO DE ENTRADA
+   -----------------------------------------------------------------------------
+   Basado en el "Manual de Identidad OneSite" v1.0
+   FUNDEA · Departamento de desarrollo y transformación digital · Agosto 2026
+
+   Este archivo se importa una sola vez desde `src/styles.css`.
+   No pongas reglas aquí: edita los archivos que agrupa.
+
+     colores.css     → paleta institucional y roles de color
+     tipografia.css  → familias, tamaños y roles tipográficos
+
+   OPCIONAL
+     bootstrap-puente.css → hace que los componentes de Bootstrap 5 usen la
+     identidad corporativa en lugar de su paleta por defecto.
+     Descomenta la línea de abajo para activarlo.
+   ============================================================================= */
+
+@import "./colores.css";
+@import "./tipografia.css";
+/* @import "./bootstrap-puente.css"; */

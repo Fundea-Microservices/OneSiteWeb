@@ -1,0 +1,154 @@
+/* =============================================================================
+   IDENTIDAD ONESITE — TIPOGRAFÍA
+   -----------------------------------------------------------------------------
+   Fuente: "Manual de Identidad OneSite" v1.0 (FUNDEA, agosto 2026), sección 5.
+
+   ESTE ES EL ÚNICO ARCHIVO QUE HAY QUE TOCAR PARA CAMBIAR LAS FUENTES.
+
+   Cómo cambiar la fuente de toda la aplicación
+     Edita `--font-cuerpo` (abajo). Se propaga a `--font-sans`, que es lo que
+     Tailwind y el navegador usan por defecto en todo el documento.
+
+   Cómo cambiar la fuente de los títulos
+     Edita `--font-titulo`.
+
+   Cómo usarlo en las plantillas
+     class="font-titulo"   → tipografía principal (Impact)
+     class="font-cuerpo"   → tipografía secundaria (Arial Nova) — ya es la de por defecto
+     class="text-display-1" → tamaños grandes de marca
+   ============================================================================= */
+
+@theme {
+  /* ---------------------------------------------------------------------------
+     FAMILIAS
+     Ninguna de las dos se descarga: son fuentes de sistema. Por eso cada una
+     lleva una cadena de respaldo, para navegadores donde no estén instaladas.
+     --------------------------------------------------------------------------- */
+
+  /* TIPOGRAFÍA PRINCIPAL — Impact (manual, sección 5)
+     Uso previsto: títulos grandes, portadas, gráfica de marca.
+
+     ⚠ Impact tiene un solo peso, es muy condensada y pierde legibilidad por
+       debajo de ~24px. NO conviene usarla para texto corrido, tablas,
+       formularios ni etiquetas pequeñas de la aplicación. Resérvala para
+       encabezados de sección hacia arriba. */
+  --font-titulo: "Impact", "Haettenschweiler", "Franklin Gothic Bold",
+                 "Arial Narrow Bold", sans-serif;
+
+  /* TIPOGRAFÍA SECUNDARIA — Arial Nova (manual, sección 5)
+     Uso previsto: todo el texto de la interfaz.
+
+     Nota: Arial Nova viene con Windows 10+ pero no con macOS, Linux ni Android.
+     El respaldo es Arial / Helvetica, métricamente casi idénticas, así que el
+     diseño no se descuadra donde no esté disponible. */
+  --font-cuerpo: "Arial Nova", "Arial", "Helvetica Neue", Helvetica,
+                 "Segoe UI", system-ui, sans-serif;
+
+  /* Monoespaciada — para códigos, identificadores, JSON, montos alineados.
+     No está en el manual; es una necesidad técnica de la aplicación. */
+  --font-mono: "Cascadia Mono", "Consolas", "SF Mono", "Menlo", monospace;
+
+  /* Fuente por defecto de TODO el documento.
+     Tailwind aplica --font-sans a la base; al apuntarla al cuerpo, la identidad
+     queda activa en toda la app sin tocar un solo componente. */
+  --font-sans: var(--font-cuerpo);
+
+  /* ---------------------------------------------------------------------------
+     TAMAÑOS DE MARCA (display)
+     Se suman a la escala normal de Tailwind (text-xs … text-9xl), que se
+     mantiene intacta. Estos son los tamaños grandes pensados para Impact.
+     --------------------------------------------------------------------------- */
+  --text-display-1: 3.5rem;    /* 56px — portadas, pantalla de bienvenida */
+  --text-display-1--line-height: 1.05;
+  --text-display-1--letter-spacing: 0.01em;
+
+  --text-display-2: 2.5rem;    /* 40px — títulos de módulo */
+  --text-display-2--line-height: 1.1;
+  --text-display-2--letter-spacing: 0.01em;
+
+  --text-display-3: 1.75rem;   /* 28px — encabezados de sección */
+  --text-display-3--line-height: 1.2;
+  --text-display-3--letter-spacing: 0.01em;
+
+  /* ---------------------------------------------------------------------------
+     PESOS, INTERLINEADO Y ESPACIADO
+     --------------------------------------------------------------------------- */
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  --leading-compacto: 1.2;   /* leading-compacto — títulos */
+  --leading-normal:   1.5;   /* leading-normal   — texto de interfaz */
+  --leading-comodo:   1.7;   /* leading-comodo   — párrafos largos, documentos */
+
+  --tracking-titulo: 0.01em; /* tracking-titulo — Impact respira mejor con algo de aire */
+  --tracking-menu:   0.02em; /* tracking-menu   — etiquetas en mayúsculas */
+}
+
+/* =============================================================================
+   ROLES TIPOGRÁFICOS
+   Igual que en colores.css: se nombra por función. Útil desde CSS de componente.
+   ============================================================================= */
+:root {
+  --tipo-titulo:  var(--font-titulo);
+  --tipo-cuerpo:  var(--font-cuerpo);
+  --tipo-codigo:  var(--font-mono);
+
+  /* Cambia esto a var(--font-titulo) si quieres Impact en los <h1>…<h6>.
+     Por defecto los encabezados usan la fuente de cuerpo en negrita, que es lo
+     legible para una aplicación de gestión. */
+  --tipo-encabezados: var(--font-cuerpo);
+}
+
+/* =============================================================================
+   APLICACIÓN BASE
+   Va en @layer base para que cualquier utilidad de Tailwind o clase de
+   componente pueda sobrescribirla sin pelear con la especificidad.
+   ============================================================================= */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Cubre también a Bootstrap, que fija su propia pila de fuentes en body. */
+  body {
+    font-family: var(--tipo-cuerpo);
+    line-height: var(--leading-normal);
+    color: var(--ui-texto);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--tipo-encabezados);
+    line-height: var(--leading-compacto);
+    font-weight: var(--font-weight-bold);
+  }
+
+  code, kbd, samp, pre {
+    font-family: var(--tipo-codigo);
+  }
+}
+
+/* =============================================================================
+   CLASES DE MARCA
+   Atajos para los usos definidos en el manual.
+   ============================================================================= */
+@layer components {
+  /* Título de marca en Impact — para portadas y encabezados grandes. */
+  .titulo-marca {
+    font-family: var(--font-titulo);
+    font-weight: var(--font-weight-normal); /* Impact ya es pesada de por sí */
+    letter-spacing: var(--tracking-titulo);
+    line-height: var(--leading-compacto);
+  }
+
+  /* Etiqueta en mayúsculas — menús, encabezados de tabla, badges. */
+  .etiqueta-marca {
+    font-family: var(--font-cuerpo);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-menu);
+    font-size: 0.75rem;
+  }
+}
