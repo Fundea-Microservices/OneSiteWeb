@@ -1,0 +1,625 @@
+/* =============================================================================
+   PUENTE BOOTSTRAP -> IDENTIDAD ONESITE
+   -----------------------------------------------------------------------------
+   La aplicación carga Bootstrap 5.3, que trae su propia paleta (azul #0D6EFD,
+   verde #198754, cian #0DCAF0...). Este archivo la reapunta a la identidad
+   corporativa para que .btn-primary, .badge, .alert, .form-control, .table,
+   etc. adopten los colores del manual SIN reescribir ninguna plantilla.
+
+   Es obligatorio según el manual v1.1: "el azul #0060AA es el único azul
+   admitido como color de acción: no deben emplearse los azules por defecto de
+   la librería de estilos".
+
+   POR QUÉ HAY REGLAS CLASE POR CLASE
+     Bootstrap 5.3 compila cada variante con valores literales
+     (.btn-primary { --bs-btn-bg: #0d6efd }), así que cambiar --bs-primary no
+     basta: hay que reapuntar las variables de cada variante.
+
+   ORDEN DE CARGA
+     Este archivo se importa DESPUÉS de bootstrap.min.css y sin @layer, que es
+     lo que le permite ganarle a la hoja de Bootstrap.
+   ============================================================================= */
+
+:root {
+  /* --- Colores de marca de Bootstrap (utilidades .text-*, .bg-*, .border-*) - */
+  --bs-primary:              #0060AA;
+  --bs-primary-rgb:          0, 96, 170;
+  --bs-primary-text-emphasis: #004A85;
+  --bs-primary-bg-subtle:     #EFF6FF;
+  --bs-primary-border-subtle: #BEDBFF;
+
+  --bs-secondary:              #4A5565;
+  --bs-secondary-rgb:          74, 85, 101;
+  --bs-secondary-text-emphasis: #29384D;
+  --bs-secondary-bg-subtle:     #F9FAFB;
+  --bs-secondary-border-subtle: #E5E7EB;
+
+  --bs-success:              #008236;
+  --bs-success-rgb:          0, 130, 54;
+  --bs-success-text-emphasis: #016630;
+  --bs-success-bg-subtle:     #F0FDF4;
+  --bs-success-border-subtle: #B9F8CF;
+
+  --bs-danger:              #E7000B;
+  --bs-danger-rgb:          231, 0, 11;
+  --bs-danger-text-emphasis: #9F0712;
+  --bs-danger-bg-subtle:     #FEF2F2;
+  --bs-danger-border-subtle: #FFC9C9;
+
+  --bs-warning:              #F8B218;
+  --bs-warning-rgb:          248, 178, 24;
+  --bs-warning-text-emphasis: #894B00;
+  --bs-warning-bg-subtle:     #FEFCE8;
+  --bs-warning-border-subtle: #FFF085;
+
+  --bs-info:              #0060AA;
+  --bs-info-rgb:          0, 96, 170;
+  --bs-info-text-emphasis: #004A85;
+  --bs-info-bg-subtle:     #EFF6FF;
+  --bs-info-border-subtle: #BEDBFF;
+
+  --bs-light:      #F9FAFB;
+  --bs-light-rgb:  249, 250, 251;
+  --bs-dark:       #29384D;
+  --bs-dark-rgb:   41, 56, 77;
+
+  /* --- Enlaces (manual: #0060AA; en hover #004E8C y se subraya) ------------- */
+  --bs-link-color:       #0060AA;
+  --bs-link-color-rgb:   0, 96, 170;
+  --bs-link-hover-color: #004E8C;
+  --bs-link-hover-color-rgb: 0, 78, 140;
+
+  /* --- Tipografía y superficies -------------------------------------------- */
+  --bs-body-font-family: var(--font-cuerpo);
+  --bs-body-font-size:   0.9375rem;   /* 15 px (manual) */
+  --bs-body-line-height: 1.5;         /* (manual) */
+  --bs-body-color:       #101828;
+  --bs-body-color-rgb:   16, 24, 40;
+  --bs-body-bg:          #FFFFFF;
+  --bs-emphasis-color:   #101828;
+  --bs-secondary-color:  rgba(74, 85, 101, 0.85);
+  --bs-tertiary-color:   #6A7282;
+  --bs-tertiary-bg:      #F3F4F6;
+  --bs-border-color:     #E5E7EB;
+  --bs-border-color-translucent: rgba(16, 24, 40, 0.1);
+  --bs-heading-color:    #1E2939;
+
+  /* --- Velo de modal (manual: #101828 al 50 %) ----------------------------- */
+  --bs-backdrop-bg:      #101828;
+  --bs-backdrop-opacity: 0.5;
+
+  /* --- Foco ---------------------------------------------------------------- */
+  --bs-focus-ring-color: rgba(0, 96, 170, 0.35);
+  --bs-focus-ring-width: 2px;
+}
+
+/* Bootstrap fija el fondo del <body> con --bs-body-bg (que aquí vale #FFFFFF
+   porque también alimenta a los campos de formulario). El lienzo general de las
+   pantallas es #F9FAFB, así que se aplica directamente sobre body. */
+body {
+  background-color: #F9FAFB;   /* fondo de página (manual) */
+}
+
+/* =============================================================================
+   BOTONES (manual, "Botones")
+   -----------------------------------------------------------------------------
+   Correspondencia entre las variantes de Bootstrap y las del manual:
+
+     .btn-primary          -> Primario        (#0060AA, texto blanco)
+     .btn-outline-primary  -> Secundario      (contorno azul sobre blanco)
+     .btn-secondary        -> Terciario       (neutro: cancelar, cerrar, volver)
+     .btn-warning          -> Acento / CTA    (#F8B218, texto #101828)
+     .btn-success          -> Crear/confirmar (#008236)
+     .btn-danger           -> Destructivo     (#E7000B, exige confirmación)
+     .btn-info             -> Informativo suave
+     :disabled             -> Deshabilitado   (#D1D5DC sobre texto #6A7282)
+
+   Recuerda: en una misma pantalla debe existir UNA SOLA acción primaria.
+   ============================================================================= */
+
+.btn {
+  --bs-btn-font-family: var(--font-cuerpo);
+  --bs-btn-font-size: 0.875rem;      /* 14 px (manual) */
+  --bs-btn-font-weight: 700;         /* Arial Nova Bold (manual) */
+  --bs-btn-disabled-opacity: 1;
+  --bs-btn-disabled-bg: #D1D5DC;
+  --bs-btn-disabled-color: #6A7282;
+  --bs-btn-disabled-border-color: #D1D5DC;
+  --bs-btn-focus-shadow-rgb: 0, 96, 170;
+}
+
+.btn-primary {
+  --bs-btn-color: #FFFFFF;
+  --bs-btn-bg: #0060AA;
+  --bs-btn-border-color: #0060AA;
+  --bs-btn-hover-color: #FFFFFF;
+  --bs-btn-hover-bg: #004E8C;
+  --bs-btn-hover-border-color: #004E8C;
+  --bs-btn-active-color: #FFFFFF;
+  --bs-btn-active-bg: #003C6B;
+  --bs-btn-active-border-color: #003C6B;
+  --bs-btn-focus-shadow-rgb: 0, 96, 170;
+}
+
+/* Secundario del manual: contorno azul sobre blanco. */
+.btn-outline-primary {
+  --bs-btn-color: #0060AA;
+  --bs-btn-bg: #FFFFFF;
+  --bs-btn-border-color: #0060AA;
+  --bs-btn-hover-color: #004E8C;
+  --bs-btn-hover-bg: #EFF6FF;
+  --bs-btn-hover-border-color: #004E8C;
+  --bs-btn-active-color: #003C6B;
+  --bs-btn-active-bg: #DBEAFE;
+  --bs-btn-active-border-color: #003C6B;
+  --bs-btn-focus-shadow-rgb: 0, 96, 170;
+}
+
+/* Terciario del manual: acciones de bajo peso (Cancelar, Cerrar, Regresar).
+   Bootstrap lo dibuja gris sólido; aquí pasa a neutro con contorno suave. */
+.btn-secondary {
+  --bs-btn-color: #364153;
+  --bs-btn-bg: #FFFFFF;
+  --bs-btn-border-color: #D1D5DC;
+  --bs-btn-hover-color: #1E2939;
+  --bs-btn-hover-bg: #F3F4F6;
+  --bs-btn-hover-border-color: #D1D5DC;
+  --bs-btn-active-color: #101828;
+  --bs-btn-active-bg: #E5E7EB;
+  --bs-btn-active-border-color: #D1D5DC;
+  --bs-btn-focus-shadow-rgb: 74, 85, 101;
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: #364153;
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: #D1D5DC;
+  --bs-btn-hover-color: #1E2939;
+  --bs-btn-hover-bg: #F3F4F6;
+  --bs-btn-hover-border-color: #D1D5DC;
+  --bs-btn-active-color: #101828;
+  --bs-btn-active-bg: #E5E7EB;
+  --bs-btn-active-border-color: #D1D5DC;
+  --bs-btn-focus-shadow-rgb: 74, 85, 101;
+}
+
+/* Crear / confirmar. */
+.btn-success {
+  --bs-btn-color: #FFFFFF;
+  --bs-btn-bg: #008236;
+  --bs-btn-border-color: #008236;
+  --bs-btn-hover-color: #FFFFFF;
+  --bs-btn-hover-bg: #016630;
+  --bs-btn-hover-border-color: #016630;
+  --bs-btn-active-color: #FFFFFF;
+  --bs-btn-active-bg: #0D542B;
+  --bs-btn-active-border-color: #0D542B;
+  --bs-btn-focus-shadow-rgb: 0, 130, 54;
+}
+
+.btn-outline-success {
+  --bs-btn-color: #016630;
+  --bs-btn-bg: #FFFFFF;
+  --bs-btn-border-color: #008236;
+  --bs-btn-hover-color: #FFFFFF;
+  --bs-btn-hover-bg: #008236;
+  --bs-btn-hover-border-color: #008236;
+  --bs-btn-active-color: #FFFFFF;
+  --bs-btn-active-bg: #016630;
+  --bs-btn-active-border-color: #016630;
+  --bs-btn-focus-shadow-rgb: 0, 130, 54;
+}
+
+/* Destructivo: eliminar, anular, revertir. Siempre con confirmación previa. */
+.btn-danger {
+  --bs-btn-color: #FFFFFF;
+  --bs-btn-bg: #E7000B;
+  --bs-btn-border-color: #E7000B;
+  --bs-btn-hover-color: #FFFFFF;
+  --bs-btn-hover-bg: #C10007;
+  --bs-btn-hover-border-color: #C10007;
+  --bs-btn-active-color: #FFFFFF;
+  --bs-btn-active-bg: #9F0712;
+  --bs-btn-active-border-color: #9F0712;
+  --bs-btn-focus-shadow-rgb: 231, 0, 11;
+}
+
+.btn-outline-danger {
+  --bs-btn-color: #9F0712;
+  --bs-btn-bg: #FFFFFF;
+  --bs-btn-border-color: #E7000B;
+  --bs-btn-hover-color: #FFFFFF;
+  --bs-btn-hover-bg: #E7000B;
+  --bs-btn-hover-border-color: #E7000B;
+  --bs-btn-active-color: #FFFFFF;
+  --bs-btn-active-bg: #C10007;
+  --bs-btn-active-border-color: #C10007;
+  --bs-btn-focus-shadow-rgb: 231, 0, 11;
+}
+
+/* Acento / CTA. Su texto es SIEMPRE #101828, nunca blanco (manual). */
+.btn-warning {
+  --bs-btn-color: #101828;
+  --bs-btn-bg: #F8B218;
+  --bs-btn-border-color: #F8B218;
+  --bs-btn-hover-color: #101828;
+  --bs-btn-hover-bg: #E0A00F;
+  --bs-btn-hover-border-color: #E0A00F;
+  --bs-btn-active-color: #101828;
+  --bs-btn-active-bg: #C98C0B;
+  --bs-btn-active-border-color: #C98C0B;
+  --bs-btn-focus-shadow-rgb: 248, 178, 24;
+}
+
+.btn-outline-warning {
+  --bs-btn-color: #894B00;
+  --bs-btn-bg: #FFFFFF;
+  --bs-btn-border-color: #F8B218;
+  --bs-btn-hover-color: #101828;
+  --bs-btn-hover-bg: #F8B218;
+  --bs-btn-hover-border-color: #F8B218;
+  --bs-btn-active-color: #101828;
+  --bs-btn-active-bg: #E0A00F;
+  --bs-btn-active-border-color: #E0A00F;
+  --bs-btn-focus-shadow-rgb: 248, 178, 24;
+}
+
+/* Informativo suave: el cian de Bootstrap no existe en la paleta. */
+.btn-info {
+  --bs-btn-color: #004A85;
+  --bs-btn-bg: #EFF6FF;
+  --bs-btn-border-color: #BEDBFF;
+  --bs-btn-hover-color: #003C6B;
+  --bs-btn-hover-bg: #DBEAFE;
+  --bs-btn-hover-border-color: #BEDBFF;
+  --bs-btn-active-color: #003C6B;
+  --bs-btn-active-bg: #BEDBFF;
+  --bs-btn-active-border-color: #BEDBFF;
+  --bs-btn-focus-shadow-rgb: 0, 96, 170;
+}
+
+.btn-light {
+  --bs-btn-color: #364153;
+  --bs-btn-bg: #F9FAFB;
+  --bs-btn-border-color: #E5E7EB;
+  --bs-btn-hover-color: #1E2939;
+  --bs-btn-hover-bg: #F3F4F6;
+  --bs-btn-hover-border-color: #D1D5DC;
+  --bs-btn-active-color: #101828;
+  --bs-btn-active-bg: #E5E7EB;
+  --bs-btn-active-border-color: #D1D5DC;
+}
+
+.btn-dark {
+  --bs-btn-color: #FFFFFF;
+  --bs-btn-bg: #29384D;
+  --bs-btn-border-color: #29384D;
+  --bs-btn-hover-color: #FFFFFF;
+  --bs-btn-hover-bg: #1E2939;
+  --bs-btn-hover-border-color: #1E2939;
+  --bs-btn-active-color: #FFFFFF;
+  --bs-btn-active-bg: #101828;
+  --bs-btn-active-border-color: #101828;
+}
+
+.btn-link {
+  --bs-btn-color: #0060AA;
+  --bs-btn-hover-color: #004E8C;
+  --bs-btn-active-color: #003C6B;
+  --bs-btn-disabled-color: #6A7282;
+}
+
+/* El manual pide anillo de foco visible en todo botón al navegar con teclado. */
+.btn:focus-visible {
+  outline: 2px solid #0060AA;
+  outline-offset: 2px;
+}
+
+/* =============================================================================
+   FORMULARIOS (manual, "Formularios, tablas y superficies")
+   ============================================================================= */
+
+.form-control,
+.form-select {
+  border-color: #D1D5DC;              /* borde de campo, estado normal */
+  color: #101828;
+}
+
+.form-control::placeholder {
+  color: #6A7282;                     /* texto de ayuda */
+}
+
+/* Borde de 1 px más anillo de foco de 2 px con 2 px de separación (manual). */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: #0060AA;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px rgba(0, 96, 170, 0.45);
+}
+
+.form-control:disabled,
+.form-select:disabled,
+.form-control[readonly] {
+  background-color: #F3F4F6;
+  color: #6A7282;
+  border-color: #D1D5DC;
+}
+
+/* Campo con error: borde, ícono, asterisco y mensaje en rojo. */
+.form-control.is-invalid,
+.was-validated .form-control:invalid,
+.form-select.is-invalid,
+.was-validated .form-select:invalid {
+  border-color: #E7000B;
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+  border-color: #E7000B;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px rgba(231, 0, 11, 0.35);
+}
+
+.invalid-feedback { color: #9F0712; }
+
+.form-control.is-valid,
+.form-select.is-valid { border-color: #008236; }
+
+.valid-feedback { color: #016630; }
+
+.form-check-input:checked {
+  background-color: #0060AA;
+  border-color: #0060AA;
+}
+
+.form-check-input {
+  border-color: #D1D5DC;
+}
+
+.form-check-input:disabled ~ .form-check-label {
+  color: #6A7282;
+}
+
+/* Rótulo de campo: Regular 13 px #364153 (manual). */
+.form-label {
+  color: #364153;
+  font-size: 0.8125rem;
+  margin-bottom: 0.25rem;
+}
+
+.form-text { color: #6A7282; font-size: 0.75rem; }
+
+.input-group-text {
+  background-color: #F3F4F6;
+  border-color: #D1D5DC;
+  color: #364153;
+}
+
+/* =============================================================================
+   TABLAS (manual, "Formularios, tablas y superficies")
+   ============================================================================= */
+
+.table {
+  --bs-table-color: #101828;
+  --bs-table-bg: transparent;
+  --bs-table-border-color: #E5E7EB;
+  --bs-table-striped-bg: #F9FAFB;      /* bandeado en tablas de más de 5 filas */
+  --bs-table-striped-color: #101828;
+  --bs-table-hover-bg: #F3F4F6;        /* realce de la fila bajo el cursor */
+  --bs-table-hover-color: #101828;
+  --bs-table-active-bg: #EFF6FF;       /* registro activo o seleccionado */
+  --bs-table-active-color: #101828;
+  font-size: 0.875rem;                 /* datos en tablas: 14 px (manual) */
+  line-height: 1.2;                    /* interlineado de tablas (manual) */
+}
+
+.table > thead {
+  background-color: #F3F4F6;
+}
+
+.table > thead th,
+.table > thead td {
+  color: #364153;
+  font-size: 0.8125rem;                /* encabezado de tabla: 13 px (manual) */
+  font-weight: 400;                    /* Arial Nova Regular (manual) */
+  vertical-align: middle;
+}
+
+.table-primary {
+  --bs-table-bg: #EFF6FF;
+  --bs-table-color: #004A85;
+  --bs-table-border-color: #BEDBFF;
+}
+
+.table-success {
+  --bs-table-bg: #F0FDF4;
+  --bs-table-color: #016630;
+  --bs-table-border-color: #B9F8CF;
+}
+
+.table-danger {
+  --bs-table-bg: #FEF2F2;
+  --bs-table-color: #9F0712;
+  --bs-table-border-color: #FFC9C9;
+}
+
+.table-warning {
+  --bs-table-bg: #FEFCE8;
+  --bs-table-color: #894B00;
+  --bs-table-border-color: #FFF085;
+}
+
+.table-info {
+  --bs-table-bg: #EFF6FF;
+  --bs-table-color: #004A85;
+  --bs-table-border-color: #BEDBFF;
+}
+
+/* =============================================================================
+   ALERTAS (manual, "Colores semánticos y de alerta")
+   Cada estado usa su cuarteto: fondo, borde, texto y acento del ícono.
+   Recuerda: el color nunca es el único medio para transmitir el estado; toda
+   alerta debe llevar ícono y texto explícito, y describir la acción correctiva.
+   ============================================================================= */
+
+.alert-primary, .alert-info {
+  --bs-alert-color: #004A85;
+  --bs-alert-bg: #EFF6FF;
+  --bs-alert-border-color: #BEDBFF;
+  --bs-alert-link-color: #003C6B;
+}
+
+.alert-success {
+  --bs-alert-color: #016630;
+  --bs-alert-bg: #F0FDF4;
+  --bs-alert-border-color: #B9F8CF;
+  --bs-alert-link-color: #0D542B;
+}
+
+.alert-danger {
+  --bs-alert-color: #9F0712;
+  --bs-alert-bg: #FEF2F2;
+  --bs-alert-border-color: #FFC9C9;
+  --bs-alert-link-color: #9F0712;
+}
+
+.alert-warning {
+  --bs-alert-color: #894B00;
+  --bs-alert-bg: #FEFCE8;
+  --bs-alert-border-color: #FFF085;
+  --bs-alert-link-color: #894B00;
+}
+
+.alert-secondary, .alert-light, .alert-dark {
+  --bs-alert-color: #29384D;
+  --bs-alert-bg: #F9FAFB;
+  --bs-alert-border-color: #E5E7EB;
+  --bs-alert-link-color: #101828;
+}
+
+/* =============================================================================
+   BADGES / ETIQUETAS DE ESTADO
+   "Los mismos acentos se aplican a las etiquetas de estado (badges) de las
+   tablas, con el fondo y el texto del estado correspondiente" (manual).
+   ============================================================================= */
+
+.badge { font-weight: 700; }
+
+.text-bg-primary,
+.badge.bg-primary { background-color: #0060AA !important; color: #FFFFFF !important; }
+
+.text-bg-success,
+.badge.bg-success { background-color: #F0FDF4 !important; color: #016630 !important;
+                    box-shadow: inset 0 0 0 1px #B9F8CF; }
+
+.text-bg-danger,
+.badge.bg-danger  { background-color: #FEF2F2 !important; color: #9F0712 !important;
+                    box-shadow: inset 0 0 0 1px #FFC9C9; }
+
+.text-bg-warning,
+.badge.bg-warning { background-color: #FEFCE8 !important; color: #894B00 !important;
+                    box-shadow: inset 0 0 0 1px #FFF085; }
+
+.text-bg-info,
+.badge.bg-info    { background-color: #EFF6FF !important; color: #004A85 !important;
+                    box-shadow: inset 0 0 0 1px #BEDBFF; }
+
+.text-bg-secondary,
+.badge.bg-secondary { background-color: #F9FAFB !important; color: #29384D !important;
+                      box-shadow: inset 0 0 0 1px #E5E7EB; }
+
+.text-bg-light,
+.badge.bg-light   { background-color: #F3F4F6 !important; color: #364153 !important; }
+
+.text-bg-dark,
+.badge.bg-dark    { background-color: #29384D !important; color: #FFFFFF !important; }
+
+/* =============================================================================
+   NAVEGACIÓN, LISTAS, TARJETAS Y MODALES
+   ============================================================================= */
+
+.nav-tabs {
+  --bs-nav-tabs-link-active-color: #0060AA;
+  --bs-nav-tabs-link-active-border-color: #E5E7EB #E5E7EB #FFFFFF;
+  --bs-nav-tabs-border-color: #E5E7EB;
+}
+
+.nav-link {
+  --bs-nav-link-color: #364153;
+  --bs-nav-link-hover-color: #0060AA;
+}
+
+.nav-pills {
+  --bs-nav-pills-link-active-bg: #0060AA;
+  --bs-nav-pills-link-active-color: #FFFFFF;
+}
+
+.dropdown-menu {
+  --bs-dropdown-link-active-bg: #0060AA;
+  --bs-dropdown-link-active-color: #FFFFFF;
+  --bs-dropdown-link-hover-bg: #F3F4F6;
+  --bs-dropdown-link-color: #364153;
+  --bs-dropdown-border-color: #E5E7EB;
+}
+
+.list-group {
+  --bs-list-group-active-bg: #0060AA;
+  --bs-list-group-active-border-color: #0060AA;
+  --bs-list-group-action-hover-bg: #F3F4F6;
+  --bs-list-group-border-color: #E5E7EB;
+  --bs-list-group-color: #101828;
+}
+
+.card {
+  --bs-card-bg: #FFFFFF;
+  --bs-card-border-color: #E5E7EB;
+  --bs-card-cap-bg: #F9FAFB;
+  --bs-card-color: #101828;
+}
+
+.modal-header,
+.modal-footer { border-color: #E5E7EB; }
+
+.progress { --bs-progress-bar-bg: #0060AA; --bs-progress-bg: #E5E7EB; }
+
+.page-link {
+  --bs-pagination-color: #0060AA;
+  --bs-pagination-hover-color: #004E8C;
+  --bs-pagination-hover-bg: #EFF6FF;
+  --bs-pagination-active-bg: #0060AA;
+  --bs-pagination-active-border-color: #0060AA;
+  --bs-pagination-border-color: #E5E7EB;
+}
+
+.accordion {
+  --bs-accordion-btn-focus-border-color: #0060AA;
+  --bs-accordion-active-color: #004A85;
+  --bs-accordion-active-bg: #EFF6FF;
+  --bs-accordion-border-color: #E5E7EB;
+}
+
+/* =============================================================================
+   SWITCHES
+   styles.css fija su color con !important, así que aquí se repite con la misma
+   fuerza para que queden alineados con la identidad.
+   ============================================================================= */
+
+.form-switch .form-check-input:checked {
+  background-color: #0060AA !important;
+  border-color: #0060AA !important;
+}
+
+.form-switch .form-check-input:focus {
+  border-color: #0060AA !important;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px rgba(0, 96, 170, 0.35) !important;
+}
+
+/* Switch de acento (p. ej. "Visible App"): naranja institucional. */
+.form-switch .form-check-input.switch-warning:checked {
+  background-color: #F8B218 !important;
+  border-color: #F8B218 !important;
+}
+
+.form-switch .form-check-input.switch-warning:focus {
+  border-color: #E0A00F !important;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px rgba(248, 178, 24, 0.35) !important;
+}

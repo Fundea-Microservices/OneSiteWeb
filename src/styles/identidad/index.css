@@ -1,0 +1,23 @@
+/* =============================================================================
+   IDENTIDAD CORPORATIVA ONESITE — PUNTO DE ENTRADA
+   -----------------------------------------------------------------------------
+   Basado en el "Manual de Identidad OneSite" v1.1
+   FUNDEA · Departamento de desarrollo y transformación digital · Agosto 2026
+
+   Este archivo se importa una sola vez desde `src/styles.css`.
+   No pongas reglas aquí: edita los archivos que agrupa.
+
+     colores.css          paleta institucional, alias de Tailwind y roles de color
+     tipografia.css       familia Arial Nova y jerarquía tipográfica
+     componentes.css      botones, estados, tablas, campos y menú oscuro propios
+     bootstrap-puente.css repinta los componentes de Bootstrap 5 con la identidad
+
+   EL ORDEN IMPORTA
+     bootstrap-puente.css va al final y fuera de @layer: es lo que le permite
+     ganarle a bootstrap.min.css, que styles.css carga antes que este archivo.
+   ============================================================================= */
+
+@import "./colores.css";
+@import "./tipografia.css";
+@import "./componentes.css";
+@import "./bootstrap-puente.css";

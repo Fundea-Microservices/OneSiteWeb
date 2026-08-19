@@ -1,0 +1,341 @@
+/* =============================================================================
+   IDENTIDAD ONESITE — COMPONENTES
+   -----------------------------------------------------------------------------
+   Piezas de interfaz descritas en el manual v1.1 que no existen como tal en
+   Bootstrap ni en Tailwind: botones de acento, superficies oscuras del menú,
+   velo de modal, estados semánticos, anillo de foco y área de pulsación.
+
+   Todo lo que hay aquí vive en `@layer components`, es decir: las utilidades de
+   Tailwind escritas en una plantilla SIEMPRE pueden sobrescribirlo. Las reglas
+   que deben ganarle a Bootstrap están en bootstrap-puente.css.
+   ============================================================================= */
+
+/* =============================================================================
+   FOCO VISIBLE (accesibilidad)
+   "Todo botón debe mostrar el anillo de foco al navegar con teclado" y "sobre
+   superficies oscuras el anillo de foco cambia a #FFFFFF" (manual).
+   ============================================================================= */
+@layer base {
+  :where(a, button, [role="button"], input, select, textarea, summary,
+         [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: var(--ui-foco-ancho) solid var(--ui-foco);
+    outline-offset: var(--ui-foco-separacion);
+  }
+
+  /* Sobre superficies oscuras el anillo se aclara para conservar visibilidad. */
+  .superficie-oscura :where(a, button, [role="button"], input, select, textarea,
+                            summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline-color: var(--ui-foco-oscuro);
+  }
+}
+
+@layer components {
+  /* ===========================================================================
+     BOTONES DE IDENTIDAD
+     ---------------------------------------------------------------------------
+     Para pantallas nuevas que no usan Bootstrap. Las clases de Bootstrap ya
+     quedan repintadas por bootstrap-puente.css.
+
+       .boton              base (tamaño, tipografía, radio)
+       .boton--primario    acción principal — una sola por pantalla
+       .boton--secundario  contorno azul
+       .boton--terciario   texto, sin fondo
+       .boton--acento      CTA de alta visibilidad (texto #101828, nunca blanco)
+       .boton--crear       crear / confirmar
+       .boton--destructivo eliminar / anular / revertir (exige confirmación)
+     =========================================================================== */
+  .boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    font-family: var(--tipo-cuerpo);
+    font-size: var(--tam-boton);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--leading-compacto);
+    cursor: pointer;
+    transition: background-color .15s ease-in-out, border-color .15s ease-in-out,
+                color .15s ease-in-out;
+  }
+
+  .boton:disabled,
+  .boton[aria-disabled="true"] {
+    background-color: var(--ui-deshabilitado-fondo);
+    border-color: var(--ui-deshabilitado-fondo);
+    color: var(--ui-deshabilitado-texto);
+    cursor: not-allowed;
+    pointer-events: none;   /* el estado deshabilitado no responde al cursor */
+  }
+
+  .boton--primario {
+    background-color: var(--ui-accion);
+    border-color: var(--ui-accion);
+    color: var(--ui-accion-texto);
+  }
+  .boton--primario:hover { background-color: var(--ui-accion-hover); border-color: var(--ui-accion-hover); }
+  .boton--primario:active { background-color: var(--ui-accion-activa); border-color: var(--ui-accion-activa); }
+
+  .boton--secundario {
+    background-color: var(--ui-superficie);
+    border-color: var(--ui-accion);
+    color: var(--ui-accion);
+  }
+  .boton--secundario:hover { background-color: var(--ui-accion-suave); }
+  .boton--secundario:active { background-color: var(--ui-accion-suave-alta); }
+
+  .boton--terciario {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--ui-texto-etiqueta);
+  }
+  .boton--terciario:hover { background-color: var(--color-neutro-100); }
+  .boton--terciario:active { background-color: var(--ui-borde); }
+
+  .boton--acento {
+    background-color: var(--ui-cta);
+    border-color: var(--ui-cta);
+    color: var(--ui-cta-texto);        /* SIEMPRE #101828, nunca blanco */
+  }
+  .boton--acento:hover { background-color: var(--ui-cta-hover); border-color: var(--ui-cta-hover); }
+  .boton--acento:active { background-color: var(--ui-cta-activa); border-color: var(--ui-cta-activa); }
+
+  .boton--crear {
+    background-color: var(--ui-crear);
+    border-color: var(--ui-crear);
+    color: #FFFFFF;
+  }
+  .boton--crear:hover { background-color: var(--ui-crear-hover); border-color: var(--ui-crear-hover); }
+  .boton--crear:active { background-color: var(--ui-crear-activa); border-color: var(--ui-crear-activa); }
+
+  .boton--destructivo {
+    background-color: var(--ui-destructivo);
+    border-color: var(--ui-destructivo);
+    color: #FFFFFF;
+  }
+  .boton--destructivo:hover { background-color: var(--ui-destructivo-hover); border-color: var(--ui-destructivo-hover); }
+  .boton--destructivo:active { background-color: var(--ui-destructivo-activa); border-color: var(--ui-destructivo-activa); }
+
+  /* Área mínima de pulsación de 44 x 44 px aun cuando el botón se dibuje más
+     pequeño (manual). Aplícala a botones de ícono sueltos; no la pongas en
+     botones contiguos dentro de una celda de tabla, porque las zonas de
+     pulsación se solaparían. */
+  .pulsacion-44 { position: relative; }
+  .pulsacion-44::after {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 44px; height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ===========================================================================
+     ESTADOS SEMÁNTICOS
+     Cuarteto del manual: acento, fondo, borde y texto se usan siempre juntos.
+     El color nunca es el único indicador: acompaña siempre con ícono y texto.
+     =========================================================================== */
+  .estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    font-size: var(--tam-etiqueta);
+  }
+  .estado--exito       { background: var(--color-exito-50);       border-color: var(--color-exito-200);       color: var(--color-exito-700); }
+  .estado--error       { background: var(--color-error-50);       border-color: var(--color-error-200);       color: var(--color-error-800); }
+  .estado--advertencia { background: var(--color-advertencia-50); border-color: var(--color-advertencia-200); color: var(--color-advertencia-800); }
+  .estado--informacion { background: var(--color-informacion-50); border-color: var(--color-informacion-200); color: var(--color-informacion-800); }
+  .estado--sistema     { background: var(--color-sistema-50);     border-color: var(--color-sistema-200);     color: var(--color-sistema-800); }
+
+  /* Etiquetas de estado (badges) de las tablas: mismo cuarteto, más compactas. */
+  .etiqueta-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: var(--tam-ayuda);
+    font-weight: var(--font-weight-bold);
+    white-space: nowrap;
+  }
+  .etiqueta-estado--exito       { background: var(--color-exito-50);       border-color: var(--color-exito-200);       color: var(--color-exito-700); }
+  .etiqueta-estado--error       { background: var(--color-error-50);       border-color: var(--color-error-200);       color: var(--color-error-800); }
+  .etiqueta-estado--advertencia { background: var(--color-advertencia-50); border-color: var(--color-advertencia-200); color: var(--color-advertencia-800); }
+  .etiqueta-estado--informacion { background: var(--color-informacion-50); border-color: var(--color-informacion-200); color: var(--color-informacion-800); }
+  .etiqueta-estado--sistema     { background: var(--color-sistema-50);     border-color: var(--color-sistema-200);     color: var(--color-sistema-800); }
+
+  /* Asterisco de campo obligatorio: rojo #E7000B (manual). */
+  .obligatorio::after {
+    content: " *";
+    color: var(--color-error-600);
+    font-weight: var(--font-weight-bold);
+  }
+
+  /* ===========================================================================
+     SUPERFICIES Y ESTRUCTURA
+     =========================================================================== */
+  .superficie {
+    background-color: var(--ui-superficie);
+    border: 1px solid var(--ui-borde);
+    border-radius: 0.5rem;
+  }
+
+  /* Encabezado de módulo sobre azul secundario (manual). */
+  .barra-modulo {
+    background-color: var(--color-oscuro-600);
+    color: #FFFFFF;
+  }
+
+  /* Velo que oscurece el fondo cuando hay un diálogo abierto: #101828 al 50 %. */
+  .velo-modal {
+    background-color: var(--ui-velo-modal);
+  }
+
+  /* ===========================================================================
+     SUPERFICIES OSCURAS — MENÚ LATERAL (manual, "Superficies oscuras")
+     ---------------------------------------------------------------------------
+     .superficie-oscura        contenedor (menú lateral, barra de módulo)
+       .item-menu              opción en estado normal
+       .item-menu.is-active    opción de la pantalla en curso
+       .grupo-menu             rótulo que agrupa opciones
+       .separador-menu         línea entre grupos
+     =========================================================================== */
+  .superficie-oscura {
+    background-color: var(--ui-sidebar-fondo);
+    color: var(--ui-sidebar-texto);
+  }
+
+  .item-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.5rem;
+    color: var(--ui-sidebar-texto);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .item-menu:hover {
+    background-color: var(--ui-sidebar-hover);
+    color: var(--ui-sidebar-texto-activo);
+  }
+
+  /* El fondo azul del ítem activo solo alcanza 1.84:1 contra el menú, así que
+     NUNCA es el único indicador: lleva marca naranja de 3 px y texto blanco. */
+  .item-menu.is-active {
+    background-color: var(--ui-sidebar-activo);
+    color: var(--ui-sidebar-texto-activo);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .item-menu.is-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    width: var(--ui-sidebar-marca-ancho);
+    border-radius: 999px;
+    background-color: var(--ui-sidebar-marca);
+  }
+
+  /* Los íconos del menú siguen el color del texto del ítem (manual). */
+  .item-menu ion-icon,
+  .item-menu svg { color: currentColor; }
+
+  .grupo-menu {
+    color: var(--ui-sidebar-grupo);
+    font-size: var(--tam-ayuda);
+    padding: 0.5rem 0.625rem 0.25rem;
+  }
+
+  .separador-menu {
+    border: 0;
+    border-top: 1px solid var(--ui-sidebar-separador);
+    margin: 0.75rem 0;
+  }
+
+  /* ===========================================================================
+     TABLAS DE DATOS SIN BOOTSTRAP
+     =========================================================================== */
+  .tabla {
+    width: 100%;
+    font-size: var(--tam-tabla);
+    line-height: var(--leading-compacto);
+    color: var(--ui-texto);
+  }
+  .tabla thead th {
+    background-color: var(--ui-tabla-encabezado);
+    color: var(--ui-tabla-encabezado-txt);
+    font-size: var(--tam-etiqueta);
+    font-weight: var(--font-weight-normal);
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+  }
+  .tabla tbody td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--ui-borde); }
+  .tabla tbody tr:nth-child(even) { background-color: var(--ui-tabla-fila-alterna); }
+  .tabla tbody tr:hover { background-color: var(--ui-tabla-fila-hover); }
+  .tabla tbody tr.is-selected { background-color: var(--ui-tabla-fila-activa); }
+  .tabla .col-numero { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ===========================================================================
+     CAMPOS DE FORMULARIO SIN BOOTSTRAP
+     =========================================================================== */
+  .campo {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--ui-campo-fondo);
+    border: 1px solid var(--ui-campo-borde);
+    border-radius: 0.375rem;
+    font-size: var(--tam-cuerpo);
+    color: var(--ui-texto);
+  }
+  .campo::placeholder { color: var(--ui-texto-tenue); }
+  .campo:focus {
+    border-color: var(--ui-campo-borde-foco);
+    outline: var(--ui-foco-ancho) solid var(--ui-foco);
+    outline-offset: var(--ui-foco-separacion);
+  }
+  .campo:disabled {
+    background-color: var(--ui-campo-desactivado);
+    color: var(--ui-texto-tenue);
+    border-color: var(--ui-campo-borde);
+    cursor: not-allowed;
+  }
+  .campo.is-invalid { border-color: var(--ui-campo-borde-error); }
+
+  .etiqueta-campo {
+    display: block;
+    font-size: var(--tam-etiqueta);
+    color: var(--ui-texto-etiqueta);
+    margin-bottom: 0.25rem;
+  }
+
+  .mensaje-error {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--tam-ayuda);
+    color: var(--color-error-800);
+  }
+
+  /* ===========================================================================
+     ENLACES DE TEXTO (manual: #0060AA; en hover #004E8C y se subraya)
+     =========================================================================== */
+  .enlace {
+    color: var(--ui-enlace);
+    text-decoration: none;
+  }
+  .enlace:hover {
+    color: var(--ui-enlace-hover);
+    text-decoration: underline;
+  }
+}

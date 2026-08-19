@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Quicksand:400,500,700');
-
+/* Tipografía: Arial Nova, definida en src/styles/identidad/tipografia.css. */
 /*-- Inspiration taken from abdo steif -->
 /* --> https://codepen.io/abdosteif/pen/bRoyMb?editors=1100*/
 
@@ -27,12 +26,12 @@
 
 .custom-nav div.logo a {
     text-decoration: none;
-    color: #fff;
+    color: #FFFFFF;
     font-size: 2.5rem;
 }
 
 .custom-nav div.logo a:hover {
-    color: #42d3ec;
+    color: #F8B218;
 }
 
 .custom-nav div.main_list {
@@ -58,13 +57,13 @@
 
 .custom-nav div.main_list ul li a {
     text-decoration: none;
-    color: #fff;
+    color: #FFFFFF;
     line-height: 65px;
     font-size: 1.4rem;
 }
 
 .custom-nav div.main_list ul li a:hover {
-    color: #42d3ec;
+    color: #F8B218;
 }
 
 
@@ -121,7 +120,7 @@
         right: 0;
         left: 0;
         bottom: 0;
-        background-color: #3256c4;
+        background-color: #29384D;
         /*same background color of navbar*/
         background-position: center top;
     }
@@ -335,7 +334,7 @@
 
 .affix {
     padding: 0;
-    background-color: #182d73;
+    background-color: #29384D;
 }
 
 

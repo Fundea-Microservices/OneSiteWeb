@@ -130,7 +130,7 @@
     <!-- Cards Mobile -->
     <div class="d-md-none d-flex flex-column gap-3">
       @for (item of preguntaList(); track item.idPregunta) {
-        <div class="card shadow-sm" [style.border-left]="item.tipoDato === 'MATRIZ' ? '4px solid #0dcaf0' : ''">
+        <div class="card shadow-sm" [style.border-left]="item.tipoDato === 'MATRIZ' ? '4px solid #0060AA' : ''">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-1">
               <div class="fw-semibold text-break">{{ item.etiqueta }}</div>

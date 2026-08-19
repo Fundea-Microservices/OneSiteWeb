@@ -1,40 +1,85 @@
-/* Theming for the side menu using palette from styles.css */
-:host .side-menu {
-	/* Reference colors from styles.css */
-	--sidebar-bg: #2b3747;        /* .bg-custom-sidebar */
-	--sidebar-text: #d7d7d7;      /* .text-custom-sidebar */
-	--sidebar-hover: #36465c;     /* hover shade */
-	--sidebar-active: #41556f;    /* active shade */
-}
+/* =============================================================================
+   MENÚ LATERAL — "Superficies oscuras" del Manual de Identidad OneSite v1.1
+   -----------------------------------------------------------------------------
+   Los colores NO se escriben aquí: se leen de los roles definidos en
+   src/styles/identidad/colores.css.
 
-/* Main toggle (first level) */
+     fondo del menú     #29384D   --ui-sidebar-fondo
+     ítem en hover      #36465C   --ui-sidebar-hover
+     ítem activo        #0060AA   --ui-sidebar-activo
+     marca del activo   #F8B218   --ui-sidebar-marca (barra vertical de 3 px)
+     separador          #41556F   --ui-sidebar-separador
+     texto de ítem      #D1D5DC   --ui-sidebar-texto
+     texto activo       #FFFFFF   --ui-sidebar-texto-activo
+   ============================================================================= */
+
+/* Opción de primer nivel (grupo desplegable) */
 :host .menu-toggle {
-	color: var(--sidebar-text);
+  color: var(--ui-sidebar-texto);
+  border-radius: 0.5rem;
 }
+
 :host .menu-toggle:hover {
-  border: solid 0px var(--sidebar-hover);
-  border-radius: 8px;
-	background-color: var(--sidebar-hover);
+  background-color: var(--ui-sidebar-hover);
+  color: var(--ui-sidebar-texto-activo);
 }
 
-/* Submenu links */
+/* Opciones de submenú */
 :host .menu-link {
-	width: 100%;
-	color: var(--sidebar-text);
-	border-radius: 0.5rem; /* rounded-md */
-}
-:host .menu-link:hover {
-	background-color: var(--sidebar-hover);
-	color: var(--sidebar-text);
-}
-:host .menu-link.is-active {
-	background-color: var(--sidebar-active);
-	color: #ffffff;
-	font-weight: 600;
+  position: relative;
+  width: 100%;
+  color: var(--ui-sidebar-texto);
+  border-radius: 0.5rem;
 }
 
-/* Accessibility: visible focus */
-:host .menu-link:focus-visible, :host .menu-toggle:focus-visible {
-	outline: 2px solid rgba(255,255,255,0.5);
-	outline-offset: 2px;
+:host .menu-link:hover {
+  background-color: var(--ui-sidebar-hover);
+  color: var(--ui-sidebar-texto-activo);
+}
+
+/* Pantalla en curso.
+   El fondo azul solo alcanza 1.84:1 contra el fondo del menú, por lo que el
+   manual exige que NUNCA sea el único indicador: va siempre acompañado de la
+   marca vertical naranja de 3 px y del texto en blanco. */
+:host .menu-link.is-active {
+  background-color: var(--ui-sidebar-activo);
+  color: var(--ui-sidebar-texto-activo);
+  font-weight: 700;
+}
+
+:host .menu-link.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  width: var(--ui-sidebar-marca-ancho);
+  border-radius: 999px;
+  background-color: var(--ui-sidebar-marca);
+}
+
+/* Los íconos siguen el color del texto del ítem al que pertenecen (manual). */
+:host .menu-toggle ion-icon,
+:host .menu-link ion-icon {
+  color: currentColor;
+}
+
+/* Separador entre grupos de opciones */
+:host .separador-menu {
+  border: 0;
+  border-top: 1px solid var(--ui-sidebar-separador);
+  margin: 0.75rem 0.25rem;
+}
+
+/* Rótulo que agrupa opciones */
+:host .grupo-menu {
+  color: var(--ui-sidebar-grupo);
+  font-size: 0.75rem;
+}
+
+/* Accesibilidad: sobre superficies oscuras el anillo de foco es blanco. */
+:host .menu-link:focus-visible,
+:host .menu-toggle:focus-visible {
+  outline: 2px solid var(--ui-foco-oscuro);
+  outline-offset: 2px;
 }

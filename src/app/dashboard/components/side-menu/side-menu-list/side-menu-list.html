@@ -7,7 +7,7 @@
           @if(acceso.showWeb && acceso.menu.active && acceso.active) {
           <li class="mb-1 rounded-xl">
             <button type="button" class="menu-toggle w-full flex items-center gap-2 py-2 px-2.5 text-left rounded-lg"
-              (click)="toggle(acceso.accesoId)" [style]="{color: acceso.menu.color || 'black'}">
+              (click)="toggle(acceso.accesoId)" [style]="{color: acceso.menu.color || 'var(--ui-sidebar-texto)'}">
               <ion-icon [name]="acceso.menu.icon"></ion-icon>
               <span class="ml-2">{{acceso.menu.label}}</span>
               <svg class="ml-auto size-4 transition-transform duration-200 text-custom-sidebar"
@@ -54,9 +54,7 @@
           }
           }
 
-          <div class="border-b border-gray-400 mt-3">
-
-          </div>
+          <hr class="separador-menu" />
           <!-- Otros -->
           <li class="mt-3 rounded-lg hover:bg-gray-700">
             <button type="button" (click)="actualizarCatalogos()"
