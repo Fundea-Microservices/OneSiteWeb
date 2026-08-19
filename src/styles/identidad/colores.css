@@ -1,158 +1,452 @@
 /* =============================================================================
    IDENTIDAD ONESITE — PALETA DE COLORES
    -----------------------------------------------------------------------------
-   Fuente: "Manual de Identidad OneSite" v1.0 (FUNDEA, agosto 2026), sección 4.
+   Fuente: "Manual de Identidad OneSite" v1.1 (FUNDEA, agosto 2026), sección 4.
+   Aprobado por Rosalio Alonzo · Última modificación 19-08-2026.
 
    ESTE ES EL ÚNICO ARCHIVO QUE HAY QUE TOCAR PARA CAMBIAR LOS COLORES DE LA APP.
 
    Cómo funciona
-     Tailwind 4 lee el bloque `@theme` y genera automáticamente las utilidades.
-     Si defines `--color-primario-700`, obtienes `bg-primario-700`,
-     `text-primario-700`, `border-primario-700`, `ring-primario-700`, etc.
+     1. El bloque `@theme` alimenta a Tailwind 4: si defines
+        `--color-primario-600`, obtienes `bg-primario-600`, `text-primario-600`,
+        `border-primario-600`, `ring-primario-600`, etc.
+     2. El mismo bloque REDEFINE las paletas de fábrica de Tailwind
+        (blue, sky, indigo, cyan, yellow, amber, slate...) para que las ~260
+        clases `blue-*` que ya existen en las plantillas pinten el azul
+        institucional. El manual lo exige: "es el único azul admitido como color
+        de acción: no deben emplearse los azules por defecto de la librería".
+     3. El bloque `:root` del final define ROLES (qué es cada color, no cómo se
+        llama). Es lo que usan componentes.css y los CSS de componente.
 
    Cómo cambiar un color
-     Edita el hex y recarga. No hay que tocar ningún componente.
-     Los tres colores oficiales del manual son los marcados con (MANUAL).
-
-   Cómo usarlo en las plantillas
-     Color oficial exacto ...... bg-primario / text-acento / bg-neutro
-     Variaciones ............... bg-primario-100 (fondos), text-primario-800 (texto)
-     Fuera de Tailwind (CSS) ... background: var(--color-primario-700);
+     Edita el hex y recarga. No hay que tocar ninguna plantilla.
+     Los valores marcados (MANUAL) son literales del documento aprobado; el
+     resto son escalones derivados para tener tintes y sombras coherentes.
    ============================================================================= */
 
 @theme {
-  /* ---------------------------------------------------------------------------
-     AZUL PRIMARIO — #0060AA (MANUAL)
-     Color institucional. Barra de navegación, botones principales, enlaces,
-     encabezados. Es el color que manda en la interfaz.
-     Contraste sobre blanco: 6.5:1 — apto para texto (WCAG AA).
-     --------------------------------------------------------------------------- */
-  --color-primario-50:  #F0F7FD;
-  --color-primario-100: #E2F0FB;
-  --color-primario-200: #BCDDF7;
-  --color-primario-300: #8BC6F4;
-  --color-primario-400: #4DABF3;
-  --color-primario-500: #0C90F6;
-  --color-primario-600: #0477D0;
-  --color-primario-700: #0060AA;  /* ← oficial del manual */
-  --color-primario-800: #024C85;
-  --color-primario-900: #033B66;
-  --color-primario-950: #03243E;
-  --color-primario: var(--color-primario-700);
+  /* ===========================================================================
+     1. COLORES BASE (manual, "Colores base")
+     =========================================================================== */
 
   /* ---------------------------------------------------------------------------
-     GRIS PRIMARIO — #EDECEB (MANUAL)
-     Gris cálido. Fondos de página, tarjetas, separadores, estados deshabilitados.
-     El manual lo indica como fondo para la variante clara del logotipo.
+     AZUL PRIMARIO — #0060AA (MANUAL)
+     Azul corporativo de FUNDEA (Pantone 2935 CP). Color dominante del sistema:
+     botón primario, enlaces, ítem activo del menú, íconos de acción y anillo
+     de foco.
+
+     Los escalones 600/700/800 son exactamente los tres estados del botón
+     primario del manual: normal / hover / presionado.
      --------------------------------------------------------------------------- */
-  --color-neutro-50:  #F4F4F3;
-  --color-neutro-100: #EDECEB;  /* ← oficial del manual */
-  --color-neutro-200: #DAD8D6;
-  --color-neutro-300: #C2BFBC;
-  --color-neutro-400: #A5A19C;
-  --color-neutro-500: #88837D;
-  --color-neutro-600: #716C68;
-  --color-neutro-700: #5C5855;
-  --color-neutro-800: #494744;
-  --color-neutro-900: #3A3835;
-  --color-neutro-950: #252322;
-  --color-neutro: var(--color-neutro-100);
+  --color-primario-50:  #EFF6FF;  /* (MANUAL) fondo información, fila seleccionada, hover secundario */
+  --color-primario-100: #DBEAFE;  /* (MANUAL) botón secundario presionado */
+  --color-primario-200: #BEDBFF;  /* (MANUAL) borde de información */
+  --color-primario-300: #8EC5FF;
+  --color-primario-400: #4A9EEB;
+  --color-primario-500: #0075CC;
+  --color-primario-600: #0060AA;  /* (MANUAL) <- azul institucional */
+  --color-primario-700: #004E8C;  /* (MANUAL) hover del botón primario y de enlaces */
+  --color-primario-800: #003C6B;  /* (MANUAL) botón primario presionado */
+  --color-primario-900: #002E52;
+  --color-primario-950: #001F38;
+  --color-primario: var(--color-primario-600);
+
+  /* ---------------------------------------------------------------------------
+     GRIS PRIMARIO — #D1D5DC (MANUAL) -> escalón 300 de la escala neutra
+     Borde de campos de formulario, líneas divisorias y fondo de elementos
+     deshabilitados.
+
+     La escala completa son los NUEVE niveles de la sección "Escala neutra".
+     El manual prohíbe introducir grises intermedios adicionales.
+     --------------------------------------------------------------------------- */
+  --color-neutro-50:  #F9FAFB;  /* (MANUAL) fondo de página */
+  --color-neutro-100: #F3F4F6;  /* (MANUAL) encabezado de tabla, fila en hover, campo deshabilitado */
+  --color-neutro-200: #E5E7EB;  /* (MANUAL) borde y divisor */
+  --color-neutro-300: #D1D5DC;  /* (MANUAL) <- gris primario: borde de campo */
+  --color-neutro-400: #99A1AF;  /* (MANUAL) encabezado de grupo en menú oscuro */
+  --color-neutro-500: #6A7282;  /* (MANUAL) texto de ayuda y placeholders */
+  --color-neutro-600: #4A5565;  /* (MANUAL) texto secundario */
+  --color-neutro-700: #364153;  /* (MANUAL) etiqueta de formulario, encabezado de tabla */
+  --color-neutro-800: #1E2939;  /* (MANUAL) títulos */
+  --color-neutro-900: #101828;  /* (MANUAL) texto principal */
+  --color-neutro-950: #030712;
+  --color-neutro: var(--color-neutro-300);
 
   /* ---------------------------------------------------------------------------
      NARANJA PRIMARIO — #F8B218 (MANUAL)
-     Color de acento. Resaltados, llamadas a la acción secundarias, badges,
-     elemento activo del menú.
+     Acento heredado del logotipo. Llamados a la acción de alta visibilidad,
+     indicadores de advertencia y marca del ítem activo sobre superficies
+     oscuras.
 
-     ⚠ ACCESIBILIDAD: sobre blanco da 1.9:1 — NO usar para texto sobre fondo
-       claro. Sí funciona como fondo con texto oscuro encima (11.4:1 con
-       neutro-950). Para texto naranja sobre blanco usa acento-700 o más oscuro.
+     ACCESIBILIDAD (manual): NUNCA se usa como fondo de texto blanco. Su texto
+     es siempre #101828. Para texto naranja sobre fondo claro hay que bajar a
+     acento-800 (#894B00), que es el color de texto de advertencia.
      --------------------------------------------------------------------------- */
-  --color-acento-50:  #FEFBF4;
-  --color-acento-100: #FCF5E7;
-  --color-acento-200: #F9E8C2;
-  --color-acento-300: #F6D792;
-  --color-acento-400: #F6C457;
-  --color-acento-500: #F8B218;  /* ← oficial del manual */
-  --color-acento-600: #D7970B;
-  --color-acento-700: #AC7A0C;
-  --color-acento-800: #88610B;
-  --color-acento-900: #6A4C0A;
-  --color-acento-950: #433108;
+  --color-acento-50:  #FEFCE8;  /* (MANUAL) fondo de advertencia */
+  --color-acento-100: #FEF9C2;
+  --color-acento-200: #FFF085;  /* (MANUAL) borde de advertencia */
+  --color-acento-300: #FBD35F;
+  --color-acento-400: #F9C13C;
+  --color-acento-500: #F8B218;  /* (MANUAL) <- naranja institucional */
+  --color-acento-600: #E0A00F;  /* (MANUAL) hover del botón de acento */
+  --color-acento-700: #C98C0B;  /* (MANUAL) botón de acento presionado */
+  --color-acento-800: #894B00;  /* (MANUAL) texto de advertencia sobre fondo claro */
+  --color-acento-900: #6E3B00;
+  --color-acento-950: #422300;
   --color-acento: var(--color-acento-500);
 
   /* ---------------------------------------------------------------------------
-     COLORES DE ESTADO
-     NO están en el manual de identidad — son una extensión necesaria para la
-     aplicación (validaciones, toasts, alertas). Elegidos para convivir con la
-     paleta institucional. Cámbialos si el área de diseño define otros.
+     AZUL SECUNDARIO — #29384D (MANUAL)
+     Menú lateral, encabezados de módulo y superficies oscuras en general.
+     Ver la sección "Superficies oscuras" del manual para los estados.
      --------------------------------------------------------------------------- */
-  --color-exito-50:   #ECFDF3;
-  --color-exito-100:  #D1FADF;
-  --color-exito-500:  #12B76A;
-  --color-exito-700:  #027A48;
-  --color-exito-900:  #054F31;
-  --color-exito: var(--color-exito-700);
+  --color-oscuro-300: #99A1AF;  /* (MANUAL) encabezado de grupo del menú */
+  --color-oscuro-400: #41556F;  /* (MANUAL) separador entre grupos */
+  --color-oscuro-500: #36465C;  /* (MANUAL) ítem en hover */
+  --color-oscuro-600: #29384D;  /* (MANUAL) <- fondo del menú lateral */
+  --color-oscuro-700: #1E2939;
+  --color-oscuro-800: #101828;  /* (MANUAL) texto principal / velo de modal */
+  --color-oscuro: var(--color-oscuro-600);
 
-  --color-peligro-50:  #FEF3F2;
-  --color-peligro-100: #FEE4E2;
-  --color-peligro-500: #F04438;
-  --color-peligro-700: #B42318;
-  --color-peligro-900: #7A271A;
-  --color-peligro: var(--color-peligro-700);
+  /* ===========================================================================
+     2. COLORES SEMÁNTICOS Y DE ALERTA (manual, "Colores semánticos y de alerta")
 
-  --color-alerta-50:   #FFFAEB;
-  --color-alerta-100:  #FEF0C7;
-  --color-alerta-500:  #F79009;
-  --color-alerta-700:  #B54708;
-  --color-alerta-900:  #7A2E0E;
-  --color-alerta: var(--color-alerta-700);
+     Cada estado son CUATRO valores que se usan siempre en conjunto:
+       -600 acento (ícono y borde de énfasis) · -50 fondo · -200 borde · -800 texto
 
-  --color-info-50:   #EFF8FF;
-  --color-info-100:  #D1E9FF;
-  --color-info-500:  #2E90FA;
-  --color-info-700:  #175CD3;
-  --color-info-900:  #194185;
-  --color-info: var(--color-info-700);
+     Se llaman en español (exito, error, advertencia, informacion) a propósito:
+     los nombres success/danger/warning/info pertenecen a Bootstrap y generarían
+     utilidades de Tailwind que chocan con las suyas.
+     =========================================================================== */
+
+  /* ÉXITO — verde de creación y confirmación */
+  --color-exito-50:  #F0FDF4;  /* (MANUAL) fondo */
+  --color-exito-200: #B9F8CF;  /* (MANUAL) borde */
+  --color-exito-600: #008236;  /* (MANUAL) acento y fondo del botón "Crear / confirmar" */
+  --color-exito-700: #016630;  /* (MANUAL) texto y hover del botón */
+  --color-exito-800: #0D542B;  /* (MANUAL) botón presionado */
+
+  /* ERROR — también asterisco de campo obligatorio y acciones de eliminación */
+  --color-error-50:  #FEF2F2;  /* (MANUAL) fondo */
+  --color-error-200: #FFC9C9;  /* (MANUAL) borde */
+  --color-error-600: #E7000B;  /* (MANUAL) acento y fondo del botón destructivo */
+  --color-error-700: #C10007;  /* (MANUAL) hover del botón destructivo */
+  --color-error-800: #9F0712;  /* (MANUAL) texto y botón presionado */
+
+  /* ADVERTENCIA — comparte el naranja institucional */
+  --color-advertencia-50:  #FEFCE8;  /* (MANUAL) fondo */
+  --color-advertencia-200: #FFF085;  /* (MANUAL) borde */
+  --color-advertencia-600: #F8B218;  /* (MANUAL) acento */
+  --color-advertencia-800: #894B00;  /* (MANUAL) texto */
+
+  /* INFORMACIÓN — comparte el azul institucional */
+  --color-informacion-50:  #EFF6FF;  /* (MANUAL) fondo */
+  --color-informacion-200: #BEDBFF;  /* (MANUAL) borde */
+  --color-informacion-600: #0060AA;  /* (MANUAL) acento */
+  --color-informacion-800: #004A85;  /* (MANUAL) texto */
+
+  /* NEUTRO / SISTEMA — mensajes sin carga positiva ni negativa (mantenimientos) */
+  --color-sistema-50:  #F9FAFB;  /* (MANUAL) fondo */
+  --color-sistema-200: #E5E7EB;  /* (MANUAL) borde */
+  --color-sistema-600: #4A5565;  /* (MANUAL) acento */
+  --color-sistema-800: #29384D;  /* (MANUAL) texto */
+
+  /* ===========================================================================
+     3. REASIGNACIÓN DE LAS PALETAS DE FÁBRICA DE TAILWIND
+     ---------------------------------------------------------------------------
+     Las plantillas ya escritas usan blue-600, gray-700, slate-100, yellow-500...
+     En lugar de reescribir cientos de archivos, se reapunta la paleta: la clase
+     sigue llamándose igual pero ahora pinta el color institucional.
+
+     Si añades pantallas nuevas, usa los nombres en español (primario, acento,
+     neutro). Estos alias existen para no romper lo ya construido.
+     =========================================================================== */
+
+  /* --- Azules (blue, sky, indigo, cyan) -> azul institucional --------------- */
+  --color-blue-50:  var(--color-primario-50);
+  --color-blue-100: var(--color-primario-100);
+  --color-blue-200: var(--color-primario-200);
+  --color-blue-300: var(--color-primario-300);
+  --color-blue-400: var(--color-primario-400);
+  --color-blue-500: var(--color-primario-500);
+  --color-blue-600: var(--color-primario-600);
+  --color-blue-700: var(--color-primario-700);
+  --color-blue-800: var(--color-primario-800);
+  --color-blue-900: var(--color-primario-900);
+  --color-blue-950: var(--color-primario-950);
+
+  --color-sky-50:  var(--color-primario-50);
+  --color-sky-100: var(--color-primario-100);
+  --color-sky-200: var(--color-primario-200);
+  --color-sky-300: var(--color-primario-300);
+  --color-sky-400: var(--color-primario-400);
+  --color-sky-500: var(--color-primario-500);
+  --color-sky-600: var(--color-primario-600);
+  --color-sky-700: var(--color-primario-700);
+  --color-sky-800: var(--color-primario-800);
+  --color-sky-900: var(--color-primario-900);
+  --color-sky-950: var(--color-primario-950);
+
+  --color-indigo-50:  var(--color-primario-50);
+  --color-indigo-100: var(--color-primario-100);
+  --color-indigo-200: var(--color-primario-200);
+  --color-indigo-300: var(--color-primario-300);
+  --color-indigo-400: var(--color-primario-400);
+  --color-indigo-500: var(--color-primario-500);
+  --color-indigo-600: var(--color-primario-600);
+  --color-indigo-700: var(--color-primario-700);
+  --color-indigo-800: var(--color-primario-800);
+  --color-indigo-900: var(--color-primario-900);
+  --color-indigo-950: var(--color-primario-950);
+
+  --color-cyan-50:  var(--color-primario-50);
+  --color-cyan-100: var(--color-primario-100);
+  --color-cyan-200: var(--color-primario-200);
+  --color-cyan-300: var(--color-primario-300);
+  --color-cyan-400: var(--color-primario-400);
+  --color-cyan-500: var(--color-primario-500);
+  --color-cyan-600: var(--color-primario-600);
+  --color-cyan-700: var(--color-primario-700);
+  --color-cyan-800: var(--color-primario-800);
+  --color-cyan-900: var(--color-primario-900);
+  --color-cyan-950: var(--color-primario-950);
+
+  /* --- Amarillos (yellow, amber, orange) -> naranja institucional ----------- */
+  --color-yellow-50:  var(--color-acento-50);
+  --color-yellow-100: var(--color-acento-100);
+  --color-yellow-200: var(--color-acento-200);
+  --color-yellow-300: var(--color-acento-300);
+  --color-yellow-400: var(--color-acento-400);
+  --color-yellow-500: var(--color-acento-500);
+  --color-yellow-600: var(--color-acento-600);
+  --color-yellow-700: var(--color-acento-700);
+  --color-yellow-800: var(--color-acento-800);
+  --color-yellow-900: var(--color-acento-900);
+  --color-yellow-950: var(--color-acento-950);
+
+  --color-amber-50:  var(--color-acento-50);
+  --color-amber-100: var(--color-acento-100);
+  --color-amber-200: var(--color-acento-200);
+  --color-amber-300: var(--color-acento-300);
+  --color-amber-400: var(--color-acento-400);
+  --color-amber-500: var(--color-acento-500);
+  --color-amber-600: var(--color-acento-600);
+  --color-amber-700: var(--color-acento-700);
+  --color-amber-800: var(--color-acento-800);
+  --color-amber-900: var(--color-acento-900);
+  --color-amber-950: var(--color-acento-950);
+
+  --color-orange-50:  var(--color-acento-50);
+  --color-orange-100: var(--color-acento-100);
+  --color-orange-200: var(--color-acento-200);
+  --color-orange-300: var(--color-acento-300);
+  --color-orange-400: var(--color-acento-400);
+  --color-orange-500: var(--color-acento-500);
+  --color-orange-600: var(--color-acento-600);
+  --color-orange-700: var(--color-acento-700);
+  --color-orange-800: var(--color-acento-800);
+  --color-orange-900: var(--color-acento-900);
+  --color-orange-950: var(--color-acento-950);
+
+  /* --- Grises (gray, slate, zinc, neutral, stone) -> escala neutra ---------- */
+  --color-gray-50:  var(--color-neutro-50);
+  --color-gray-100: var(--color-neutro-100);
+  --color-gray-200: var(--color-neutro-200);
+  --color-gray-300: var(--color-neutro-300);
+  --color-gray-400: var(--color-neutro-400);
+  --color-gray-500: var(--color-neutro-500);
+  --color-gray-600: var(--color-neutro-600);
+  --color-gray-700: var(--color-neutro-700);
+  --color-gray-800: var(--color-neutro-800);
+  --color-gray-900: var(--color-neutro-900);
+  --color-gray-950: var(--color-neutro-950);
+
+  --color-slate-50:  var(--color-neutro-50);
+  --color-slate-100: var(--color-neutro-100);
+  --color-slate-200: var(--color-neutro-200);
+  --color-slate-300: var(--color-neutro-300);
+  --color-slate-400: var(--color-neutro-400);
+  --color-slate-500: var(--color-neutro-500);
+  --color-slate-600: var(--color-neutro-600);
+  --color-slate-700: var(--color-neutro-700);
+  --color-slate-800: var(--color-neutro-800);
+  --color-slate-900: var(--color-neutro-900);
+  --color-slate-950: var(--color-neutro-950);
+
+  --color-zinc-50:  var(--color-neutro-50);
+  --color-zinc-100: var(--color-neutro-100);
+  --color-zinc-200: var(--color-neutro-200);
+  --color-zinc-300: var(--color-neutro-300);
+  --color-zinc-400: var(--color-neutro-400);
+  --color-zinc-500: var(--color-neutro-500);
+  --color-zinc-600: var(--color-neutro-600);
+  --color-zinc-700: var(--color-neutro-700);
+  --color-zinc-800: var(--color-neutro-800);
+  --color-zinc-900: var(--color-neutro-900);
+  --color-zinc-950: var(--color-neutro-950);
+
+  --color-neutral-50:  var(--color-neutro-50);
+  --color-neutral-100: var(--color-neutro-100);
+  --color-neutral-200: var(--color-neutro-200);
+  --color-neutral-300: var(--color-neutro-300);
+  --color-neutral-400: var(--color-neutro-400);
+  --color-neutral-500: var(--color-neutro-500);
+  --color-neutral-600: var(--color-neutro-600);
+  --color-neutral-700: var(--color-neutro-700);
+  --color-neutral-800: var(--color-neutro-800);
+  --color-neutral-900: var(--color-neutro-900);
+  --color-neutral-950: var(--color-neutro-950);
+
+  --color-stone-50:  var(--color-neutro-50);
+  --color-stone-100: var(--color-neutro-100);
+  --color-stone-200: var(--color-neutro-200);
+  --color-stone-300: var(--color-neutro-300);
+  --color-stone-400: var(--color-neutro-400);
+  --color-stone-500: var(--color-neutro-500);
+  --color-stone-600: var(--color-neutro-600);
+  --color-stone-700: var(--color-neutro-700);
+  --color-stone-800: var(--color-neutro-800);
+  --color-stone-900: var(--color-neutro-900);
+  --color-stone-950: var(--color-neutro-950);
+
+  /* --- Verdes (green, emerald) -> verde de éxito del manual ------------------
+     green-600 baja a #008236: el manual descarta #00A63E como fondo de botón
+     con texto blanco porque alcanza apenas 3.22:1 y no cumple el nivel AA.
+     #00A63E queda reservado para íconos y badges sobre fondo claro. */
+  --color-green-50:  var(--color-exito-50);
+  --color-green-100: #DCFCE7;
+  --color-green-200: var(--color-exito-200);
+  --color-green-300: #7BF1A8;
+  --color-green-400: #05DF72;
+  --color-green-500: #00A63E;
+  --color-green-600: var(--color-exito-600);
+  --color-green-700: var(--color-exito-700);
+  --color-green-800: var(--color-exito-700);
+  --color-green-900: var(--color-exito-800);
+  --color-green-950: #032E15;
+
+  --color-emerald-50:  var(--color-exito-50);
+  --color-emerald-100: #DCFCE7;
+  --color-emerald-200: var(--color-exito-200);
+  --color-emerald-300: #7BF1A8;
+  --color-emerald-400: #05DF72;
+  --color-emerald-500: #00A63E;
+  --color-emerald-600: var(--color-exito-600);
+  --color-emerald-700: var(--color-exito-700);
+  --color-emerald-800: var(--color-exito-700);
+  --color-emerald-900: var(--color-exito-800);
+  --color-emerald-950: #032E15;
+
+  /* --- Rojos (red, rose) -> rojo de error del manual ------------------------ */
+  --color-red-50:  var(--color-error-50);
+  --color-red-100: #FFE2E2;
+  --color-red-200: var(--color-error-200);
+  --color-red-300: #FFA2A2;
+  --color-red-400: #FF6467;
+  --color-red-500: #FB2C36;
+  --color-red-600: var(--color-error-600);
+  --color-red-700: var(--color-error-700);
+  --color-red-800: var(--color-error-800);
+  --color-red-900: #82181A;
+  --color-red-950: #460809;
+
+  --color-rose-50:  var(--color-error-50);
+  --color-rose-100: #FFE2E2;
+  --color-rose-200: var(--color-error-200);
+  --color-rose-300: #FFA2A2;
+  --color-rose-400: #FF6467;
+  --color-rose-500: #FB2C36;
+  --color-rose-600: var(--color-error-600);
+  --color-rose-700: var(--color-error-700);
+  --color-rose-800: var(--color-error-800);
+  --color-rose-900: #82181A;
+  --color-rose-950: #460809;
 }
 
 /* =============================================================================
-   ROLES DE INTERFAZ
+   4. ROLES DE INTERFAZ
    -----------------------------------------------------------------------------
-   Nombres por FUNCIÓN, no por color. Un componente pide "el fondo de la app" o
-   "el color del texto secundario" sin saber qué hex hay detrás.
+   Nombres por FUNCIÓN, no por color: un componente pide "el fondo de la app" o
+   "el borde del campo con foco" sin saber qué hex hay detrás.
 
-   Ventaja: para reestilizar la aplicación entera basta reapuntar estas líneas.
-   Se usan en CSS normal: `color: var(--ui-texto-suave);`
+   Se usan desde CSS normal:  background: var(--ui-fondo);
+   Para reestilizar la aplicación entera basta con reapuntar estas líneas.
    ============================================================================= */
 :root {
-  /* Superficies */
-  --ui-fondo:            var(--color-neutro-100);
-  --ui-superficie:       #FFFFFF;
-  --ui-superficie-alta:  var(--color-neutro-50);
-  --ui-borde:            var(--color-neutro-200);
-  --ui-borde-fuerte:     var(--color-neutro-300);
+  /* --- Superficies (manual, "Escala neutra") ------------------------------- */
+  --ui-fondo:            var(--color-neutro-50);   /* lienzo general de las pantallas */
+  --ui-superficie:       #FFFFFF;                  /* tarjetas, paneles, modales, desplegables */
+  --ui-superficie-alta:  var(--color-neutro-100);  /* encabezados de tabla, zonas hundidas */
+  --ui-borde:            var(--color-neutro-200);  /* líneas divisorias y bordes de tarjeta */
+  --ui-borde-fuerte:     var(--color-neutro-300);  /* borde de campo de formulario */
 
-  /* Texto */
-  --ui-texto:            var(--color-neutro-900);
-  --ui-texto-suave:      var(--color-neutro-600);
-  --ui-texto-tenue:      var(--color-neutro-500);
+  /* --- Texto (manual, "Jerarquía tipográfica") ----------------------------- */
+  --ui-texto:            var(--color-neutro-900);  /* cuerpo de texto y datos numéricos */
+  --ui-texto-titulo:     var(--color-neutro-800);  /* títulos H1 y H2 */
+  --ui-texto-subtitulo:  var(--color-oscuro-600);  /* subtítulos H3 */
+  --ui-texto-etiqueta:   var(--color-neutro-700);  /* rótulos de campo y encabezados de tabla */
+  --ui-texto-suave:      var(--color-neutro-600);  /* descripciones y metadatos */
+  --ui-texto-tenue:      var(--color-neutro-500);  /* placeholders y textos de ayuda */
   --ui-texto-invertido:  #FFFFFF;
 
-  /* Acciones */
-  --ui-accion:           var(--color-primario-700);
-  --ui-accion-hover:     var(--color-primario-800);
-  --ui-accion-activa:    var(--color-primario-900);
-  --ui-accion-suave:     var(--color-primario-50);
-  --ui-accion-texto:     #FFFFFF;
+  /* --- Acciones (manual, "Botones") ---------------------------------------- */
+  --ui-accion:            var(--color-primario-600);
+  --ui-accion-hover:      var(--color-primario-700);
+  --ui-accion-activa:     var(--color-primario-800);
+  --ui-accion-suave:      var(--color-primario-50);
+  --ui-accion-suave-alta: var(--color-primario-100);
+  --ui-accion-texto:      #FFFFFF;
 
-  /* Foco (accesibilidad — visible en navegación por teclado) */
-  --ui-foco:             var(--color-primario-500);
-  --ui-foco-anillo:      color-mix(in srgb, var(--color-primario-500) 35%, transparent);
+  --ui-cta:            var(--color-acento-500);
+  --ui-cta-hover:      var(--color-acento-600);
+  --ui-cta-activa:     var(--color-acento-700);
+  --ui-cta-texto:      var(--color-neutro-900);   /* NUNCA blanco (manual) */
 
-  /* Menú lateral */
-  --ui-sidebar-fondo:        #29384D;
-  --ui-sidebar-texto:        #636467;
+  --ui-crear:          var(--color-exito-600);
+  --ui-crear-hover:    var(--color-exito-700);
+  --ui-crear-activa:   var(--color-exito-800);
+
+  --ui-destructivo:        var(--color-error-600);
+  --ui-destructivo-hover:  var(--color-error-700);
+  --ui-destructivo-activa: var(--color-error-800);
+
+  --ui-deshabilitado-fondo: var(--color-neutro-300);
+  --ui-deshabilitado-texto: var(--color-neutro-500);
+
+  /* --- Foco (manual: borde 1 px + anillo de 2 px con 2 px de separación) ---- */
+  --ui-foco:              var(--color-primario-600);
+  --ui-foco-ancho:        2px;
+  --ui-foco-separacion:   2px;
+  --ui-foco-anillo:       color-mix(in srgb, var(--color-primario-600) 35%, transparent);
+  --ui-foco-oscuro:       #FFFFFF;   /* sobre superficies oscuras */
+
+  /* --- Formularios y tablas (manual, "Formularios, tablas y superficies") --- */
+  --ui-campo-borde:          var(--color-neutro-300);
+  --ui-campo-borde-foco:     var(--color-primario-600);
+  --ui-campo-borde-error:    var(--color-error-600);
+  --ui-campo-fondo:          #FFFFFF;
+  --ui-campo-desactivado:    var(--color-neutro-100);
+  --ui-tabla-encabezado:     var(--color-neutro-100);
+  --ui-tabla-encabezado-txt: var(--color-neutro-700);
+  --ui-tabla-fila-alterna:   var(--color-neutro-50);
+  --ui-tabla-fila-hover:     var(--color-neutro-100);
+  --ui-tabla-fila-activa:    var(--color-primario-50);
+  --ui-enlace:               var(--color-primario-600);
+  --ui-enlace-hover:         var(--color-primario-700);
+  --ui-velo-modal:           color-mix(in srgb, var(--color-neutro-900) 50%, transparent);
+
+  /* --- Superficies oscuras / menú lateral (manual, "Superficies oscuras") ---
+     El fondo del ítem activo #0060AA solo alcanza 1.84:1 contra el fondo del
+     menú, por lo que NUNCA es el único indicador de la pantalla en curso: va
+     siempre con la marca vertical naranja de 3 px y el texto en blanco. */
+  --ui-sidebar-fondo:        var(--color-oscuro-600);
+  --ui-sidebar-hover:        var(--color-oscuro-500);
+  --ui-sidebar-activo:       var(--color-primario-600);
+  --ui-sidebar-marca:        var(--color-acento-500);
+  --ui-sidebar-marca-ancho:  3px;
+  --ui-sidebar-separador:    var(--color-oscuro-400);
+  --ui-sidebar-texto:        var(--color-neutro-300);
   --ui-sidebar-texto-activo: #FFFFFF;
-  --ui-sidebar-activo:       var(--color-primario-700);
-  --ui-sidebar-header:       #F2F2F2;
+  --ui-sidebar-grupo:        var(--color-oscuro-300);
+  --ui-sidebar-header:       #FFFFFF;   /* cabecera clara: logo variante fondo blanco */
 }
