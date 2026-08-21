@@ -47,8 +47,10 @@ export class UserService extends HttpService {
 
   async updateUser(userUpdate: IUser) {
     try {
-      // Retiramos el password, el rol, puesto y metodo
-      const { password, rol, puesto, metodo, created_at, updated_at, deleted_at, lastPasswordUpdate, ...userData } = userUpdate;
+      // Retiramos el password, el rol, puesto y metodo.
+      // `siucom` también se descarta: el login lo agrega al usuario que se
+      // guarda en localStorage (auth.service), no es un campo del DTO del API 
+      const { password, rol, puesto, metodo, siucom, created_at, updated_at, deleted_at, lastPasswordUpdate, ...userData } = userUpdate;
       const resp =  await firstValueFrom(this.put<UsersResponse>(`${this.endpoints.user}`, userData));
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');
@@ -65,8 +67,8 @@ export class UserService extends HttpService {
 
   async createUser(createUser: IUser) {
     try {
-      //Retiramos el id
-      const { userId, lastPasswordUpdate, created_at, rol, puesto, metodoId, ...other } = createUser;
+      //Retiramos el id y los campos que no pertenecen al DTO del API
+      const { userId, lastPasswordUpdate, created_at, updated_at, deleted_at, rol, puesto, metodo, siucom, metodoId, ...other } = createUser;
       let userData: any = {
         ...other
       }

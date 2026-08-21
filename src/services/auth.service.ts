@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { HttpService } from './HttpService';
 import { AccesoResponse, AuthResponse, IUser } from '../interfaces/auth';
 import { firstValueFrom } from 'rxjs';
@@ -17,6 +18,14 @@ export class AuthService extends HttpService {
     menuByRol: '/acceso/rol',
     changePassword: '/config/change-password'
   };
+
+  /** Mensaje por defecto cuando el token ya no es válido */
+  public static readonly MSG_SESION_EXPIRADA = 'Su sesión ha expirado. Por favor inicie sesión nuevamente para continuar.';
+
+  private readonly router = inject(Router);
+
+  /** Evita cierres de sesión y toasts duplicados cuando varias peticiones fallan a la vez */
+  private cerrandoSesion = false;
 
   // 🔑 Signal para el estado del usuario
   private _user = signal<IUser>(this.loadUserFromStorage());
@@ -79,8 +88,53 @@ export class AuthService extends HttpService {
     return localStorage.getItem('token');
   }
 
+  /**
+   * Decodifica el payload del JWT sin validar la firma (eso lo hace el API).
+   * Sirve para saber, del lado del cliente, si el token ya venció.
+   */
+  private getTokenPayload(token: string): { exp?: number } | null {
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) return null;
+
+      // base64url -> base64
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64));
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Indica si el token está vencido (o es ilegible).
+   * @param token Token a evaluar; por defecto el almacenado en localStorage.
+   */
+  isTokenExpired(token: string | null = this.token): boolean {
+    if (!token) return true;
+
+    const payload = this.getTokenPayload(token);
+    if (!payload?.exp) return true; // token sin exp o corrupto: se trata como vencido
+
+    const ahora = Math.floor(Date.now() / 1000);
+    return payload.exp <= ahora;
+  }
+
   isAuthenticated(): boolean {
-    return !!this.token;
+    return !!this.token && !this.isTokenExpired();
+  }
+
+  /**
+   * Cierra la sesión por token vencido/inválido y redirige al login.
+   * Es idempotente: varias peticiones fallando en paralelo generan un solo cierre.
+   */
+  sesionExpirada(message: string = AuthService.MSG_SESION_EXPIRADA) {
+    if (this.cerrandoSesion) return;
+    this.cerrandoSesion = true;
+
+    this.logout(message || AuthService.MSG_SESION_EXPIRADA);
+    this.router.navigate(['/fundea/login']).finally(() => {
+      this.cerrandoSesion = false;
+    });
   }
 
   logout(message: string = '') {
