@@ -371,6 +371,10 @@ export const routes: Routes = [
                         path: 'usuarios',
                         loadComponent: () => import('./onesite-ex/pages/usuarios-onesiteex-page/usuarios-onesiteex-page'),
                     },
+                    {
+                        path: 'empresas',
+                        loadComponent: () => import('./onesite-ex/pages/empresas-onesiteex-page/empresas-onesiteex-page'),
+                    },
                 ]
             },
 

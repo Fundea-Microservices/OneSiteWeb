@@ -33,6 +33,16 @@ export interface IEmpresaEx {
   codigo: string | null;
 }
 
+/** Payload de creación/edición. El backend usa forbidNonWhitelisted: solo estos campos. */
+export interface IEmpresaExUpsert {
+  idEmpresa?: number;
+  nombreEmpresa?: string;
+  codigoEnrolamiento?: string;
+  /** Clave corta usada en la carga masiva de usuarios (p. ej. GTDEMO). */
+  codigo?: string | null;
+  estado?: boolean;
+}
+
 // ─── Rol ──────────────────────────────────────────────────────────────────────
 
 export interface IRolEx {
