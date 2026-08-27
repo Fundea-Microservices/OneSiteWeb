@@ -51,28 +51,29 @@ export default class DashboardSiucomPage implements OnInit {
       const agencias = sucursales?.data?.agencias ?? [];
       const regiones = sucursales?.data?.regiones ?? [];
 
-      // 2. Tomar la primera agencia que tenga región asignada
-      const agencia = agencias.find(a => a.regionId !== null);
+      // 2. Tomar la agencia del usuario: se prefiere una con región asignada,
+      //    pero el dato que SIUCOM exige es el código numérico de la agencia.
+      const agencia = agencias.find(a => a.regionId !== null) ?? agencias[0];
       if (!agencia) {
-        this.errorMessage.set('No se encontraron agencias con región asignada para su usuario. Contacte al administrador.');
+        this.errorMessage.set('No se encontraron agencias asignadas a su usuario. Contacte al administrador.');
         return;
       }
 
       const region = regiones.find(r => r.id === agencia.regionId);
-      if (!region) {
-        this.errorMessage.set('No se encontró la región de su agencia. Contacte al administrador.');
-        return;
-      }
 
       // 3. Crear/obtener el acceso SIUCOM
-      // El endpoint espera "REGIÓN III" (no "REGIONAL III") y "QUETZALTENANGO" (sin el prefijo "AGENCIA")
+      // `codigo` es lo único de ubicación que llega a SIUCOM y debe viajar como número
+      // (el gateway rechaza un string con 400). `region`/`agencia` solo se guardan en el
+      // registro local y esperan el formato "REGIÓN III" (no "REGIONAL III") y
+      // "QUETZALTENANGO" (sin el prefijo "AGENCIA").
       this.loadingMessage.set('Creando acceso SIUCOM...');
       const resp = await this.siucomService.getOrCreateAcceso({
         usuarioId: user.userId,
         nombre: user.fullName,
-        region: region.descripcion.replace(/^REGIONAL/i, 'REGIÓN').trim(),
-        agencia: agencia.descripcion.replace(/^AGENCIA\s+/i, '').trim(),
+        codigo: Number(agencia.id),
         rol: user.rol.name || 'OneSiteUser',
+        ...(region && { region: region.descripcion.replace(/^REGIONAL/i, 'REGIÓN').trim() }),
+        agencia: agencia.descripcion.replace(/^AGENCIA\s+/i, '').trim(),
       });
 
       const siucom: ISIUCOM | undefined = resp?.data?.siucom;
