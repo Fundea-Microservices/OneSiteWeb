@@ -1,0 +1,193 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/onesiteex']">OneSiteEx</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Menú de la app</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Configuración del menú lateral (app móvil)</span>
+    <button class="btn btn-primary btn-sm" (click)="openModal(true)">
+      <ion-icon name="add-outline"></ion-icon> Nuevo ítem
+    </button>
+  </div>
+
+  <div class="card-body">
+    <div class="alert alert-info py-2 px-3 small">
+      <ion-icon name="information-circle-outline"></ion-icon>
+      Estos ítems arman el <b>drawer de la app móvil</b> (data-driven). No es el menú lateral de
+      OneSiteWeb. Los cambios llegan a campo en el siguiente ciclo de sincronización.
+    </div>
+
+    <form class="row g-2 mb-3" (submit)="$event.preventDefault()">
+      <div class="col-12 col-md-4">
+        <input type="text" class="form-control form-control-sm" placeholder="Buscar por nombre o ruta..."
+          [value]="buscador()" (input)="buscador.set(txtBuscar.value)" (keyup.enter)="buscar()" #txtBuscar />
+      </div>
+      <div class="col-6 col-md-3 d-flex gap-2">
+        <button type="button" class="btn btn-success btn-sm flex-fill" (click)="buscar()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+        @if (hayFiltrosActivos()) {
+          <button type="button" class="btn btn-outline-secondary btn-sm" title="Limpiar filtros"
+            (click)="limpiarFiltros()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+    </form>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted small">Cargando...</span>
+      </div>
+    }
+
+    <!-- Tabla Desktop -->
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="text-center" style="width:5%">#</th>
+            <th style="width:20%">Nombre</th>
+            <th style="width:20%">Ruta pantalla</th>
+            <th style="width:15%">Padre</th>
+            <th style="width:15%">Permiso</th>
+            <th class="text-center" style="width:8%">Orden</th>
+            <th class="text-center" style="width:9%">Estado</th>
+            <th class="text-center" style="width:8%">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of menuList(); track item.idMenu; let i = $index) {
+            <tr>
+              <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
+              <td>
+                <span class="fw-semibold">
+                  @if (item.icono) { <ion-icon [name]="item.icono"></ion-icon> }
+                  {{ item.nombre }}
+                </span>
+              </td>
+              <td><code class="small">{{ item.rutaPantalla }}</code></td>
+              <td>{{ nombrePadre(item.idPadre) }}</td>
+              <td>
+                @if (nombrePermiso(item.idPermisoRequerido); as permiso) {
+                  <span class="badge text-bg-info">{{ permiso }}</span>
+                } @else {
+                  <span class="text-muted small">Todos</span>
+                }
+              </td>
+              <td class="text-center">{{ item.orden ?? '—' }}</td>
+              <td class="text-center">
+                <div class="form-check form-switch d-inline-flex justify-content-center">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                    [checked]="item.estado" [title]="item.estado ? 'Activo' : 'Inactivo'"
+                    (change)="toggleEstado(item, cbxEstado.checked)" #cbxEstado />
+                </div>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-success mx-1" title="Editar" (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-danger mx-1" title="Eliminar" (click)="openDeleteModal(item)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr><td colspan="8" class="text-center text-muted py-3">No hay ítems de menú registrados</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none d-flex flex-column gap-3">
+      @for (item of menuList(); track item.idMenu) {
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="fw-semibold">
+                  @if (item.icono) { <ion-icon [name]="item.icono"></ion-icon> }
+                  {{ item.nombre }}
+                </div>
+                <div class="small text-muted"><code>{{ item.rutaPantalla }}</code></div>
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                    [checked]="item.estado"
+                    (change)="toggleEstado(item, cbxEstadoM.checked)" #cbxEstadoM />
+                  <label class="form-check-label small">{{ item.estado ? 'Activo' : 'Inactivo' }}</label>
+                </div>
+              </div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-success" (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="openDeleteModal(item)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            <div class="small text-muted">Padre: {{ nombrePadre(item.idPadre) }}</div>
+            <div class="small text-muted">
+              Permiso: {{ nombrePermiso(item.idPermisoRequerido) ?? 'Todos' }} · Orden: {{ item.orden ?? '—' }}
+            </div>
+          </div>
+        </div>
+      } @empty {
+        @if (!isLoading()) {
+          <div class="text-center text-muted py-3">No hay ítems de menú registrados</div>
+        }
+      }
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+  </div>
+
+  <!-- Modal Upsert -->
+  <div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ modal().titulo }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <app-upsert-menu-ex [menu]="menuEdit()" [menus]="menuTodos()" [roles]="rolList()"
+            [nuevo]="nuevo()" [formKey]="formKey()"
+            (save)="upsertMenu($event)" (cancel)="closeModal()" />
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Delete -->
+  <div #deleteModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">Eliminar ítem de menú</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Eliminar el ítem <b>{{ menuEdit()?.nombre }}</b> del menú?</p>
+          <p class="small text-muted mb-0">
+            Si tiene ítems hijos, revisa las referencias antes de continuar. El cambio llega a
+            campo en el siguiente ciclo de sync.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger btn-sm" (click)="deleteMenu()">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

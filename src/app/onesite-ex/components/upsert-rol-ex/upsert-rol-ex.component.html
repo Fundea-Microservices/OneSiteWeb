@@ -1,0 +1,79 @@
+<form [formGroup]="form()">
+  <div class="row">
+    <div class="mb-3 col-md-8">
+      <label class="form-label">Nombre del rol <span class="text-danger">*</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombreRol"
+        placeholder="Ej. Asesor de campo" autocomplete="off" />
+      @if (hasError('nombreRol', 'required')) {
+        <div class="text-danger small">El nombre del rol es requerido</div>
+      }
+      @if (hasError('nombreRol', 'maxlength')) {
+        <div class="text-danger small">Máximo 50 caracteres</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-4">
+      <label class="form-label">Código</label>
+      <input type="text" class="form-control form-control-sm" formControlName="codigo"
+        placeholder="Ej. OPERA" autocomplete="off" />
+      <div class="small text-muted">Clave corta usada en la carga masiva de usuarios.</div>
+      @if (hasError('codigo', 'maxlength')) {
+        <div class="text-danger small">Máximo 20 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="accesoLectura" id="accesoLecturaCheck" />
+        <label class="form-check-label" for="accesoLecturaCheck">Acceso de lectura</label>
+      </div>
+    </div>
+    <div class="mb-3 col-md-6">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="accesoEscritura" id="accesoEscrituraCheck" />
+        <label class="form-check-label" for="accesoEscrituraCheck">Acceso de escritura</label>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <div class="mb-2">
+    <label class="form-label">Módulos con permiso</label>
+    <div class="small text-muted mb-2">
+      Claves cortas de los módulos visibles para este rol (gateo permisivo: sin permiso
+      sincronizado, el ítem se muestra). Se guardan como <code>{{ '{' }}"modulos":[...]{{ '}' }}</code>.
+    </div>
+
+    <div class="input-group input-group-sm mb-2">
+      <input type="text" class="form-control form-control-sm" placeholder="Ej. encuestas"
+        [value]="nuevoModulo()" (input)="nuevoModulo.set(inputModulo.value)"
+        (keyup.enter)="$event.preventDefault(); agregarModulo()" #inputModulo />
+      <button type="button" class="btn btn-outline-primary" (click)="agregarModulo()">
+        <ion-icon name="add-outline"></ion-icon> Agregar
+      </button>
+    </div>
+
+    @if (modulos().length) {
+      <div class="d-flex flex-wrap gap-2">
+        @for (m of modulos(); track m) {
+          <span class="badge text-bg-secondary d-inline-flex align-items-center gap-1">
+            {{ m }}
+            <button type="button" class="btn-close btn-close-white btn-sm" style="font-size:.55rem"
+              title="Quitar" (click)="quitarModulo(m)"></button>
+          </span>
+        }
+      </div>
+    } @else {
+      <div class="text-muted small fst-italic">Sin módulos asignados.</div>
+    }
+  </div>
+
+  <hr />
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">{{ btnText }}</button>
+  </div>
+</form>

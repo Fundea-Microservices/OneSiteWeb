@@ -1,0 +1,82 @@
+<form [formGroup]="form()">
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Nombre <span class="text-danger">*</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombre"
+        placeholder="Ej. Encuestas" autocomplete="off" />
+      @if (hasError('nombre', 'required')) {
+        <div class="text-danger small">El nombre es requerido</div>
+      }
+      @if (hasError('nombre', 'maxlength')) {
+        <div class="text-danger small">Máximo 100 caracteres</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Ruta de pantalla <span class="text-danger">*</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="rutaPantalla"
+        placeholder="Ej. EncuestasScreen" autocomplete="off" />
+      <div class="small text-muted">Identificador de pantalla que abre el ítem en la app móvil.</div>
+      @if (hasError('rutaPantalla', 'required')) {
+        <div class="text-danger small">La ruta de pantalla es requerida</div>
+      }
+      @if (hasError('rutaPantalla', 'maxlength')) {
+        <div class="text-danger small">Máximo 150 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Menú padre</label>
+      <select class="form-select form-select-sm" formControlName="idPadre">
+        <option [ngValue]="null">— Sin padre (ítem raíz) —</option>
+        @for (m of padresDisponibles(); track m.idMenu) {
+          <option [ngValue]="m.idMenu">{{ m.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Permiso requerido</label>
+      <select class="form-select form-select-sm" formControlName="idPermisoRequerido">
+        <option [ngValue]="null">— Sin permiso (visible para todos) —</option>
+        @for (r of roles(); track r.idRol) {
+          <option [ngValue]="r.idRol">{{ r.nombreRol }}</option>
+        }
+      </select>
+      <div class="small text-muted">Gateo permisivo: sin permiso sincronizado, el ítem se muestra.</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Icono</label>
+      <input type="text" class="form-control form-control-sm" formControlName="icono"
+        placeholder="Ej. clipboard-outline" autocomplete="off" />
+    </div>
+
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Orden</label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden"
+        placeholder="Ej. 1" min="0" />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-12">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="estado" id="estadoMenuCheck" />
+        <label class="form-check-label" for="estadoMenuCheck">
+          {{ form().get('estado')?.value ? 'Activo' : 'Inactivo' }}
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">{{ btnText }}</button>
+  </div>
+</form>

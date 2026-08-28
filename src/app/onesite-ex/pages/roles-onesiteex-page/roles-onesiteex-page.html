@@ -1,0 +1,192 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/onesiteex']">OneSiteEx</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Roles y permisos</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Administrar roles y permisos</span>
+    <button class="btn btn-primary btn-sm" (click)="openModal(true)">
+      <ion-icon name="add-outline"></ion-icon> Nuevo rol
+    </button>
+  </div>
+
+  <div class="card-body">
+    <form class="row g-2 mb-3" (submit)="$event.preventDefault()">
+      <div class="col-12 col-md-4">
+        <input type="text" class="form-control form-control-sm" placeholder="Buscar por nombre de rol..."
+          [value]="buscador()" (input)="buscador.set(txtBuscar.value)" (keyup.enter)="buscar()" #txtBuscar />
+      </div>
+      <div class="col-6 col-md-3 d-flex gap-2">
+        <button type="button" class="btn btn-success btn-sm flex-fill" (click)="buscar()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+        @if (hayFiltrosActivos()) {
+          <button type="button" class="btn btn-outline-secondary btn-sm" title="Limpiar filtros"
+            (click)="limpiarFiltros()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+    </form>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted small">Cargando...</span>
+      </div>
+    }
+
+    <!-- Tabla Desktop -->
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="text-center" style="width:5%">#</th>
+            <th style="width:22%">Rol</th>
+            <th style="width:12%">Código</th>
+            <th style="width:36%">Módulos</th>
+            <th class="text-center" style="width:12%">Lectura</th>
+            <th class="text-center" style="width:12%">Escritura</th>
+            <th class="text-center" style="width:11%">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of rolList(); track item.idRol; let i = $index) {
+            <tr>
+              <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
+              <td class="fw-semibold">{{ item.nombreRol }}</td>
+              <td>{{ item.codigo || '—' }}</td>
+              <td>
+                @if (modulosRol(item).length) {
+                  <div class="d-flex flex-wrap gap-1">
+                    @for (m of modulosRol(item); track m) {
+                      <span class="badge text-bg-secondary">{{ m }}</span>
+                    }
+                  </div>
+                } @else {
+                  <span class="text-muted small fst-italic">Sin módulos</span>
+                }
+              </td>
+              <td class="text-center">
+                <span class="badge" [class]="item.accesoLectura ? 'text-bg-success' : 'text-bg-light text-muted'">
+                  {{ item.accesoLectura ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="badge" [class]="item.accesoEscritura ? 'text-bg-success' : 'text-bg-light text-muted'">
+                  {{ item.accesoEscritura ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-success mx-1" title="Editar" (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-danger mx-1" title="Eliminar" (click)="openDeleteModal(item)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr><td colspan="7" class="text-center text-muted py-3">No hay roles registrados</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none d-flex flex-column gap-3">
+      @for (item of rolList(); track item.idRol) {
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="fw-semibold">{{ item.nombreRol }}</div>
+                <div class="small text-muted">Código: {{ item.codigo || '—' }}</div>
+              </div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-success" (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="openDeleteModal(item)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            <div class="small mb-1">
+              Lectura:
+              <span class="badge" [class]="item.accesoLectura ? 'text-bg-success' : 'text-bg-light text-muted'">
+                {{ item.accesoLectura ? 'Sí' : 'No' }}
+              </span>
+              · Escritura:
+              <span class="badge" [class]="item.accesoEscritura ? 'text-bg-success' : 'text-bg-light text-muted'">
+                {{ item.accesoEscritura ? 'Sí' : 'No' }}
+              </span>
+            </div>
+            @if (modulosRol(item).length) {
+              <div class="d-flex flex-wrap gap-1 mt-1">
+                @for (m of modulosRol(item); track m) {
+                  <span class="badge text-bg-secondary">{{ m }}</span>
+                }
+              </div>
+            } @else {
+              <div class="text-muted small fst-italic">Sin módulos</div>
+            }
+          </div>
+        </div>
+      } @empty {
+        @if (!isLoading()) {
+          <div class="text-center text-muted py-3">No hay roles registrados</div>
+        }
+      }
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+  </div>
+
+  <!-- Modal Upsert -->
+  <div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ modal().titulo }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <app-upsert-rol-ex [rol]="rolEdit()" [modulosIniciales]="modulosEdit()"
+            [nuevo]="nuevo()" [formKey]="formKey()"
+            (save)="upsertRol($event)" (cancel)="closeModal()" />
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Delete -->
+  <div #deleteModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">Eliminar rol</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas eliminar el rol <b>{{ rolEdit()?.nombreRol }}</b>?</p>
+          <p class="small text-muted mb-0">
+            Esta acción es <b>permanente</b>. Si hay usuarios asignados a este rol, revisa las
+            referencias antes de continuar.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger btn-sm" (click)="deleteRol()">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
