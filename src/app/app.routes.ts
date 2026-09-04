@@ -371,6 +371,31 @@ export const routes: Routes = [
                         path: 'usuarios',
                         loadComponent: () => import('./onesite-ex/pages/usuarios-onesiteex-page/usuarios-onesiteex-page'),
                     },
+                    {
+                        path: 'config-precarga',
+                        children: [
+                            {
+                                path: '',
+                                loadComponent: () => import('./onesite-ex/pages/precarga-config-page/precarga-config-page'),
+                            },
+                            {
+                                path: 'nueva',
+                                loadComponent: () => import('./onesite-ex/pages/crear-config-page/crear-config-page'),
+                            },
+                            {
+                                path: 'editar/:id',
+                                loadComponent: () => import('./onesite-ex/pages/crear-config-page/crear-config-page'),
+                            },
+                        ]
+                    },
+                    {
+                        path: 'cargar-precarga',
+                        loadComponent: () => import('./onesite-ex/pages/cargar-precarga-page/cargar-precarga-page'),
+                    },
+                    {
+                        path: 'cargar-precarga/:id',
+                        loadComponent: () => import('./onesite-ex/pages/cargar-precarga-page/cargar-precarga-page'),
+                    },
                 ]
             },
 
