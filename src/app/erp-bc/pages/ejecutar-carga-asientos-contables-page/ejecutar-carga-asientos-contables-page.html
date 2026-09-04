@@ -86,17 +86,28 @@
         <!-- Encabezado del estado -->
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
           <div class="d-flex align-items-center gap-2">
-            @if (data.enEjecucion) {
-              <span class="badge bg-primary">
-                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                En ejecución
-              </span>
-            } @else if (data.interrumpida) {
-              <span class="badge bg-warning text-dark">Interrumpida</span>
-            } @else if (data.tieneErrores) {
-              <span class="badge bg-danger">Finalizada con errores</span>
-            } @else {
-              <span class="badge bg-success">Finalizada</span>
+            @switch (vista()) {
+              @case ('avance') {
+                <span class="badge bg-primary">
+                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  En ejecución
+                </span>
+              }
+              @case ('descuadre') {
+                <span class="badge bg-danger">Detenida: cuentas sin cuadrar</span>
+              }
+              @case ('interrumpida') {
+                <span class="badge bg-warning text-dark">Interrumpida</span>
+              }
+              @case ('reenvio') {
+                <span class="badge bg-danger">Finalizada con errores</span>
+              }
+              @case ('error') {
+                <span class="badge bg-danger">Finalizada con fallo</span>
+              }
+              @default {
+                <span class="badge bg-success">Finalizada</span>
+              }
             }
 
             @if (ejecucion(); as ej) {
@@ -150,31 +161,124 @@
                 Puedes salir de la pantalla: el proceso sigue corriendo en el servidor.
               </div>
             </div>
-          } @else if (ej.comentario) {
+          } @else if (ej.comentario && vista() !== 'descuadre') {
             <div class="alert alert-light border" role="alert">
               <ion-icon name="chatbox-ellipses-outline" class="me-2"></ion-icon>
               {{ ej.comentario }}
             </div>
           }
 
-          <!-- Avisos por estado -->
-          @if (data.interrumpida) {
-            <div class="alert alert-warning" role="alert">
-              <ion-icon name="warning-outline" class="me-2"></ion-icon>
-              El proceso quedó sin finalizar y ya superó su tiempo máximo de vida.
-              Puedes reintentar la carga: solo se reprocesará lo que no quedó cargado.
-            </div>
-          } @else if (data.tieneErrores) {
-            <div class="alert alert-danger" role="alert">
-              <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
-              El proceso finalizó con {{ ej.registrosConError | number }} asiento(s) en error.
-              El reenvío toma solo esos asientos y no vuelve a recorrer Bantotal.
-            </div>
-          } @else if (reenvioSinErrores()) {
-            <div class="alert alert-success" role="alert">
-              <ion-icon name="checkmark-done-outline" class="me-2"></ion-icon>
-              No había asientos en error para reenviar: no quedó nada pendiente en esta fecha.
-            </div>
+          <!-- Avisos por estado. El orden lo fija vista(): los flags del backend no
+               son excluyentes (tieneErrores también sale true en un descuadre). -->
+          @switch (vista()) {
+
+            <!-- La validación de cuadre detuvo la carga antes de tocar el ERP -->
+            @case ('descuadre') {
+              <div class="alert alert-danger" role="alert">
+                <div class="d-flex align-items-start gap-2">
+                  <ion-icon name="alert-circle-outline" class="fs-5 flex-shrink-0"></ion-icon>
+                  <div>
+                    <h6 class="alert-heading mb-1">La carga se detuvo: hay cuentas que no cuadran</h6>
+                    <p class="mb-2">
+                      {{ ej.comentario
+                         || 'La suma de las partidas de una o más cuentas externas no da cero.' }}
+                    </p>
+                    <p class="mb-0 small">
+                      Los asientos <strong>sí quedaron guardados</strong>, pero
+                      <strong>no se envió nada a Business Central</strong>. Hay que corregir
+                      el origen en Bantotal antes de volver a ejecutar: relanzar la carga sin
+                      corregir da exactamente el mismo resultado.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <h6 class="text-uppercase text-muted small mb-2">
+                  Cuentas que no cuadran
+                  <span class="badge bg-danger ms-1">{{ cuentasDescuadradas().length | number }}</span>
+                  @if (totalCuentasExternas(); as total) {
+                    <span class="fw-normal text-lowercase">de {{ total | number }} cuenta(s) externa(s)</span>
+                  }
+                </h6>
+
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th class="table-light">Cuenta externa</th>
+                        <th class="table-light text-end" style="width: 32%;">Diferencia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (cuenta of cuentasVisibles(); track cuenta.cuentaExterna) {
+                        <tr>
+                          <td class="font-monospace" [class.text-muted]="!cuenta.cuentaExterna">
+                            {{ etiquetaCuenta(cuenta.cuentaExterna) }}
+                          </td>
+                          <td class="text-end font-monospace fw-bold text-danger">
+                            {{ cuenta.valorCuenta | number:'1.4-4' }}
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="2" class="text-center text-muted">
+                            No se recibió el detalle de las cuentas descuadradas.
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+
+                @if (hayCuentasOcultas() || verTodasLasCuentas()) {
+                  <button type="button" class="btn btn-link btn-sm px-0" (click)="alternarCuentas()">
+                    @if (verTodasLasCuentas()) {
+                      Mostrar solo las primeras
+                    } @else {
+                      Ver las {{ cuentasOcultas() | number }} cuenta(s) restantes
+                    }
+                  </button>
+                }
+
+                <div class="form-text">
+                  Una cuenta cuadra cuando la suma de sus partidas da cero. Un importe
+                  negativo significa que sobran débitos; positivo, que sobran créditos.
+                </div>
+              </div>
+            }
+
+            @case ('interrumpida') {
+              <div class="alert alert-warning" role="alert">
+                <ion-icon name="warning-outline" class="me-2"></ion-icon>
+                El proceso quedó sin finalizar y ya superó su tiempo máximo de vida.
+                Puedes reintentar la carga: solo se reprocesará lo que no quedó cargado.
+              </div>
+            }
+
+            @case ('reenvio') {
+              <div class="alert alert-danger" role="alert">
+                <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+                Business Central rechazó {{ ej.registrosConError | number }} asiento(s).
+                El reenvío toma solo esos asientos y no vuelve a recorrer Bantotal.
+              </div>
+            }
+
+            @case ('error') {
+              <div class="alert alert-danger" role="alert">
+                <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+                El proceso terminó con un fallo. Revisa el detalle y vuelve a ejecutar la carga.
+              </div>
+            }
+
+            @default {
+              @if (reenvioSinErrores()) {
+                <div class="alert alert-success" role="alert">
+                  <ion-icon name="checkmark-done-outline" class="me-2"></ion-icon>
+                  No había asientos en error para reenviar: no quedó nada pendiente en esta fecha.
+                </div>
+              }
+            }
           }
 
           <!-- Detalle -->
@@ -258,6 +362,18 @@
                       </span>
                     </td>
                   </tr>
+                  @if (!esReenvio()) {
+                    <tr>
+                      <th class="table-light">Enviado a Business Central</th>
+                      <td>
+                        @if (ej.enviado) {
+                          <span class="badge bg-success">Sí</span>
+                        } @else {
+                          <span class="badge bg-secondary">No</span>
+                        }
+                      </td>
+                    </tr>
+                  }
                 </tbody>
               </table>
             </div>
