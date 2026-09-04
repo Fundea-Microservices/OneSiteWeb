@@ -1,0 +1,199 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/onesiteex/config-precarga']">Precarga de encuestas</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ nuevo() ? 'Nueva' : 'Editar' }}</li>
+  </ol>
+</nav>
+
+@if (isLoading()) {
+  <div class="d-flex justify-content-center align-items-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+} @else {
+
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>{{ tituloPagina }}</span>
+      @if (!nuevo() && configOriginal()) {
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-secondary">Versión {{ configOriginal()!.version }}</span>
+          <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="descargando()" (click)="descargarPlantilla()">
+            @if (descargando()) {
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            } @else {
+              <ion-icon name="download-outline" class="me-1"></ion-icon>
+            }
+            Descargar plantilla
+          </button>
+        </div>
+      }
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-12 col-md-7">
+          <label class="form-label">Nombre de la configuración</label>
+          <input type="text" class="form-control form-control-sm" maxlength="200"
+            placeholder="Ej. Precarga datos del cliente - Agencia Central"
+            [value]="nombre()" (input)="nombre.set(txtNombre.value)" #txtNombre />
+          @if (touched() && !nombre().trim()) {
+            <div class="text-danger small">El nombre es requerido</div>
+          }
+        </div>
+
+        <div class="col-12 col-md-3">
+          <label class="form-label">Encuesta</label>
+          @if (nuevo()) {
+            <select class="form-select form-select-sm" (change)="onEncuestaChange(selEncuesta.value)" #selEncuesta>
+              <option value="">Seleccione una encuesta</option>
+              @for (e of encuestaList(); track e.idEncuesta) {
+                <option [value]="e.idEncuesta" [selected]="idEncuesta() === e.idEncuesta">{{ e.nombre }}</option>
+              }
+            </select>
+            @if (touched() && idEncuesta() == null) {
+              <div class="text-danger small">Seleccione una encuesta</div>
+            }
+          } @else {
+            <input type="text" class="form-control form-control-sm" disabled [value]="nombreEncuestaActual()" />
+          }
+        </div>
+
+        <div class="col-12 col-md-2 d-flex align-items-end">
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" role="switch" id="activoCheck"
+              [checked]="activo()" (change)="activo.set(cbxActivo.checked)" #cbxActivo />
+            <label class="form-check-label" for="activoCheck">Activa</label>
+          </div>
+        </div>
+      </div>
+
+      @if (!nuevo()) {
+        <div class="alert alert-light border mt-3 mb-0 py-2 small">
+          <ion-icon name="information-circle-outline" class="me-1"></ion-icon>
+          La encuesta no se puede cambiar al editar. Si envías el detalle, se reemplazan todas las preguntas configuradas.
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (idEncuesta() == null) {
+    <div class="alert alert-light border text-center text-muted py-4">
+      Seleccioná una encuesta para elegir qué preguntas se van a precargar.
+    </div>
+  } @else {
+    <div class="row g-3">
+
+      <!-- Preguntas disponibles -->
+      <div class="col-12 col-lg-6">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Preguntas de la encuesta</span>
+            @if (cargandoPreguntas()) {
+              <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+            }
+          </div>
+          <div class="card-body">
+            <input type="text" class="form-control form-control-sm mb-3" placeholder="Filtrar preguntas..."
+              [value]="buscadorPreguntas()" (input)="buscadorPreguntas.set(txtFiltro.value)" #txtFiltro />
+
+            <div style="max-height: 480px; overflow-y: auto;">
+              @for (grupo of gruposFiltrados(); track grupo.seccion.idSeccion) {
+                <div class="mb-3">
+                  <div class="fw-semibold small text-uppercase text-muted mb-1">{{ grupo.seccion.titulo }}</div>
+                  @for (pregunta of grupo.preguntas; track pregunta.idPregunta) {
+                    <div class="form-check py-1">
+                      <input class="form-check-input" type="checkbox"
+                        [id]="'pregunta-' + pregunta.idPregunta"
+                        [checked]="isSelected(pregunta)"
+                        (change)="toggleSeleccion(pregunta, cbxPregunta.checked)"
+                        #cbxPregunta />
+                      <label class="form-check-label" [for]="'pregunta-' + pregunta.idPregunta">
+                        {{ pregunta.etiqueta }}
+                        <span class="text-muted small">(cód. {{ pregunta.codigo }})</span>
+                      </label>
+                    </div>
+                  }
+                </div>
+              } @empty {
+                @if (!cargandoPreguntas()) {
+                  <div class="text-center text-muted py-3">No hay preguntas disponibles</div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columnas seleccionadas -->
+      <div class="col-12 col-lg-6">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Columnas del Excel</span>
+            <span class="badge bg-primary">{{ selectedDetails().length }}</span>
+          </div>
+          <div class="card-body">
+            @if (touched() && selectedDetails().length === 0) {
+              <div class="text-danger small mb-2">Seleccioná al menos una pregunta</div>
+            }
+
+            <div style="max-height: 480px; overflow-y: auto;">
+              @for (item of selectedDetails(); track item.idPregunta; let i = $index) {
+                <div class="border rounded p-2 mb-2" draggable="true" style="cursor: grab;"
+                  (dragstart)="onDragStart(i)" (dragover)="onDragOver($event)" (drop)="onDrop(i)" (dragend)="onDragEnd()">
+                  <div class="d-flex align-items-start gap-2">
+                    <ion-icon name="reorder-three-outline" class="text-muted mt-2"></ion-icon>
+                    <div class="flex-grow-1">
+                      <div class="small text-muted mb-1">
+                        Pregunta: {{ etiquetaPregunta(item.idPregunta) ?? ('#' + item.idPregunta) }}
+                      </div>
+                      <div class="row g-2">
+                        <div class="col-7">
+                          <input type="text" class="form-control form-control-sm" maxlength="250"
+                            placeholder="Encabezado de la columna"
+                            [class.is-invalid]="duplicateEtiquetaSet().has(item.etiqueta.trim().toLowerCase()) || !item.etiqueta.trim()"
+                            [value]="item.etiqueta" (input)="updateEtiqueta(i, txtEtiqueta.value)" #txtEtiqueta />
+                        </div>
+                        <div class="col-5">
+                          <select class="form-select form-select-sm" (change)="updateTipo(i, selTipo.value)" #selTipo>
+                            <option value="" [selected]="!item.tipo">Sin criterio</option>
+                            @for (tipo of tiposDisponibles; track tipo) {
+                              <option [value]="tipo" [selected]="item.tipo === tipo" [disabled]="tipoUsadoPorOtro(tipo, i)">
+                                {{ tipoLabel[tipo] }}
+                              </option>
+                            }
+                          </select>
+                        </div>
+                      </div>
+                      @if (duplicateEtiquetaSet().has(item.etiqueta.trim().toLowerCase())) {
+                        <div class="text-danger small mt-1">Encabezado repetido</div>
+                      }
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Quitar" (click)="removeDetalle(i)">
+                      <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                  </div>
+                </div>
+              } @empty {
+                <div class="text-center text-muted py-3">
+                  Marcá preguntas de la izquierda para armar las columnas del Excel
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="d-flex justify-content-end gap-2 mt-3">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" [disabled]="isSaving()" (click)="onSubmit()">
+      @if (isSaving()) {
+        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+      }
+      {{ textoBoton }}
+    </button>
+  </div>
+}
