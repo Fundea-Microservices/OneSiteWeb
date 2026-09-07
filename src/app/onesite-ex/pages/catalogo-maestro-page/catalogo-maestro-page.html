@@ -215,6 +215,11 @@
               Se detectaron <strong>{{ importRows().length }}</strong> filas de datos en
               <strong>{{ importFileName() }}</strong>.
             </div>
+          } @else if (importError()) {
+            <div class="alert alert-danger py-2 small mb-3">
+              <ion-icon name="alert-circle-outline"></ion-icon>
+              {{ importError() }}
+            </div>
           }
 
           <!-- Barra de progreso -->

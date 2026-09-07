@@ -61,6 +61,7 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
   importResult = signal<{ nuevos: number; duplicados: number; total: number } | null>(null);
   isImporting = signal(false);
   importFileName = signal('');
+  importError = signal('');
 
   ngOnInit() {
     this.fetchData();
@@ -177,6 +178,7 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
     this.importProgress.set({ current: 0, total: 0 });
     this.importResult.set(null);
     this.importFileName.set('');
+    this.importError.set('');
     this.modalImportInstance.show();
   }
 
@@ -186,29 +188,46 @@ export default class CatalogoMaestroPage implements OnInit, AfterViewInit {
     if (!file) return;
     this.importFileName.set(file.name);
     this.importResult.set(null);
+    this.importError.set('');
+    this.importRows.set([]);
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const data = e.target?.result;
-      const wb = XLSX.read(data, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
+      try {
+        const data = e.target?.result;
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows: unknown[][] = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
 
-      // Skip header row; columns: A=codigoCatalogo, B=nombreCatalogo, C=codigo, D=opcion, E=orden, F=catalogoPadre, G=opcionPadre
-      const items = rows
-        .slice(1)
-        .filter(row => row[0] && row[2] && row[3])
-        .map(row => ({
-          codigoCatalogo: String(row[0]).trim(),
-          nombreCatalogo: row[1] !== undefined && row[1] !== null && row[1] !== '' ? String(row[1]).trim() : '',
-          codigo: String(row[2]).trim(),
-          opcion: String(row[3]).trim(),
-          orden: row[4] !== undefined && row[4] !== null && row[4] !== '' ? Number(row[4]) : 0,
-          catalogoPadre: row[5] !== undefined && row[5] !== null && row[5] !== '' ? String(row[5]).trim() : undefined,
-          opcionPadre: row[6] !== undefined && row[6] !== null && row[6] !== '' ? String(row[6]).trim() : undefined,
-        }));
+        // Skip header row; columns: A=codigoCatalogo, B=nombreCatalogo, C=codigo, D=opcion, E=orden, F=catalogoPadre, G=opcionPadre
+        const items = rows
+          .slice(1)
+          .filter(row => row[0] && row[2] && row[3])
+          .map(row => ({
+            codigoCatalogo: String(row[0]).trim(),
+            nombreCatalogo: row[1] !== undefined && row[1] !== null && row[1] !== '' ? String(row[1]).trim() : '',
+            codigo: String(row[2]).trim(),
+            opcion: String(row[3]).trim(),
+            orden: row[4] !== undefined && row[4] !== null && row[4] !== '' ? Number(row[4]) : 0,
+            catalogoPadre: row[5] !== undefined && row[5] !== null && row[5] !== '' ? String(row[5]).trim() : undefined,
+            opcionPadre: row[6] !== undefined && row[6] !== null && row[6] !== '' ? String(row[6]).trim() : undefined,
+          }));
 
-      this.importRows.set(items);
+        if (items.length === 0) {
+          this.importError.set(
+            rows.length > 1
+              ? 'El archivo se leyó correctamente, pero ninguna fila cumple con el formato esperado. Verifica que las columnas A (código de catálogo), C (código de opción) y D (nombre de opción) estén en el orden indicado arriba.'
+              : 'El archivo no contiene filas de datos (solo encabezado o está vacío).'
+          );
+        }
+
+        this.importRows.set(items);
+      } catch {
+        this.importError.set('No se pudo leer el archivo. Verifica que sea un Excel (.xlsx, .xls) o CSV válido.');
+      }
+    };
+    reader.onerror = () => {
+      this.importError.set('No se pudo leer el archivo. Verifica que sea un Excel (.xlsx, .xls) o CSV válido.');
     };
     reader.readAsArrayBuffer(file);
   }
