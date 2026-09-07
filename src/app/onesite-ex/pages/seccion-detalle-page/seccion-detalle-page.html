@@ -71,7 +71,7 @@
               (dragover)="onDragOver($event)"
               (drop)="onDrop(i)"
               (dragend)="onDragEnd()">
-              <td class="text-center">{{ item.codigo }}</td>
+              <td class="text-center">{{ item.idPregunta }}</td>
               <td class="text-break" style="white-space:normal;">{{ item.etiqueta }}</td>
               <td class="text-center">
                 <span class="badge" [class.bg-secondary]="item.tipoDato !== 'MATRIZ'"
