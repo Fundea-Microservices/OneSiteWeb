@@ -246,13 +246,6 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
       previous.find(o => o.id === item.id)?.orden !== item.orden
     );
     await Promise.all(cambios.map(item => this.opcionService.updateOpcion(item)));
-
-    // El backend puede recompactar los ordenes por su cuenta: resincronizamos
-    // para que la tabla muestre exactamente lo que quedo guardado.
-    if (cambios.length) {
-      await this.fetchData();
-      this.loadTodasLasOpciones(this.idCatalogo());
-    }
   }
 
   onDragEnd() {
