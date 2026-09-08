@@ -176,16 +176,19 @@ export default class SeccionDetallePage implements OnInit, AfterViewInit {
   async onDrop(dropIndex: number) {
     if (this.dragIndex === -1 || this.dragIndex === dropIndex) return;
 
-    const list = [...this.preguntaList()];
-    const draggedItem = list[this.dragIndex];
-    const targetOrden = list[dropIndex].orden ?? dropIndex;
-
-    list.splice(this.dragIndex, 1);
+    const previous = this.preguntaList();
+    const list = [...previous];
+    const [draggedItem] = list.splice(this.dragIndex, 1);
     list.splice(dropIndex, 0, draggedItem);
-    this.preguntaList.set(list);
     this.dragIndex = -1;
 
-    await this.preguntaService.updatePregunta({ ...draggedItem, orden: targetOrden });
+    const reordered = list.map((item, i) => ({ ...item, orden: i + 1 }));
+    this.preguntaList.set(reordered);
+
+    const cambios = reordered.filter(item =>
+      previous.find(p => p.idPregunta === item.idPregunta)?.orden !== item.orden
+    );
+    await Promise.all(cambios.map(item => this.preguntaService.updatePregunta(item)));
   }
 
   onDragEnd() {
