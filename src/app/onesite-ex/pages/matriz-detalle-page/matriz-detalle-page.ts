@@ -84,7 +84,7 @@ export default class MatrizDetallePage implements OnInit, AfterViewInit {
         page: this.pagination().page,
         limit: this.pagination().pageSize,
         search: this.buscador(),
-        idMatrizPadre: matriz.codigo,
+        idMatrizPadre: matriz.idPregunta,
       });
       if (resp?.data) {
         this.preguntaList.set(resp.data ?? []);
@@ -104,7 +104,7 @@ export default class MatrizDetallePage implements OnInit, AfterViewInit {
       tipoDato: 'TEXT',
       orden: 1,
       codigo: 0,
-      idMatrizPadre: matriz.codigo,
+      idMatrizPadre: matriz.idPregunta,
     };
   }
 
@@ -134,7 +134,7 @@ export default class MatrizDetallePage implements OnInit, AfterViewInit {
 
   async upsertPregunta(pregunta: IPregunta) {
     // Always ensure idMatrizPadre is set on save
-    const withMatriz: IPregunta = { ...pregunta, idMatrizPadre: this.matrizPregunta()!.codigo };
+    const withMatriz: IPregunta = { ...pregunta, idMatrizPadre: this.matrizPregunta()!.idPregunta };
     const resp = this.nuevo()
       ? await this.preguntaService.createPregunta(withMatriz)
       : await this.preguntaService.updatePregunta(withMatriz);
