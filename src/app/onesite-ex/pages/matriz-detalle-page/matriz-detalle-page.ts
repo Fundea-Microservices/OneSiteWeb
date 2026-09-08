@@ -17,6 +17,8 @@ const emptyRegla = (idPregunta: number): IRegla => ({
   sintaxisCalculo: null,
   reglaValidacion: null,
   reglaVisibilidad: null,
+  mensajeError: null,
+  mensajeNotificacion: null,
 });
 
 @Component({
@@ -157,7 +159,9 @@ export default class MatrizDetallePage implements OnInit, AfterViewInit {
   }
 
   async saveRegla(regla: IRegla) {
-    const existe = !!(this.reglaEdit().sintaxisCalculo || this.reglaEdit().reglaValidacion || this.reglaEdit().reglaVisibilidad);
+    const actual = this.reglaEdit();
+    const existe = !!(actual.sintaxisCalculo || actual.reglaValidacion || actual.reglaVisibilidad
+      || actual.mensajeError || actual.mensajeNotificacion);
     const resp = existe
       ? await this.reglaService.updateRegla(regla)
       : await this.reglaService.createRegla(regla);
