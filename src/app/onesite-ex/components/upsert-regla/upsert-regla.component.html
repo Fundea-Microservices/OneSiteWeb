@@ -20,6 +20,34 @@
     <div class="form-text text-muted small">Expresión que determina si la pregunta debe mostrarse.</div>
   </div>
 
+  <div class="mb-3">
+    <label class="form-label">Mensaje de error <span class="text-muted">(opcional)</span></label>
+    <textarea class="form-control form-control-sm" formControlName="mensajeError" rows="2"
+      [class.is-invalid]="hasError('mensajeError', 'maxlength')" maxlength="500"
+      placeholder="Ej. El valor debe ser mayor a cero"></textarea>
+    @if (hasError('mensajeError', 'maxlength')) {
+      <div class="text-danger small">Máximo 500 caracteres</div>
+    }
+    <div class="d-flex justify-content-between form-text text-muted small">
+      <span>Se muestra al usuario cuando no se cumple la regla de validación.</span>
+      <span class="flex-shrink-0 ms-2">{{ largo('mensajeError') }}/500</span>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Mensaje de notificación <span class="text-muted">(opcional)</span></label>
+    <textarea class="form-control form-control-sm" formControlName="mensajeNotificacion" rows="2"
+      [class.is-invalid]="hasError('mensajeNotificacion', 'maxlength')" maxlength="500"
+      placeholder="Ej. Se aplicará un recalculo automático"></textarea>
+    @if (hasError('mensajeNotificacion', 'maxlength')) {
+      <div class="text-danger small">Máximo 500 caracteres</div>
+    }
+    <div class="d-flex justify-content-between form-text text-muted small">
+      <span>Mensaje informativo que se muestra al usuario al evaluar la regla.</span>
+      <span class="flex-shrink-0 ms-2">{{ largo('mensajeNotificacion') }}/500</span>
+    </div>
+  </div>
+
   <hr />
   <div class="d-flex justify-content-end gap-2">
     <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
