@@ -135,16 +135,20 @@ export default class EncuestaDetallePage implements OnInit, AfterViewInit {
   async onDrop(dropIndex: number) {
     if (this.dragIndex === -1 || this.dragIndex === dropIndex) return;
 
-    const list = [...this.seccionList()];
-    const draggedItem = list[this.dragIndex];
-    const targetOrden = list[dropIndex].orden ?? dropIndex;
-
-    list.splice(this.dragIndex, 1);
+    const previous = this.seccionList();
+    const list = [...previous];
+    const [draggedItem] = list.splice(this.dragIndex, 1);
     list.splice(dropIndex, 0, draggedItem);
-    this.seccionList.set(list);
     this.dragIndex = -1;
 
-    await this.seccionService.updateSeccion({ ...draggedItem, orden: targetOrden });
+    const offset = (this.pagination().page - 1) * this.pagination().pageSize;
+    const reordered = list.map((item, i) => ({ ...item, orden: offset + i + 1 }));
+    this.seccionList.set(reordered);
+
+    const cambios = reordered.filter(item =>
+      previous.find(p => p.idSeccion === item.idSeccion)?.orden !== item.orden
+    );
+    await Promise.all(cambios.map(item => this.seccionService.updateSeccion(item)));
   }
 
   onDragEnd() {

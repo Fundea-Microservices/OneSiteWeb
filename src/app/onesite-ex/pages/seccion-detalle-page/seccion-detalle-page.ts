@@ -182,7 +182,8 @@ export default class SeccionDetallePage implements OnInit, AfterViewInit {
     list.splice(dropIndex, 0, draggedItem);
     this.dragIndex = -1;
 
-    const reordered = list.map((item, i) => ({ ...item, orden: i + 1 }));
+    const offset = (this.pagination().page - 1) * this.pagination().pageSize;
+    const reordered = list.map((item, i) => ({ ...item, orden: offset + i + 1 }));
     this.preguntaList.set(reordered);
 
     const cambios = reordered.filter(item =>
