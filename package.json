@@ -11,6 +11,9 @@
     "deploy:amazon": "git fetch origin && git pull && npm install && ng build --configuration production && sudo rm -rf /usr/share/nginx/html/onesite/* && sudo cp -r dist/OneSiteWeb/* /usr/share/nginx/html/onesite"
   },
   "private": true,
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.12"
+  },
   "dependencies": {
     "@angular/animations": "^20.3.28",
     "@angular/cdk": "^20.2.14",
