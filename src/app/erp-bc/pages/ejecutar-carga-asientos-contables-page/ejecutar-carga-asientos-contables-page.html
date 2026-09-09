@@ -320,11 +320,15 @@
             <div class="col-md-6 col-lg-3">
               <div class="card border-0 bg-light h-100">
                 <div class="card-body py-2">
-                  <div class="text-muted small">{{ etiquetaInsertados() }}</div>
-                  <div class="fs-6 fw-bold text-success">
-                    {{ ej.registrosInsertados | number }}
-                    <span class="text-muted fw-normal">/ {{ ej.registrosObtenidos | number }}</span>
-                  </div>
+                  <div class="text-muted small">{{ resumenEtiqueta() }}</div>
+                  @if (resumenValor() === null) {
+                    <div class="fs-6 fw-bold text-muted">Sin dato</div>
+                  } @else {
+                    <div class="fs-6 fw-bold text-success">
+                      {{ resumenValor() | number }}
+                      <span class="text-muted fw-normal">/ {{ ej.registrosObtenidos | number }}</span>
+                    </div>
+                  }
                 </div>
               </div>
             </div>
@@ -337,13 +341,30 @@
                     <td>{{ ej.registrosObtenidos | number }}</td>
                   </tr>
                   <tr>
-                    <th class="table-light">Registros procesados</th>
+                    <th class="table-light">{{ etiquetaProcesados() }}</th>
                     <td>{{ ej.registrosProcesados | number }}</td>
                   </tr>
+                  <!-- El reenvío no guarda nada nuevo: insertados y duplicados
+                       vienen siempre en 0 y solo confundirían. -->
+                  @if (!esReenvio()) {
+                    <tr>
+                      <th class="table-light">Registros insertados</th>
+                      <td>
+                        <span class="badge bg-success">{{ ej.registrosInsertados | number }}</span>
+                      </td>
+                    </tr>
+                  }
                   <tr>
-                    <th class="table-light">{{ etiquetaInsertados() }}</th>
+                    <th class="table-light">{{ etiquetaEnviados() }}</th>
                     <td>
-                      <span class="badge bg-success">{{ ej.registrosInsertados | number }}</span>
+                      @if (enviadosSinDato()) {
+                        <span class="badge bg-light text-muted border">Sin dato</span>
+                        <span class="text-muted small ms-2">
+                          Esta ejecución es anterior al registro de este contador.
+                        </span>
+                      } @else {
+                        <span class="badge bg-success">{{ registrosEnviados() | number }}</span>
+                      }
                     </td>
                   </tr>
                   @if (!esReenvio()) {
@@ -355,7 +376,7 @@
                     </tr>
                   }
                   <tr>
-                    <th class="table-light">Registros con error</th>
+                    <th class="table-light">{{ etiquetaConError() }}</th>
                     <td>
                       <span class="badge {{ ej.registrosConError > 0 ? 'bg-danger' : 'bg-secondary' }}">
                         {{ ej.registrosConError | number }}
@@ -371,6 +392,9 @@
                         } @else {
                           <span class="badge bg-secondary">No</span>
                         }
+                        <span class="text-muted small ms-2">
+                          Indica si llegó a la fase de envío, no cuántos asientos aceptó el ERP.
+                        </span>
                       </td>
                     </tr>
                   }

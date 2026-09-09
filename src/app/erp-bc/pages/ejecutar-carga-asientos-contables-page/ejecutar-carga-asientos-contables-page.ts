@@ -217,14 +217,37 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     return n === 1 ? 'Reenviar 1 asiento' : `Reenviar ${n} asientos`;
   });
 
+  registrosEnviados = computed(() => this.ejecucion()?.registrosEnviados ?? null);
+
+  /** La ejecución es anterior al contador: se pinta «sin dato», nunca 0. */
+  enviadosSinDato = computed(() => !!this.ejecucion() && this.registrosEnviados() === null);
+
   /** Rótulos que cambian de significado en un reenvío. */
   etiquetaObtenidos = computed(() =>
     this.esReenvio() ? 'Asientos en error encontrados' : 'Registros obtenidos'
   );
 
-  etiquetaInsertados = computed(() =>
-    this.esReenvio() ? 'Reenviados con éxito' : 'Registros insertados'
+  etiquetaProcesados = computed(() =>
+    this.esReenvio() ? 'Asientos reintentados' : 'Registros procesados'
   );
+
+  etiquetaEnviados = computed(() =>
+    this.esReenvio() ? 'Reenviados con éxito' : 'Aceptados por Business Central'
+  );
+
+  etiquetaConError = computed(() =>
+    this.esReenvio() ? 'Siguen en error' : 'Registros con error'
+  );
+
+  resumenEtiqueta = computed(() =>
+    this.esReenvio() ? this.etiquetaEnviados() : 'Registros insertados'
+  );
+
+  resumenValor = computed<number | null>(() => {
+    const ej = this.ejecucion();
+    if (!ej) return null;
+    return this.esReenvio() ? this.registrosEnviados() : ej.registrosInsertados;
+  });
 
   textoFrecuencia = computed(() =>
     this.esReenvio()

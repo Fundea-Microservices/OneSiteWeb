@@ -57,10 +57,13 @@ export interface CuentaExternaCuadre {
 
 /**
  * Los contadores cambian de significado según `tipo`:
- * - `MANUAL` / `AUTOMATICA`: `registrosObtenidos` es el total traído de Bantotal
- *   y `registrosInsertados` son los asientos nuevos.
+ * - `MANUAL` / `AUTOMATICA`: `registrosObtenidos` es el total traído de Bantotal,
+ *   `registrosInsertados` son los asientos nuevos que quedaron guardados y
+ *   `registrosEnviados` los que Business Central aceptó.
  * - `REENVIO`: `registrosObtenidos` son los asientos en error encontrados y
- *   `registrosInsertados` son los reenviados con éxito.
+ *   `registrosEnviados` los reenviados con éxito. Ahí `registrosInsertados` y
+ *   `registrosDuplicados` vienen siempre en 0: el reenvío no guarda nada, solo
+ *   reintenta el envío de asientos que ya estaban en la base.
  *
  * La ejecución terminó cuando `fechaFin !== null`, nunca cuando `porcentaje`
  * llega a 100: un reenvío sin errores pendientes termina en 0%.
@@ -75,6 +78,9 @@ export interface EjecucionCargaAsientos {
     registrosObtenidos:  number;
     registrosProcesados: number;
     registrosInsertados: number;
+
+    registrosEnviados:   number | null;
+
     registrosDuplicados: number;
     registrosConError:   number;
     porcentaje:          number;
@@ -87,6 +93,11 @@ export interface EjecucionCargaAsientos {
     /**
      * `true` solo si la fase 2 llegó a mandar los asientos a Business Central.
      * En un descuadre es `false`: quedaron guardados en bc.AsientosContables.
+     *
+     * No confundir con `registrosEnviados`: esto es la fase, no la cuenta. Una
+     * ejecución puede tener `enviado: true` y `registrosEnviados` por debajo del
+     * total si el ERP rechazó parte de los asientos (quedan en ERROR y son
+     * reenviables).
      */
     enviado:             boolean;
 
