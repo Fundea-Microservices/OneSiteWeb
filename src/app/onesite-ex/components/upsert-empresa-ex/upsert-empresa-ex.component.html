@@ -1,0 +1,57 @@
+<form [formGroup]="form()">
+  <div class="row">
+    <div class="mb-3 col-12">
+      <label class="form-label">Nombre de la empresa <span class="text-danger">*</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombreEmpresa"
+        placeholder="Ej. FUNDEA Guatemala" autocomplete="off" />
+      @if (hasError('nombreEmpresa', 'required')) {
+        <div class="text-danger small">El nombre es requerido</div>
+      }
+      @if (hasError('nombreEmpresa', 'maxlength')) {
+        <div class="text-danger small">Máximo 100 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Código de enrolamiento <span class="text-danger">*</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="codigoEnrolamiento"
+        placeholder="Ej. ENR-GTDEMO" autocomplete="off" />
+      <div class="form-text small">Lo valida el dispositivo al enrolarse en la app móvil.</div>
+      @if (hasError('codigoEnrolamiento', 'required')) {
+        <div class="text-danger small">El código de enrolamiento es requerido</div>
+      }
+      @if (hasError('codigoEnrolamiento', 'maxlength')) {
+        <div class="text-danger small">Máximo 50 caracteres</div>
+      }
+    </div>
+
+    <div class="mb-3 col-md-6">
+      <label class="form-label">Código corto <span class="text-muted">(opcional)</span></label>
+      <input type="text" class="form-control form-control-sm" formControlName="codigo"
+        placeholder="Ej. GTDEMO" autocomplete="off" />
+      <div class="form-text small">Clave usada en la carga masiva de usuarios.</div>
+      @if (hasError('codigo', 'maxlength')) {
+        <div class="text-danger small">Máximo 20 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="mb-3 col-12">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" formControlName="estado" id="estadoEmpresaCheck" />
+        <label class="form-check-label" for="estadoEmpresaCheck">
+          {{ form().get('estado')?.value ? 'Alta (activa)' : 'Baja (inactiva)' }}
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="onSubmit()">{{ btnText }}</button>
+  </div>
+</form>
