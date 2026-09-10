@@ -38,14 +38,32 @@ export interface CargarPartidasResponse {
     data:       CargarPartidasData;
 }
 
+// ── Cuadre por cuenta externa ────────────────────────────────────────────────
+
+/**
+ * Suma de `valorCuenta` de todas las partidas de la fecha que comparten
+ * `numeroExterno` (Sucursal-Módulo-Transacción-Relación). Una cuenta cuadra
+ * cuando la suma es exactamente 0: los cargos y abonos se compensan.
+ *
+ * Los asientos sin cuenta externa se agrupan bajo cadena vacía `''`.
+ */
+export interface CuentaExternaCuadre {
+    cuentaExterna: string;
+    /** Diferencia con signo. Negativo: sobran débitos. Positivo: sobran créditos. */
+    valorCuenta:   number;
+}
+
 // ── Estado de la ejecución (LogsCargaAsientos) ───────────────────────────────
 
 /**
  * Los contadores cambian de significado según `tipo`:
- * - `MANUAL` / `AUTOMATICA`: `registrosObtenidos` es el total traído de Bantotal
- *   y `registrosInsertados` son los asientos nuevos.
+ * - `MANUAL` / `AUTOMATICA`: `registrosObtenidos` es el total traído de Bantotal,
+ *   `registrosInsertados` son los asientos nuevos que quedaron guardados y
+ *   `registrosEnviados` los que Business Central aceptó.
  * - `REENVIO`: `registrosObtenidos` son los asientos en error encontrados y
- *   `registrosInsertados` son los reenviados con éxito.
+ *   `registrosEnviados` los reenviados con éxito. Ahí `registrosInsertados` y
+ *   `registrosDuplicados` vienen siempre en 0: el reenvío no guarda nada, solo
+ *   reintenta el envío de asientos que ya estaban en la base.
  *
  * La ejecución terminó cuando `fechaFin !== null`, nunca cuando `porcentaje`
  * llega a 100: un reenvío sin errores pendientes termina en 0%.
@@ -60,22 +78,70 @@ export interface EjecucionCargaAsientos {
     registrosObtenidos:  number;
     registrosProcesados: number;
     registrosInsertados: number;
+
+    registrosEnviados:   number | null;
+
     registrosDuplicados: number;
     registrosConError:   number;
     porcentaje:          number;
     error:               boolean;
     comentario:          string | null;
+
+    /** Fecha contable solicitada, `YYYY-MM-DD`. */
+    fechaIndicada?:      string;
+
+    /**
+     * `true` solo si la fase 2 llegó a mandar los asientos a Business Central.
+     * En un descuadre es `false`: quedaron guardados en bc.AsientosContables.
+     *
+     * No confundir con `registrosEnviados`: esto es la fase, no la cuenta. Una
+     * ejecución puede tener `enviado: true` y `registrosEnviados` por debajo del
+     * total si el ERP rechazó parte de los asientos (quedan en ERROR y son
+     * reenviables).
+     */
+    enviado:             boolean;
+
+    /**
+     * Solo las cuentas externas cuya suma no da cero. Es la lista que se
+     * muestra en pantalla. Viene vacía cuando no hay descuadre.
+     */
+    cuentasDescuadradas: CuentaExternaCuadre[];
+
+    /**
+     * Todas las cuentas externas de la fecha con su suma, cuadren o no.
+     * `null` si la ejecución murió antes de calcular el cuadre (fallo técnico).
+     */
+    cuentasExternas:     CuentaExternaCuadre[] | null;
 }
 
 export interface EstadoEjecucionData {
+    /** Fecha consultada, `YYYY-MM-DD`. */
+    fecha?:           string;
     /** Ya existe un registro de carga para la fecha consultada. */
     existe:           boolean;
     /** Sin fechaFin y dentro de la ventana de vida del proceso. */
     enEjecucion:      boolean;
     /** Sin fechaFin pero el proceso ya murió (superó las 6h). */
     interrumpida:     boolean;
-    /** Terminó dejando registros en ERROR. */
+    /**
+     * Terminó dejando registros en ERROR.
+     *
+     * Ojo: también sale `true` en un descuadre, así que NO sirve para decidir
+     * si se ofrece el reenvío. Para eso está `puedeReenviar`.
+     */
     tieneErrores:     boolean;
+    /**
+     * La carga se detuvo en la validación de cuadre: los asientos quedaron
+     * guardados y no se envió nada al ERP. No es un fallo técnico —la petición
+     * responde 200— sino un estado de negocio que hay que renderizar.
+     */
+    descuadre:        boolean;
+    /**
+     * Hay asientos en estado ERROR que Business Central rechazó y tiene
+     * sentido reintentar. En un descuadre siempre es `false`: los asientos
+     * están en INICIO, no en ERROR, y el reenvío no encontraría nada.
+     */
+    puedeReenviar:    boolean;
     /** El job automático está activo para esa fecha: no se permite disparo manual. */
     automaticaActiva: boolean;
     /** El backend acepta un POST de carga para esta fecha. */

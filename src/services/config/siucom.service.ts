@@ -8,9 +8,15 @@ import { ConsultaAuditoriaResponse, ConsultaAuditoriaSiucomParams } from '../../
 export interface SiucomAccesoRequest {
   usuarioId: string;
   nombre: string;
-  region: string;
-  agencia: string;
+  /** Codigo numerico de la agencia. Unico dato de ubicacion que se envia a SIUCOM. */
+  codigo: number;
   rol: string;
+  /** Ya no se envia a SIUCOM; solo se guarda en el registro local. */
+  region?: string;
+  /** Ya no se envia a SIUCOM; solo se guarda en el registro local. */
+  agencia?: string;
+  /** Lista separada por comas. SIUCOM solo la exige para las categorias D y E. */
+  cultivo?: string;
 }
 
 @Injectable({

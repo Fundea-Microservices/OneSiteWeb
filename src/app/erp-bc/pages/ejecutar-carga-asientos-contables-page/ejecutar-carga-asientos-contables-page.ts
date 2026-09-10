@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { PartidasContablesService } from '../../../../services/erp-bc/partidas-contables.service';
-import { EstadoEjecucionData } from '../../../../interfaces/erp-bc/partidas-contables';
+import { CuentaExternaCuadre, EstadoEjecucionData } from '../../../../interfaces/erp-bc/partidas-contables';
 
 /**
  * Cada cuánto se re-consulta el estado mientras el proceso sigue corriendo.
@@ -13,7 +13,26 @@ import { EstadoEjecucionData } from '../../../../interfaces/erp-bc/partidas-cont
 const POLL_CARGA_MS   = 5 * 60 * 1000;
 const POLL_REENVIO_MS = 12 * 1000;
 
+/**
+ * Cuántas cuentas descuadradas se listan de entrada. `cuentasDescuadradas` no
+ * tiene tope: un día mal cargado puede traer cientos de filas.
+ */
+const CUENTAS_VISIBLES = 15;
+
 type AccionEnCurso = 'carga' | 'reenvio' | null;
+
+/**
+ * Desenlace único de la ejecución. Los flags del backend no son excluyentes
+ * entre sí, así que se evalúan en orden y gana el primero que aplica.
+ */
+type VistaEstado =
+  | 'sin-registro'
+  | 'avance'
+  | 'descuadre'
+  | 'interrumpida'
+  | 'reenvio'
+  | 'error'
+  | 'ok';
 
 @Component({
   selector: 'app-ejecutar-carga-asientos-contables-page',
@@ -39,6 +58,8 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   errorMsg       = signal('');
   avisoMsg       = signal('');
   ultimaConsulta = signal<Date | null>(null);
+  /** La tabla de cuentas descuadradas arranca recortada. */
+  verTodasLasCuentas = signal(false);
 
   private pollId: ReturnType<typeof setInterval> | null = null;
   private pollMsActual: number | null = null;
@@ -73,6 +94,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     this.errorMsg.set('');
     this.avisoMsg.set('');
     this.ultimaConsulta.set(null);
+    this.verTodasLasCuentas.set(false);
   }
 
   // ── Estado derivado ────────────────────────────────────────────────────────
@@ -83,11 +105,62 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   /** El último registro de la fecha es un reenvío de errores, no una carga. */
   esReenvio = computed(() => this.ejecucion()?.tipo === 'REENVIO');
 
-  /** Terminó y no dejó registros en error: solo se muestra el resumen. */
-  finalizadaLimpia = computed(() => {
+  /**
+   * La carga se detuvo en la validación de cuadre. Los asientos quedaron
+   * guardados en el intermedio y el ERP no recibió nada.
+   */
+  descuadre = computed(() => this.estado()?.descuadre === true);
+
+  /** Hay asientos en ERROR que el ERP rechazó y tiene sentido reintentar. */
+  puedeReenviar = computed(() => this.estado()?.puedeReenviar === true);
+
+  /**
+   * Desenlace a pintar. `tieneErrores` sale `true` también en un descuadre, así
+   * que el orden importa: el descuadre se resuelve antes que el reenvío.
+   */
+  vista = computed<VistaEstado>(() => {
     const e = this.estado();
-    return !!e?.existe && !e.enEjecucion && !e.interrumpida && !e.tieneErrores;
+    if (!e || !e.existe)   return 'sin-registro';
+    if (e.enEjecucion)     return 'avance';
+    if (e.descuadre)       return 'descuadre';
+    if (e.interrumpida)    return 'interrumpida';
+    if (e.puedeReenviar)   return 'reenvio';
+    if (e.ejecucion?.error) return 'error';
+    return 'ok';
   });
+
+  /** Terminó sin incidencias: solo se muestra el resumen. */
+  finalizadaLimpia = computed(() => this.vista() === 'ok');
+
+  // ── Cuentas que no cuadran ─────────────────────────────────────────────────
+
+  cuentasDescuadradas = computed<CuentaExternaCuadre[]>(
+    () => this.ejecucion()?.cuentasDescuadradas ?? []
+  );
+
+  /** Total de cuentas externas de la fecha, cuadren o no. `null` si no se calculó. */
+  totalCuentasExternas = computed(() => this.ejecucion()?.cuentasExternas?.length ?? null);
+
+  /** La tabla se recorta salvo que el usuario pida verla entera. */
+  cuentasVisibles = computed<CuentaExternaCuadre[]>(() => {
+    const cuentas = this.cuentasDescuadradas();
+    return this.verTodasLasCuentas() ? cuentas : cuentas.slice(0, CUENTAS_VISIBLES);
+  });
+
+  cuentasOcultas = computed(() =>
+    Math.max(0, this.cuentasDescuadradas().length - this.cuentasVisibles().length)
+  );
+
+  hayCuentasOcultas = computed(() => this.cuentasOcultas() > 0);
+
+  alternarCuentas() {
+    this.verTodasLasCuentas.update(v => !v);
+  }
+
+  /** Los asientos sin cuenta externa se agrupan bajo cadena vacía. */
+  etiquetaCuenta(cuenta: string): string {
+    return cuenta?.trim() ? cuenta : 'Sin cuenta externa';
+  }
 
   /**
    * Un reenvío que no encontró nada que reenviar: termina al instante con
@@ -108,28 +181,35 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     return this.enEjecucion() && (ej?.porcentaje ?? 0) <= 0;
   });
 
-  /** Reenvío rápido: solo lo que quedó en error. Es la acción recomendada. */
+  /**
+   * Reenvío rápido: solo lo que quedó en error. Se decide con `puedeReenviar`,
+   * nunca con `tieneErrores`: en un descuadre los asientos están en INICIO y el
+   * reenvío no encontraría nada que hacer.
+   */
   mostrarBotonReenviarErrores = computed(() => {
     const e = this.estado();
-    return !!e?.tieneErrores && e.puedeEjecutar;
+    return !!e?.puedeReenviar && e.puedeEjecutar;
   });
 
   /**
-   * Carga completa: sin registro previo, interrumpida, o como alternativa al
-   * reenvío cuando hubo errores (vuelve a recorrer Bantotal y también levanta
-   * lo que quedó en PENDIENTE). Una carga que terminó limpia no se relanza.
+   * Carga completa: sin registro previo, interrumpida, descuadrada, con
+   * rechazos del ERP o con fallo técnico. Vuelve a recorrer Bantotal y también
+   * levanta lo que quedó en PENDIENTE. Una carga que terminó limpia no se
+   * relanza.
    */
   mostrarBotonEjecutar = computed(() => {
     const e = this.estado();
     if (!e || !e.puedeEjecutar) return false;
-    return !e.existe || e.interrumpida || e.tieneErrores;
+    return this.vista() !== 'avance' && this.vista() !== 'ok';
   });
 
   textoBotonEjecutar = computed(() => {
-    const e = this.estado();
-    if (e?.interrumpida) return 'Reintentar carga';
-    if (e?.tieneErrores) return 'Volver a enviar todo';
-    return 'Ejecutar carga';
+    switch (this.vista()) {
+      case 'descuadre':    return 'Volver a ejecutar la carga';
+      case 'interrumpida': return 'Reintentar carga';
+      case 'reenvio':      return 'Volver a enviar todo';
+      default:             return 'Ejecutar carga';
+    }
   });
 
   textoBotonReenviar = computed(() => {
@@ -137,14 +217,37 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     return n === 1 ? 'Reenviar 1 asiento' : `Reenviar ${n} asientos`;
   });
 
+  registrosEnviados = computed(() => this.ejecucion()?.registrosEnviados ?? null);
+
+  /** La ejecución es anterior al contador: se pinta «sin dato», nunca 0. */
+  enviadosSinDato = computed(() => !!this.ejecucion() && this.registrosEnviados() === null);
+
   /** Rótulos que cambian de significado en un reenvío. */
   etiquetaObtenidos = computed(() =>
     this.esReenvio() ? 'Asientos en error encontrados' : 'Registros obtenidos'
   );
 
-  etiquetaInsertados = computed(() =>
-    this.esReenvio() ? 'Reenviados con éxito' : 'Registros insertados'
+  etiquetaProcesados = computed(() =>
+    this.esReenvio() ? 'Asientos reintentados' : 'Registros procesados'
   );
+
+  etiquetaEnviados = computed(() =>
+    this.esReenvio() ? 'Reenviados con éxito' : 'Aceptados por Business Central'
+  );
+
+  etiquetaConError = computed(() =>
+    this.esReenvio() ? 'Siguen en error' : 'Registros con error'
+  );
+
+  resumenEtiqueta = computed(() =>
+    this.esReenvio() ? this.etiquetaEnviados() : 'Registros insertados'
+  );
+
+  resumenValor = computed<number | null>(() => {
+    const ej = this.ejecucion();
+    if (!ej) return null;
+    return this.esReenvio() ? this.registrosEnviados() : ej.registrosInsertados;
+  });
 
   textoFrecuencia = computed(() =>
     this.esReenvio()
@@ -173,6 +276,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     this.errorMsg.set('');
     this.avisoMsg.set('');
     this.estado.set(null);
+    this.verTodasLasCuentas.set(false);
 
     await this.consultar();
 

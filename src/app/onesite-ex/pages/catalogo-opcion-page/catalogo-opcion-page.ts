@@ -232,18 +232,20 @@ export default class CatalogoOpcionPage implements OnInit, AfterViewInit {
   async onDrop(dropIndex: number) {
     if (this.dragIndex === -1 || this.dragIndex === dropIndex) return;
 
-    const list = [...this.opcionList()];
-    const draggedItem = list[this.dragIndex];
-    const targetOrden = list[dropIndex].orden ?? dropIndex;
-
-    // Reorder locally for instant feedback
-    list.splice(this.dragIndex, 1);
+    const previous = this.opcionList();
+    const list = [...previous];
+    const [draggedItem] = list.splice(this.dragIndex, 1);
     list.splice(dropIndex, 0, draggedItem);
-    this.opcionList.set(list);
     this.dragIndex = -1;
 
-    // Send only the dragged item with the target's orden value
-    await this.opcionService.updateOpcion({ ...draggedItem, orden: targetOrden });
+    const offset = (this.pagination().page - 1) * this.pagination().pageSize;
+    const reordered = list.map((item, i) => ({ ...item, orden: offset + i + 1 }));
+    this.opcionList.set(reordered);
+
+    const cambios = reordered.filter(item =>
+      previous.find(o => o.id === item.id)?.orden !== item.orden
+    );
+    await Promise.all(cambios.map(item => this.opcionService.updateOpcion(item)));
   }
 
   onDragEnd() {

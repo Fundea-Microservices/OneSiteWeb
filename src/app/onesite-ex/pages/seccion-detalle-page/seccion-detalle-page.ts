@@ -27,6 +27,8 @@ const emptyRegla = (idPregunta: number): IRegla => ({
   sintaxisCalculo: null,
   reglaValidacion: null,
   reglaVisibilidad: null,
+  mensajeError: null,
+  mensajeNotificacion: null,
 });
 
 @Component({
@@ -149,7 +151,9 @@ export default class SeccionDetallePage implements OnInit, AfterViewInit {
   }
 
   async saveRegla(regla: IRegla) {
-    const existe = !!(this.reglaEdit().sintaxisCalculo || this.reglaEdit().reglaValidacion || this.reglaEdit().reglaVisibilidad);
+    const actual = this.reglaEdit();
+    const existe = !!(actual.sintaxisCalculo || actual.reglaValidacion || actual.reglaVisibilidad
+      || actual.mensajeError || actual.mensajeNotificacion);
     const resp = existe
       ? await this.reglaService.updateRegla(regla)
       : await this.reglaService.createRegla(regla);
@@ -176,16 +180,20 @@ export default class SeccionDetallePage implements OnInit, AfterViewInit {
   async onDrop(dropIndex: number) {
     if (this.dragIndex === -1 || this.dragIndex === dropIndex) return;
 
-    const list = [...this.preguntaList()];
-    const draggedItem = list[this.dragIndex];
-    const targetOrden = list[dropIndex].orden ?? dropIndex;
-
-    list.splice(this.dragIndex, 1);
+    const previous = this.preguntaList();
+    const list = [...previous];
+    const [draggedItem] = list.splice(this.dragIndex, 1);
     list.splice(dropIndex, 0, draggedItem);
-    this.preguntaList.set(list);
     this.dragIndex = -1;
 
-    await this.preguntaService.updatePregunta({ ...draggedItem, orden: targetOrden });
+    const offset = (this.pagination().page - 1) * this.pagination().pageSize;
+    const reordered = list.map((item, i) => ({ ...item, orden: offset + i + 1 }));
+    this.preguntaList.set(reordered);
+
+    const cambios = reordered.filter(item =>
+      previous.find(p => p.idPregunta === item.idPregunta)?.orden !== item.orden
+    );
+    await Promise.all(cambios.map(item => this.preguntaService.updatePregunta(item)));
   }
 
   onDragEnd() {

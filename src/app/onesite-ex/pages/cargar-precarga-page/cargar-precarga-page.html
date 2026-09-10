@@ -1,0 +1,270 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/onesiteex/config-precarga']">Precarga de encuestas</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Cargar Excel</li>
+  </ol>
+</nav>
+
+<!-- Configuración -->
+<div class="card mb-3">
+  <div class="card-header">Configuración</div>
+  <div class="card-body">
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-md-7">
+        <label class="form-label">Configuración de precarga</label>
+        <select class="form-select form-select-sm" (change)="onChangeConfig(selConfig.value)" #selConfig>
+          <option value="">Seleccione una configuración</option>
+          @for (c of configList(); track c.id) {
+            <option [value]="c.id" [selected]="configId() === c.id">{{ c.nombre }}</option>
+          }
+        </select>
+      </div>
+      @if (configSeleccionada()) {
+        <div class="col-12 col-md-5">
+          <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="descargandoPlantilla()" (click)="descargarPlantilla()">
+            @if (descargandoPlantilla()) {
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            } @else {
+              <ion-icon name="download-outline" class="me-1"></ion-icon>
+            }
+            Descargar plantilla
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (configId()) {
+
+  <!-- Archivo -->
+  <div class="card mb-3">
+    <div class="card-header">Archivo</div>
+    <div class="card-body">
+      @if (!archivo()) {
+        <input type="file" class="form-control form-control-sm" accept=".xlsx"
+          (change)="onArchivoSeleccionado(inputArchivo)" #inputArchivo />
+        <div class="form-text">Solo .xlsx, máximo 10 MB. Debe generarse con la plantilla de esta configuración.</div>
+      } @else {
+        <div class="d-flex justify-content-between align-items-center border rounded p-2">
+          <div>
+            <ion-icon name="document-outline" class="me-1"></ion-icon>
+            <strong>{{ archivo()!.name }}</strong>
+            <span class="text-muted small ms-2">{{ tamanoArchivo(archivo()!) }}</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="quitarArchivo(inputArchivo)">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+        <input type="file" hidden accept=".xlsx" (change)="onArchivoSeleccionado(inputArchivo)" #inputArchivo />
+      }
+
+      @if (archivoError()) {
+        <div class="text-danger small mt-2">{{ archivoError() }}</div>
+      }
+
+      @if (!validacion() && !resultado()) {
+        <div class="mt-3">
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="!archivo() || validando()" (click)="validar()">
+            @if (validando()) {
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            }
+            Validar archivo
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Resultado de la validación -->
+  @if (validacion(); as v) {
+    <div class="card mb-3">
+      <div class="card-header">Resultado de la validación</div>
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="badge bg-secondary">Total leídas: {{ v.resumen.totalFilas }}</span>
+          <span class="badge bg-success">Nuevas: {{ v.resumen.nuevas }}</span>
+          <span class="badge" [class.bg-warning]="v.resumen.duplicadas > 0" [class.bg-light]="v.resumen.duplicadas === 0"
+            [class.text-dark]="v.resumen.duplicadas === 0">
+            Duplicadas: {{ v.resumen.duplicadas }}
+          </span>
+          <span class="badge" [class.bg-danger]="v.resumen.conError > 0" [class.bg-light]="v.resumen.conError === 0"
+            [class.text-dark]="v.resumen.conError === 0">
+            Con error: {{ v.resumen.conError }}
+          </span>
+        </div>
+
+        @if (v.resumen.duplicadas === 0 && v.resumen.conError === 0) {
+          <div class="alert alert-success py-2 small mb-3">
+            Todas las filas son nuevas. Se cargarán las {{ v.resumen.nuevas }} precargas.
+          </div>
+        } @else {
+          <div class="alert alert-light border py-2 small mb-3">
+            Por defecto solo se cargarán las <strong>{{ v.resumen.nuevas }} filas nuevas</strong>; las duplicadas y las
+            que tienen error se omiten, a menos que decidas lo contrario al confirmar.
+          </div>
+        }
+
+        @if (v.duplicadas.length > 0) {
+          <h3 class="h6">Filas duplicadas</h3>
+          <div class="table-responsive mb-3" style="max-height: 260px; overflow-y: auto;">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>Fila</th>
+                  <th>Motivo</th>
+                  <th>Documento</th>
+                  <th>Nombres</th>
+                  <th>Cuenta</th>
+                  <th>Operación</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of v.duplicadas; track d.numeroFila) {
+                  <tr>
+                    <td>{{ d.numeroFila }}</td>
+                    <td>
+                      <span class="badge" [class.bg-warning]="d.motivo === 'EN_ARCHIVO'" [class.bg-info]="d.motivo === 'EN_BASE'">
+                        {{ d.motivo === 'EN_ARCHIVO' ? 'En el archivo' : 'Ya existe' }}
+                      </span>
+                    </td>
+                    <td>{{ d.documento ?? '—' }}</td>
+                    <td>{{ d.nombres ?? '—' }}</td>
+                    <td>{{ d.cuenta ?? '—' }}</td>
+                    <td>{{ d.operacion ?? '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (v.errores.length > 0) {
+          <h3 class="h6">Filas con error</h3>
+          <div class="table-responsive mb-3" style="max-height: 260px; overflow-y: auto;">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr><th style="width:80px">Fila</th><th>Mensaje</th></tr>
+              </thead>
+              <tbody>
+                @for (e of v.errores; track e.numeroFila) {
+                  <tr><td>{{ e.numeroFila }}</td><td>{{ e.mensaje }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (v.detalleTruncado) {
+          <div class="small text-muted mb-3">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            Se muestran hasta 200 filas por lista. Los conteos del resumen son exactos aunque el detalle esté recortado.
+          </div>
+        }
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarValidacion()">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="confirmando()" (click)="iniciarConfirmacion()">
+            @if (confirmando()) {
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            }
+            Confirmar carga
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Resultado de la carga -->
+  @if (resultado(); as r) {
+    <div class="card mb-3">
+      <div class="card-header">Resultado de la carga</div>
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="badge bg-success">Insertadas: {{ r.resumen.insertadas }}</span>
+          <span class="badge bg-warning">
+            Duplicadas {{ r.decisionDuplicados === 'INCLUIR' ? 'incluidas' : 'omitidas' }}: {{ r.decisionDuplicados === 'INCLUIR' ? r.resumen.duplicadasIncluidas : r.resumen.duplicadas }}
+          </span>
+          <span class="badge" [class.bg-danger]="r.resumen.conError > 0" [class.bg-light]="r.resumen.conError === 0"
+            [class.text-dark]="r.resumen.conError === 0">
+            Con error: {{ r.resumen.conError }}
+          </span>
+        </div>
+
+        <div class="small text-muted mb-3">Lote: <code>{{ r.idLogPrecarga }}</code></div>
+
+        @if (r.errores.length > 0) {
+          <h3 class="h6">Filas con error</h3>
+          <div class="table-responsive mb-3" style="max-height: 260px; overflow-y: auto;">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr><th style="width:80px">Fila</th><th>Mensaje</th></tr>
+              </thead>
+              <tbody>
+                @for (e of r.errores; track e.numeroFila) {
+                  <tr><td>{{ e.numeroFila }}</td><td>{{ e.mensaje }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <div class="d-flex justify-content-end gap-2">
+          <a class="btn btn-secondary btn-sm" [routerLink]="['/onesiteex/config-precarga']">Volver al listado</a>
+          <button type="button" class="btn btn-primary btn-sm" (click)="cargarOtroArchivo()">Cargar otro archivo</button>
+        </div>
+      </div>
+    </div>
+  }
+}
+
+<!-- Modal Confirmar -->
+<div #confirmModal class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar carga</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        @if (validacion(); as v) {
+          <p>
+            Se detectaron <strong>{{ v.resumen.duplicadas }}</strong> filas duplicadas y
+            <strong>{{ v.resumen.conError }}</strong> con error. Al continuar se cargarán únicamente las
+            <strong>{{ v.resumen.nuevas }}</strong> filas nuevas, salvo que cambies las opciones de abajo.
+          </p>
+
+          @if (v.resumen.duplicadas > 0) {
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="incluirDupCheck"
+                [checked]="incluirDuplicados()" (change)="incluirDuplicados.set(cbxDup.checked)" #cbxDup />
+              <label class="form-check-label" for="incluirDupCheck">
+                Incluir las duplicadas de todas formas
+              </label>
+            </div>
+          }
+
+          @if (v.resumen.conError > 0) {
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="procesarErrCheck"
+                [checked]="procesarConErrores()" (change)="procesarConErrores.set(cbxErr.checked)" #cbxErr />
+              <label class="form-check-label" for="procesarErrCheck">
+                Cargar las filas válidas aunque haya filas con error
+              </label>
+            </div>
+            @if (!procesarConErrores()) {
+              <div class="small text-danger mt-1">
+                Si no marcás esta opción, el archivo completo será rechazado porque tiene filas con error.
+              </div>
+            }
+          }
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="cerrarConfirmModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="confirmarDesdeModal()">Sí, cargar</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -6,9 +6,9 @@ const AGENTE = {
 }
 
 export const environment = {
-    production: true,
+    production: false,
     path: API_URL,
     apiPath: (API_URL) + 'api',
-    tokenCheckInterval: 5,  // minutos
+    tokenCheckInterval: 5, // minutos
     agente: AGENTE
 };

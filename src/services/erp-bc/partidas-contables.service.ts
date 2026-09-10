@@ -65,7 +65,13 @@ export class PartidasContablesService extends HttpService {
 
   /**
    * Consulta el registro de LogsCargaAsientos de la fecha indicada: si existe,
-   * si sigue en ejecución, su progreso y si se permite (re)ejecutar la carga.
+   * si sigue en ejecución, su progreso, si el cuadre por cuenta externa falló
+   * (`descuadre`) y qué acción se puede ofrecer (`puedeEjecutar`,
+   * `puedeReenviar`).
+   *
+   * Un descuadre responde 200 con `success: true`: la carga terminó bien, lo
+   * que falló son los datos de origen. No hay que tratarlo como error de red.
+   *
    * @param fecha formato `YYYY-MM-DD`
    */
   getEjecucion(fecha: string): Observable<EstadoEjecucionResponse> {

@@ -104,6 +104,8 @@ export interface IRegla {
   sintaxisCalculo?: string | null;
   reglaValidacion?: string | null;
   reglaVisibilidad?: string | null;
+  mensajeError?: string | null;
+  mensajeNotificacion?: string | null;
   fechaModificacion?: Date;
 }
 

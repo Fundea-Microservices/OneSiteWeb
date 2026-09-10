@@ -133,8 +133,9 @@ export interface ISIUCOM {
     mensaje?:               string;
     usuarioSiucom:          string;
     nombreCliente:          string;
-    region:                 string;
-    agencia:                string;
+    codigoAgencia:          number;
+    region:                 string | null;
+    agencia:                string | null;
     rol:                    string;
     estado:                 string;
     dashboard:              string;
