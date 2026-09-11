@@ -3,7 +3,10 @@ on:
   pull_request:
     branches: [ "develop", "production", "certification" ]
   push:
-    branches: [ "develop", "production", "certification" ]
+    # develop no va aquí: en cada push a develop este escaneo lo ejecuta cd-develop.yml
+    # (vía workflow_call) antes de desplegar, así no corre dos veces por el mismo commit.
+    branches: [ "production", "certification" ]
+  workflow_call:
 
 permissions:
   contents: read
