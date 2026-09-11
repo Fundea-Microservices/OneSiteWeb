@@ -1,0 +1,13 @@
+@if (plantilla(); as p) {
+  <button type="button" class="btn btn-outline-secondary btn-sm"
+    [title]="p.descripcion ? p.nombre + ': ' + p.descripcion : p.nombre"
+    [disabled]="descargando()"
+    (click)="descargar()">
+    @if (descargando()) {
+      <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+    } @else {
+      <ion-icon name="download-outline" aria-hidden="true"></ion-icon>
+    }
+    Descargar plantilla
+  </button>
+}

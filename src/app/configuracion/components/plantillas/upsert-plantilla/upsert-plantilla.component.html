@@ -1,0 +1,171 @@
+<!-- dragover/drop se cancelan en todo el formulario para que soltar un archivo fuera
+     de la zona no haga que el navegador lo abra y se pierda la pantalla. -->
+<form #plantillaForm="ngForm" (ngSubmit)="onSave(plantillaForm)" novalidate class="row g-3"
+    (dragover)="$event.preventDefault()" (drop)="$event.preventDefault()">
+
+    <!-- ─── Archivo ─────────────────────────────────────────── -->
+    <div class="col-12">
+        <span class="form-label d-block" [class.obligatorio]="nuevo()">
+            {{ nuevo() ? 'Archivo de Excel' : 'Reemplazar archivo' }}
+            @if (!nuevo()) {
+                <span class="txt-ayuda">(opcional)</span>
+            }
+        </span>
+
+        @if (plantilla(); as actual) {
+            <div class="archivo-ficha mb-2">
+                <ion-icon name="document-text-outline" class="archivo-ficha__icono" aria-hidden="true"></ion-icon>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="fw-semibold">Archivo actual · versión {{ actual.version }}</div>
+                    <div class="txt-ayuda">
+                        {{ formatoExcel(actual.mimeType) }} · {{ formatearTamanio(actual.tamanioBytes) }}
+                        · Actualizado {{ (actual.updated_at ?? actual.created_at) | date:'dd/MM/yyyy HH:mm' }}
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (archivo(); as seleccionado) {
+            <div class="archivo-ficha archivo-ficha--nuevo">
+                <ion-icon name="document-attach-outline" class="archivo-ficha__icono" aria-hidden="true"></ion-icon>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="fw-semibold text-truncate" [title]="seleccionado.name">{{ seleccionado.name }}</div>
+                    <div class="txt-ayuda">{{ formatearTamanio(seleccionado.size) }}</div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="guardando()" (click)="quitarArchivo()">
+                    <ion-icon name="close-outline" aria-hidden="true"></ion-icon> Quitar
+                </button>
+            </div>
+            @if (plantilla(); as actual) {
+                <div class="estado estado--informacion w-100 mt-2">
+                    <ion-icon name="information-circle-outline" class="flex-shrink-0" aria-hidden="true"></ion-icon>
+                    <span>Se publicará como la versión {{ actual.version + 1 }}. Los datos de la plantilla se conservan.</span>
+                </div>
+            }
+        } @else {
+            <label class="zona-archivo" for="plantillaArchivo"
+                [class.zona-archivo--activa]="arrastrando()"
+                [class.zona-archivo--error]="!!errorArchivo()"
+                (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+                <ion-icon name="cloud-upload-outline" class="zona-archivo__icono" aria-hidden="true"></ion-icon>
+                <span class="zona-archivo__texto">
+                    Arrastra el archivo aquí o <span class="enlace">selecciónalo</span>
+                </span>
+                <span class="txt-ayuda">Excel .xls o .xlsx · máximo {{ tamanioMaxMb }} MB</span>
+                <input id="plantillaArchivo" type="file" class="visually-hidden"
+                    [accept]="accept" [disabled]="guardando()"
+                    (change)="onArchivoSeleccionado($event)" />
+            </label>
+        }
+
+        @if (errorArchivo()) {
+            <div class="mensaje-error mt-1" role="alert">
+                <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon> {{ errorArchivo() }}
+            </div>
+        }
+    </div>
+
+    <!-- ─── Datos ───────────────────────────────────────────── -->
+    <div class="col-12">
+        <label for="plantillaNombre" class="form-label obligatorio">Nombre</label>
+        <input type="text" id="plantillaNombre" name="nombre" class="form-control"
+            [(ngModel)]="form().nombre" #nombre="ngModel"
+            required maxlength="150"
+            [class.is-invalid]="enviado() && nombre.invalid"
+            placeholder="Ej. Plantilla de carga de usuarios OneSite EX" />
+        @if (enviado() && nombre.invalid) {
+            <div class="mensaje-error mt-1">Ingresa el nombre de la plantilla.</div>
+        }
+    </div>
+
+    <div class="col-md-6">
+        <label for="plantillaCodigo" class="form-label" [class.obligatorio]="nuevo()">Código</label>
+        <input type="text" id="plantillaCodigo" name="codigo" class="form-control campo-codigo"
+            [(ngModel)]="form().codigo" #codigo="ngModel"
+            [disabled]="!nuevo()"
+            required maxlength="100" pattern="[A-Za-z0-9_\-]+"
+            autocomplete="off" spellcheck="false"
+            [class.is-invalid]="enviado() && codigo.invalid"
+            placeholder="Ej. plantilla_usuarios_onesiteex" />
+        @if (enviado() && codigo.errors?.['required']) {
+            <div class="mensaje-error mt-1">Ingresa el código de la plantilla.</div>
+        } @else if (enviado() && codigo.errors?.['pattern']) {
+            <div class="mensaje-error mt-1">Usa solo letras, números, guion (-) o guion bajo (_), sin espacios.</div>
+        }
+        <div class="form-text">
+            {{ nuevo() ? 'Identificador único que usan los módulos. No se puede cambiar después.' : 'El código no se puede modificar.' }}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <label for="plantillaModulo" class="form-label obligatorio">Módulo</label>
+        <input type="text" id="plantillaModulo" name="modulo" class="form-control"
+            [(ngModel)]="form().modulo" #modulo="ngModel"
+            required maxlength="50" list="upsertPlantillaModulos" autocomplete="off"
+            [class.is-invalid]="enviado() && modulo.invalid"
+            placeholder="Ej. onesite-ex-ms" />
+        <datalist id="upsertPlantillaModulos">
+            @for (m of modulos(); track m) {
+                <option [value]="m"></option>
+            }
+        </datalist>
+        @if (enviado() && modulo.invalid) {
+            <div class="mensaje-error mt-1">Ingresa el módulo al que pertenece.</div>
+        }
+        <div class="form-text">Microservicio dueño de la plantilla.</div>
+    </div>
+
+    <div class="col-md-6">
+        <label for="plantillaCategoria" class="form-label">Categoría</label>
+        <input type="text" id="plantillaCategoria" name="categoria" class="form-control"
+            [(ngModel)]="form().categoria"
+            maxlength="50" list="upsertPlantillaCategorias" autocomplete="off"
+            placeholder="Ej. carga_masiva" />
+        <datalist id="upsertPlantillaCategorias">
+            @for (c of categorias(); track c) {
+                <option [value]="c"></option>
+            }
+        </datalist>
+        <div class="form-text">Agrupación libre para ordenar las plantillas.</div>
+    </div>
+
+    <div class="col-12">
+        <label for="plantillaDescripcion" class="form-label">Descripción</label>
+        <textarea id="plantillaDescripcion" name="descripcion" rows="3" class="form-control"
+            [(ngModel)]="form().descripcion" maxlength="300"
+            placeholder="Para qué sirve la plantilla y cómo se debe llenar..."></textarea>
+        <div class="form-text text-end num-tabular">{{ form().descripcion.length }}/300</div>
+    </div>
+
+    @if (!nuevo()) {
+        <div class="col-12">
+            <div class="superficie p-3 d-flex justify-content-between align-items-center gap-3">
+                <div>
+                    <div class="fw-semibold">Plantilla activa</div>
+                    <div class="txt-ayuda">Solo las plantillas activas se pueden consultar y descargar desde los módulos.</div>
+                </div>
+                <div class="form-check form-switch mb-0 flex-shrink-0">
+                    <input class="form-check-input" type="checkbox" role="switch"
+                        id="plantillaActivo" name="activo" [(ngModel)]="form().activo" />
+                    <label class="form-check-label" for="plantillaActivo">
+                        {{ form().activo ? 'Activa' : 'Inactiva' }}
+                    </label>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="col-12 mt-3 pt-3 border-top d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary px-4" [disabled]="guardando()" (click)="cancel.emit()">
+            Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary px-4" [disabled]="guardando()">
+            @if (guardando()) {
+                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Guardando...
+            } @else {
+                {{ nuevo() ? 'Crear plantilla' : 'Guardar cambios' }}
+            }
+        </button>
+    </div>
+
+</form>
