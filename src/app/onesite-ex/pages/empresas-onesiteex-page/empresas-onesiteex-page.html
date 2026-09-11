@@ -1,0 +1,185 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/onesiteex']">OneSiteEx</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Empresas</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Administrar empresas</span>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary btn-sm" (click)="openModal(true)">
+        <ion-icon name="add-outline"></ion-icon> Nueva empresa
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <form class="row g-2 mb-3" (submit)="$event.preventDefault()">
+      <div class="col-12 col-md-4">
+        <input type="text" class="form-control form-control-sm" placeholder="Buscar por nombre o código..."
+          [value]="buscador()" (input)="buscador.set(txtBuscar.value)" (keyup.enter)="buscar()" #txtBuscar />
+      </div>
+
+      <div class="col-6 col-md-3">
+        <select class="form-select form-select-sm" [value]="filtroEstado()"
+          (change)="onChangeEstado(selEstado.value)" #selEstado>
+          <option value="">Alta y baja</option>
+          <option value="true">Solo alta</option>
+          <option value="false">Solo baja</option>
+        </select>
+      </div>
+
+      <div class="col-6 col-md-3 d-flex gap-2">
+        <button type="button" class="btn btn-success btn-sm flex-fill" (click)="buscar()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+        @if (hayFiltrosActivos()) {
+          <button type="button" class="btn btn-outline-secondary btn-sm" title="Limpiar filtros"
+            (click)="limpiarFiltros()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+    </form>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted small">Cargando...</span>
+      </div>
+    }
+
+    <!-- Tabla Desktop -->
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="text-center" style="width:5%">#</th>
+            <th style="width:32%">Empresa</th>
+            <th style="width:23%">Código de enrolamiento</th>
+            <th style="width:12%">Código corto</th>
+            <th class="text-center" style="width:13%">Estado</th>
+            <th class="text-center" style="width:15%">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of empresaList(); track item.idEmpresa; let i = $index) {
+            <tr>
+              <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
+              <td>
+                <span class="fw-semibold">{{ item.nombreEmpresa }}</span>
+                <div class="small text-muted">Alta: {{ item.fechaCreacion | date:'dd/MM/yyyy' }}</div>
+              </td>
+              <td><code>{{ item.codigoEnrolamiento }}</code></td>
+              <td>{{ item.codigo || '—' }}</td>
+              <td class="text-center">
+                <div class="form-check form-switch d-inline-flex justify-content-center">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                    [checked]="item.estado"
+                    [title]="item.estado ? 'Alta' : 'Baja'"
+                    (change)="toggleEstado(item, cbxEstado.checked)"
+                    #cbxEstado />
+                </div>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-success mx-1" title="Editar" (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-danger mx-1" title="Dar de baja" (click)="openDeleteModal(item)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr><td colspan="6" class="text-center text-muted py-3">No hay empresas registradas</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none d-flex flex-column gap-3">
+      @for (item of empresaList(); track item.idEmpresa) {
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="fw-semibold">{{ item.nombreEmpresa }}</div>
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                    [checked]="item.estado"
+                    (change)="toggleEstado(item, cbxEstadoM.checked)"
+                    #cbxEstadoM />
+                  <label class="form-check-label small">{{ item.estado ? 'Alta' : 'Baja' }}</label>
+                </div>
+              </div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-success" (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="openDeleteModal(item)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="small text-muted">Enrolamiento: <code>{{ item.codigoEnrolamiento }}</code></div>
+            <div class="small text-muted">Código corto: {{ item.codigo || '—' }}</div>
+            <div class="small text-muted">Alta: {{ item.fechaCreacion | date:'dd/MM/yyyy' }}</div>
+          </div>
+        </div>
+      } @empty {
+        @if (!isLoading()) {
+          <div class="text-center text-muted py-3">No hay empresas registradas</div>
+        }
+      }
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+  </div>
+
+  <!-- Modal Upsert -->
+  <div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ modal().titulo }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <app-upsert-empresa-ex [empresa]="empresaEdit()" [nuevo]="nuevo()" [formKey]="formKey()"
+            (save)="upsertEmpresa($event)" (cancel)="closeModal()" />
+        </div>
+        <div class="modal-footer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Delete -->
+  <div #deleteModal class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">Dar de baja empresa</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas dar de baja la empresa <b>{{ empresaEdit()?.nombreEmpresa }}</b>?</p>
+          <p class="small text-muted mb-0">
+            Es una baja lógica: el registro se conserva con estado <b>Baja</b> y puede reactivarse
+            con el interruptor de la tabla.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger btn-sm" (click)="deleteEmpresa()">Dar de baja</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
