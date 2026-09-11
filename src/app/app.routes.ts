@@ -146,8 +146,13 @@ export const routes: Routes = [
                                 ]
                             },
                         ]
-                    }
-                    
+                    },
+                    {
+                        path: 'plantillas',
+                        loadComponent: () => import('./configuracion/pages/plantillas-page/plantillas-page'),
+                        canActivate: [AccessGuard]
+                    },
+
 
                 ]
             },

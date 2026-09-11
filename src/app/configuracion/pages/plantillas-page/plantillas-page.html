@@ -1,0 +1,313 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Gestión de plantillas</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Plantillas</span>
+        @if (esAdmin()) {
+            <button type="button" class="btn btn-primary btn-sm" (click)="openUpsertModal()">
+                <ion-icon name="add-outline" aria-hidden="true"></ion-icon> Nueva plantilla
+            </button>
+        }
+    </div>
+
+    <div class="card-body">
+        @if (!esAdmin()) {
+            <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+                <ion-icon name="lock-closed-outline" class="fs-5 flex-shrink-0" aria-hidden="true"></ion-icon>
+                <div>
+                    <strong>Acceso restringido.</strong>
+                    La gestión de plantillas requiere un rol con permisos de administrador.
+                    Solicita el acceso al administrador del sistema si necesitas crear o actualizar plantillas.
+                </div>
+            </div>
+        } @else {
+            <p class="txt-secundario mb-3">
+                Plantillas de Excel que los módulos ofrecen para descargar (carga masiva, formatos, etc.).
+                Se aceptan archivos .xls o .xlsx de hasta {{ tamanioMaxMb }} MB.
+            </p>
+
+            <!-- ─── Filtros ─────────────────────────────────────── -->
+            <form class="row g-2 align-items-end mb-3" (ngSubmit)="buscar()">
+                <div class="col-12 col-lg-4">
+                    <label for="filtroNombre" class="form-label">Nombre</label>
+                    <input type="search" id="filtroNombre" name="search" class="form-control form-control-sm"
+                        [(ngModel)]="filtros.search" placeholder="Buscar por nombre..." />
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label for="filtroModulo" class="form-label">Módulo</label>
+                    <input type="text" id="filtroModulo" name="modulo" class="form-control form-control-sm"
+                        [(ngModel)]="filtros.modulo" list="filtroPlantillaModulos" autocomplete="off" placeholder="Todos" />
+                    <datalist id="filtroPlantillaModulos">
+                        @for (m of modulos(); track m) {
+                            <option [value]="m"></option>
+                        }
+                    </datalist>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label for="filtroCategoria" class="form-label">Categoría</label>
+                    <input type="text" id="filtroCategoria" name="categoria" class="form-control form-control-sm"
+                        [(ngModel)]="filtros.categoria" list="filtroPlantillaCategorias" autocomplete="off" placeholder="Todas" />
+                    <datalist id="filtroPlantillaCategorias">
+                        @for (c of categorias(); track c) {
+                            <option [value]="c"></option>
+                        }
+                    </datalist>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label for="filtroEstado" class="form-label">Estado</label>
+                    <select id="filtroEstado" name="estado" class="form-select form-select-sm" [(ngModel)]="filtros.estado">
+                        <option value="">Todas</option>
+                        <option value="activas">Activas</option>
+                        <option value="inactivas">Inactivas</option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary btn-sm flex-fill" [disabled]="isLoading()">
+                        <ion-icon name="search-outline" aria-hidden="true"></ion-icon> Buscar
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" title="Limpiar filtros" aria-label="Limpiar filtros"
+                        [disabled]="isLoading()" (click)="limpiarFiltros()">
+                        <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+                    </button>
+                </div>
+            </form>
+
+            <!-- ─── VERSIÓN DESKTOP ─────────────────────────────── -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-striped table-sm table-bordered table-hover align-middle mb-2">
+                    <thead>
+                        <tr>
+                            <th class="text-center" scope="col" style="width: 3rem;">#</th>
+                            <th scope="col">Plantilla</th>
+                            <th scope="col">Código</th>
+                            <th scope="col">Módulo / categoría</th>
+                            <th scope="col">Archivo</th>
+                            <th class="text-center" scope="col">Activa</th>
+                            <th class="text-center" scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (isLoading() && plantillaList().length === 0) {
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <span class="ms-2">Buscando plantillas...</span>
+                                </td>
+                            </tr>
+                        } @else {
+                            @for (item of plantillaList(); track item.plantillaId; let i = $index) {
+                                <tr>
+                                    <th scope="row" class="text-center">{{ numeroFila(i) }}</th>
+                                    <td>
+                                        <div class="d-flex align-items-center flex-wrap gap-2">
+                                            <span class="fw-semibold">{{ item.nombre }}</span>
+                                            @if (!item.activo) {
+                                                <span class="etiqueta-estado etiqueta-estado--sistema">Inactiva</span>
+                                            }
+                                        </div>
+                                        @if (item.descripcion) {
+                                            <div class="txt-ayuda descripcion-corta" [title]="item.descripcion">{{ item.descripcion }}</div>
+                                        }
+                                    </td>
+                                    <td><code class="codigo-plantilla">{{ item.codigo }}</code></td>
+                                    <td>
+                                        <div>{{ item.modulo }}</div>
+                                        <div class="txt-ayuda">{{ item.categoria || 'Sin categoría' }}</div>
+                                    </td>
+                                    <td class="text-nowrap">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="etiqueta-estado etiqueta-estado--informacion">v{{ item.version }}</span>
+                                            <span>{{ formatoExcel(item.mimeType) }} · {{ formatearTamanio(item.tamanioBytes) }}</span>
+                                        </div>
+                                        <div class="txt-ayuda">{{ (item.updated_at ?? item.created_at) | date:'dd/MM/yyyy HH:mm' }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-inline-block mb-0">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                [id]="'switchActivo' + item.plantillaId"
+                                                [checked]="item.activo"
+                                                [disabled]="procesando() === item.codigo"
+                                                [attr.aria-label]="(item.activo ? 'Desactivar ' : 'Activar ') + item.nombre"
+                                                (change)="toggleActivo(item, $event)" />
+                                        </div>
+                                    </td>
+                                    <td class="text-center text-nowrap">
+                                        <button type="button" class="btn btn-sm btn-info mx-1"
+                                            [title]="item.activo ? 'Descargar' : 'Activa la plantilla para descargarla'"
+                                            [attr.aria-label]="'Descargar ' + item.nombre"
+                                            [disabled]="!item.activo || procesando() === item.codigo"
+                                            (click)="descargar(item)">
+                                            <ion-icon name="download-outline" aria-hidden="true"></ion-icon>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-success mx-1" title="Editar"
+                                            [attr.aria-label]="'Editar ' + item.nombre" (click)="openUpsertModal(item)">
+                                            <ion-icon name="create-outline" aria-hidden="true"></ion-icon>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger mx-1" title="Eliminar"
+                                            [attr.aria-label]="'Eliminar ' + item.nombre" (click)="openDeleteModal(item)">
+                                            <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                            } @empty {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">No se encontraron plantillas</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ─── VERSIÓN MÓVIL ───────────────────────────────── -->
+            <div class="d-md-none d-flex flex-column gap-3 mb-2">
+                @if (isLoading() && plantillaList().length === 0) {
+                    <div class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                        <span class="ms-2">Buscando plantillas...</span>
+                    </div>
+                } @else {
+                    @for (item of plantillaList(); track item.plantillaId; let i = $index) {
+                        <div class="superficie p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-break">{{ item.nombre }}</div>
+                                    <code class="codigo-plantilla">{{ item.codigo }}</code>
+                                </div>
+                                <div class="form-check form-switch mb-0 flex-shrink-0">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                        [id]="'switchActivoMobile' + item.plantillaId"
+                                        [checked]="item.activo"
+                                        [disabled]="procesando() === item.codigo"
+                                        [attr.aria-label]="(item.activo ? 'Desactivar ' : 'Activar ') + item.nombre"
+                                        (change)="toggleActivo(item, $event)" />
+                                </div>
+                            </div>
+
+                            @if (item.descripcion) {
+                                <p class="txt-secundario mb-2">{{ item.descripcion }}</p>
+                            }
+
+                            <dl class="plantilla-datos mb-3">
+                                <dt>Módulo</dt>
+                                <dd>{{ item.modulo }}</dd>
+                                <dt>Categoría</dt>
+                                <dd>{{ item.categoria || 'Sin categoría' }}</dd>
+                                <dt>Archivo</dt>
+                                <dd>v{{ item.version }} · {{ formatoExcel(item.mimeType) }} · {{ formatearTamanio(item.tamanioBytes) }}</dd>
+                                <dt>Actualizado</dt>
+                                <dd>{{ (item.updated_at ?? item.created_at) | date:'dd/MM/yyyy HH:mm' }}</dd>
+                                <dt>Estado</dt>
+                                <dd>
+                                    <span class="etiqueta-estado"
+                                        [class.etiqueta-estado--exito]="item.activo"
+                                        [class.etiqueta-estado--sistema]="!item.activo">
+                                        {{ item.activo ? 'Activa' : 'Inactiva' }}
+                                    </span>
+                                </dd>
+                            </dl>
+
+                            <div class="d-flex gap-2 pt-3 border-top">
+                                <button type="button" class="btn btn-info btn-sm flex-fill"
+                                    [disabled]="!item.activo || procesando() === item.codigo" (click)="descargar(item)">
+                                    <ion-icon name="download-outline" aria-hidden="true"></ion-icon> Descargar
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm flex-fill" (click)="openUpsertModal(item)">
+                                    <ion-icon name="create-outline" aria-hidden="true"></ion-icon> Editar
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm flex-fill" (click)="openDeleteModal(item)">
+                                    <ion-icon name="trash-outline" aria-hidden="true"></ion-icon> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    } @empty {
+                        <div class="text-center py-4 text-muted">No se encontraron plantillas</div>
+                    }
+                }
+            </div>
+
+            <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+        }
+    </div>
+</div>
+
+<!-- Modal crear / editar -->
+<div #upsertModal class="modal fade" tabindex="-1" aria-labelledby="upsertPlantillaTitulo" aria-hidden="true"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="upsertPlantillaTitulo">
+                    {{ plantillaEdit() ? 'Editar plantilla' : 'Nueva plantilla' }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"
+                    [disabled]="guardando()"></button>
+            </div>
+            <div class="modal-body">
+                <app-upsert-plantilla
+                    [plantilla]="plantillaEdit()"
+                    [key]="formKey()"
+                    [guardando]="guardando()"
+                    [modulos]="modulos()"
+                    [categorias]="categorias()"
+                    (save)="onSavePlantilla($event)"
+                    (cancel)="closeUpsertModal()" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal eliminar -->
+<div #deleteModal class="modal fade" tabindex="-1" aria-labelledby="eliminarPlantillaTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="eliminarPlantillaTitulo">Eliminar plantilla</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            @if (plantillaEliminar(); as item) {
+                <div class="modal-body">
+                    <p>
+                        ¿Eliminar la plantilla <strong>{{ item.nombre }}</strong>
+                        (<code class="codigo-plantilla">{{ item.codigo }}</code>)?
+                    </p>
+                    <p class="txt-secundario mb-0">
+                        Dejará de aparecer en el listado y los módulos ya no podrán descargarla.
+                        El código quedará libre para registrarse de nuevo.
+                    </p>
+                    @if (item.activo) {
+                        <div class="estado estado--informacion w-100 mt-3 align-items-start">
+                            <ion-icon name="information-circle-outline" class="fs-5 flex-shrink-0" aria-hidden="true"></ion-icon>
+                            <span>Si solo necesitas ocultarla por un tiempo, desactívala en lugar de eliminarla.</span>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    @if (item.activo) {
+                        <button type="button" class="btn btn-outline-primary"
+                            [disabled]="guardando() || procesando() === item.codigo"
+                            (click)="desactivarEnLugarDeEliminar()">
+                            Desactivar
+                        </button>
+                    }
+                    <button type="button" class="btn btn-danger"
+                        [disabled]="guardando() || procesando() === item.codigo"
+                        (click)="deletePlantilla()">
+                        @if (guardando()) {
+                            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                        }
+                        Eliminar
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
