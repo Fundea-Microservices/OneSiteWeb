@@ -6,6 +6,7 @@ import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
+import { DescargarPlantillaComponent } from '../../../shared/components/descargar-plantilla/descargar-plantilla';
 import { UpsertUsuarioExComponent } from '../../components/upsert-usuario-ex/upsert-usuario-ex.component';
 import { UsuarioExService } from '../../../../services/onesiteex-auth/usuario-ex.service';
 import { EmpresaExService } from '../../../../services/onesiteex-auth/empresa-ex.service';
@@ -24,7 +25,7 @@ type EstadoFiltro = '' | 'true' | 'false';
 
 @Component({
   selector: 'app-usuarios-onesiteex-page',
-  imports: [RouterLink, DatePipe, NgTemplateOutlet, PaginationComponent, UpsertUsuarioExComponent],
+  imports: [RouterLink, DatePipe, NgTemplateOutlet, PaginationComponent, DescargarPlantillaComponent, UpsertUsuarioExComponent],
   templateUrl: './usuarios-onesiteex-page.html',
   styleUrl: './usuarios-onesiteex-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
