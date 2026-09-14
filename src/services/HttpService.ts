@@ -84,4 +84,11 @@ export class HttpService {
       observe: 'response'
     });
   }
+
+  public putFormData<T>(url: string, data: FormData): Observable<HttpResponse<T>> {
+    return this.http.put<T>(this.baseUrl + url, data, {
+      headers: new HttpHeaders({ 'Authorization': `Bearer ${this.getToken()}` }),
+      observe: 'response'
+    });
+  }
 }

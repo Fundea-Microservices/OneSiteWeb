@@ -1,0 +1,77 @@
+/* Colores y tipografía: roles de src/styles/identidad (colores.css / tipografia.css). */
+
+/* ─── Zona para soltar o elegir el Excel ─────────────────────── */
+.zona-archivo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
+  margin: 0;
+  padding: 1.5rem 1rem;
+  border: 1px dashed var(--ui-borde-fuerte);
+  border-radius: 0.5rem;
+  background-color: var(--ui-fondo);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color .15s ease-in-out, border-color .15s ease-in-out;
+}
+
+.zona-archivo:hover,
+.zona-archivo--activa {
+  border-color: var(--ui-accion);
+  background-color: var(--ui-accion-suave);
+}
+
+/* El input está oculto: el anillo de foco del teclado se dibuja en la zona (manual). */
+.zona-archivo:has(input:focus-visible) {
+  outline: var(--ui-foco-ancho) solid var(--ui-foco);
+  outline-offset: var(--ui-foco-separacion);
+}
+
+.zona-archivo--error {
+  border-color: var(--ui-campo-borde-error);
+}
+
+.zona-archivo__icono {
+  font-size: 2rem;
+  color: var(--ui-accion);
+}
+
+.zona-archivo__texto {
+  font-size: var(--tam-cuerpo);
+  color: var(--ui-texto);
+}
+
+/* ─── Ficha del archivo actual / seleccionado ────────────────── */
+.archivo-ficha {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ui-borde);
+  border-radius: 0.5rem;
+  background-color: var(--ui-superficie);
+}
+
+.archivo-ficha__icono {
+  flex-shrink: 0;
+  font-size: 1.75rem;
+  color: var(--ui-texto-suave);
+}
+
+/* Archivo listo para subir: cuarteto de éxito del manual. */
+.archivo-ficha--nuevo {
+  border-color: var(--color-exito-200);
+  background-color: var(--color-exito-50);
+}
+
+.archivo-ficha--nuevo .archivo-ficha__icono {
+  color: var(--color-exito-600);
+}
+
+/* El código viaja en la URL de los endpoints: se muestra monoespaciado. */
+.campo-codigo {
+  font-family: var(--tipo-codigo);
+}

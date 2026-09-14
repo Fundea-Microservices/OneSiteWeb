@@ -13,6 +13,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import * as XLSX from 'xlsx';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
+import { DescargarPlantillaComponent } from '../../../shared/components/descargar-plantilla/descargar-plantilla';
 import { CatalogoService } from '../../../../services/config/catalogo-maestro.service';
 import { ICatalogo } from '../../../../interfaces/catalogo-maestro/catalogo-maestro';
 import { UpsertCatalogoMaestroComponent } from '../../components/upsert-catalogo-maestro/upsert-catalogo-maestro.component';
@@ -26,7 +27,7 @@ const emptyCatalogo: ICatalogo = {
 
 @Component({
   selector: 'app-catalogo-maestro-page',
-  imports: [RouterLink, PaginationComponent, UpsertCatalogoMaestroComponent],
+  imports: [RouterLink, PaginationComponent, DescargarPlantillaComponent, UpsertCatalogoMaestroComponent],
   templateUrl: './catalogo-maestro-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
