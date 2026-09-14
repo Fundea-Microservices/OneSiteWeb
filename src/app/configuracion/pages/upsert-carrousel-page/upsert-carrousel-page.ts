@@ -96,7 +96,9 @@ export default class UpsertCarrouselPage {
   }
 
   resolverFoto(fotoUrl: string | undefined): string {
-    if (!fotoUrl || fotoUrl.startsWith('http')) return fotoUrl ?? '';
+    // URLs absolutas y archivos locales recién elegidos (data:/blob:) se muestran tal cual;
+    // lo demás es una ruta del storage que se sirve desde el API.
+    if (!fotoUrl || /^(https?:|data:|blob:)/.test(fotoUrl)) return fotoUrl ?? '';
     return `${environment.apiPath}/config/carousel/imagen?fotoUrl=${encodeURIComponent(fotoUrl)}`;
   }
 }
