@@ -1,0 +1,341 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/onesiteex/config-precarga']">Precarga de encuestas</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Gestión de precargas</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header">Gestión de precargas</div>
+
+  <div class="card-body">
+    <!-- Filtros -->
+    <form class="row g-2 align-items-end mb-2" (submit)="$event.preventDefault(); buscar()">
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="fechaInicio" class="form-label small mb-1">Fecha inicial <span class="text-danger">*</span></label>
+        <input type="date" id="fechaInicio" class="form-control form-control-sm" required
+          [class.is-invalid]="!fechaInicio() || !!errorFechas()"
+          [max]="fechaFin() || hoy"
+          [value]="fechaInicio()" (change)="fechaInicio.set(txtFechaInicio.value)" #txtFechaInicio />
+      </div>
+
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="fechaFin" class="form-label small mb-1">Fecha final <span class="text-danger">*</span></label>
+        <input type="date" id="fechaFin" class="form-control form-control-sm" required
+          [class.is-invalid]="!fechaFin() || !!errorFechas()"
+          [min]="fechaInicio()" [max]="hoy"
+          [value]="fechaFin()" (change)="fechaFin.set(txtFechaFin.value)" #txtFechaFin />
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <label for="filtroEmpresa" class="form-label small mb-1">Empresa</label>
+        <app-autocomplete inputId="filtroEmpresa" placeholder="Buscar empresa..." todosLabel="Todas las empresas"
+          [options]="empresaOptions()" [value]="filtroEmpresa()" [loading]="catalogosLoading()"
+          (valueChange)="onChangeEmpresa($event)" />
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <label for="filtroEncuesta" class="form-label small mb-1">Encuesta</label>
+        <app-autocomplete inputId="filtroEncuesta" placeholder="Buscar encuesta..." todosLabel="Todas las encuestas"
+          [options]="encuestaOptions()" [value]="filtroEncuesta()" [loading]="catalogosLoading()"
+          (valueChange)="filtroEncuesta.set($event)" />
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <label for="filtroEncuestador" class="form-label small mb-1">Encuestador</label>
+        <app-autocomplete inputId="filtroEncuestador" placeholder="Buscar por nombre o usuario..."
+          todosLabel="Todos los encuestadores"
+          [options]="encuestadorOptions()" [value]="filtroEncuestador()" [loading]="catalogosLoading()"
+          (valueChange)="filtroEncuestador.set($event)" />
+      </div>
+
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="filtroEstado" class="form-label small mb-1">Estado</label>
+        <select id="filtroEstado" class="form-select form-select-sm" (change)="onChangeEstado(selEstado.value)" #selEstado>
+          <option value="" [selected]="filtroEstado() === ''">Todos los estados</option>
+          @for (e of estados; track e) {
+            <option [value]="e" [selected]="filtroEstado() === e">{{ e }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="col-6 col-md-3 col-xl-2 d-flex gap-2">
+        <button type="submit" class="btn btn-success btn-sm flex-fill" [disabled]="!!errorFechas() || isLoading()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+        @if (hayFiltrosActivos()) {
+          <button type="button" class="btn btn-outline-secondary btn-sm" title="Limpiar filtros" (click)="limpiarFiltros()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+    </form>
+
+    @if (errorFechas()) {
+      <div class="text-danger small mb-2">{{ errorFechas() }}</div>
+    }
+    @if (filtroEncuestador() !== null) {
+      <div class="form-text small mb-2">
+        Con encuestador no se incluyen las precargas asignadas a toda la empresa.
+      </div>
+    }
+
+    <!-- Barra de selección -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-top pt-3 mb-2">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm"
+          [disabled]="!seleccionables().length || isLoading()"
+          (click)="toggleTodos(!todosSeleccionados())">
+          <ion-icon [name]="todosSeleccionados() ? 'square-outline' : 'checkbox-outline'"></ion-icon>
+          {{ todosSeleccionados() ? 'Quitar selección' : 'Seleccionar todas (' + seleccionables().length + ')' }}
+        </button>
+        <span class="small text-muted">
+          @if (totalSeleccionados()) {
+            <b>{{ totalSeleccionados() }}</b> seleccionada{{ totalSeleccionados() === 1 ? '' : 's' }} en esta página
+          } @else {
+            Solo se pueden seleccionar precargas en estado CARGADO
+          }
+        </span>
+        @if (excedeMaximo()) {
+          <span class="small text-danger">Máximo {{ maxAnular }} por anulación</span>
+        }
+      </div>
+
+      <button type="button" class="btn btn-danger btn-sm"
+        [disabled]="!totalSeleccionados() || excedeMaximo() || isLoading()"
+        (click)="openAnularModal()">
+        <ion-icon name="ban-outline"></ion-icon>
+        Anular{{ totalSeleccionados() ? ' (' + totalSeleccionados() + ')' : '' }}
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted small">Cargando...</span>
+      </div>
+    }
+
+    <!-- Tabla Desktop -->
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle small">
+        <thead>
+          <tr>
+            <th class="text-center" style="width:3%">
+              <input class="form-check-input" type="checkbox" title="Seleccionar todas las de la página"
+                aria-label="Seleccionar todas las de la página"
+                [checked]="todosSeleccionados()" [indeterminate]="algunosSeleccionados()"
+                [disabled]="!seleccionables().length"
+                (change)="toggleTodos(cbxTodos.checked)" #cbxTodos />
+            </th>
+            <th class="text-center" style="width:4%">#</th>
+            <th style="width:10%">Fecha carga</th>
+            <th style="width:18%">Cliente</th>
+            <th style="width:11%">Cuenta</th>
+            <th style="width:13%">Empresa</th>
+            <th style="width:13%">Encuesta</th>
+            <th style="width:13%">Encuestador</th>
+            <th style="width:15%">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of precargaList(); track item.id; let i = $index) {
+            <tr [class.table-active]="seleccionados().has(item.id)">
+              <td class="text-center">
+                <input class="form-check-input" type="checkbox" [attr.aria-label]="'Seleccionar ' + (item.nombres ?? item.documento ?? item.id)"
+                  [title]="esSeleccionable(item) ? '' : 'Solo se pueden anular precargas en CARGADO'"
+                  [checked]="seleccionados().has(item.id)" [disabled]="!esSeleccionable(item)"
+                  (change)="toggleSeleccion(item, cbxItem.checked)" #cbxItem />
+              </td>
+              <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
+              <td>{{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <div class="fw-semibold">{{ item.nombres ?? '—' }}</div>
+                <div class="text-muted">{{ item.documento ?? '—' }}</div>
+              </td>
+              <td>
+                {{ item.cuenta ?? '—' }}
+                @if (item.operacion) {
+                  <div class="text-muted">Op. {{ item.operacion }}</div>
+                }
+              </td>
+              <td>{{ nombreEmpresa(item.idEmpresa) }}</td>
+              <td>{{ nombreEncuesta(item.idEncuesta) }}</td>
+              <td>
+                @if (item.todos) {
+                  <span class="badge text-bg-info">Toda la empresa</span>
+                } @else {
+                  {{ nombreEncuestador(item) }}
+                }
+              </td>
+              <td>
+                <span class="badge" [class]="estadoBadge(item.estado)">{{ item.estado }}</span>
+                @if (item.comentario) {
+                  <div class="text-muted text-truncate" style="max-width: 220px;" [title]="item.comentario">
+                    {{ item.comentario }}
+                  </div>
+                }
+                @if (item.usrActualiza) {
+                  <div class="text-muted">
+                    {{ item.usrActualiza }}@if (item.updatedAt) { · {{ item.updatedAt | date:'dd/MM/yyyy HH:mm' }} }
+                  </div>
+                }
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr><td colspan="9" class="text-center text-muted py-3">No hay precargas con estos filtros</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none d-flex flex-column gap-3">
+      @for (item of precargaList(); track item.id) {
+        <div class="card shadow-sm" [class.border-primary]="seleccionados().has(item.id)">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <div class="form-check mb-0">
+                <input class="form-check-input" type="checkbox" [id]="'sel-' + item.id"
+                  [checked]="seleccionados().has(item.id)" [disabled]="!esSeleccionable(item)"
+                  (change)="toggleSeleccion(item, cbxItemM.checked)" #cbxItemM />
+                <label class="form-check-label" [for]="'sel-' + item.id">
+                  <span class="fw-semibold">{{ item.nombres ?? '—' }}</span>
+                  <span class="d-block small text-muted">{{ item.documento ?? '—' }}</span>
+                </label>
+              </div>
+              <span class="badge" [class]="estadoBadge(item.estado)">{{ item.estado }}</span>
+            </div>
+
+            <div class="small text-muted">Cargada: {{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
+            <div class="small text-muted">
+              Cuenta: {{ item.cuenta ?? '—' }}@if (item.operacion) { · Op. {{ item.operacion }} }
+            </div>
+            <div class="small text-muted">Empresa: {{ nombreEmpresa(item.idEmpresa) }}</div>
+            <div class="small text-muted">Encuesta: {{ nombreEncuesta(item.idEncuesta) }}</div>
+            <div class="small text-muted">
+              Encuestador: {{ item.todos ? 'Toda la empresa' : nombreEncuestador(item) }}
+            </div>
+            @if (item.comentario) {
+              <div class="small mt-1"><b>Comentario:</b> {{ item.comentario }}</div>
+            }
+          </div>
+        </div>
+      } @empty {
+        @if (!isLoading()) {
+          <div class="text-center text-muted py-3">No hay precargas con estos filtros</div>
+        }
+      }
+    </div>
+
+    <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+  </div>
+</div>
+
+<!-- Modal Anular -->
+<div #anularModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">
+          <ion-icon name="ban-outline"></ion-icon> Anular precargas
+        </h5>
+        <button type="button" class="btn-close" [disabled]="anulando()" (click)="closeAnularModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        @if (resultadoAnulacion(); as r) {
+          <!-- Resultado parcial -->
+          <div class="alert alert-warning py-2 small">
+            Se anularon <b>{{ r.anuladas.length }}</b> precarga{{ r.anuladas.length === 1 ? '' : 's' }};
+            <b>{{ r.noAnuladas.length }}</b> no se pudieron anular.
+          </div>
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-sm table-bordered small mb-0">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Motivo</th>
+                  <th class="text-center">Estado actual</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (n of r.noAnuladas; track n.id) {
+                  <tr>
+                    <td>
+                      @if (precargaAnulada(n.id); as p) {
+                        <div class="fw-semibold">{{ p.nombres ?? '—' }}</div>
+                        <div class="text-muted">{{ p.documento ?? '—' }}</div>
+                      } @else {
+                        <code>{{ n.id }}</code>
+                      }
+                    </td>
+                    <td>{{ motivoLabel[n.motivo] }}</td>
+                    <td class="text-center">
+                      @if (n.estado) {
+                        <span class="badge" [class]="estadoBadge(n.estado)">{{ n.estado }}</span>
+                      } @else {
+                        —
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="mb-2">
+            Se anularán <b>{{ precargasAnular().length }}</b> precarga{{ precargasAnular().length === 1 ? '' : 's' }}.
+            La app móvil recibirá el cambio en su próxima sincronización.
+          </p>
+
+          <div class="border rounded mb-3" style="max-height: 160px; overflow-y: auto;">
+            <ul class="list-group list-group-flush small">
+              @for (p of precargasAnular(); track p.id) {
+                <li class="list-group-item py-1 d-flex justify-content-between gap-2">
+                  <span class="text-truncate">{{ p.nombres ?? '—' }}</span>
+                  <span class="text-muted text-nowrap">{{ p.documento ?? '—' }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <label for="comentarioAnulacion" class="form-label small fw-semibold">
+            Motivo de anulación <span class="text-danger">*</span>
+          </label>
+          <textarea id="comentarioAnulacion" class="form-control form-control-sm" rows="3"
+            placeholder="Ej. Cliente ya fue atendido por otra agencia"
+            [attr.maxlength]="maxComentario" [disabled]="anulando()"
+            [class.is-invalid]="comentarioLength() > maxComentario"
+            [value]="comentario()" (input)="comentario.set(txtComentario.value)" #txtComentario></textarea>
+          <div class="d-flex justify-content-between small mt-1">
+            <span class="text-muted">Reemplaza el comentario anterior de cada precarga.</span>
+            <span [class.text-danger]="comentarioLength() > maxComentario" class="text-muted text-nowrap ms-2">
+              {{ comentarioLength() }}/{{ maxComentario }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        @if (resultadoAnulacion()) {
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeAnularModal()">Cerrar</button>
+        } @else {
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="anulando()" (click)="closeAnularModal()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-danger btn-sm" [disabled]="!comentarioValido() || anulando()" (click)="anular()">
+            @if (anulando()) {
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span> Anulando...
+            } @else {
+              Anular {{ precargasAnular().length }}
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+<div class="position-relative">
+  <input type="text" class="form-control form-control-sm autocomplete-input" [id]="inputId()"
+    role="combobox" aria-autocomplete="list"
+    [attr.aria-expanded]="abierto()"
+    [attr.aria-controls]="listaId()"
+    [attr.aria-activedescendant]="abierto() && activo() >= 0 ? opcionId(activo()) : null"
+    [placeholder]="placeholderVisible()"
+    [disabled]="disabled()"
+    [value]="textoVisible()"
+    (focus)="abrir()"
+    (click)="abrir()"
+    (input)="onInput(txt.value)"
+    (keydown)="onKeydown($event)"
+    (blur)="cerrar()"
+    autocomplete="off" spellcheck="false" #txt />
+
+  <div class="autocomplete-acciones">
+    @if (loading()) {
+      <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
+    } @else if (value() !== null && !disabled()) {
+      <button type="button" class="autocomplete-limpiar" title="Limpiar" aria-label="Limpiar"
+        (mousedown)="$event.preventDefault()" (click)="limpiar()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    } @else {
+      <ion-icon name="chevron-down-outline" class="text-muted" aria-hidden="true"></ion-icon>
+    }
+  </div>
+
+  @if (abierto()) {
+    <!-- mousedown con preventDefault: el input no pierde el foco antes de elegir -->
+    <div class="dropdown-menu show w-100 autocomplete-lista" role="listbox" [id]="listaId()"
+      (mousedown)="$event.preventDefault()" #lista>
+      @for (e of entradas(); track e.value; let i = $index) {
+        <button type="button" class="dropdown-item small" role="option" tabindex="-1"
+          [id]="opcionId(i)" [attr.data-index]="i"
+          [class.active]="i === activo()"
+          [attr.aria-selected]="e.value === value()"
+          (mouseenter)="activo.set(i)"
+          (click)="elegir(e)">
+          @if (e.esTodos) {
+            <span class="fst-italic">{{ e.label }}</span>
+          } @else {
+            <span [class.fw-semibold]="e.value === value()">{{ e.label }}</span>
+            @if (e.detalle) {
+              <span class="autocomplete-detalle ms-1">{{ e.detalle }}</span>
+            }
+          }
+        </button>
+      } @empty {
+        <span class="dropdown-item-text small text-muted">
+          {{ loading() ? 'Cargando...' : 'Sin resultados' }}
+        </span>
+      }
+      @if (recortado()) {
+        <span class="dropdown-item-text small text-muted border-top">
+          Mostrando {{ maxResultados() }} de {{ totalCoincidencias() }}. Escribe para refinar.
+        </span>
+      }
+    </div>
+  }
+</div>

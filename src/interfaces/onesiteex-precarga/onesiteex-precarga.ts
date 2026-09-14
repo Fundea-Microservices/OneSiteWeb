@@ -177,3 +177,91 @@ export interface IDecisionesCarga {
   /** false (por defecto): un solo error descarta el archivo entero. */
   procesarConErrores?: boolean;
 }
+
+// ─── Gestión de precargas ───────────────────────────────────────────────────
+
+export const ESTADOS_PRECARGA = ['CARGADO', 'APLICADO', 'ANULADO', 'RECHAZADO'] as const;
+
+export type EstadoPrecarga = (typeof ESTADOS_PRECARGA)[number];
+
+/** Captura local que la app móvil usa para prellenar la encuesta. */
+export interface IPrecargaValor {
+  id: string | null;
+  id_pregunta: string;
+  id_encuesta: string;
+  valor: string;
+  uuid_instancia: string | null;
+  estado_sincro: number;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+}
+
+/** Elemento de GET /precarga/detalle. */
+export interface IPrecargaDetalle {
+  id: string;
+  idLogPrecarga: string;
+  idConfiguracion: string;
+  idEncuesta: number;
+  idEmpresa: number;
+  encuestador: string | null;
+  idEncuestador: number | null;
+  documento: string | null;
+  nombres: string | null;
+  cuenta: string | null;
+  operacion: string | null;
+  /** true: la precarga es para toda la empresa, no para un encuestador. */
+  todos: boolean;
+  estado: EstadoPrecarga;
+  valores: IPrecargaValor[];
+  usrActualiza: string | null;
+  idUsrActualiza: string | null;
+  comentario: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  deletedAt: string | null;
+}
+
+export interface IDetallePrecargaFilters {
+  /** YYYY-MM-DD, inclusiva. */
+  fechaInicio: string;
+  /** YYYY-MM-DD, inclusiva: abarca todo ese día. */
+  fechaFin: string;
+  idEncuesta?: number;
+  idEmpresa?: number;
+  /** Usuarios_AppEx.IdUsuario. No incluye las precargas marcadas para toda la empresa. */
+  idEncuestador?: number;
+  estado?: EstadoPrecarga;
+  page?: number;
+  limit?: number;
+  all?: boolean;
+}
+
+/** Tope de ids por solicitud de anulación (límite de parámetros de SQL Server). */
+export const MAX_PRECARGAS_ANULAR = 1000;
+export const MAX_COMENTARIO_ANULACION = 500;
+
+export interface IAnularPrecargas {
+  ids: string[];
+  comentario: string;
+}
+
+export type MotivoNoAnulada = 'NO_ENCONTRADA' | 'ELIMINADA' | 'ESTADO_NO_PERMITIDO';
+
+export const MOTIVO_NO_ANULADA_LABEL: Record<MotivoNoAnulada, string> = {
+  NO_ENCONTRADA: 'No encontrada',
+  ELIMINADA: 'Lote revertido',
+  ESTADO_NO_PERMITIDO: 'Ya no estaba en CARGADO',
+};
+
+export interface IPrecargaNoAnulada {
+  id: string;
+  motivo: MotivoNoAnulada;
+  /** Estado actual; null cuando la precarga no existe. */
+  estado: EstadoPrecarga | null;
+}
+
+/** Respuesta de POST /precarga/anular. No es todo o nada. */
+export interface IAnularPrecargasResultado {
+  anuladas: string[];
+  noAnuladas: IPrecargaNoAnulada[];
+}
