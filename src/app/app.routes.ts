@@ -402,6 +402,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./onesite-ex/pages/cargar-precarga-page/cargar-precarga-page'),
                     },
                     {
+                        path: 'gestion-precarga',
+                        loadComponent: () => import('./onesite-ex/pages/gestion-precarga-page/gestion-precarga-page'),
+                    },
+                    {
                         path: 'empresas',
                         loadComponent: () => import('./onesite-ex/pages/empresas-onesiteex-page/empresas-onesiteex-page'),
                     },
