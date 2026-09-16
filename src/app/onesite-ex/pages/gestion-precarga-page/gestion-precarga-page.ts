@@ -27,6 +27,7 @@ import { IEncuesta } from '../../../../interfaces/encuesta/encuesta';
 const ESTADO_BADGE: Record<EstadoPrecarga, string> = {
   CARGADO: 'text-bg-primary',
   APLICADO: 'text-bg-success',
+  FINALIZADO: 'text-bg-dark',
   ANULADO: 'text-bg-secondary',
   RECHAZADO: 'text-bg-danger',
 };

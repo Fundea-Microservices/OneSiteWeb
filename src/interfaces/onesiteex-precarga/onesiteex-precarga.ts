@@ -180,7 +180,7 @@ export interface IDecisionesCarga {
 
 // ─── Gestión de precargas ───────────────────────────────────────────────────
 
-export const ESTADOS_PRECARGA = ['CARGADO', 'APLICADO', 'ANULADO', 'RECHAZADO'] as const;
+export const ESTADOS_PRECARGA = ['CARGADO', 'APLICADO', 'FINALIZADO', 'ANULADO', 'RECHAZADO'] as const;
 
 export type EstadoPrecarga = (typeof ESTADOS_PRECARGA)[number];
 
