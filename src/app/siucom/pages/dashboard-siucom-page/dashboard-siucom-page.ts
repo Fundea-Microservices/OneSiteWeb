@@ -16,6 +16,13 @@ export default class DashboardSiucomPage implements OnInit {
   /** Dominios desde los que se acepta cargar el dashboard en el iframe. */
   private static readonly HOSTS_PERMITIDOS: readonly string[] = ['siucomgt.com'];
 
+  /** Agencia asignada cuando Bantotal no devuelve sucursales para el usuario. */
+  private static readonly AGENCIA_POR_DEFECTO = {
+    codigo: 101,
+    agencia: 'AGENCIA CHIMALTENANGO',
+    region: 'REGIONAL I',
+  } as const;
+
   private readonly sanitizer = inject(DomSanitizer);
   private readonly authService = inject(AuthService);
   private readonly siucomService = inject(SiucomService);
@@ -53,13 +60,19 @@ export default class DashboardSiucomPage implements OnInit {
 
       // 2. Tomar la agencia del usuario: se prefiere una con región asignada,
       //    pero el dato que SIUCOM exige es el código numérico de la agencia.
+      //    Si Bantotal no devuelve ninguna, se asigna la agencia por defecto.
       const agencia = agencias.find(a => a.regionId !== null) ?? agencias[0];
-      if (!agencia) {
-        this.errorMessage.set('No se encontraron agencias asignadas a su usuario. Contacte al administrador.');
-        return;
-      }
+      const ubicacion = agencia
+        ? {
+            codigo: Number(agencia.id),
+            agencia: agencia.descripcion,
+            region: regiones.find(r => r.id === agencia.regionId)?.descripcion,
+          }
+        : DashboardSiucomPage.AGENCIA_POR_DEFECTO;
 
-      const region = regiones.find(r => r.id === agencia.regionId);
+      if (!agencia) {
+        console.warn('⚠️ Usuario sin agencias en Bantotal, se asigna la agencia por defecto:', ubicacion);
+      }
 
       // 3. Crear/obtener el acceso SIUCOM
       // `codigo` es lo único de ubicación que llega a SIUCOM y debe viajar como número
@@ -70,10 +83,10 @@ export default class DashboardSiucomPage implements OnInit {
       const resp = await this.siucomService.getOrCreateAcceso({
         usuarioId: user.userId,
         nombre: user.fullName,
-        codigo: Number(agencia.id),
+        codigo: ubicacion.codigo,
         rol: user.rol.name || 'OneSiteUser',
-        ...(region && { region: region.descripcion.replace(/^REGIONAL/i, 'REGIÓN').trim() }),
-        agencia: agencia.descripcion.replace(/^AGENCIA\s+/i, '').trim(),
+        ...(ubicacion.region && { region: ubicacion.region.replace(/^REGIONAL/i, 'REGIÓN').trim() }),
+        agencia: ubicacion.agencia.replace(/^AGENCIA\s+/i, '').trim(),
       });
 
       const siucom: ISIUCOM | undefined = resp?.data?.siucom;
