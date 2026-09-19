@@ -7,8 +7,10 @@
 
     <div class="mb-3 col-6">
       <label class="form-label">Variable</label>
-      <input type="text" class="form-control form-control-sm" formControlName="variable" />
-    </div>    
+      <input type="text" class="form-control form-control-sm" formControlName="variable"
+        placeholder="@FechaInicio" (blur)="normalizarVariable()" />
+      <small class="form-text text-muted">Debe iniciar con &#64; (ej. &#64;FechaInicio). Si no lo incluye, se agregará automáticamente.</small>
+    </div>
   </div>
 
   
