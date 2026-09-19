@@ -16,7 +16,7 @@ export default class DashboardSiucomPage implements OnInit {
   /** Dominios desde los que se acepta cargar el dashboard en el iframe. */
   private static readonly HOSTS_PERMITIDOS: readonly string[] = ['siucomgt.com'];
 
-  /** Agencia asignada cuando Bantotal no devuelve sucursales para el usuario. */
+  /** Agencia asignada cuando Bantotal no devuelve sucursales con un código válido para SIUCOM. */
   private static readonly AGENCIA_POR_DEFECTO = {
     codigo: 101,
     agencia: 'AGENCIA CHIMALTENANGO',
@@ -60,8 +60,14 @@ export default class DashboardSiucomPage implements OnInit {
 
       // 2. Tomar la agencia del usuario: se prefiere una con región asignada,
       //    pero el dato que SIUCOM exige es el código numérico de la agencia.
-      //    Si Bantotal no devuelve ninguna, se asigna la agencia por defecto.
-      const agencia = agencias.find(a => a.regionId !== null) ?? agencias[0];
+      //    SIUCOM solo acepta códigos de exactamente 3 dígitos (100-999), así que las
+      //    agencias con otro código (p. ej. OFICINAS CENTRALES = 1) se descartan.
+      //    Si no queda ninguna válida, se asigna la agencia por defecto.
+      const agenciasValidas = agencias.filter(a => {
+        const codigo = Number(a.id);
+        return Number.isInteger(codigo) && codigo >= 100 && codigo <= 999;
+      });
+      const agencia = agenciasValidas.find(a => a.regionId !== null) ?? agenciasValidas[0];
       const ubicacion = agencia
         ? {
             codigo: Number(agencia.id),
@@ -71,7 +77,7 @@ export default class DashboardSiucomPage implements OnInit {
         : DashboardSiucomPage.AGENCIA_POR_DEFECTO;
 
       if (!agencia) {
-        console.warn('⚠️ Usuario sin agencias en Bantotal, se asigna la agencia por defecto:', ubicacion);
+        console.warn('⚠️ Usuario sin agencias válidas para SIUCOM, se asigna la agencia por defecto:', ubicacion);
       }
 
       // 3. Crear/obtener el acceso SIUCOM
