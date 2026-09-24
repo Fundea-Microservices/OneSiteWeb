@@ -1,0 +1,321 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/onesiteex/encuestas']">Encuestas</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Validar encuesta</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header">Validar encuesta</div>
+
+  <div class="card-body">
+    <!-- Filtros -->
+    <form class="row g-2 align-items-end mb-2" (submit)="$event.preventDefault(); buscar()">
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="fechaInicio" class="form-label small mb-1">Fecha inicial <span class="text-danger">*</span></label>
+        <input type="date" id="fechaInicio" class="form-control form-control-sm" required
+          [class.is-invalid]="!fechaInicio() || !!errorFechas()"
+          [max]="fechaFin() || hoy"
+          [value]="fechaInicio()" (change)="fechaInicio.set(txtFechaInicio.value)" #txtFechaInicio />
+      </div>
+
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="fechaFin" class="form-label small mb-1">Fecha final <span class="text-danger">*</span></label>
+        <input type="date" id="fechaFin" class="form-control form-control-sm" required
+          [class.is-invalid]="!fechaFin() || !!errorFechas()"
+          [min]="fechaInicio()" [max]="hoy"
+          [value]="fechaFin()" (change)="fechaFin.set(txtFechaFin.value)" #txtFechaFin />
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <label for="filtroEncuesta" class="form-label small mb-1">Tipo de encuesta</label>
+        <app-autocomplete inputId="filtroEncuesta" placeholder="Buscar encuesta..." todosLabel="Todas las encuestas"
+          [options]="encuestaOptions()" [value]="filtroEncuesta()" [loading]="catalogosLoading()"
+          (valueChange)="filtroEncuesta.set($event)" />
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <label for="filtroEmpresa" class="form-label small mb-1">Empresa</label>
+        <app-autocomplete inputId="filtroEmpresa" placeholder="Buscar empresa..." todosLabel="Todas las empresas"
+          [options]="empresaOptions()" [value]="filtroEmpresa()" [loading]="catalogosLoading()"
+          (valueChange)="onChangeEmpresa($event)" />
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-4">
+        <label for="filtroEncuestador" class="form-label small mb-1">Encuestador</label>
+        <app-autocomplete inputId="filtroEncuestador" placeholder="Buscar por nombre o usuario..."
+          todosLabel="Todos los encuestadores"
+          [options]="encuestadorOptions()" [value]="filtroEncuestador()" [loading]="catalogosLoading()"
+          (valueChange)="filtroEncuestador.set($event)" />
+      </div>
+
+      <div class="col-6 col-md-3 col-xl-2 d-flex gap-2">
+        <button type="submit" class="btn btn-success btn-sm flex-fill" [disabled]="!!errorFechas() || isLoading()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+        @if (hayFiltrosActivos()) {
+          <button type="button" class="btn btn-outline-secondary btn-sm" title="Limpiar filtros" (click)="limpiarFiltros()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+    </form>
+
+    @if (errorFechas()) {
+      <div class="text-danger small mb-2">{{ errorFechas() }}</div>
+    }
+    <div class="form-text small mb-2 border-top pt-2">
+      El período filtra por la fecha en que se finalizó la encuesta. El cliente viene de la precarga de origen:
+      una encuesta levantada sin precarga lo muestra vacío. Revisado y Validado son marcas independientes.
+    </div>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted small">Cargando...</span>
+      </div>
+    }
+
+    <!-- Tabla Desktop -->
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle small">
+        <thead>
+          <tr>
+            <th class="text-center" style="width:4%">#</th>
+            <th style="width:11%">Fecha</th>
+            <th style="width:15%">Encuestador</th>
+            <th style="width:15%">Encuesta</th>
+            <th class="text-center" style="width:8%">No. encuesta</th>
+            <th style="width:15%">Cliente</th>
+            <th class="text-center" style="width:11%">Revisado</th>
+            <th class="text-center" style="width:11%">Validado</th>
+            <th class="text-center" style="width:9%">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of capturaList(); track item.idCaptura; let i = $index) {
+            <tr>
+              <td class="text-center">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</td>
+              <td>{{ item.fechaFin | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ nombreEncuestador(item) }}</td>
+              <td>
+                {{ item.nombreEncuesta ?? '#' + item.idEncuesta }}
+                @if (item.nombreEmpresa) {
+                  <div class="text-muted">{{ item.nombreEmpresa }}</div>
+                }
+              </td>
+              <td class="text-center">{{ item.idCaptura }}</td>
+              <td>
+                <div class="fw-semibold">{{ item.cliente ?? '—' }}</div>
+                @if (item.documento) {
+                  <div class="text-muted">{{ item.documento }}</div>
+                }
+              </td>
+
+              <!-- Estado y autor: las acciones viven en su propia columna. -->
+              <td class="text-center">
+                @if (item.revisado) {
+                  <span class="badge" [class]="marcaBadge(item.revisado)">
+                    {{ marcaLabel['revisado'][item.revisado] }}
+                  </span>
+                  @if (item.usuarioRevisor) {
+                    <div class="text-muted">{{ item.usuarioRevisor }}</div>
+                  }
+                } @else {
+                  <span class="text-muted">Pendiente</span>
+                }
+              </td>
+
+              <td class="text-center">
+                @if (item.validado) {
+                  <span class="badge" [class]="marcaBadge(item.validado)">
+                    {{ marcaLabel['validado'][item.validado] }}
+                  </span>
+                  @if (item.usuarioValidador) {
+                    <div class="text-muted">{{ item.usuarioValidador }}</div>
+                  }
+                } @else {
+                  <span class="text-muted">Pendiente</span>
+                }
+              </td>
+
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                  <!-- Deshabilitados, no ocultos: la columna conserva su ancho
+                       y el estado ya se lee en las dos columnas anteriores. -->
+                  <button type="button" class="btn btn-outline-primary btn-sm"
+                    [disabled]="!!item.revisado"
+                    [title]="item.revisado ? 'Ya fue revisada' : 'Revisar encuesta'"
+                    aria-label="Revisar encuesta"
+                    (click)="mostrarEncuesta(item, 'revisado')">
+                    <ion-icon name="eye-outline"></ion-icon>
+                  </button>
+                  <button type="button" class="btn btn-success btn-sm"
+                    [disabled]="!!item.validado"
+                    [title]="item.validado ? 'Ya fue validada' : 'Validar encuesta'"
+                    aria-label="Validar encuesta"
+                    (click)="mostrarEncuesta(item, 'validado')">
+                    <ion-icon name="checkmark-done-outline"></ion-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr><td colspan="9" class="text-center text-muted py-3">No hay encuestas con estos filtros</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none d-flex flex-column gap-3">
+      @for (item of capturaList(); track item.idCaptura) {
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <div>
+                <span class="fw-semibold">{{ item.cliente ?? '—' }}</span>
+                <span class="d-block small text-muted">{{ item.documento ?? '—' }}</span>
+              </div>
+              <div class="d-flex flex-column align-items-end gap-1">
+                @if (item.revisado) {
+                  <span class="badge" [class]="marcaBadge(item.revisado)">
+                    {{ marcaLabel['revisado'][item.revisado] }}@if (item.usuarioRevisor) { · {{ item.usuarioRevisor }} }
+                  </span>
+                }
+                @if (item.validado) {
+                  <span class="badge" [class]="marcaBadge(item.validado)">
+                    {{ marcaLabel['validado'][item.validado] }}@if (item.usuarioValidador) { · {{ item.usuarioValidador }} }
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="small text-muted">Fecha: {{ item.fechaFin | date:'dd/MM/yyyy HH:mm' }}</div>
+            <div class="small text-muted">Encuestador: {{ nombreEncuestador(item) }}</div>
+            <div class="small text-muted">Encuesta: {{ item.nombreEncuesta ?? '#' + item.idEncuesta }}</div>
+            <div class="small text-muted">No. encuesta: {{ item.idCaptura }}</div>
+
+            <div class="d-flex gap-2 mt-2">
+              <button type="button" class="btn btn-outline-primary btn-sm flex-fill"
+                [disabled]="!!item.revisado" (click)="mostrarEncuesta(item, 'revisado')">
+                <ion-icon name="eye-outline"></ion-icon> Revisar
+              </button>
+              <button type="button" class="btn btn-success btn-sm flex-fill"
+                [disabled]="!!item.validado" (click)="mostrarEncuesta(item, 'validado')">
+                <ion-icon name="checkmark-done-outline"></ion-icon> Validar
+              </button>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        @if (!isLoading()) {
+          <div class="text-center text-muted py-3">No hay encuestas con estos filtros</div>
+        }
+      }
+    </div>
+
+    <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+  </div>
+</div>
+
+<!-- Modal Detalle de la encuesta -->
+<div #detalleModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title">
+            <ion-icon name="document-text-outline"></ion-icon>
+            {{ capturaAbierta()?.nombreEncuesta ?? 'Encuesta' }}
+          </h5>
+          @if (capturaAbierta(); as c) {
+            <div class="small text-muted">
+              No. {{ c.idCaptura }} · {{ c.fechaFin | date:'dd/MM/yyyy HH:mm' }} · {{ nombreEncuestador(c) }}
+            </div>
+            <div class="small text-muted">
+              {{ c.cliente ?? 'Sin cliente' }}@if (c.cuenta) { · Cuenta {{ c.cuenta }} }@if (c.operacion) { · Op. {{ c.operacion }} }
+            </div>
+          }
+        </div>
+        <button type="button" class="btn-close" [disabled]="marcando()" (click)="cerrarDetalle()"></button>
+      </div>
+
+      <div class="modal-body">
+        @if (detalleLoading()) {
+          <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2 text-muted small">Cargando respuestas...</span>
+          </div>
+        } @else if (capturaDetalle(); as d) {
+          @if (d.revisado) {
+            <div class="alert alert-secondary py-2 small mb-2">
+              Revisada como <b>{{ marcaLabel['revisado'][d.revisado] }}</b>@if (d.usuarioRevisor) { por {{ d.usuarioRevisor }} }.
+            </div>
+          }
+          @if (d.validado) {
+            <div class="alert py-2 small" [class.alert-success]="d.validado === 'Si'" [class.alert-danger]="d.validado === 'No'">
+              Validada como <b>{{ marcaLabel['validado'][d.validado] }}</b>@if (d.usuarioValidador) { por {{ d.usuarioValidador }} }.
+            </div>
+          }
+
+          @for (seccion of d.secciones; track seccion.idSeccion) {
+            <h6 class="fw-semibold border-bottom pb-1 mt-3">{{ seccion.seccion }}</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered align-middle small mb-0">
+                <thead>
+                  <tr>
+                    <th class="text-center" style="width:10%">No. pregunta</th>
+                    <th style="width:50%">Pregunta</th>
+                    <th style="width:40%">Respuesta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of seccion.respuestas; track $index) {
+                    <tr>
+                      <td class="text-center">{{ r.codigo }}</td>
+                      <td>{{ r.pregunta }}</td>
+                      <td>{{ r.valor || '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @empty {
+            <div class="text-center text-muted py-3">Esta encuesta no tiene respuestas registradas</div>
+          }
+
+          <div class="form-text small mt-3">{{ totalRespuestas() }} respuesta(s) en {{ d.secciones.length }} sección(es)</div>
+        } @else {
+          <div class="text-center text-muted py-3">No se pudo cargar el detalle de la encuesta</div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        @if (confirmando()) {
+          <span class="me-auto small fw-semibold">{{ confirmacionLabel() }}</span>
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="marcando()" (click)="cancelarConfirmacion()">
+            No
+          </button>
+          <button type="button" class="btn btn-success btn-sm" [disabled]="marcando()" (click)="marcar()">
+            @if (marcando()) {
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span> Guardando...
+            } @else {
+              Sí
+            }
+          </button>
+        } @else {
+          <button type="button" class="btn btn-success btn-sm" [disabled]="!puedeMarcar()"
+            [title]="puedeMarcar() ? '' : 'Esta encuesta ya tiene esa marca'"
+            (click)="pedirConfirmacion()">
+            <ion-icon name="checkmark-circle-outline"></ion-icon> {{ accionLabel() }}
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="cerrarDetalle()">Cerrar</button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
