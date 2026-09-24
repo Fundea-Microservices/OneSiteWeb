@@ -406,6 +406,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./onesite-ex/pages/gestion-precarga-page/gestion-precarga-page'),
                     },
                     {
+                        path: 'validar-encuesta',
+                        loadComponent: () => import('./onesite-ex/pages/validar-encuesta-page/validar-encuesta-page'),
+                    },
+                    {
                         path: 'empresas',
                         loadComponent: () => import('./onesite-ex/pages/empresas-onesiteex-page/empresas-onesiteex-page'),
                     },
