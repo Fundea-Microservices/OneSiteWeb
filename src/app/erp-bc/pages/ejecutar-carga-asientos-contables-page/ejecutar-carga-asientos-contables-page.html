@@ -142,20 +142,43 @@
         @if (ejecucion(); as ej) {
           @if (data.enEjecucion) {
             <div class="mb-3">
-              <div class="d-flex justify-content-between small text-muted mb-1">
-                <span>
-                  {{ ej.comentario || (esReenvio() ? 'Reenvío en proceso' : 'Carga en proceso') }}
-                </span>
-                @if (!progresoIndeterminado()) {
-                  <span>{{ ej.porcentaje }}%</span>
-                }
-              </div>
-              <div class="progress" role="progressbar"
-                   [attr.aria-valuenow]="progresoIndeterminado() ? null : ej.porcentaje"
-                   aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar progress-bar-striped progress-bar-animated"
-                     [style.width.%]="progresoIndeterminado() ? 100 : ej.porcentaje"></div>
-              </div>
+              @for (fase of fases(); track fase.titulo) {
+                <div class="mb-2">
+                  <div class="d-flex justify-content-between gap-2 small mb-1">
+                    <span>
+                      <span class="fw-semibold" [class.text-muted]="fase.estado === 'pendiente'">
+                        {{ fase.titulo }}
+                      </span>
+                      <span class="text-muted ms-1">{{ fase.detalle }}</span>
+                    </span>
+                    <span class="text-muted text-nowrap">
+                      @switch (fase.estado) {
+                        @case ('completa') {
+                          <ion-icon name="checkmark-circle" class="text-success align-middle"></ion-icon>
+                          Completada
+                        }
+                        @case ('pendiente') {
+                          Pendiente
+                        }
+                        @default {
+                          @if (fase.porcentaje !== null) {
+                            {{ fase.porcentaje }}%
+                          }
+                        }
+                      }
+                    </span>
+                  </div>
+                  <div class="progress" role="progressbar"
+                       [attr.aria-label]="fase.titulo"
+                       [attr.aria-valuenow]="fase.porcentaje"
+                       aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar {{ fase.color }}"
+                         [class.progress-bar-striped]="fase.estado === 'en-curso'"
+                         [class.progress-bar-animated]="fase.estado === 'en-curso'"
+                         [style.width.%]="fase.porcentaje ?? 100"></div>
+                  </div>
+                </div>
+              }
               <div class="form-text">
                 El estado se actualiza automáticamente {{ textoFrecuencia() }}.
                 Puedes salir de la pantalla: el proceso sigue corriendo en el servidor.
