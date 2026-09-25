@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnDestroy, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, LOCALE_ID, OnDestroy, computed, inject, signal } from '@angular/core';
+import { CommonModule, formatNumber } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { PartidasContablesService } from '../../../../services/erp-bc/partidas-contables.service';
@@ -19,7 +19,28 @@ const POLL_REENVIO_MS = 12 * 1000;
  */
 const CUENTAS_VISIBLES = 15;
 
+/**
+ * El backend reescribe `comentario` en cada página (fase 1) y en cada lote
+ * (fase 2). Es la única fuente del total por enviar de la fase 2.
+ */
+const RE_FASE_CARGA = /^Fase 1 en proceso \| página (\d+) de (\d+)/;
+const RE_FASE_ENVIO = /^Fase 2 en proceso \| (\d+) de (\d+)/;
+
+const COLOR_FASE_CARGA = 'bg-primary';
+const COLOR_FASE_ENVIO = 'bg-success';
+
 type AccionEnCurso = 'carga' | 'reenvio' | null;
+
+type EstadoFase = 'pendiente' | 'en-curso' | 'completa';
+
+interface ProgresoFase {
+  titulo:     string;
+  estado:     EstadoFase;
+  /** `null` pinta la barra indeterminada: hay avance pero no un total contra el cual medirlo. */
+  porcentaje: number | null;
+  detalle:    string;
+  color:      string;
+}
 
 /**
  * Desenlace único de la ejecución. Los flags del backend no son excluyentes
@@ -46,6 +67,7 @@ type VistaEstado =
 export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
 
   private service = inject(PartidasContablesService);
+  private locale  = inject(LOCALE_ID);
 
   fecha  = signal('');
   estado = signal<EstadoEjecucionData | null>(null);
@@ -172,14 +194,87 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   });
 
   /**
-   * La barra se pinta indeterminada mientras no haya porcentaje real: un
-   * proceso recién arrancado (o un reenvío corto) reporta 0% y una barra
-   * vacía parece colgada.
+   * Una barra por fase mientras el proceso corre. `porcentaje` solo mide la
+   * fase 1 (procesados / obtenidos); el avance de la fase 2 sale del
+   * `comentario` del lote. El reenvío no pasa por Bantotal: solo tiene envío.
+   *
+   * Una barra sin porcentaje real se pinta indeterminada: un proceso recién
+   * arrancado reporta 0% y una barra vacía parece colgada.
    */
-  progresoIndeterminado = computed(() => {
+  fases = computed<ProgresoFase[]>(() => {
     const ej = this.ejecucion();
-    return this.enEjecucion() && (ej?.porcentaje ?? 0) <= 0;
+    if (!ej || !this.enEjecucion()) return [];
+
+    const comentario = ej.comentario ?? '';
+
+    if (ej.tipo === 'REENVIO') {
+      return [{
+        titulo:     'Reenvío a Business Central',
+        estado:     'en-curso',
+        porcentaje: ej.porcentaje > 0 ? ej.porcentaje : null,
+        detalle:    ej.registrosObtenidos > 0
+          ? `${this.num(ej.registrosProcesados)} de ${this.num(ej.registrosObtenidos)} asiento(s)`
+          : 'Buscando asientos en error…',
+        color:      COLOR_FASE_ENVIO,
+      }];
+    }
+
+    // Durante la fase 1 enviados y errores se escriben en 0, así que cualquier
+    // valor mayor indica que ya arrancó el envío.
+    const lote    = RE_FASE_ENVIO.exec(comentario);
+    const tocados = (ej.registrosEnviados ?? 0) + ej.registrosConError;
+    const enEnvio = !!lote || tocados > 0;
+
+    // Entre ambas fases corre la validación de cuadre sin guardar la bitácora:
+    // la fase 1 ya está al 100% y la 2 todavía no reporta nada.
+    const cargaLista = enEnvio
+      || (ej.registrosObtenidos > 0 && ej.registrosProcesados >= ej.registrosObtenidos);
+
+    const pagina = cargaLista ? null : RE_FASE_CARGA.exec(comentario);
+
+    const carga: ProgresoFase = {
+      titulo:     'Fase 1 · Obtener de Bantotal',
+      estado:     cargaLista ? 'completa' : 'en-curso',
+      porcentaje: cargaLista ? 100 : (ej.porcentaje > 0 ? ej.porcentaje : null),
+      detalle:    ej.registrosObtenidos > 0
+        ? `${this.num(ej.registrosProcesados)} de ${this.num(ej.registrosObtenidos)} registro(s)`
+          + (pagina ? ` · página ${this.num(+pagina[1])} de ${this.num(+pagina[2])}` : '')
+        : 'Consultando Bantotal…',
+      color:      COLOR_FASE_CARGA,
+    };
+
+    const titulo = 'Fase 2 · Enviar a Business Central';
+    let envio: ProgresoFase;
+
+    if (enEnvio) {
+      const hechos = lote ? +lote[1] : tocados;
+      const total  = lote ? +lote[2] : 0;
+      const pct    = total > 0 ? Math.min(100, Math.round((hechos / total) * 100)) : 0;
+      envio = {
+        titulo,
+        estado:     'en-curso',
+        porcentaje: pct > 0 ? pct : null,
+        detalle:    total > 0
+          ? `${this.num(hechos)} de ${this.num(total)} asiento(s)`
+          : `${this.num(hechos)} asiento(s) enviado(s)`,
+        color:      COLOR_FASE_ENVIO,
+      };
+    } else {
+      envio = {
+        titulo,
+        estado:     'pendiente',
+        porcentaje: 0,
+        detalle:    cargaLista ? 'Validando cuadre de cuentas…' : 'Empieza al terminar la fase 1',
+        color:      COLOR_FASE_ENVIO,
+      };
+    }
+
+    return [carga, envio];
   });
+
+  private num(valor: number): string {
+    return formatNumber(valor, this.locale, '1.0-0');
+  }
 
   /**
    * Reenvío rápido: solo lo que quedó en error. Se decide con `puedeReenviar`,
