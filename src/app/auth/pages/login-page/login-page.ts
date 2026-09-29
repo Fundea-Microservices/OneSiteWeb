@@ -26,8 +26,22 @@ export default class LoginPageComponent {
   public user = this.authService.getUserStorage();
   userName = signal('');
   password = signal('');
+
+  private readonly EXTERNO_PREF_KEY = 'login_externo';
+
+  /** Switch del formulario: envía las credenciales al login de OneSiteEx */
+  esExterno = signal(localStorage.getItem(this.EXTERNO_PREF_KEY) === '1');
+
   onPasswordInput(value: string) {
     this.password.set(value);
+  }
+
+  toggleExterno() {
+    const valor = !this.esExterno();
+    this.esExterno.set(valor);
+    localStorage.setItem(this.EXTERNO_PREF_KEY, valor ? '1' : '0');
+    // Un mensaje del otro modo ya no aplica
+    this.errorObj.set({ message: '', code: 0, isError: false });
   }
 
   errorObj = signal<{ message: string; code: number, isError: boolean }>({
@@ -106,10 +120,13 @@ export default class LoginPageComponent {
         isError: false
       })
 
-      let authData = await  this.authService.login({ userName: this.userName(), password: this.password() })
-      if(authData.success) {
+      let authData = await this.authService.login(
+        { userName: this.userName(), password: this.password() },
+        this.esExterno()
+      )
+      if(authData?.success) {
+        // El usuario (con realm y contexto externo) ya quedó guardado por el AuthService
         localStorage.setItem('token', authData?.data.token || '');
-        localStorage.setItem('user', JSON.stringify({ ...authData?.data.user, siucom: authData?.data.siucom }));
 
         this.errorObj.set({
           message: '',
@@ -134,15 +151,18 @@ export default class LoginPageComponent {
           }
         }
 
-        // Cargar catálogos antes de navegar
-        this.loadingMessage.set('Cargando catálogos...');
-        this.loadingSubtitle.set('Esto puede tomar unos segundos');
-        try {
-          await this.catalogosService.actualizarCatalogos();
-          console.log('✅ Catálogos cargados exitosamente');
-        } catch (error) {
-          console.error('❌ Error al cargar catálogos:', error);
-          // Continuar aunque falle la carga de catálogos
+        // Cargar catálogos antes de navegar.
+        // Los externos no tienen acceso a las rutas internas de catálogos (403), así que se omite.
+        if (!this.authService.esExterno()) {
+          this.loadingMessage.set('Cargando catálogos...');
+          this.loadingSubtitle.set('Esto puede tomar unos segundos');
+          try {
+            await this.catalogosService.actualizarCatalogos();
+            console.log('✅ Catálogos cargados exitosamente');
+          } catch (error) {
+            console.error('❌ Error al cargar catálogos:', error);
+            // Continuar aunque falle la carga de catálogos
+          }
         }
 
         this.loading.set(false);
@@ -150,7 +170,7 @@ export default class LoginPageComponent {
       } else {
         this.loading.set(false);
         this.errorObj.set({
-          message: authData.message || 'Login failed',
+          message: authData?.message || 'No fue posible iniciar sesión. Intente nuevamente.',
           code: 401,
           isError: true
         });
