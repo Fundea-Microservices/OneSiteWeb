@@ -434,6 +434,20 @@ export const routes: Routes = [
                 ]
             },
 
+            {
+                path: 'jobs',
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./jobs/pages/jobs-page/jobs-page'),
+                    },
+                    {
+                        path: 'ejecuciones',
+                        loadComponent: () => import('./jobs/pages/job-ejecuciones-page/job-ejecuciones-page'),
+                    },
+                ]
+            },
+
             
         ]
     },

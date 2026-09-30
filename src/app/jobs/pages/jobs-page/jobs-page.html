@@ -1,0 +1,376 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Jobs programados</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Jobs programados</span>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary btn-sm" [routerLink]="['/jobs/ejecuciones']">
+                <ion-icon name="list-outline" aria-hidden="true"></ion-icon> Bitácora de ejecuciones
+            </a>
+            @if (esAdmin()) {
+                <button type="button" class="btn btn-primary btn-sm" (click)="openUpsertModal()">
+                    <ion-icon name="add-outline" aria-hidden="true"></ion-icon> Nuevo job
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="card-body">
+        <p class="txt-secundario mb-3">
+            Tareas que el scheduler ejecuta automáticamente en la fecha y hora configuradas.
+            @if (!esAdmin()) {
+                Solo los administradores pueden crear, editar o eliminar jobs.
+            }
+        </p>
+
+        <!-- ─── Filtros ─────────────────────────────────────── -->
+        <form class="row g-2 align-items-end mb-3" (ngSubmit)="buscar()">
+            <div class="col-12 col-lg-6">
+                <label for="filtroNombre" class="form-label">Nombre</label>
+                <input type="search" id="filtroNombre" name="search" class="form-control form-control-sm"
+                    [(ngModel)]="filtros.search" placeholder="Buscar por nombre..." />
+            </div>
+            <div class="col-6 col-lg-3">
+                <label for="filtroEstado" class="form-label">Estado</label>
+                <select id="filtroEstado" name="estado" class="form-select form-select-sm" [(ngModel)]="filtros.estado">
+                    <option value="">Todos</option>
+                    <option value="activos">Activos</option>
+                    <option value="inactivos">Inactivos</option>
+                </select>
+            </div>
+            <div class="col-6 col-lg-3 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary btn-sm flex-fill" [disabled]="isLoading()">
+                    <ion-icon name="search-outline" aria-hidden="true"></ion-icon> Buscar
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" title="Limpiar filtros" aria-label="Limpiar filtros"
+                    [disabled]="isLoading()" (click)="limpiarFiltros()">
+                    <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+                </button>
+            </div>
+        </form>
+
+        <!-- ─── VERSIÓN DESKTOP ─────────────────────────────── -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-striped table-sm table-bordered table-hover align-middle mb-2">
+                <thead>
+                    <tr>
+                        <th class="text-center" scope="col" style="width: 3rem;">#</th>
+                        <th scope="col">Job</th>
+                        <th scope="col">Programación</th>
+                        <th scope="col">Ejecuta</th>
+                        <th class="text-center" scope="col">Activo</th>
+                        <th class="text-center" scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading() && jobList().length === 0) {
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <span class="ms-2">Buscando jobs...</span>
+                            </td>
+                        </tr>
+                    } @else {
+                        @for (item of jobList(); track item.jobId; let i = $index) {
+                            <tr>
+                                <th scope="row" class="text-center">{{ numeroFila(i) }}</th>
+                                <td>
+                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                        <span class="fw-semibold">{{ item.nombre }}</span>
+                                        @if (!item.activo) {
+                                            <span class="etiqueta-estado etiqueta-estado--sistema">Inactivo</span>
+                                        }
+                                    </div>
+                                    @if (item.descripcion) {
+                                        <div class="txt-ayuda descripcion-corta" [title]="item.descripcion">{{ item.descripcion }}</div>
+                                    }
+                                </td>
+                                <td>{{ describirProgramacion(item) }}</td>
+                                <td>
+                                    <div class="txt-ayuda mb-1">{{ textoTipo[tipoJob(item)] }}</div>
+                                    <code class="codigo-job">{{ destinoJob(item) }}</code>
+                                    @if (item.payload) {
+                                        <div class="txt-ayuda descripcion-corta font-monospace mt-1" [title]="item.payload">{{ item.payload }}</div>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check form-switch d-inline-block mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            [id]="'switchActivo' + item.jobId"
+                                            [checked]="item.activo"
+                                            [disabled]="!esAdmin() || procesando() === item.jobId"
+                                            [title]="esAdmin() ? '' : 'Requiere permisos de administrador'"
+                                            [attr.aria-label]="(item.activo ? 'Desactivar ' : 'Activar ') + item.nombre"
+                                            (change)="toggleActivo(item, $event)" />
+                                    </div>
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    <a class="btn btn-sm btn-info mx-1" title="Ver bitácora"
+                                        [attr.aria-label]="'Ver bitácora de ' + item.nombre"
+                                        [routerLink]="['/jobs/ejecuciones']" [queryParams]="{ jobId: item.jobId }">
+                                        <ion-icon name="list-outline" aria-hidden="true"></ion-icon>
+                                    </a>
+                                    @if (esAdmin()) {
+                                        <button type="button" class="btn btn-sm btn-primary mx-1" title="Ejecutar ahora"
+                                            [attr.aria-label]="'Ejecutar ahora ' + item.nombre"
+                                            [disabled]="jobsEnEjecucion().has(item.jobId)" (click)="openEjecutarModal(item)">
+                                            @if (jobsEnEjecucion().has(item.jobId)) {
+                                                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                            } @else {
+                                                <ion-icon name="play-outline" aria-hidden="true"></ion-icon>
+                                            }
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-success mx-1" title="Editar"
+                                            [attr.aria-label]="'Editar ' + item.nombre" (click)="openUpsertModal(item)">
+                                            <ion-icon name="create-outline" aria-hidden="true"></ion-icon>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger mx-1" title="Eliminar"
+                                            [attr.aria-label]="'Eliminar ' + item.nombre" (click)="openDeleteModal(item)">
+                                            <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No se encontraron jobs</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ─── VERSIÓN MÓVIL ───────────────────────────────── -->
+        <div class="d-md-none d-flex flex-column gap-3 mb-2">
+            @if (isLoading() && jobList().length === 0) {
+                <div class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-2">Buscando jobs...</span>
+                </div>
+            } @else {
+                @for (item of jobList(); track item.jobId) {
+                    <div class="superficie p-3">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div class="min-w-0">
+                                <div class="fw-semibold text-break">{{ item.nombre }}</div>
+                                <code class="codigo-job">{{ destinoJob(item) }}</code>
+                            </div>
+                            <div class="form-check form-switch mb-0 flex-shrink-0">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    [id]="'switchActivoMobile' + item.jobId"
+                                    [checked]="item.activo"
+                                    [disabled]="!esAdmin() || procesando() === item.jobId"
+                                    [attr.aria-label]="(item.activo ? 'Desactivar ' : 'Activar ') + item.nombre"
+                                    (change)="toggleActivo(item, $event)" />
+                            </div>
+                        </div>
+
+                        @if (item.descripcion) {
+                            <p class="txt-secundario mb-2">{{ item.descripcion }}</p>
+                        }
+
+                        <dl class="job-datos mb-3">
+                            <dt>Tipo</dt>
+                            <dd>{{ textoTipo[tipoJob(item)] }}</dd>
+                            <dt>Programación</dt>
+                            <dd>{{ describirProgramacion(item) }}</dd>
+                            @if (item.payload) {
+                                <dt>Payload</dt>
+                                <dd class="font-monospace text-break">{{ item.payload }}</dd>
+                            }
+                            <dt>Estado</dt>
+                            <dd>
+                                <span class="etiqueta-estado"
+                                    [class.etiqueta-estado--exito]="item.activo"
+                                    [class.etiqueta-estado--sistema]="!item.activo">
+                                    {{ item.activo ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </dd>
+                        </dl>
+
+                        <div class="d-flex flex-wrap gap-2 pt-3 border-top">
+                            <a class="btn btn-info btn-sm flex-fill"
+                                [routerLink]="['/jobs/ejecuciones']" [queryParams]="{ jobId: item.jobId }">
+                                <ion-icon name="list-outline" aria-hidden="true"></ion-icon> Bitácora
+                            </a>
+                            @if (esAdmin()) {
+                                <button type="button" class="btn btn-primary btn-sm flex-fill"
+                                    [disabled]="jobsEnEjecucion().has(item.jobId)" (click)="openEjecutarModal(item)">
+                                    @if (jobsEnEjecucion().has(item.jobId)) {
+                                        <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Ejecutando
+                                    } @else {
+                                        <ion-icon name="play-outline" aria-hidden="true"></ion-icon> Ejecutar
+                                    }
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm flex-fill" (click)="openUpsertModal(item)">
+                                    <ion-icon name="create-outline" aria-hidden="true"></ion-icon> Editar
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm flex-fill" (click)="openDeleteModal(item)">
+                                    <ion-icon name="trash-outline" aria-hidden="true"></ion-icon> Eliminar
+                                </button>
+                            }
+                        </div>
+                    </div>
+                } @empty {
+                    <div class="text-center py-4 text-muted">No se encontraron jobs</div>
+                }
+            }
+        </div>
+
+        <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+    </div>
+</div>
+
+<!-- Modal crear / editar -->
+<div #upsertModal class="modal fade" tabindex="-1" aria-labelledby="upsertJobTitulo" aria-hidden="true"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="upsertJobTitulo">
+                    {{ jobEdit() ? 'Editar job' : 'Nuevo job' }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"
+                    [disabled]="guardando()"></button>
+            </div>
+            <div class="modal-body">
+                <app-upsert-job
+                    [job]="jobEdit()"
+                    [key]="formKey()"
+                    [guardando]="guardando()"
+                    (save)="onSaveJob($event)"
+                    (cancel)="closeUpsertModal()" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal eliminar -->
+<div #deleteModal class="modal fade" tabindex="-1" aria-labelledby="eliminarJobTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="eliminarJobTitulo">Eliminar job</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            @if (jobEliminar(); as item) {
+                <div class="modal-body">
+                    <p>
+                        ¿Eliminar el job <strong>{{ item.nombre }}</strong>
+                        (<code class="codigo-job">{{ destinoJob(item) }}</code>)?
+                    </p>
+                    <p class="txt-secundario mb-0">
+                        El scheduler dejará de ejecutarlo y ya no aparecerá en el listado.
+                    </p>
+                    @if (item.activo) {
+                        <div class="estado estado--informacion w-100 mt-3 align-items-start">
+                            <ion-icon name="information-circle-outline" class="fs-5 flex-shrink-0" aria-hidden="true"></ion-icon>
+                            <span>Si solo necesitas pausarlo por un tiempo, desactívalo en lugar de eliminarlo.</span>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    @if (item.activo) {
+                        <button type="button" class="btn btn-outline-primary"
+                            [disabled]="guardando() || procesando() === item.jobId"
+                            (click)="desactivarEnLugarDeEliminar()">
+                            Desactivar
+                        </button>
+                    }
+                    <button type="button" class="btn btn-danger"
+                        [disabled]="guardando() || procesando() === item.jobId"
+                        (click)="deleteJob()">
+                        @if (guardando()) {
+                            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                        }
+                        Eliminar
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal ejecutar ahora -->
+<div #ejecutarModal class="modal fade" tabindex="-1" aria-labelledby="ejecutarJobTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ejecutarJobTitulo">Ejecutar job</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            @if (ejecucionManual(); as manual) {
+                <div class="modal-body">
+                    <div class="superficie p-3 mb-3">
+                        <div class="fw-semibold">{{ manual.job.nombre }}</div>
+                        <div class="txt-ayuda mb-1">{{ textoTipo[tipoJob(manual.job)] }}</div>
+                        <code class="codigo-job">{{ destinoJob(manual.job) }}</code>
+                    </div>
+
+                    @if (manual.ejecucion; as ejecucion) {
+                        @switch (estadoEjecucion(ejecucion)) {
+                            @case ('progreso') {
+                                <div class="estado estado--informacion w-100" role="status">
+                                    <span class="spinner-border spinner-border-sm flex-shrink-0" aria-hidden="true"></span>
+                                    <span>
+                                        Ejecutando... El resultado se actualiza solo. Puedes cerrar esta ventana:
+                                        te avisaremos cuando termine.
+                                    </span>
+                                </div>
+                            }
+                            @default {
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="etiqueta-estado" [class]="claseEstado[estadoEjecucion(ejecucion)]">
+                                        {{ textoEstado[estadoEjecucion(ejecucion)] }}
+                                    </span>
+                                    <span class="txt-ayuda num-tabular">Duración: {{ formatearDuracion(ejecucion.duracionMs) }}</span>
+                                </div>
+                                @if (ejecucion.mensaje) {
+                                    <p class="txt-secundario text-break mb-0">{{ ejecucion.mensaje }}</p>
+                                }
+                            }
+                        }
+                    } @else {
+                        <p class="mb-2">¿Ejecutar este job ahora, fuera de su programación?</p>
+                        @if (!manual.job.activo) {
+                            <div class="estado estado--advertencia w-100">
+                                <ion-icon name="warning-outline" class="flex-shrink-0" aria-hidden="true"></ion-icon>
+                                <span>El job está inactivo; aun así se puede ejecutar manualmente.</span>
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    @if (manual.ejecucion) {
+                        <a class="btn btn-outline-primary" data-bs-dismiss="modal"
+                            [routerLink]="['/jobs/ejecuciones']" [queryParams]="{ jobId: manual.job.jobId }">
+                            Ver en bitácora
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    } @else {
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                            [disabled]="iniciandoEjecucion()">Cancelar</button>
+                        <button type="button" class="btn btn-primary" [disabled]="iniciandoEjecucion()"
+                            (click)="confirmarEjecucion()">
+                            @if (iniciandoEjecucion()) {
+                                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                            } @else {
+                                <ion-icon name="play-outline" aria-hidden="true"></ion-icon>
+                            }
+                            Ejecutar ahora
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

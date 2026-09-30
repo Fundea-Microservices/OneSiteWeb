@@ -93,7 +93,19 @@ export class UpsertParametroSPComponent {
     return this.nuevo() ? 'Crear Parámetro' : 'Actualizar Parámetro';
   }
 
+  // Asegura que la variable inicie con '@' (ej. @FechaInicio)
+  normalizarVariable() {
+    const control = this.form().get('variable');
+    const actual = (control?.value ?? '').toString().trim();
+    if (!actual) return;
+    const normalizada = '@' + actual.replace(/^@+/, '');
+    if (normalizada !== control?.value) {
+      control?.setValue(normalizada);
+    }
+  }
+
   onSubmit() {
+    this.normalizarVariable();
     if (this.form().valid) {
       const value: IParametro = {
         ...this.parametro(),

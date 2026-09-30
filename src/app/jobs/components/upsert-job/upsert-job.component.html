@@ -1,0 +1,192 @@
+<form #jobForm="ngForm" (ngSubmit)="onSave(jobForm)" novalidate class="row g-3">
+
+    <!-- ─── Datos generales ─────────────────────────────────── -->
+    <div class="col-12">
+        <label for="jobNombre" class="form-label obligatorio">Nombre</label>
+        <input type="text" id="jobNombre" name="nombre" class="form-control"
+            [(ngModel)]="form().nombre" #nombre="ngModel"
+            required maxlength="150"
+            [class.is-invalid]="enviado() && nombre.invalid"
+            placeholder="Ej. Cierre diario de cartera" />
+        @if (enviado() && nombre.invalid) {
+            <div class="mensaje-error mt-1">Ingresa el nombre del job.</div>
+        }
+    </div>
+
+    <div class="col-12">
+        <label for="jobDescripcion" class="form-label">Descripción</label>
+        <textarea id="jobDescripcion" name="descripcion" rows="2" class="form-control"
+            [(ngModel)]="form().descripcion" maxlength="300"
+            placeholder="Qué hace el job y a quién afecta..."></textarea>
+        <div class="form-text text-end num-tabular">{{ form().descripcion.length }}/300</div>
+    </div>
+
+    <!-- ─── Qué ejecuta ─────────────────────────────────────── -->
+    <div class="col-12">
+        <span class="form-label d-block obligatorio" id="jobTipoEtiqueta">Tipo de job</span>
+        <div class="btn-group w-100" role="radiogroup" aria-labelledby="jobTipoEtiqueta">
+            <input type="radio" class="btn-check" name="tipo" id="jobTipoPattern" value="PATTERN"
+                [(ngModel)]="form().tipo" autocomplete="off" />
+            <label class="btn btn-outline-primary" for="jobTipoPattern">
+                <ion-icon name="git-network-outline" aria-hidden="true"></ion-icon> Pattern
+            </label>
+            <input type="radio" class="btn-check" name="tipo" id="jobTipoProcedimiento" value="PROCEDIMIENTO"
+                [(ngModel)]="form().tipo" autocomplete="off" />
+            <label class="btn btn-outline-primary" for="jobTipoProcedimiento">
+                <ion-icon name="server-outline" aria-hidden="true"></ion-icon> Procedimiento
+            </label>
+        </div>
+        <div class="form-text">
+            {{ form().tipo === 'PATTERN'
+                ? 'Envía un mensaje NATS para ejecutar una acción de otro microservicio.'
+                : 'Ejecuta un procedimiento almacenado del esquema jobs de la base de datos.' }}
+        </div>
+        @if (cambioDeTipo) {
+            <div class="estado estado--advertencia w-100 mt-2">
+                <ion-icon name="warning-outline" class="flex-shrink-0" aria-hidden="true"></ion-icon>
+                <span>
+                    Al guardar se quitará {{ form().tipo === 'PATTERN' ? 'el procedimiento' : 'el pattern y el payload' }}
+                    configurado actualmente.
+                </span>
+            </div>
+        }
+    </div>
+
+    @if (form().tipo === 'PATTERN') {
+        <div class="col-12">
+            <label for="jobPattern" class="form-label obligatorio">Pattern</label>
+            <input type="text" id="jobPattern" name="pattern" class="form-control font-monospace"
+                [(ngModel)]="form().pattern" #pattern="ngModel"
+                required autocomplete="off" spellcheck="false"
+                [class.is-invalid]="enviado() && pattern.invalid"
+                placeholder="Ej. reportes.generar.cierre" />
+            @if (enviado() && pattern.invalid) {
+                <div class="mensaje-error mt-1">Ingresa el pattern que invocará el scheduler.</div>
+            }
+            <div class="form-text">Mensaje NATS que el scheduler envía al microservicio cuando se ejecuta el job.</div>
+        </div>
+
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-end mb-2">
+                <label for="jobPayload" class="form-label mb-0">
+                    Payload <span class="txt-ayuda">(JSON opcional)</span>
+                </label>
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                    [disabled]="!form().payload.trim()" (click)="formatearPayload()">
+                    <ion-icon name="code-slash-outline" aria-hidden="true"></ion-icon> Formatear
+                </button>
+            </div>
+            <textarea id="jobPayload" name="payload" rows="5" class="form-control font-monospace"
+                [(ngModel)]="form().payload" spellcheck="false"
+                [class.is-invalid]="!!errorPayload()"
+                placeholder='{ "tipo": "diario" }'></textarea>
+            @if (errorPayload()) {
+                <div class="mensaje-error mt-1" role="alert">
+                    <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon> {{ errorPayload() }}
+                </div>
+            }
+            <div class="form-text">Datos que recibe el microservicio junto con el mensaje.</div>
+        </div>
+    } @else {
+        <div class="col-12">
+            <label for="jobProcedimiento" class="form-label obligatorio">Procedimiento almacenado</label>
+            <input type="text" id="jobProcedimiento" name="procedimiento" class="form-control font-monospace"
+                [(ngModel)]="form().procedimiento" #procedimiento="ngModel"
+                required [pattern]="procedimientoPattern" autocomplete="off" spellcheck="false"
+                [class.is-invalid]="enviado() && procedimiento.invalid"
+                placeholder="Ej. jobs.sp_CierreDiarioCartera" />
+            @if (enviado() && procedimiento.errors?.['required']) {
+                <div class="mensaje-error mt-1">Ingresa el procedimiento que se ejecutará.</div>
+            } @else if (enviado() && procedimiento.errors?.['pattern']) {
+                <div class="mensaje-error mt-1">
+                    Usa el formato esquema.nombre dentro del esquema jobs, ej. jobs.sp_CierreDiarioCartera.
+                </div>
+            }
+            <div class="form-text">Debe existir en el esquema jobs de la base de datos; si no existe, no se podrá guardar.</div>
+        </div>
+    }
+
+    <!-- ─── Programación ────────────────────────────────────── -->
+    <div class="col-md-4">
+        <label for="jobMes" class="form-label">Mes</label>
+        <select id="jobMes" name="mes" class="form-select" [(ngModel)]="form().mes"
+            [class.is-invalid]="!!validacionDiaMes.error">
+            @for (op of opcionesMes; track op.valor) {
+                <option [ngValue]="op.valor">{{ op.texto }}</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label for="jobDia" class="form-label">Día</label>
+        <select id="jobDia" name="dia" class="form-select" [(ngModel)]="form().dia"
+            [class.is-invalid]="!!validacionDiaMes.error">
+            @for (op of opcionesDia; track op.valor) {
+                <option [ngValue]="op.valor">{{ op.texto }}</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label for="jobHora" class="form-label obligatorio">Hora (24 h, Guatemala)</label>
+        <input type="time" id="jobHora" name="hora" class="form-control num-tabular"
+            [(ngModel)]="form().hora" #hora="ngModel"
+            required [pattern]="horaPattern"
+            [class.is-invalid]="enviado() && hora.invalid" />
+        @if (enviado() && hora.invalid) {
+            <div class="mensaje-error mt-1">Ingresa una hora válida entre 00:00 y 23:59.</div>
+        }
+    </div>
+
+    <div class="col-12">
+        @if (validacionDiaMes.error; as error) {
+            <div class="mensaje-error" role="alert">
+                <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+                {{ error }} Elige otro día o mes.
+            </div>
+        } @else {
+            @if (programacion; as texto) {
+                <div class="estado estado--informacion w-100">
+                    <ion-icon name="time-outline" class="flex-shrink-0" aria-hidden="true"></ion-icon>
+                    <span>{{ texto }} (hora de Guatemala)</span>
+                </div>
+            }
+            @if (validacionDiaMes.aviso; as aviso) {
+                <div class="estado estado--advertencia w-100 mt-2">
+                    <ion-icon name="warning-outline" class="flex-shrink-0" aria-hidden="true"></ion-icon>
+                    <span>{{ aviso }}</span>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="col-12">
+        <div class="superficie p-3 d-flex justify-content-between align-items-center gap-3">
+            <div>
+                <div class="fw-semibold">Job activo</div>
+                <div class="txt-ayuda">El scheduler solo ejecuta automáticamente los jobs activos.</div>
+            </div>
+            <div class="form-check form-switch mb-0 flex-shrink-0">
+                <input class="form-check-input" type="checkbox" role="switch"
+                    id="jobActivo" name="activo" [(ngModel)]="form().activo" />
+                <label class="form-check-label" for="jobActivo">
+                    {{ form().activo ? 'Activo' : 'Inactivo' }}
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 mt-3 pt-3 border-top d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary px-4" [disabled]="guardando()" (click)="cancel.emit()">
+            Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary px-4" [disabled]="guardando()">
+            @if (guardando()) {
+                <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Guardando...
+            } @else {
+                {{ nuevo() ? 'Crear job' : 'Guardar cambios' }}
+            }
+        </button>
+    </div>
+
+</form>
