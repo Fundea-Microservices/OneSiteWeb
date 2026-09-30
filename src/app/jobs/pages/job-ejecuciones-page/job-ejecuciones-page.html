@@ -1,0 +1,161 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/jobs']">Jobs programados</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Bitácora de ejecuciones</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Bitácora de ejecuciones</span>
+        <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="isLoading()" (click)="fetchData()">
+            <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon> Actualizar
+        </button>
+    </div>
+
+    <div class="card-body">
+        <!-- ─── Filtros ─────────────────────────────────────── -->
+        <form class="row g-2 align-items-end mb-3" (ngSubmit)="buscar()">
+            <div class="col-12 col-lg-6">
+                <label for="filtroJob" class="form-label">Job</label>
+                <select id="filtroJob" name="jobId" class="form-select form-select-sm" [(ngModel)]="filtros.jobId">
+                    <option value="">Todos los jobs</option>
+                    @for (job of jobs(); track job.jobId) {
+                        <option [value]="job.jobId">{{ job.nombre }}{{ job.activo ? '' : ' (inactivo)' }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-lg-3">
+                <label for="filtroResultado" class="form-label">Resultado</label>
+                <select id="filtroResultado" name="resultado" class="form-select form-select-sm" [(ngModel)]="filtros.resultado">
+                    <option value="">Todos</option>
+                    <option value="exito">Éxito</option>
+                    <option value="error">Error</option>
+                </select>
+            </div>
+            <div class="col-6 col-lg-3 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary btn-sm flex-fill" [disabled]="isLoading()">
+                    <ion-icon name="search-outline" aria-hidden="true"></ion-icon> Buscar
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" title="Limpiar filtros" aria-label="Limpiar filtros"
+                    [disabled]="isLoading()" (click)="limpiarFiltros()">
+                    <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+                </button>
+            </div>
+        </form>
+
+        <!-- ─── Ficha del job filtrado ──────────────────────── -->
+        @if (jobFiltrado(); as job) {
+            <div class="superficie p-3 mb-3">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <span class="fw-semibold">{{ job.nombre }}</span>
+                    <span class="etiqueta-estado"
+                        [class.etiqueta-estado--exito]="job.activo"
+                        [class.etiqueta-estado--sistema]="!job.activo">
+                        {{ job.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                </div>
+                @if (job.descripcion) {
+                    <p class="txt-secundario mb-2">{{ job.descripcion }}</p>
+                }
+                <div class="d-flex flex-wrap gap-3 txt-ayuda">
+                    <span><ion-icon name="time-outline" aria-hidden="true"></ion-icon> {{ describirProgramacion(job) }}</span>
+                    <span>{{ textoTipo[tipoJob(job)] }}: <code class="codigo-job">{{ destinoJob(job) }}</code></span>
+                    @if (job.payload) {
+                        <span class="text-break">Payload: <code class="codigo-job">{{ job.payload }}</code></span>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- ─── VERSIÓN DESKTOP ─────────────────────────────── -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-striped table-sm table-bordered table-hover align-middle mb-2">
+                <thead>
+                    <tr>
+                        <th class="text-center" scope="col" style="width: 3rem;">#</th>
+                        <th scope="col">Job</th>
+                        <th scope="col">Fecha de ejecución</th>
+                        <th class="text-center" scope="col">Estado</th>
+                        <th class="text-end" scope="col">Duración</th>
+                        <th scope="col">Mensaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading() && ejecucionList().length === 0) {
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <span class="ms-2">Buscando ejecuciones...</span>
+                            </td>
+                        </tr>
+                    } @else {
+                        @for (item of ejecucionList(); track item.ejecucionId; let i = $index) {
+                            <tr>
+                                <th scope="row" class="text-center">{{ numeroFila(i) }}</th>
+                                <td [class.text-muted]="!jobExiste(item.jobId)">{{ nombreJob(item.jobId) }}</td>
+                                <td class="text-nowrap num-tabular">{{ item.fechaEjecucion | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                                <td class="text-center">
+                                    <span class="etiqueta-estado" [class]="claseEstado[estadoEjecucion(item)]">
+                                        {{ textoEstado[estadoEjecucion(item)] }}
+                                    </span>
+                                </td>
+                                <td class="text-end text-nowrap num-tabular">{{ formatearDuracion(item.duracionMs) }}</td>
+                                <td>
+                                    @if (item.mensaje) {
+                                        <div class="mensaje-corto" [title]="item.mensaje">{{ item.mensaje }}</div>
+                                    } @else {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No se encontraron ejecuciones</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ─── VERSIÓN MÓVIL ───────────────────────────────── -->
+        <div class="d-md-none d-flex flex-column gap-3 mb-2">
+            @if (isLoading() && ejecucionList().length === 0) {
+                <div class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-2">Buscando ejecuciones...</span>
+                </div>
+            } @else {
+                @for (item of ejecucionList(); track item.ejecucionId) {
+                    <div class="superficie p-3">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <div class="fw-semibold text-break" [class.text-muted]="!jobExiste(item.jobId)">
+                                {{ nombreJob(item.jobId) }}
+                            </div>
+                            <span class="etiqueta-estado flex-shrink-0" [class]="claseEstado[estadoEjecucion(item)]">
+                                {{ textoEstado[estadoEjecucion(item)] }}
+                            </span>
+                        </div>
+                        <dl class="job-datos mb-0">
+                            <dt>Fecha</dt>
+                            <dd class="num-tabular">{{ item.fechaEjecucion | date:'dd/MM/yyyy HH:mm:ss' }}</dd>
+                            <dt>Duración</dt>
+                            <dd class="num-tabular">{{ formatearDuracion(item.duracionMs) }}</dd>
+                        </dl>
+                        @if (item.mensaje) {
+                            <p class="txt-secundario text-break mt-2 mb-0">{{ item.mensaje }}</p>
+                        }
+                    </div>
+                } @empty {
+                    <div class="text-center py-4 text-muted">No se encontraron ejecuciones</div>
+                }
+            }
+        </div>
+
+        <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+    </div>
+</div>
