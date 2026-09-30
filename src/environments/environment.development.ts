@@ -1,4 +1,4 @@
-const API_URL = 'https://dev-api-onesite-dtd.fundea.org.gt:8086'
+const API_URL = 'http://172.25.5.11:3000'
 
 
 const AGENTE = {
