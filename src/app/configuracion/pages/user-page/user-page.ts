@@ -23,11 +23,15 @@ export default class UserPageComponent {
 
   public user = this.authService.getUserStorage();
 
+  /** Los externos cambian su contraseña desde OneSiteEx: la ruta interna devolvería 403 */
+  public esExterno = this.authService.esExterno;
+
   public router = inject(Router);
   formKey = signal(Date.now());
 
-  @ViewChild('changePasswordModal') modalElementRef!: ElementRef;
-  private modalChangePasswordInstance!: bootstrap.Modal;
+  /** Solo existe para usuarios internos (el modal no se renderiza para externos) */
+  @ViewChild('changePasswordModal') modalElementRef?: ElementRef;
+  private modalChangePasswordInstance?: bootstrap.Modal;
 
   @ViewChild('upsertModalFotoUsuario') modalFotoElementRef!: ElementRef;
   private modalUpsertFotoInstance!: bootstrap.Modal;
@@ -37,11 +41,15 @@ export default class UserPageComponent {
   }
 
   ngAfterViewInit() {
-    this.modalChangePasswordInstance = new Modal(this.modalElementRef.nativeElement);
+    if (this.modalElementRef) {
+      this.modalChangePasswordInstance = new Modal(this.modalElementRef.nativeElement);
+    }
     this.modalUpsertFotoInstance = new Modal(this.modalFotoElementRef.nativeElement);
   }
 
   async changePassword(current: string, newPassword: string) {
+    if (this.esExterno()) return;
+
     const data = {
       current: current,
       newPassword: newPassword,
@@ -63,6 +71,7 @@ export default class UserPageComponent {
   }
 
   openModal() {
+    if (this.esExterno() || !this.modalElementRef) return;
     if (!this.modalChangePasswordInstance) {
       this.modalChangePasswordInstance = new Modal(this.modalElementRef.nativeElement);
     }

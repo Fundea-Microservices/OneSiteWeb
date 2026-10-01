@@ -47,6 +47,8 @@ export default class RolPageComponent {
   });
 
   buscador = signal('');
+  /** '' todos, 'true' solo externos, 'false' solo internos */
+  filtroExterno = signal<'' | 'true' | 'false'>('');
 
   constructor() { }
 
@@ -64,7 +66,13 @@ export default class RolPageComponent {
   async fetchData() {
     if (this.isLoading()) return;
     this.isLoading.set(true);
-    let resp = await this.rolService.getRoles({ page: this.pagination().page, limit: this.pagination().pageSize, search: this.buscador() });
+    const externo = this.filtroExterno();
+    let resp = await this.rolService.getRoles({
+      page: this.pagination().page,
+      limit: this.pagination().pageSize,
+      search: this.buscador(),
+      externo: externo === '' ? undefined : externo === 'true',
+    });
     if (resp) {
       let { roles, metadata } = resp.data;
       this.rolesList.set(roles);
@@ -114,6 +122,13 @@ export default class RolPageComponent {
       this.fetchData()
       this.closeModal();
     }
+  }
+
+  onChangeExterno(value: string) {
+    this.filtroExterno.set(value as '' | 'true' | 'false');
+    // El total cambia con el filtro: se vuelve a la primera página
+    this.pagination.update(p => ({ ...p, page: 1 }));
+    this.fetchData();
   }
 
   onChangePage(newPagination: IPagination) {

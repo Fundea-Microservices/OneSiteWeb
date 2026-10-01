@@ -14,13 +14,22 @@
     <div class="card-body">
         <form class="row g-3">
             <div class="col-auto">
+                <label for="selectTipoRol" class="visually-hidden">Tipo de rol</label>
+                <select class="form-select form-select-sm" aria-label="Tipo de rol" id="selectTipoRol"
+                    (change)="changeTipoRol(selectTipoRol.value, selectRol)" #selectTipoRol>
+                    <option value="">Todos los roles</option>
+                    <option value="false">Internos</option>
+                    <option value="true">Externos</option>
+                </select>
+            </div>
+            <div class="col-auto">
                 <label for="selectRol" class="visually-hidden">Buscar por rol</label>
                 <select class="form-select form-select-sm" aria-label="Seleccionar rol" id="selectRol"
                     (change)="changeRolSelected(selectRol.value) " (input)="rolFilter.set(selectRol.value)" #selectRol>
                     >
                     <option value='' selected>Seleccione rol</option>
                     @for (item of rolesList(); track item.rolId) {
-                    <option value="{{ item.rolId }}">{{ item.name }}</option>
+                    <option value="{{ item.rolId }}">{{ item.name }}{{ item.externo ? ' (Externo)' : '' }}</option>
                     }
                 </select>
             </div>

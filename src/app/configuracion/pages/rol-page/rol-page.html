@@ -21,6 +21,15 @@
                     (keyup.enter)="fetchData()" #txtBuscar>
             </div>
             <div class="col-auto">
+                <label for="selectTipoRol" class="visually-hidden">Tipo de rol</label>
+                <select class="form-select" id="selectTipoRol" aria-label="Tipo de rol"
+                    (change)="onChangeExterno(selectTipoRol.value)" #selectTipoRol>
+                    <option value="">Todos los roles</option>
+                    <option value="false">Internos</option>
+                    <option value="true">Externos</option>
+                </select>
+            </div>
+            <div class="col-auto">
                 <button type="button" (click)="fetchData()" class="btn btn-success mb-3">
                     Buscar
                 </button>
@@ -34,6 +43,7 @@
                     <th class="text-center" scope="col">#</th>
                     <th class="text-center" scope="col">Nombre</th>
                     <th class="text-center" scope="col">Activo</th>
+                    <th class="text-center" scope="col">Externo</th>
                     <th class="text-center" scope="col">Creado</th>
                     <th class="text-center" scope="col">Acciones</th>
                 </tr>
@@ -53,6 +63,13 @@
                                 [checked]="item.active" (change)="changeActive(item, cbxActive.checked)"
                                 [value]="item.active" #cbxActive>
                         </div>
+                    </td>
+                    <td class="text-center">
+                        @if (item.externo) {
+                        <span class="badge text-bg-info">Externo</span>
+                        } @else {
+                        <span class="badge text-bg-light border">Interno</span>
+                        }
                     </td>
                     <td class="text-center justify-items-center items-center">
                         {{ item.created_at | date: 'dd/MM/yyyy' }} <br>

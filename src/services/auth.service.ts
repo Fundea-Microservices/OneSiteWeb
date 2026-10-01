@@ -1,8 +1,8 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { HttpService } from './HttpService';
-import { AccesoResponse, AuthResponse, IUser } from '../interfaces/auth';
+import { AccesoResponse, AuthResponse, IContextoExterno, IUser, Realm } from '../interfaces/auth';
 import { firstValueFrom } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 
@@ -13,6 +13,7 @@ export class AuthService extends HttpService {
 
   private readonly endpoints = {
     login: '/auth/login',
+    loginExterno: '/auth/login-externo',
     verify: '/auth/verify',
     menus: '/acceso/menu',
     menuByRol: '/acceso/rol',
@@ -30,6 +31,15 @@ export class AuthService extends HttpService {
   // 🔑 Signal para el estado del usuario
   private _user = signal<IUser>(this.loadUserFromStorage());
   public user = this._user.asReadonly();
+
+  /** Origen de la sesión actual. Sin dato en storage se asume colaborador interno. */
+  public realm = computed<Realm>(() => this._user().realm ?? 'INTERNAL');
+
+  /** true cuando la sesión pertenece a un usuario externo de OneSiteEx */
+  public esExterno = computed<boolean>(() => this.realm() === 'ONESITEEX');
+
+  /** Empresa y rol de OneSiteEx del usuario externo; null para internos */
+  public contextoExterno = computed<IContextoExterno | null>(() => this._user().externo ?? null);
 
   constructor(http: HttpClient, private toastr: ToastrService) {
     super(http);
@@ -62,6 +72,8 @@ export class AuthService extends HttpService {
       puestoId: null,
       puesto: null,
       metodoId: null,
+      realm: 'INTERNAL',
+      externo: null,
       created_at: new Date(),
       rol: {
         rolId: '',
@@ -149,24 +161,61 @@ export class AuthService extends HttpService {
     this._user.set(this.loadUserFromStorage());
   }
 
-  async login(data: { userName: string; password: string }) {
+  /**
+   * Inicia sesión contra el API.
+   * @param data Credenciales; el backend normaliza `userName` a minúsculas.
+   * @param esExterno true consume `/auth/login-externo` (usuarios de OneSiteEx).
+   *                  El body y la forma de la respuesta son idénticos, solo cambia la URL.
+   */
+  async login(data: { userName: string; password: string }, esExterno = false) {
+    const endpoint = esExterno ? this.endpoints.loginExterno : this.endpoints.login;
+
     try {
-      const resp = await firstValueFrom(this.post<AuthResponse>(this.endpoints.login, data));
+      const resp = await firstValueFrom(this.post<AuthResponse>(endpoint, data));
       if (resp.body?.success) {
-        // Guardar en signal y storage (incluyendo datos de SIUCOM si vienen en la respuesta)
+        // Guardar en signal y storage (incluyendo SIUCOM y el contexto externo si vienen en la respuesta)
         if (resp.body.data?.user) {
-          this.updateUser({ ...resp.body.data.user, siucom: resp.body.data.siucom });
+          this.updateUser({
+            ...resp.body.data.user,
+            siucom: resp.body.data.siucom,
+            realm: resp.body.data.realm ?? resp.body.data.user.realm ?? 'INTERNAL',
+            externo: resp.body.data.externo ?? null,
+          });
         }
         return resp.body;
       }
       return null;
     } catch (error: any) {
       console.log("🚀 ~ AuthService ~ login ~ error:", error);
-      this.toastr.error(error?.error?.message || '', 'Error en login');
-      return error.error;
+      const mensaje = AuthService.traducirErrorLogin(error);
+      this.toastr.error(mensaje, 'Error en login');
+      return { ...(error?.error ?? {}), success: false, message: mensaje };
     }
   }
-  
+
+  /**
+   * Traduce un error de login a un mensaje para el usuario.
+   * Los errores de login no traen campo `error`: el código viaja dentro del `message`.
+   */
+  static traducirErrorLogin(error: any): string {
+    const mensaje: string = error?.error?.message ?? '';
+
+    if (error?.status === 0)   return 'No fue posible conectar con el servidor. Intente nuevamente.';
+    if (error?.status === 429) return 'Demasiados intentos. Espere un minuto e intente de nuevo.';
+
+    if (mensaje.includes('MS-AUT-09-02')) return 'Usuario o contraseña incorrectos.';
+    if (mensaje.includes('MS-AUT-09-01')) return 'El acceso de usuarios externos no está disponible.';
+    if (mensaje.includes('MS-AUT-09-03')) return 'Su usuario aún no tiene acceso. Solicite el alta a un administrador.';
+    if (mensaje.includes('MS-AUT-09-05')) return 'Su acceso fue desactivado. Contacte al administrador.';
+    if (mensaje.includes('MS-AUT-09-06') || mensaje.includes('MS-AUT-09-07')) {
+      return 'Su rol no está configurado correctamente. Contacte al administrador.';
+    }
+    if (mensaje.includes('MS-AUT-01-07')) return 'Este usuario debe ingresar activando "Usuario externo".';
+    if (mensaje.includes('MS-AUT-01-01') || mensaje.includes('MS-AUT-01-03')) return 'Usuario o contraseña incorrectos.';
+
+    return mensaje || 'No fue posible iniciar sesión. Intente nuevamente.';
+  }
+
 
   getMenus(params?: { [key: string]: any }) {
     return this.get(this.endpoints.menus, params);

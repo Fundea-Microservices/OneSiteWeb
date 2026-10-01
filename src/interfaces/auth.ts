@@ -1,6 +1,27 @@
 import { IAcceso } from "./acceso";
 import { IMetodo } from "./metodo";
 
+/** Origen del usuario autenticado: colaborador interno o usuario externo de OneSiteEx */
+export type Realm = 'INTERNAL' | 'ONESITEEX';
+
+/** Contexto de empresa y rol que devuelve el login de usuarios externos (OneSiteEx) */
+export interface IContextoExterno {
+    origen:         string;
+    idUsuario:      number;
+    idEmpresa:      number;
+    idRol:          number;
+    nombreEmpresa:  string;
+    codigoEmpresa:  string | null;
+    nombreRol:      string | null;
+}
+
+/** Códigos del campo `error` que devuelven las rutas protegidas en 401/403 */
+export type AuthErrorCode =
+    | 'TOKEN_NO_ENVIADO' | 'TOKEN_EXPIRADO' | 'TOKEN_INVALIDO'
+    | 'SESION_CADUCADA' | 'USUARIO_INACTIVO' | 'USUARIO_EXTERNO_INACTIVO'
+    | 'ROL_INACTIVO' | 'REALM_NO_PERMITIDO' | 'ROL_NO_PROPIO'
+    | 'SERVICIO_NO_DISPONIBLE';
+
 export interface AuthResponse {
     success: boolean;
     statusCode: number;
@@ -10,6 +31,10 @@ export interface AuthResponse {
         user: IUser;
         siucom?: ISIUCOM;
         token:    string;
+        /** Ausente en respuestas antiguas del API: se asume INTERNAL */
+        realm?:   Realm;
+        /** Solo viene con contenido en el login de externos */
+        externo?: IContextoExterno | null;
     }
 }
 
@@ -60,6 +85,10 @@ export interface IUser {
     metodoId:    null;
     metodo?:    IMetodo;
     siucom?: ISIUCOM;
+    /** Origen del usuario. Sin valor se trata como INTERNAL. */
+    realm?:   Realm;
+    /** Contexto de OneSiteEx. Siempre null para colaboradores internos. */
+    externo?: IContextoExterno | null;
     created_at?:  Date;
     updated_at?:  Date;
     deleted_at?:  Date;
@@ -71,6 +100,8 @@ export interface IRol {
     active:    boolean;
     guest:    boolean;
     isAdmin?: boolean;
+    /** Rol pensado para usuarios de OneSiteEx. Solo informativo: no da ni quita permisos. */
+    externo?: boolean;
     created_at?: Date;
     updated_at?:  Date;
     deleted_at?:  Date;

@@ -18,7 +18,13 @@ export class RolService extends HttpService {
     super(http); // pasa HttpClient al servicio base
   }
 
-  async getRoles({ page = 1, limit = 10, search = '', all = false } = {}) {
+  /**
+   * @param externo true solo roles externos, false solo internos, sin valor todos.
+   *                Con `all: true` el API devuelve únicamente los activos.
+   */
+  async getRoles({ page = 1, limit = 10, search = '', all = false, externo }: {
+    page?: number; limit?: number; search?: string; all?: boolean; externo?: boolean;
+  } = {}) {
     try {
       let params: any = {
         page,
@@ -27,6 +33,9 @@ export class RolService extends HttpService {
       }
       if (all) {
         params = {...params, all: all};
+      }
+      if (externo !== undefined) {
+        params = {...params, externo};
       }
       const resp =  await firstValueFrom(this.get<RolesResponse>(`${this.endpoints.rol}`, params));
       if (resp.body?.success) {        
@@ -63,8 +72,8 @@ export class RolService extends HttpService {
   async createRol(createRol: IRol) {
     try {
       //Obtenemos solo lo necesario para crear el rol
-      const { name, active, guest } = createRol;
-      const resp =  await firstValueFrom(this.post<RolesResponse>(`${this.endpoints.rol}`, {name, active, guest}));
+      const { name, active, guest, externo = false } = createRol;
+      const resp =  await firstValueFrom(this.post<RolesResponse>(`${this.endpoints.rol}`, {name, active, guest, externo}));
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');
         return resp.body;
