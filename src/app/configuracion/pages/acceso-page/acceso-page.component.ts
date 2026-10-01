@@ -85,6 +85,8 @@ export default class AccesoPageComponent {
   });
 
   rolFilter = signal('');
+  /** '' todos, 'true' solo roles externos, 'false' solo internos */
+  tipoRolFilter = signal<'' | 'true' | 'false'>('');
   submenuSearch = signal('');
 
   submenusUnusedFiltered = computed(() => {
@@ -148,7 +150,11 @@ export default class AccesoPageComponent {
   }
 
   async loadFilters() {
-    let resp = await this.rolService.getRoles({ all: true });
+    const tipo = this.tipoRolFilter();
+    let resp = await this.rolService.getRoles({
+      all: true,
+      externo: tipo === '' ? undefined : tipo === 'true',
+    });
     if (resp) {
       this.rolesList.set(resp.data.roles);
     }
@@ -291,6 +297,14 @@ export default class AccesoPageComponent {
 
     this.openModal(true, this.accesoEdit());
 
+  }
+
+  /** Cambia el tipo de rol: recarga el combo y limpia la selección, que puede no estar en la nueva lista */
+  changeTipoRol(value: string, selectRol: HTMLSelectElement) {
+    this.tipoRolFilter.set(value as '' | 'true' | 'false');
+    selectRol.value = '';
+    this.changeRolSelected('');
+    this.loadFilters();
   }
 
   changeRolSelected(rolId: string) {

@@ -56,6 +56,7 @@ export class UpsertRolComponent {
       name: [rol.name, this.validationRules.name],
       active: [rol.active],
       guest: [rol.guest],
+      externo: [rol.externo ?? false],
     });
 
     if (isNuevo) {
@@ -63,6 +64,7 @@ export class UpsertRolComponent {
         name: '',
         active: true,
         guest: false,
+        externo: false,
       });
     }
 

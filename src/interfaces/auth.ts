@@ -100,6 +100,8 @@ export interface IRol {
     active:    boolean;
     guest:    boolean;
     isAdmin?: boolean;
+    /** Rol pensado para usuarios de OneSiteEx. Solo informativo: no da ni quita permisos. */
+    externo?: boolean;
     created_at?: Date;
     updated_at?:  Date;
     deleted_at?:  Date;
