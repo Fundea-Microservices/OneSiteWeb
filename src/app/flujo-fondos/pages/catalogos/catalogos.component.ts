@@ -1,24 +1,16 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, signal, ViewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
-import { ICatalogo } from '../../../../interfaces/catalogo';
+import { ICatalogo, ICatalogoCreate, ICatalogoUpdate } from '../../../../interfaces/catalogo';
 import { CatalogoService } from '../../../../services/flujo-fondos/catalogo.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { UpsertCatalogoComponent } from '../../components/catalogo/upsert-catalogo/upsert-catalogo';
-
-const emptyCatalogo: ICatalogo = {
-  catalogoId: '',
-  codigo: 0,
-  codigoExterno: 0,
-  descripcion: '',
-  estado: true,
-  tipo: '',
-  created_at: new Date(),
-}
+import { ImportarCatalogosComponent } from '../../components/catalogo/importar-catalogos/importar-catalogos';
+import { DescargarPlantillaComponent } from '../../../shared/components/descargar-plantilla/descargar-plantilla';
 
 @Component({
   selector: 'app-catalogos',
-  imports: [RouterLink, PaginationComponent, UpsertCatalogoComponent],
+  imports: [RouterLink, PaginationComponent, UpsertCatalogoComponent, ImportarCatalogosComponent, DescargarPlantillaComponent],
   templateUrl: './catalogos.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,10 +18,10 @@ const emptyCatalogo: ICatalogo = {
 export default class CatalogosComponent {
 
   catalogoService = inject(CatalogoService);
+  router = inject(Router);
   catalogosList = signal<ICatalogo[]>([]);
-  metadata = signal({});
   nuevoCatalogo = signal(true);
-  catalogoEdit = signal<ICatalogo>(emptyCatalogo);
+  catalogoEdit = signal<ICatalogo | null>(null);
 
   pagination = signal<IPagination>({
     page: 1,
@@ -42,8 +34,8 @@ export default class CatalogosComponent {
   @ViewChild('upsertCatalogoModal') modalElementRef!: ElementRef;
   private modalUpsertInstance!: bootstrap.Modal;
 
-  @ViewChild('deleteCatalogoModal') modalDeleteElementRef!: ElementRef;
-  private modalDeleteInstance!: bootstrap.Modal;
+  @ViewChild('desactivarCatalogoModal') modalDesactivarElementRef!: ElementRef;
+  private modalDesactivarInstance!: bootstrap.Modal;
 
   modal = signal({
     titulo: 'Crear Catálogo',
@@ -51,9 +43,8 @@ export default class CatalogosComponent {
   });
 
   buscador = signal('');
-  tipoFilter = signal('');
-
-  constructor() { }
+  // '' = todos, 'true' = activos, 'false' = inactivos
+  activoFilter = signal<'' | 'true' | 'false'>('');
 
   ngOnInit() {
     this.catalogosList.set([]);
@@ -62,25 +53,23 @@ export default class CatalogosComponent {
 
   ngAfterViewInit() {
     this.modalUpsertInstance = new Modal(this.modalElementRef.nativeElement);
-    this.modalDeleteInstance = new Modal(this.modalDeleteElementRef.nativeElement);
+    this.modalDesactivarInstance = new Modal(this.modalDesactivarElementRef.nativeElement);
   }
 
   async fetchData() {
     if (this.isLoading()) return;
     this.isLoading.set(true);
-    let params: any = {
+    const activo = this.activoFilter();
+    let resp = await this.catalogoService.getCatalogos({
       page: this.pagination().page,
       limit: this.pagination().pageSize,
-      search: this.buscador()
-    }
-    if (this.tipoFilter()) {
-      params.search = this.tipoFilter();
-    }
-    let resp = await this.catalogoService.getCatalogos(params);
+      search: this.buscador().trim(),
+      // Sin `active` no se filtra; `active=false` ahora sí devuelve solo inactivos
+      active: activo === '' ? undefined : activo === 'true',
+    });
     if (resp) {
       let { catalogos, metadata } = resp.data;
       this.catalogosList.set(catalogos);
-      this.metadata.set(metadata);
       this.pagination.set({
         page: metadata.page,
         pageSize: metadata.limit,
@@ -90,32 +79,39 @@ export default class CatalogosComponent {
     this.isLoading.set(false);
   }
 
-  async deleteCatalogo(catalogo: ICatalogo) {
-    let resp = await this.catalogoService.deleteCatalogo(catalogo);
+  buscar() {
+    this.pagination.update(p => ({ ...p, page: 1 }));
+    this.fetchData();
+  }
+
+  async desactivarCatalogo(catalogo: ICatalogo) {
+    let resp = await this.catalogoService.desactivarCatalogo(catalogo.id);
     if (resp?.success) {
       this.fetchData();
-      if (this.modalDeleteInstance) {
-        this.modalDeleteInstance.hide();
-      }
+      this.modalDesactivarInstance?.hide();
     }
   }
 
-  changeEstado(catalogo: ICatalogo, checked: boolean) {
-    catalogo.estado = checked;
-    this.updateCatalogo(catalogo);
+  async changeActivo(catalogo: ICatalogo, cbx: HTMLInputElement) {
+    const checked = cbx.checked;
+    let resp = await this.catalogoService.updateCatalogo({ id: catalogo.id, activo: checked });
+    if (resp?.success) {
+      this.catalogosList.update(list => list.map(c => c.id === catalogo.id ? { ...c, activo: checked } : c));
+    } else {
+      // Revertir el switch si el backend rechazó el cambio
+      cbx.checked = !checked;
+    }
   }
 
-  async createCatalogo(catalogo: ICatalogo) {
+  async createCatalogo(catalogo: ICatalogoCreate) {
     let resp = await this.catalogoService.createCatalogo(catalogo);
     if (resp?.success) {
       this.fetchData();
       this.closeModal();
-      this.catalogoEdit.set(emptyCatalogo);
-      this.nuevoCatalogo.set(true);
     }
   }
 
-  async updateCatalogo(catalogo: ICatalogo) {
+  async updateCatalogo(catalogo: ICatalogoUpdate) {
     let resp = await this.catalogoService.updateCatalogo(catalogo);
     if (resp?.success) {
       this.fetchData();
@@ -129,17 +125,13 @@ export default class CatalogosComponent {
     this.fetchData();
   }
 
-  openModal(nuevo: boolean = true, catalogo: ICatalogo = emptyCatalogo) {
+  openModal(nuevo: boolean = true, catalogo: ICatalogo | null = null) {
     this.nuevoCatalogo.set(nuevo);
-    if (this.nuevoCatalogo()) {
-      this.catalogoEdit.set(emptyCatalogo);
-    } else {
-      this.catalogoEdit.set(catalogo);
-    }
+    this.catalogoEdit.set(nuevo ? null : catalogo);
 
     this.formKey.set(Date.now());
     this.modal.set({
-      titulo: catalogo.catalogoId ? 'Actualizar Catálogo' : 'Crear Catálogo',
+      titulo: nuevo ? 'Crear Catálogo' : 'Actualizar Catálogo',
       visible: true,
     });
 
@@ -150,24 +142,26 @@ export default class CatalogosComponent {
   }
 
   closeModal() {
-    if (this.modalUpsertInstance) {
-      this.modalUpsertInstance.hide();
-    }
+    this.modalUpsertInstance?.hide();
   }
 
-  openDeleteModal(catalogo: ICatalogo) {
+  openDesactivarModal(catalogo: ICatalogo) {
     this.catalogoEdit.set(catalogo);
-    if (!this.modalDeleteInstance) {
-      this.modalDeleteInstance = new Modal(this.modalDeleteElementRef.nativeElement);
+    if (!this.modalDesactivarInstance) {
+      this.modalDesactivarInstance = new Modal(this.modalDesactivarElementRef.nativeElement);
     }
-    this.modalDeleteInstance.show();
+    this.modalDesactivarInstance.show();
   }
 
-  onSave(catalogo: ICatalogo) {
-    if (!catalogo.catalogoId) {
-      this.createCatalogo(catalogo);
-    } else {
+  verOpciones(catalogo: ICatalogo) {
+    this.router.navigate(['/flujo-fondos/catalogos', catalogo.id, 'opciones']);
+  }
+
+  onSave(catalogo: ICatalogoCreate | ICatalogoUpdate) {
+    if ('id' in catalogo) {
       this.updateCatalogo(catalogo);
+    } else {
+      this.createCatalogo(catalogo);
     }
   }
 }

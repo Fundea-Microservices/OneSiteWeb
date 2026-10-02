@@ -1,0 +1,167 @@
+<div #importModal class="modal fade" tabindex="-1" aria-labelledby="titleImportModal" aria-hidden="true"
+  data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="titleImportModal">
+          <ion-icon name="cloud-upload-outline" class="me-1"></ion-icon>
+          Importar catálogos desde Excel
+        </h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+          [disabled]="isImporting()"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Instrucciones -->
+        <div class="alert alert-info py-2 small mb-3">
+          <strong>Formato esperado</strong> (plantilla FLUJOF-CATALOGOS, una fila por opción):
+          <br />
+          <span class="font-monospace">A</span>: Código catálogo &nbsp;|
+          <span class="font-monospace">B</span>: Nombre catálogo &nbsp;|
+          <span class="font-monospace">C</span>: Código opción &nbsp;|
+          <span class="font-monospace">D</span>: Nombre opción &nbsp;|
+          <span class="font-monospace">E</span>: Orden &nbsp;|
+          <span class="font-monospace">F</span>: Por defecto (Si/No) &nbsp;|
+          <span class="font-monospace">G</span>: Catálogo padre (opcional) &nbsp;|
+          <span class="font-monospace">H</span>: Opción padre (código o nombre, requerida si hay catálogo padre)
+          <br />
+          Los códigos se guardan en mayúsculas; el código externo del catálogo es su mismo código.
+          Los catálogos y opciones que ya existen no se modifican.
+        </div>
+
+        <!-- Selector de archivo -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="archivoCatalogos">Seleccionar archivo (.xlsx, .xls, .csv)</label>
+          <input type="file" class="form-control form-control-sm" id="archivoCatalogos" accept=".xlsx,.xls,.csv"
+            [disabled]="isImporting()" (change)="onFileSelected($event)" #fileInput />
+        </div>
+
+        @if (readError()) {
+          <div class="alert alert-danger py-2 small mb-3">
+            <ion-icon name="alert-circle-outline"></ion-icon> {{ readError() }}
+          </div>
+        }
+
+        <!-- Vista previa -->
+        @if (catalogos().length > 0) {
+          <div class="alert alert-success py-2 small mb-2">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+            <strong>{{ fileName() }}</strong>: {{ catalogos().length }} catálogos y {{ totalOpciones() }} opciones
+            listos para importar.
+          </div>
+          <div class="table-responsive mb-3">
+            <table class="table table-sm table-bordered small mb-0">
+              <thead>
+                <tr>
+                  <th class="text-center">Código</th>
+                  <th class="text-center">Nombre</th>
+                  <th class="text-center">Catálogo padre</th>
+                  <th class="text-center">Opciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cat of catalogos(); track cat.codigo) {
+                  <tr>
+                    <td><code>{{ cat.codigo }}</code></td>
+                    <td>{{ cat.nombre }}</td>
+                    <td class="text-center">
+                      @if (cat.catalogoPadre) { <code>{{ cat.catalogoPadre }}</code> } @else { <span class="text-muted">—</span> }
+                    </td>
+                    <td class="text-center">{{ cat.filas.length }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (advertencias().length > 0) {
+          <div class="alert alert-warning py-2 small mb-3">
+            @for (adv of advertencias(); track $index) {
+              <div>{{ adv }}</div>
+            }
+          </div>
+        }
+
+        @if (erroresArchivo().length > 0) {
+          <div class="alert alert-danger py-2 small mb-3">
+            <strong>{{ erroresArchivo().length }} filas con errores no se importarán:</strong>
+            @for (err of erroresArchivo(); track $index) {
+              <div>Fila {{ err.fila }}: {{ err.mensaje }}</div>
+            }
+          </div>
+        }
+
+        <!-- Progreso -->
+        @if (progress().total > 0) {
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>Progreso</span>
+              <span>{{ progress().current }} / {{ progress().total }}</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar progress-bar-striped" [class.progress-bar-animated]="isImporting()"
+                [style.width.%]="(progress().current / progress().total) * 100">
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Resultado -->
+        @if (resultado(); as res) {
+          <div class="row g-2 mb-3">
+            <div class="col-6 col-md-3">
+              <div class="card border-success text-center py-2">
+                <div class="fw-bold fs-4 text-success">{{ res.catalogosCreados }}</div>
+                <div class="small text-muted">Catálogos creados</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="card border-secondary text-center py-2">
+                <div class="fw-bold fs-4 text-secondary">{{ res.catalogosExistentes }}</div>
+                <div class="small text-muted">Catálogos ya existentes</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="card border-success text-center py-2">
+                <div class="fw-bold fs-4 text-success">{{ res.opcionesCreadas }}</div>
+                <div class="small text-muted">Opciones creadas</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="card border-warning text-center py-2">
+                <div class="fw-bold fs-4 text-warning">{{ res.opcionesOmitidas }}</div>
+                <div class="small text-muted">Opciones ya existentes</div>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (erroresImportacion().length > 0) {
+          <div class="alert alert-danger py-2 small mb-0">
+            <strong>{{ erroresImportacion().length }} errores durante la importación:</strong>
+            @for (err of erroresImportacion(); track $index) {
+              <div>
+                @if (err.fila) { Fila {{ err.fila }}: }
+                {{ err.mensaje }}
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"
+          [disabled]="isImporting()">Cerrar</button>
+        <button type="button" class="btn btn-success btn-sm"
+          [disabled]="catalogos().length === 0 || isImporting() || resultado() !== null" (click)="importar()">
+          @if (isImporting()) {
+            <span class="spinner-border spinner-border-sm me-1"></span> Importando...
+          } @else {
+            <ion-icon name="cloud-upload-outline"></ion-icon> Iniciar importación
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

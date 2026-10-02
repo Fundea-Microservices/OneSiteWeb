@@ -1,0 +1,187 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/flujo-fondos']">Flujo de Fondos</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/flujo-fondos/catalogos']">Catálogos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ catalogo()?.codigo ?? 'Opciones' }}</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+            Opciones del catálogo
+            @if (catalogo(); as cat) {
+            <b>{{ cat.nombre }}</b>
+            <span class="badge bg-secondary ms-1">{{ cat.codigo }}</span>
+            @if (cat.catalogoPadre) {
+            <span class="small text-muted ms-2">depende de <code>{{ cat.catalogoPadre.codigo }}</code></span>
+            }
+            @if (!cat.activo) {
+            <span class="badge bg-warning text-dark ms-1">Inactivo</span>
+            }
+            }
+        </span>
+        <button class="btn btn-primary btn-sm" [disabled]="!catalogo()" (click)="openModal(true)">
+            Crear nueva opción
+        </button>
+    </div>
+    <div class="card-body">
+        <form class="row g-3">
+            <div class="col-auto">
+                <label for="txtBuscar" class="visually-hidden">Buscar</label>
+                <input type="text" class="form-control form-control-sm" id="txtBuscar" placeholder="Código o nombre"
+                    (input)="buscador.set(txtBuscar.value)" (keyup.enter)="buscar()" #txtBuscar>
+            </div>
+            @if (tienePadre()) {
+            <div class="col-auto">
+                <label for="selectPadre" class="visually-hidden">Padre</label>
+                <select class="form-select form-select-sm" id="selectPadre"
+                    (change)="padreFilter.set(selPadre.value); buscar()" #selPadre>
+                    <option value="">{{ catalogo()?.catalogoPadre?.nombre ?? 'Padre' }}: todos</option>
+                    @for (op of opcionesPadre(); track op.id) {
+                    <option [value]="op.id">{{ op.nombre }}</option>
+                    }
+                </select>
+            </div>
+            }
+            <div class="col-auto">
+                <label for="selectActivo" class="visually-hidden">Estado</label>
+                <select class="form-select form-select-sm" id="selectActivo"
+                    (change)="activoFilter.set($any(selActivo.value)); buscar()" #selActivo>
+                    <option value="">Todos</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="button" (click)="buscar()" class="btn btn-success btn-sm mb-3">
+                    Buscar
+                </button>
+            </div>
+        </form>
+
+        <div class="small text-muted mb-2">
+            <ion-icon name="reorder-three-outline" class="align-middle"></ion-icon>
+            Arrastra una fila desde la columna # para cambiar el orden en que aparece en los selects.
+            @if (guardandoOrden()) {
+            <span class="ms-2 text-primary">
+                <span class="spinner-border spinner-border-sm"></span> Guardando orden...
+            </span>
+            }
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-sm table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th class="text-center" scope="col">#</th>
+                        <th class="text-center" scope="col">Código</th>
+                        <th class="text-center" scope="col">Nombre</th>
+                        @if (tienePadre()) {
+                        <th class="text-center" scope="col">Padre</th>
+                        }
+                        <th class="text-center" scope="col">Orden</th>
+                        <th class="text-center" scope="col">Por defecto</th>
+                        <th class="text-center" scope="col">Activo</th>
+                        <th class="text-center" scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="text-[0.85em]" cdkDropList cdkDropListLockAxis="y"
+                    [cdkDropListDisabled]="guardandoOrden() || isLoading()" (cdkDropListDropped)="onDrop($event)">
+                    @for (item of opcionesList(); track item.id; let i = $index) {
+                    <tr cdkDrag>
+                        <th scope="row" class="text-nowrap drag-handle" cdkDragHandle title="Arrastra para cambiar el orden">
+                            <ion-icon name="reorder-three-outline" class="text-muted align-middle"></ion-icon>
+                            {{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}
+                        </th>
+                        <td class="text-center"><code>{{ item.codigo }}</code></td>
+                        <td>{{ item.nombre }}</td>
+                        @if (tienePadre()) {
+                        <td>{{ nombrePadre(item) }}</td>
+                        }
+                        <td class="text-center">{{ item.orden }}</td>
+                        <td class="text-center">
+                            <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    [checked]="item.porDefecto" (change)="changePorDefecto(item, cbxDefecto)"
+                                    #cbxDefecto>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    [checked]="item.activo" (change)="changeActivo(item, cbxActivo)" #cbxActivo>
+                            </div>
+                        </td>
+                        <td class="text-center text-nowrap">
+                            <button class="btn btn-sm btn-success mx-1" title="Editar" (click)="openModal(false, item)">
+                                <ion-icon name="create-outline"></ion-icon>
+                            </button>
+                            <button class="btn btn-sm btn-warning mx-1" title="Desactivar"
+                                [disabled]="!item.activo" (click)="openDesactivarModal(item)">
+                                <ion-icon name="ban-outline"></ion-icon>
+                            </button>
+                        </td>
+                    </tr>
+                    } @empty {
+                    @if (!isLoading()) {
+                    <tr>
+                        <td [attr.colspan]="tienePadre() ? 8 : 7" class="text-center text-muted py-3">
+                            No hay opciones para este catálogo
+                        </td>
+                    </tr>
+                    }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+
+    </div>
+
+    <!-- Modal Upsert Opción-->
+    <div #upsertOpcionModal class="modal fade" id="upsertOpcionModal" tabindex="-1"
+        aria-labelledby="titleUpsertOpcionModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertOpcionModal">{{ modal().titulo }}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <app-upsert-opcion [catalogo]="catalogo()" [opcion]="opcionEdit()" [nuevo]="nuevaOpcion()"
+                        [formKey]="formKey()" [opcionesPadre]="opcionesPadre()" (save)="onSave($event)"
+                        (cancel)="closeModal()"></app-upsert-opcion>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Desactivar Opción-->
+    <div #desactivarOpcionModal class="modal fade" id="desactivarOpcionModal" tabindex="-1"
+        aria-labelledby="titleDesactivarOpcionModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 text-warning" id="titleDesactivarOpcionModal">Desactivar Opción</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Deseas desactivar la opción "{{ opcionEdit()?.nombre }}" (<code>{{ opcionEdit()?.codigo }}</code>)?</p>
+                    <p class="small text-muted mb-0">La opción no se borra: deja de aparecer en los selects de captura y
+                        puede reactivarse desde el switch "Activo".</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning"
+                        (click)="desactivarOpcion(opcionEdit()!)">Desactivar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

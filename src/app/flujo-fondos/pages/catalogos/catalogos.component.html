@@ -7,65 +7,98 @@
 </nav>
 
 <div class="card">
-    <div class="card-header">
-        Administrar Catálogos
-        <button class="btn btn-primary btn-sm float-end" (click)="openModal(true)">Crear
-            nuevo catálogo</button>
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Administrar Catálogos</span>
+        <div class="d-flex flex-wrap gap-2">
+            <app-descargar-plantilla codigo="FLUJOF-CATALOGOS" />
+            <button class="btn btn-outline-success btn-sm" (click)="importador.abrir()">
+                <ion-icon name="cloud-upload-outline"></ion-icon> Importar Excel
+            </button>
+            <button class="btn btn-primary btn-sm" (click)="openModal(true)">Crear nuevo catálogo</button>
+        </div>
     </div>
     <div class="card-body">
-        <form class="row g-3">            
+        <form class="row g-3">
             <div class="col-auto">
-                <label for="selectTipo" class="visually-hidden">Buscar por tipo</label>
-                <input type="text" class="form-control form-control-sm" id="selectTipo" placeholder="Tipo"
-                    (change)="tipoFilter.set(txtTipo.value)" (input)="tipoFilter.set(txtTipo.value)"
-                    (keyup.enter)="fetchData()" #txtTipo>
+                <label for="txtBuscar" class="visually-hidden">Buscar</label>
+                <input type="text" class="form-control form-control-sm" id="txtBuscar"
+                    placeholder="Código, código externo o nombre"
+                    (input)="buscador.set(txtBuscar.value)" (keyup.enter)="buscar()" #txtBuscar>
             </div>
             <div class="col-auto">
-                <button type="button" (click)="fetchData()" class="btn btn-success btn-sm mb-3">
+                <label for="selectActivo" class="visually-hidden">Estado</label>
+                <select class="form-select form-select-sm" id="selectActivo"
+                    (change)="activoFilter.set($any(selActivo.value)); buscar()" #selActivo>
+                    <option value="">Todos</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="button" (click)="buscar()" class="btn btn-success btn-sm mb-3">
                     Buscar
                 </button>
             </div>
         </form>
         <br>
 
-        <table class="table table-striped table-sm table-bordered table-hover">
-            <thead>
-                <tr>
-                    <th class="text-center" scope="col">#</th>
-                    <th class="text-center" scope="col">Código</th>
-                    <th class="text-center" scope="col">Cod. Externo</th>
-                    <th class="text-center" scope="col">Tipo</th>
-                    <th class="text-center" scope="col">Descripción</th>
-                    <th class="text-center" scope="col">Estado</th>
-                    <th class="text-center" scope="col">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="text-[0.85em]">
-                @for (item of catalogosList(); track item.catalogoId; let i = $index) {
-                <tr>
-                    <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
-                    <td class="text-center">{{ item.codigo }}</td>
-                    <td class="text-center">{{ item.codigoExterno }}</td>
-                    <td>{{ item.tipo }}</td>
-                    <td>{{ item.descripcion }}</td>
-                    <td class="text-center justify-items-center items-center">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault{{i}}"
-                                [checked]="item.estado" (change)="changeEstado(item, cbxEstado.checked)"
-                                [value]="item.estado" #cbxEstado>
-                        </div>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-success mx-1" (click)="openModal(false, item)"><ion-icon
-                                name="create-outline"></ion-icon></button>
-                        <button class="btn btn-sm btn-danger mx-1" (click)="openDeleteModal(item)">
-                            <ion-icon name="trash-outline"></ion-icon>
-                        </button>
-                    </td>
-                </tr>
-                }
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-sm table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th class="text-center" scope="col">#</th>
+                        <th class="text-center" scope="col">Código</th>
+                        <th class="text-center" scope="col">Cod. Externo</th>
+                        <th class="text-center" scope="col">Nombre</th>
+                        <th class="text-center" scope="col">Catálogo padre</th>
+                        <th class="text-center" scope="col">Activo</th>
+                        <th class="text-center" scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="text-[0.85em]">
+                    @for (item of catalogosList(); track item.id; let i = $index) {
+                    <tr>
+                        <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
+                        <td class="text-center"><code>{{ item.codigo }}</code></td>
+                        <td class="text-center">{{ item.codigoExterno }}</td>
+                        <td>{{ item.nombre }}</td>
+                        <td class="text-center">
+                            @if (item.catalogoPadre) {
+                            <code>{{ item.catalogoPadre.codigo }}</code>
+                            } @else {
+                            <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                <input class="form-check-input" type="checkbox" role="switch"
+                                    id="switchActivo{{i}}" [checked]="item.activo"
+                                    (change)="changeActivo(item, cbxActivo)" #cbxActivo>
+                            </div>
+                        </td>
+                        <td class="text-center text-nowrap">
+                            <button class="btn btn-sm btn-info mx-1" title="Ver opciones" (click)="verOpciones(item)">
+                                <ion-icon name="list-outline"></ion-icon>
+                            </button>
+                            <button class="btn btn-sm btn-success mx-1" title="Editar" (click)="openModal(false, item)">
+                                <ion-icon name="create-outline"></ion-icon>
+                            </button>
+                            <button class="btn btn-sm btn-warning mx-1" title="Desactivar"
+                                [disabled]="!item.activo" (click)="openDesactivarModal(item)">
+                                <ion-icon name="ban-outline"></ion-icon>
+                            </button>
+                        </td>
+                    </tr>
+                    } @empty {
+                    @if (!isLoading()) {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">No hay catálogos</td>
+                    </tr>
+                    }
+                    }
+                </tbody>
+            </table>
+        </div>
 
         <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
 
@@ -73,7 +106,7 @@
 
     <!-- Modal Upsert Catálogo-->
     <div #upsertCatalogoModal class="modal fade" id="upsertCatalogoModal" tabindex="-1"
-        aria-labelledby="exampleModalLabel" aria-hidden="true">
+        aria-labelledby="titleUpsertModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -81,7 +114,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <app-upsert-catalogo [catalogo]="catalogoEdit()" [nuevo]="nuevoCatalogo()" [key]="formKey()"
+                    <app-upsert-catalogo [catalogo]="catalogoEdit()" [nuevo]="nuevoCatalogo()" [formKey]="formKey()"
                         (save)="onSave($event)" (cancel)="closeModal()"></app-upsert-catalogo>
                 </div>
                 <div class="modal-footer">
@@ -90,23 +123,27 @@
         </div>
     </div>
 
-    <!-- Modal Delete Catálogo-->
-    <div #deleteCatalogoModal class="modal fade" id="deleteCatalogoModal" tabindex="-1"
-        aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <!-- Modal Importar Excel -->
+    <app-importar-catalogos #importador (importado)="fetchData()" />
+
+    <!-- Modal Desactivar Catálogo-->
+    <div #desactivarCatalogoModal class="modal fade" id="desactivarCatalogoModal" tabindex="-1"
+        aria-labelledby="titleDesactivarModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5 text-red" id="titleDeleteModal">Eliminar Catálogo</h1>
+                    <h1 class="modal-title fs-5 text-warning" id="titleDesactivarModal">Desactivar Catálogo</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar el catálogo "{{ catalogoEdit().descripcion }}"?</p>
-                    <p>Código: {{ catalogoEdit().codigo }} - Tipo: {{ catalogoEdit().tipo }}</p>
+                    <p>¿Deseas desactivar el catálogo "{{ catalogoEdit()?.nombre }}" (<code>{{ catalogoEdit()?.codigo }}</code>)?</p>
+                    <p class="small text-muted mb-0">El catálogo no se borra: deja de aparecer en los selects y puede
+                        reactivarse desde el switch "Activo".</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger"
-                        (click)="deleteCatalogo(catalogoEdit())">Eliminar</button>
+                    <button type="button" class="btn btn-warning"
+                        (click)="desactivarCatalogo(catalogoEdit()!)">Desactivar</button>
                 </div>
             </div>
         </div>
