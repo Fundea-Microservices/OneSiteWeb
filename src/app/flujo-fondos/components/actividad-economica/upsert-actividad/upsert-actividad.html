@@ -1,0 +1,268 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+
+  <h6 class="text-muted border-bottom pb-1 mb-3">Ficha técnica</h6>
+
+  <div class="row">
+    @if (!nuevo()) {
+      <div class="col-md-3 mb-3">
+        <label class="form-label">Código</label>
+        <input type="text" class="form-control form-control-sm" formControlName="codigo" />
+      </div>
+    }
+    <div class="mb-3" [class.col-md-9]="!nuevo()" [class.col-12]="nuevo()">
+      <label class="form-label">Nombre</label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombre" placeholder="Ej. Cultivo de zanahoria"
+        [class.is-invalid]="invalido('nombre')" />
+      @if (hasError('nombre', 'required')) {
+        <div class="text-danger small">Nombre es requerido</div>
+      }
+      @if (hasError('nombre', 'maxlength')) {
+        <div class="text-danger small">Máximo 150 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Región</label>
+      <select class="form-select form-select-sm" formControlName="region" [class.is-invalid]="invalido('region')">
+        <option [ngValue]="null">Seleccione...</option>
+        @for (op of opciones().region; track op.value) {
+          <option [ngValue]="op.value">{{ op.label }}</option>
+        }
+      </select>
+      @if (hasError('region', 'required')) {
+        <div class="text-danger small">Región es requerida</div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Actividad</label>
+      <select class="form-select form-select-sm" formControlName="actividad" [class.is-invalid]="invalido('actividad')">
+        <option [ngValue]="null">Seleccione...</option>
+        @for (op of opciones().actividad; track op.value) {
+          <option [ngValue]="op.value">{{ op.label }}</option>
+        }
+      </select>
+      @if (hasError('actividad', 'required')) {
+        <div class="text-danger small">Actividad es requerida</div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Subactividad</label>
+      <select class="form-select form-select-sm" formControlName="subActividad" [class.is-invalid]="invalido('subActividad')"
+        [attr.disabled]="!form().get('actividad')?.value || cargandoSubactividades() ? true : null">
+        <option [ngValue]="null">
+          @if (cargandoSubactividades()) { Cargando... }
+          @else if (!form().get('actividad')?.value) { Seleccione una actividad }
+          @else { Seleccione... }
+        </option>
+        @for (op of opciones().subActividad; track op.value) {
+          <option [ngValue]="op.value">{{ op.label }}</option>
+        }
+      </select>
+      @if (hasError('subActividad', 'required')) {
+        <div class="text-danger small">Subactividad es requerida</div>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Giro</label>
+      <select class="form-select form-select-sm" formControlName="giro" [class.is-invalid]="invalido('giro')">
+        <option [ngValue]="null">Seleccione...</option>
+        @for (op of opciones().giro; track op.value) {
+          <option [ngValue]="op.value">{{ op.label }}</option>
+        }
+      </select>
+      @if (hasError('giro', 'required')) {
+        <div class="text-danger small">Giro es requerido</div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Unidad de giro</label>
+      <select class="form-select form-select-sm" formControlName="unidadGiro" [class.is-invalid]="invalido('unidadGiro')">
+        <option [ngValue]="null">Seleccione...</option>
+        @for (op of opciones().unidadGiro; track op.value) {
+          <option [ngValue]="op.value">{{ op.label }}</option>
+        }
+      </select>
+      @if (hasError('unidadGiro', 'required')) {
+        <div class="text-danger small">Unidad de giro es requerida</div>
+      }
+    </div>
+
+    @if (esCuerdas()) {
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Área <span class="text-muted">(opcional)</span></label>
+        <select class="form-select form-select-sm" formControlName="area">
+          <option [ngValue]="null">Seleccione...</option>
+          @for (op of opciones().area; track op.value) {
+            <option [ngValue]="op.value">{{ op.label }}</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+
+  <div class="row">
+    <div class="col-md-2 mb-3">
+      <label class="form-label">Ciclo (meses)</label>
+      <input type="number" class="form-control form-control-sm" formControlName="ciclo" min="1" step="1"
+        [class.is-invalid]="invalido('ciclo')" />
+      @if (hasError('ciclo', 'required')) {
+        <div class="text-danger small">Requerido</div>
+      }
+      @if (hasError('ciclo', 'min') || hasError('ciclo', 'pattern')) {
+        <div class="text-danger small">Entero mayor o igual a 1</div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Medida de producción</label>
+      <select class="form-select form-select-sm" formControlName="medidaProduccion" [class.is-invalid]="invalido('medidaProduccion')">
+        <option [ngValue]="null">Seleccione...</option>
+        @for (op of opciones().medidaProduccion; track op.value) {
+          <option [ngValue]="op.value">{{ op.label }}</option>
+        }
+      </select>
+      @if (hasError('medidaProduccion', 'required')) {
+        <div class="text-danger small">Medida de producción es requerida</div>
+      }
+    </div>
+
+    <div class="col-md-2 mb-3">
+      <label class="form-label">Cantidad estimada</label>
+      <input type="number" class="form-control form-control-sm" formControlName="cantidadEstimada" min="0" step="0.01"
+        [class.is-invalid]="invalido('cantidadEstimada')" />
+      @if (hasError('cantidadEstimada', 'required')) {
+        <div class="text-danger small">Requerida</div>
+      }
+      @if (hasError('cantidadEstimada', 'min')) {
+        <div class="text-danger small">No puede ser negativa</div>
+      }
+      @if (hasError('cantidadEstimada', 'decimales')) {
+        <div class="text-danger small">Máximo 2 decimales</div>
+      }
+    </div>
+
+    <div class="col-md-2 mb-3">
+      <label class="form-label">Precio U. (Q)</label>
+      <input type="number" class="form-control form-control-sm" formControlName="precioU" min="0" step="0.01"
+        [class.is-invalid]="invalido('precioU')" />
+      @if (hasError('precioU', 'required')) {
+        <div class="text-danger small">Requerido</div>
+      }
+      @if (hasError('precioU', 'min')) {
+        <div class="text-danger small">No puede ser negativo</div>
+      }
+      @if (hasError('precioU', 'decimales')) {
+        <div class="text-danger small">Máximo 2 decimales</div>
+      }
+    </div>
+
+    <div class="col-md-2 mb-3">
+      <label class="form-label">Costo U. (Q) <span class="text-muted">(opc.)</span></label>
+      <input type="number" class="form-control form-control-sm" formControlName="costoU" min="0" step="0.01"
+        [class.is-invalid]="invalido('costoU')" />
+      @if (hasError('costoU', 'min')) {
+        <div class="text-danger small">No puede ser negativo</div>
+      }
+      @if (hasError('costoU', 'decimales')) {
+        <div class="text-danger small">Máximo 2 decimales</div>
+      }
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Descripción <span class="text-muted">(opcional)</span></label>
+    <textarea class="form-control form-control-sm" formControlName="descripcion" rows="2"
+      [class.is-invalid]="invalido('descripcion')"></textarea>
+    @if (hasError('descripcion', 'maxlength')) {
+      <div class="text-danger small">Máximo 500 caracteres</div>
+    }
+  </div>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-end border-bottom pb-1 mb-2">
+    <h6 class="text-muted mb-0">Distribución mensual del ciclo (%) <span class="fw-normal small">— el mes 1 es el inicio del ciclo</span></h6>
+    <button type="button" class="btn btn-link btn-sm p-0" (click)="copiarIngresosAEgresos()">
+      Copiar ingresos a egresos
+    </button>
+  </div>
+
+  <div class="table-responsive" formGroupName="distribucion">
+    <table class="table table-sm table-bordered align-middle text-center mb-1">
+      <thead>
+        <tr>
+          <th class="small text-start">Mes</th>
+          @for (mes of meses; track mes) {
+            <th class="small">{{ mes }}</th>
+          }
+          <th class="small">Total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (tipo of tipos; track tipo) {
+          <tr [formArrayName]="tipo">
+            <th class="text-start small">{{ tipo === 'INGRESO' ? 'Ingresos' : 'Egresos' }}</th>
+            @for (mes of meses; track mes; let i = $index) {
+              <td class="p-1" style="min-width: 4.5rem;">
+                <input type="number" class="form-control form-control-sm text-end px-1" [formControlName]="i"
+                  min="0" max="100" step="0.01" [attr.aria-label]="tipo + ' mes ' + mes"
+                  [class.is-invalid]="invalido(['distribucion', tipo, i])" />
+              </td>
+            }
+            <td class="fw-semibold text-nowrap small"
+              [class.text-success]="totales()[tipo] === 100" [class.text-danger]="totales()[tipo] !== 100">
+              {{ totales()[tipo] | number:'1.2-2' }} %
+            </td>
+            <td class="text-nowrap">
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" title="Repartir 100 % en partes iguales"
+                (click)="repartir(tipo)">
+                <ion-icon name="git-compare-outline"></ion-icon>
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1 ms-1" title="Poner todo en 0"
+                (click)="limpiar(tipo)">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="small mb-3">
+    @for (tipo of tipos; track tipo) {
+      @if (totales()[tipo] !== 100) {
+        <div class="text-danger">
+          {{ tipo === 'INGRESO' ? 'Ingresos' : 'Egresos' }}:
+          @if (diferencia(tipo) > 0) {
+            faltan {{ diferencia(tipo) | number:'1.2-2' }} % para llegar a 100 %
+          } @else {
+            sobran {{ -diferencia(tipo) | number:'1.2-2' }} %
+          }
+        </div>
+      }
+    }
+    @if (invalido('distribucion')) {
+      <div class="text-danger">Cada porcentaje debe estar entre 0 y 100, con máximo 2 decimales.</div>
+    }
+    @if (distribucionOk()) {
+      <div class="text-success">Ingresos y egresos suman 100 %.</div>
+    }
+  </div>
+
+  <div class="row justify-content-end">
+    <div class="col-auto">
+      <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid || !distribucionOk()">
+        {{ btnText }}
+      </button>
+    </div>
+  </div>
+</form>

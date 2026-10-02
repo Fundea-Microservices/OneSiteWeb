@@ -1,0 +1,82 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Código</label>
+      <input type="text" class="form-control form-control-sm text-uppercase" formControlName="codigo" placeholder="Ej. 0101" />
+      @if (!nuevo()) {
+        <div class="form-text">No se puede modificar.</div>
+      }
+      @if (hasError('codigo', 'required')) {
+        <div class="text-danger small">Código es requerido</div>
+      }
+      @if (hasError('codigo', 'maxlength')) {
+        <div class="text-danger small">Máximo 50 caracteres</div>
+      }
+    </div>
+
+    <div class="col-md-8 mb-3">
+      <label class="form-label">Nombre</label>
+      <input type="text" class="form-control form-control-sm" formControlName="nombre" />
+      @if (hasError('nombre', 'required')) {
+        <div class="text-danger small">Nombre es requerido</div>
+      }
+      @if (hasError('nombre', 'maxlength')) {
+        <div class="text-danger small">Máximo 150 caracteres</div>
+      }
+    </div>
+  </div>
+
+  @if (requierePadre()) {
+    <div class="mb-3">
+      <label class="form-label">
+        Opción padre
+        @if (catalogo()?.catalogoPadre; as padre) {
+          <span class="text-muted">({{ padre.nombre }})</span>
+        }
+      </label>
+      <select class="form-select form-select-sm" formControlName="padreId">
+        <option value="">Seleccione...</option>
+        @for (op of opcionesPadreSelect(); track op.id) {
+          <option [value]="op.id">{{ op.nombre }} ({{ op.codigo }}){{ op.activo ? '' : ' — inactiva' }}</option>
+        }
+      </select>
+      @if (hasError('padreId', 'required')) {
+        <div class="text-danger small">La opción padre es requerida</div>
+      }
+    </div>
+  }
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Orden</label>
+      <input type="number" class="form-control form-control-sm" formControlName="orden" min="0" />
+      @if (hasError('orden', 'min')) {
+        <div class="text-danger small">El orden no puede ser negativo</div>
+      }
+    </div>
+  </div>
+
+  <div class="d-flex gap-4 mb-3">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="opcionActivo" formControlName="activo" />
+      <label class="form-check-label" for="opcionActivo">Activo</label>
+    </div>
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="opcionPorDefecto" formControlName="porDefecto" />
+      <label class="form-check-label" for="opcionPorDefecto">Por defecto</label>
+    </div>
+  </div>
+  <div class="form-text mb-3">
+    Solo puede haber una opción por defecto {{ requierePadre() ? 'por cada padre' : 'en el catálogo' }}; al marcarla se
+    desmarca la anterior.
+  </div>
+
+  <div class="row justify-content-end">
+    <div class="col-auto">
+      <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid">
+        {{ btnText }}
+      </button>
+    </div>
+  </div>
+</form>

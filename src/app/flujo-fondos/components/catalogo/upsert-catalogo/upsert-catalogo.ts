@@ -3,21 +3,17 @@ import {
   Component,
   EventEmitter,
   Output,
+  computed,
   inject,
   input,
   effect,
-  signal
+  signal,
+  untracked
 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ICatalogo } from '../../../../../interfaces/catalogo';
-
-export interface CatalogoValidationRules {
-  codigo?: any[];
-  codigoExterno?: any[];
-  descripcion?: any[];
-  tipo?: any[];
-}
+import { ICatalogo, ICatalogoCreate, ICatalogoUpdate } from '../../../../../interfaces/catalogo';
+import { CatalogoService } from '../../../../../services/flujo-fondos/catalogo.service';
 
 @Component({
   selector: 'app-upsert-catalogo',
@@ -28,68 +24,74 @@ export interface CatalogoValidationRules {
 })
 export class UpsertCatalogoComponent {
   fb = inject(FormBuilder);
+  catalogoService = inject(CatalogoService);
 
-  catalogo = input<ICatalogo>({
-    catalogoId: '',
-    codigo: 0,
-    codigoExterno: 0,
-    descripcion: '',
-    estado: true,
-    tipo: '',
-  });
-
+  catalogo = input<ICatalogo | null>(null);
   nuevo = input<boolean>(true);
+  formKey = input<number>(0);
 
-  validationRules: CatalogoValidationRules = {
-    codigo: [Validators.required, Validators.min(0)],
-    codigoExterno: [Validators.required, Validators.min(0)],
-    descripcion: [Validators.required, Validators.minLength(3), Validators.maxLength(300)],
-    tipo: [Validators.required, Validators.minLength(3), Validators.maxLength(25)],
-  };
-
-  @Output() save = new EventEmitter<ICatalogo>();
+  @Output() save = new EventEmitter<ICatalogoCreate | ICatalogoUpdate>();
   @Output() cancel = new EventEmitter<void>();
 
   form = signal<FormGroup>(this.fb.group({}));
+  catalogos = signal<ICatalogo[]>([]);
+
+  // Un catálogo no puede depender de sí mismo
+  catalogosPadre = computed(() => {
+    const id = this.catalogo()?.id;
+    return this.catalogos().filter(c => c.id !== id);
+  });
 
   constructor() {
     effect(() => {
+      this.formKey();
       const isNuevo = this.nuevo();
       const catalogo = this.catalogo();
 
       const newForm = this.fb.group({
-        codigo: [catalogo.codigo, this.validationRules.codigo],
-        codigoExterno: [catalogo.codigoExterno, this.validationRules.codigoExterno],
-        descripcion: [catalogo.descripcion, this.validationRules.descripcion],
-        estado: [catalogo.estado],
-        tipo: [catalogo.tipo, this.validationRules.tipo],
+        codigo: [{ value: isNuevo ? '' : catalogo?.codigo ?? '', disabled: !isNuevo }, [Validators.required, Validators.maxLength(50)]],
+        codigoExterno: [isNuevo ? '' : catalogo?.codigoExterno ?? '', [Validators.required, Validators.maxLength(50)]],
+        nombre: [isNuevo ? '' : catalogo?.nombre ?? '', [Validators.required, Validators.maxLength(200)]],
+        catalogoPadreId: [isNuevo ? '' : catalogo?.catalogoPadreId ?? ''],
+        activo: [isNuevo ? true : catalogo?.activo ?? true],
       });
 
-      if (isNuevo) {
-        newForm.reset({
-          codigo: 0,
-          codigoExterno: 0,
-          descripcion: '',
-          estado: true,
-          tipo: '',
-        });
-      }
-
       this.form.set(newForm);
+      untracked(() => this.loadCatalogos());
     });
+  }
+
+  private async loadCatalogos() {
+    const resp = await this.catalogoService.getCatalogos({ all: true });
+    this.catalogos.set(resp?.data.catalogos ?? []);
   }
 
   get btnText(): string {
     return this.nuevo() ? 'Crear Catálogo' : 'Actualizar Catálogo';
   }
 
+  hasError(field: string, error: string): boolean {
+    const ctrl = this.form().get(field);
+    return !!(ctrl?.touched && ctrl?.errors?.[error]);
+  }
+
   onSubmit() {
-    if (this.form().valid) {
-      const value: ICatalogo = {
-        ...this.catalogo(),
-        ...this.form().value,
-      };
-      this.save.emit(value);
+    this.form().markAllAsTouched();
+    if (!this.form().valid) return;
+
+    // form.value excluye `codigo` en edición (control deshabilitado): el código no se puede cambiar
+    const { codigo, codigoExterno, nombre, catalogoPadreId, activo } = this.form().value;
+    const base = {
+      codigoExterno: codigoExterno.trim(),
+      nombre: nombre.trim(),
+      catalogoPadreId: catalogoPadreId || null,
+      activo,
+    };
+
+    if (this.nuevo()) {
+      this.save.emit({ ...base, codigo: codigo.trim() });
+    } else {
+      this.save.emit({ ...base, id: this.catalogo()!.id });
     }
   }
 

@@ -2,79 +2,56 @@
   <div class="row">
     <div class="col-md-6 mb-3">
       <label class="form-label">Código</label>
-      <input type="number" class="form-control form-control-sm" formControlName="codigo" />
-
-      @if (form().get('codigo')?.touched && form().get('codigo')?.invalid) {
-        <div class="text-danger small">
-          @if (form().get('codigo')?.errors?.['required']) {
-            <div>Código es requerido</div>
-          }
-          @if (form().get('codigo')?.errors?.['min']) {
-            <div>El código debe ser mayor o igual a 0</div>
-          }
-        </div>
+      <input type="text" class="form-control form-control-sm text-uppercase" formControlName="codigo" placeholder="Ej. MUNICIPIOS" />
+      @if (!nuevo()) {
+        <div class="form-text">El código no se puede modificar.</div>
+      }
+      @if (hasError('codigo', 'required')) {
+        <div class="text-danger small">Código es requerido</div>
+      }
+      @if (hasError('codigo', 'maxlength')) {
+        <div class="text-danger small">Máximo 50 caracteres</div>
       }
     </div>
 
     <div class="col-md-6 mb-3">
       <label class="form-label">Código Externo</label>
-      <input type="number" class="form-control form-control-sm" formControlName="codigoExterno" />
-
-      @if (form().get('codigoExterno')?.touched && form().get('codigoExterno')?.invalid) {
-        <div class="text-danger small">
-          @if (form().get('codigoExterno')?.errors?.['required']) {
-            <div>Código externo es requerido</div>
-          }
-          @if (form().get('codigoExterno')?.errors?.['min']) {
-            <div>El código externo debe ser mayor o igual a 0</div>
-          }
-        </div>
+      <input type="text" class="form-control form-control-sm text-uppercase" formControlName="codigoExterno" />
+      @if (hasError('codigoExterno', 'required')) {
+        <div class="text-danger small">Código externo es requerido</div>
+      }
+      @if (hasError('codigoExterno', 'maxlength')) {
+        <div class="text-danger small">Máximo 50 caracteres</div>
       }
     </div>
   </div>
 
   <div class="mb-3">
-    <label class="form-label">Tipo</label>
-    <input type="text" class="form-control form-control-sm" formControlName="tipo" />
-
-    @if (form().get('tipo')?.touched && form().get('tipo')?.invalid) {
-      <div class="text-danger small">
-        @if (form().get('tipo')?.errors?.['required']) {
-          <div>Tipo es requerido</div>
-        }
-        @if (form().get('tipo')?.errors?.['minlength']) {
-          <div>Mínimo 3 caracteres</div>
-        }
-        @if (form().get('tipo')?.errors?.['maxlength']) {
-          <div>Máximo 25 caracteres</div>
-        }
-      </div>
+    <label class="form-label">Nombre</label>
+    <input type="text" class="form-control form-control-sm" formControlName="nombre" placeholder="Ej. Municipios" />
+    @if (hasError('nombre', 'required')) {
+      <div class="text-danger small">Nombre es requerido</div>
+    }
+    @if (hasError('nombre', 'maxlength')) {
+      <div class="text-danger small">Máximo 200 caracteres</div>
     }
   </div>
 
   <div class="mb-3">
-    <label class="form-label">Descripción</label>
-    <textarea class="form-control form-control-sm" formControlName="descripcion" rows="3"></textarea>
-
-    @if (form().get('descripcion')?.touched && form().get('descripcion')?.invalid) {
-      <div class="text-danger small">
-        @if (form().get('descripcion')?.errors?.['required']) {
-          <div>Descripción es requerida</div>
-        }
-        @if (form().get('descripcion')?.errors?.['minlength']) {
-          <div>Mínimo 3 caracteres</div>
-        }
-        @if (form().get('descripcion')?.errors?.['maxlength']) {
-          <div>Máximo 300 caracteres</div>
-        }
-      </div>
-    }
+    <label class="form-label">Catálogo padre <span class="text-muted">(opcional)</span></label>
+    <select class="form-select form-select-sm" formControlName="catalogoPadreId">
+      <option value="">— Sin padre —</option>
+      @for (cat of catalogosPadre(); track cat.id) {
+        <option [value]="cat.id">{{ cat.nombre }} ({{ cat.codigo }}){{ cat.activo ? '' : ' — inactivo' }}</option>
+      }
+    </select>
+    <div class="form-text">Catálogo del que depende, p. ej. MUNICIPIOS depende de DEPARTAMENTOS.</div>
   </div>
 
   <div class="mb-3">
     <div class="form-check form-switch">
-      <input class="form-check-input" type="checkbox" formControlName="estado" />
-      <label class="form-check-label">Estado Activo</label>
+      <input class="form-check-input" type="checkbox" id="catalogoActivo" formControlName="activo" />
+      <label class="form-check-label" for="catalogoActivo">Activo</label>
     </div>
   </div>
 

@@ -1,11 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  CUSTOM_ELEMENTS_SCHEMA,
   EventEmitter,
   Output,
   effect,
   inject,
-  input
+  input,
+  signal
 } from '@angular/core';
 import {
   FormBuilder,
@@ -21,6 +23,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './change-password.component.html',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ChangePasswordComponent {
@@ -31,6 +34,8 @@ export class ChangePasswordComponent {
 
   @Output() cancel = new EventEmitter<void>();
   @Output() changePassword = new EventEmitter<{ current: string; new: string }>();
+
+  verPassword = signal<Record<string, boolean>>({});
 
   form: FormGroup = this.fb.group({
     currentPassword: ['',],
@@ -51,6 +56,11 @@ export class ChangePasswordComponent {
 
   private initForm(): void {
     this.form.reset();
+    this.verPassword.set({});
+  }
+
+  toggleVerPassword(campo: string) {
+    this.verPassword.update(v => ({ ...v, [campo]: !v[campo] }));
   }
 
   get passwordsDoNotMatch(): boolean {   
