@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal } from '@angular/core';
 import { AuthService } from '../../../../services/auth.service';
 import { Router } from '@angular/router';
 import { IMenu } from '../../../../interfaces/auth';
@@ -13,6 +13,7 @@ import { LoadingScreenComponent } from '../../../shared/components/loading-scree
   imports: [UpperCasePipe, LoadingScreenComponent],
   templateUrl: './login-page.html',
   styleUrl: './login-page.css',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class LoginPageComponent {
@@ -29,6 +30,9 @@ export default class LoginPageComponent {
   onPasswordInput(value: string) {
     this.password.set(value);
   }
+
+  verPassword = signal(false);
+  toggleVerPassword() { this.verPassword.update(v => !v); }
 
   errorObj = signal<{ message: string; code: number, isError: boolean }>({
     message: '',
