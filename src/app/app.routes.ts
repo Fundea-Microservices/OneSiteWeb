@@ -309,6 +309,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./flujo-fondos/pages/catalogo-opciones/catalogo-opciones.component'),
                     },
                     {
+                        path: 'actividades-economicas',
+                        loadComponent: () => import('./flujo-fondos/pages/actividades-economicas/actividades-economicas.component'),
+                    },
+                    {
                         path: '**',
                         redirectTo: '',
                     }

@@ -1,0 +1,165 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/flujo-fondos']">Flujo de Fondos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Actividades Económicas</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Administrar Actividades Económicas</span>
+        <button class="btn btn-primary btn-sm" (click)="openModal(true)">Crear nueva actividad</button>
+    </div>
+    <div class="card-body">
+        <form class="row g-3">
+            <div class="col-auto">
+                <label for="txtBuscar" class="visually-hidden">Buscar</label>
+                <input type="text" class="form-control form-control-sm" id="txtBuscar" placeholder="Código o nombre"
+                    (input)="buscador.set(txtBuscar.value)" (keyup.enter)="buscar()" #txtBuscar>
+            </div>
+            <div class="col-auto">
+                <label for="selectRegion" class="visually-hidden">Región</label>
+                <select class="form-select form-select-sm" id="selectRegion" (change)="onRegionChange(selRegion.value)"
+                    #selRegion>
+                    <option value="">Región: Todas</option>
+                    @for (op of opcionesRegion(); track op.value) {
+                    <option [value]="op.value">{{ op.label }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <label for="selectActividad" class="visually-hidden">Actividad</label>
+                <select class="form-select form-select-sm" id="selectActividad"
+                    (change)="onActividadChange(selActividad.value)" #selActividad>
+                    <option value="">Actividad: Todas</option>
+                    @for (op of opcionesActividad(); track op.value) {
+                    <option [value]="op.value">{{ op.label }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <label for="selectSubActividad" class="visually-hidden">Subactividad</label>
+                <select class="form-select form-select-sm" id="selectSubActividad" [disabled]="!actividadFilter()"
+                    [value]="subActividadFilter()" (change)="onSubActividadChange(selSub.value)" #selSub>
+                    <option value="">Subactividad: Todas</option>
+                    @for (op of opcionesSubActividad(); track op.value) {
+                    <option [value]="op.value">{{ op.label }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="button" (click)="buscar()" class="btn btn-success btn-sm mb-3">
+                    Buscar
+                </button>
+            </div>
+        </form>
+
+        @if (isLoading()) {
+        <div class="text-center py-3">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2 text-muted small">Cargando...</span>
+        </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-striped table-sm table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th class="text-center" scope="col">#</th>
+                        <th class="text-center" scope="col">Código</th>
+                        <th class="text-center" scope="col">Nombre</th>
+                        <th class="text-center" scope="col">Región</th>
+                        <th class="text-center" scope="col">Actividad</th>
+                        <th class="text-center" scope="col">Subactividad</th>
+                        <th class="text-center" scope="col">Giro</th>
+                        <th class="text-center" scope="col">Duración</th>
+                        <th class="text-center" scope="col">Producción</th>
+                        <th class="text-center" scope="col">Precio U.</th>
+                        <th class="text-center" scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="text-[0.85em]">
+                    @for (item of actividadesList(); track item.id; let i = $index) {
+                    <tr>
+                        <th scope="row">{{ (i + 1) + ((pagination().page - 1) * pagination().pageSize) }}</th>
+                        <td class="text-center text-nowrap"><code>{{ item.codigo }}</code></td>
+                        <td>{{ item.nombre }}</td>
+                        <td>{{ nombre('region', item.region) }}</td>
+                        <td>{{ nombre('actividad', item.actividad) }}</td>
+                        <td>{{ nombre('subActividad', item.subActividad) }}</td>
+                        <td>{{ nombre('giro', item.giro) }}</td>
+                        <td class="text-center text-nowrap">{{ item.ciclo }} {{ item.ciclo === 1 ? 'mes' : 'meses' }}</td>
+                        <td class="text-end text-nowrap">
+                            {{ item.cantidadEstimada | number:'1.0-2' }} {{ nombre('medidaProduccion', item.medidaProduccion) }}
+                        </td>
+                        <td class="text-end text-nowrap">Q {{ item.precioU | number:'1.2-2' }}</td>
+                        <td class="text-center text-nowrap">
+                            <button class="btn btn-sm btn-success mx-1" title="Editar"
+                                [disabled]="cargandoEdicionId() === item.id" (click)="openModal(false, item)">
+                                @if (cargandoEdicionId() === item.id) {
+                                <span class="spinner-border spinner-border-sm"></span>
+                                } @else {
+                                <ion-icon name="create-outline"></ion-icon>
+                                }
+                            </button>
+                            <button class="btn btn-sm btn-danger mx-1" title="Eliminar" (click)="openDeleteModal(item)">
+                                <ion-icon name="trash-outline"></ion-icon>
+                            </button>
+                        </td>
+                    </tr>
+                    } @empty {
+                    @if (!isLoading()) {
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-3">No hay actividades económicas</td>
+                    </tr>
+                    }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+
+    </div>
+
+    <!-- Modal Upsert Actividad -->
+    <div #upsertActividadModal class="modal fade" id="upsertActividadModal" tabindex="-1"
+        aria-labelledby="titleUpsertActividadModal" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="titleUpsertActividadModal">{{ modal().titulo }}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <app-upsert-actividad [actividad]="actividadEdit()" [nuevo]="nuevaActividad()" [formKey]="formKey()"
+                        (save)="onSave($event)" (cancel)="closeModal()"></app-upsert-actividad>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Eliminar Actividad -->
+    <div #deleteActividadModal class="modal fade" id="deleteActividadModal" tabindex="-1"
+        aria-labelledby="titleDeleteActividadModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 text-danger" id="titleDeleteActividadModal">Eliminar Actividad Económica</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar la actividad "{{ actividadEdit()?.nombre }}"
+                        (<code>{{ actividadEdit()?.codigo }}</code>)?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger"
+                        (click)="deleteActividad(actividadEdit()!)">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
