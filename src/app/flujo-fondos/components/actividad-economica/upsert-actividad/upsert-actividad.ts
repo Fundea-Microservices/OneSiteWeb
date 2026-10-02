@@ -84,11 +84,24 @@ export class UpsertActividadComponent {
   distribucion = signal<DistribucionForm>({ INGRESO: ceros(), EGRESO: ceros() });
 
   // Totales en porcentaje (sumados en centésimas)
-  totales = computed(() => {
+  totales = computed<Record<TipoDistribucion, number>>(() => {
     const d = this.distribucion();
     return { INGRESO: sumaCentesimas(d.INGRESO) / 100, EGRESO: sumaCentesimas(d.EGRESO) / 100 };
   });
   distribucionOk = computed(() => distribucionCompleta(this.distribucion()));
+
+  // Estimación: ingreso = cantidad × precio U., costo = cantidad × costo U.
+  montos = signal<{ cantidad: number | null; precioU: number | null; costoU: number | null }>({ cantidad: null, precioU: null, costoU: null });
+  estimacion = computed(() => {
+    const { cantidad, precioU, costoU } = this.montos();
+    // En centavos para no arrastrar errores de punto flotante
+    const multiplicar = (a: number | null, b: number | null) =>
+      a === null || b === null ? null : Math.round(a * 100) * Math.round(b * 100) / 10000;
+    const ingreso = multiplicar(cantidad, precioU);
+    const costo = multiplicar(cantidad, costoU);
+    const utilidad = ingreso === null ? null : (Math.round(ingreso * 100) - Math.round((costo ?? 0) * 100)) / 100;
+    return { ingreso, costo, utilidad };
+  });
 
   private subs: Subscription[] = [];
 
@@ -140,7 +153,19 @@ export class UpsertActividadComponent {
     this.distribucion.set(distribucion);
     this.esCuerdas.set(mismoCodigo(a?.unidadGiro, UNIDAD_GIRO_CUERDAS));
 
+    const numero = (valor: unknown) => valor === null || valor === undefined || valor === '' || isNaN(Number(valor)) ? null : Number(valor);
+    const actualizarMontos = () => this.montos.set({
+      cantidad: numero(form.controls.cantidadEstimada.value),
+      precioU: numero(form.controls.precioU.value),
+      costoU: numero(form.controls.costoU.value),
+    });
+    actualizarMontos();
+
     this.subs.push(
+      form.controls.cantidadEstimada.valueChanges.subscribe(actualizarMontos),
+      form.controls.precioU.valueChanges.subscribe(actualizarMontos),
+      form.controls.costoU.valueChanges.subscribe(actualizarMontos),
+
       form.controls.distribucion.valueChanges.subscribe(valor => {
         this.distribucion.set({ INGRESO: valor.INGRESO ?? ceros(), EGRESO: valor.EGRESO ?? ceros() } as DistribucionForm);
       }),

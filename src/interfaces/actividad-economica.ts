@@ -21,7 +21,7 @@ export interface IActividadEconomica {
     codigo: string;              // ACT-001, generado por el sistema
     nombre: string;
     giro: string;                // código de opción de GIRO
-    unidadGiro: string;          // código de opción de UNGI
+    unidadGiro: string;          // código de opción de UNI-GIR
     region: string;              // código de opción de REGION
     actividad: string;           // código de opción de ACTI
     subActividad: string;        // código de opción de SUB-ACT

@@ -186,6 +186,47 @@
     }
   </div>
 
+  <!-- Estimación según la cantidad -->
+  @let est = estimacion();
+  @let m = montos();
+  <div class="row g-3 rounded border border-primary-subtle bg-primary-subtle bg-opacity-25 mx-0 mb-4 p-3">
+    <div class="col-md-4">
+      <div class="small fw-semibold text-uppercase text-secondary">Ingreso / Área</div>
+      <div class="fs-5 fw-bold text-primary">
+        {{ est.ingreso !== null ? 'Q ' + (est.ingreso | number:'1.2-2') : '—' }}
+      </div>
+      <div class="small text-muted">
+        @if (est.ingreso !== null) {
+          ({{ m.cantidad | number:'1.0-2' }} × Q {{ m.precioU | number:'1.2-2' }})
+        } @else {
+          Ingresa cantidad y precio unitario
+        }
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="small fw-semibold text-uppercase text-secondary">Costo / Área</div>
+      <div class="fs-5 fw-bold text-danger">
+        {{ est.costo !== null ? 'Q ' + (est.costo | number:'1.2-2') : '—' }}
+      </div>
+      <div class="small text-muted">
+        @if (est.costo !== null) {
+          ({{ m.cantidad | number:'1.0-2' }} × Q {{ m.costoU | number:'1.2-2' }})
+        } @else {
+          Ingresa cantidad y costo unitario
+        }
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="small fw-semibold text-uppercase text-secondary">Utilidad bruta</div>
+      <div class="fs-5 fw-bold" [class.text-success]="(est.utilidad ?? 0) >= 0" [class.text-danger]="(est.utilidad ?? 0) < 0">
+        {{ est.utilidad !== null ? 'Q ' + (est.utilidad | number:'1.2-2') : '—' }}
+      </div>
+      <div class="small" [class.text-success]="(est.utilidad ?? 0) >= 0" [class.text-danger]="(est.utilidad ?? 0) < 0">
+        (Ingresos - Costos)
+      </div>
+    </div>
+  </div>
+
   <div class="d-flex flex-wrap justify-content-between align-items-end border-bottom pb-1 mb-2">
     <h6 class="text-muted mb-0">Distribución mensual del ciclo (%) <span class="fw-normal small">— el mes 1 es el inicio del ciclo</span></h6>
     <button type="button" class="btn btn-link btn-sm p-0" (click)="copiarIngresosAEgresos()">
