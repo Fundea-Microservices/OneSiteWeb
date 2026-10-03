@@ -1,0 +1,212 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+
+  <!-- Sección 1: Datos Generales del Modelo -->
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2 py-2">
+      <span class="badge rounded-pill text-bg-primary">1</span>
+      <div>
+        <div class="fw-semibold">Datos Generales del Modelo</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-semibold small">Código Interno (*)</label>
+          <input type="text" class="form-control form-control-sm" formControlName="codigoInterno"
+            placeholder="FU01" [class.is-invalid]="campoInvalido('codigoInterno')" />
+          @if (campoInvalido('codigoInterno')) {
+            <div class="invalid-feedback">
+              Obligatorio. Solo letras, números, guion y guion bajo.
+            </div>
+          }
+          @if (!nuevo()) {
+            <div class="form-text">
+              El código no se edita. Para cambiar la parametrización, genere una versión nueva.
+            </div>
+          }
+        </div>
+
+        <div class="col-12 col-md-8">
+          <label class="form-label fw-semibold small">Nombre del Scoring (*)</label>
+          <input type="text" class="form-control form-control-sm" formControlName="nombreScoring"
+            placeholder="MICROCRÉDITO" [class.is-invalid]="campoInvalido('nombreScoring')" />
+          @if (campoInvalido('nombreScoring')) {
+            <div class="invalid-feedback">Obligatorio.</div>
+          }
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Descripción (*)</label>
+          <textarea class="form-control form-control-sm" rows="2" formControlName="descripcion"
+            placeholder="Ejm: Evaluación de riesgo crediticio para microempresas de Q5,000 a Q50,000"
+            [class.is-invalid]="campoInvalido('descripcion')"></textarea>
+          @if (campoInvalido('descripcion')) {
+            <div class="invalid-feedback">Obligatorio.</div>
+          }
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-semibold small">Fecha de Vigencia (*)</label>
+          <input type="date" class="form-control form-control-sm" formControlName="fechaVigencia"
+            [class.is-invalid]="campoInvalido('fechaVigencia')" />
+          @if (campoInvalido('fechaVigencia')) {
+            <div class="invalid-feedback">Obligatoria.</div>
+          }
+          <div class="form-text">No puede ser anterior a hoy.</div>
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-label fw-semibold small">Versión</label>
+          <input type="text" class="form-control form-control-sm"
+            [value]="modelo()?.version ?? 1" disabled />
+          <div class="form-text">La administra el sistema.</div>
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-label fw-semibold small">Estado (*)</label>
+          <select class="form-select form-select-sm" formControlName="estado">
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección 2: Configuración de Procesos de Cálculo -->
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2 py-2">
+      <span class="badge rounded-pill text-bg-primary">2</span>
+      <div>
+        <div class="fw-semibold">Configuración de Procesos de Cálculo</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Tipo de Scoring (*)</label>
+          <select class="form-select form-select-sm" formControlName="idTipoScoring"
+            [class.is-invalid]="campoInvalido('idTipoScoring')">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (tipo of tipos(); track tipo.idTipoScoring) {
+              <option [ngValue]="tipo.idTipoScoring">{{ tipo.descripcion }}</option>
+            }
+          </select>
+          @if (campoInvalido('idTipoScoring')) {
+            <div class="invalid-feedback">Obligatorio.</div>
+          }
+        </div>
+
+        <div class="col-12">
+          @if (ejecutaProcedimiento()) {
+            <div class="alert alert-warning py-2 small mb-0">
+              Este tipo delega el cálculo en un procedimiento almacenado, así que
+              <strong>Proceso Cálculo de Punteo es obligatorio</strong>.
+              <span class="badge text-bg-warning me-1">Ejecuta SP</span>
+            </div>
+          } @else {
+            <div class="alert alert-secondary py-2 small mb-0">
+              El punteo se calcula por regla directa en el aplicativo. Los procedimientos son opcionales.
+              <span class="badge text-bg-secondary me-1">Cálculo Directo</span>
+            </div>
+          }
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-semibold small">
+            Proceso Cálculo de Variables @if (!ejecutaProcedimiento()) { <span class="text-muted">(Opcional)</span> }
+          </label>
+          <input type="text" class="form-control form-control-sm font-monospace"
+            formControlName="procesoVariables" placeholder="proc_calc_vars_micro" />
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-semibold small">
+            Proceso Cálculo de Punteo
+            @if (ejecutaProcedimiento()) { (*) } @else { <span class="text-muted">(Opcional)</span> }
+          </label>
+          <input type="text" class="form-control form-control-sm font-monospace"
+            formControlName="procesoPunteo" placeholder="proc_calc_punteo_micro"
+            [class.is-invalid]="campoInvalido('procesoPunteo')" />
+          @if (campoInvalido('procesoPunteo')) {
+            <div class="invalid-feedback">
+              Obligatorio para este tipo de scoring.
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección 3: Rangos del Dictamen -->
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2 py-2">
+      <span class="badge rounded-pill text-bg-primary">3</span>
+      <div>
+        <div class="fw-semibold">Rangos del Dictamen</div>
+        <!-- <div class="text-muted small">En qué tramo de punteo cae cada color del semáforo</div>-->
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0" formArrayName="rangos">
+          <thead>
+            <tr>
+              <th class="text-center" style="width: 18%;">Semáforo</th>
+              <th class="text-center" style="width: 20%;">Punteo mínimo</th>
+              <th class="text-center" style="width: 20%;">Punteo máximo</th>
+              <th class="text-center">Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rango of rangos.controls; track $index) {
+              <tr [formGroupName]="$index">
+                <td>
+                  <span class="badge w-100"
+                    [class.text-bg-danger]="rango.value.semaforo === 'Rojo'"
+                    [class.text-bg-warning]="rango.value.semaforo === 'Amarillo'"
+                    [class.text-bg-success]="rango.value.semaforo === 'Verde'">
+                    {{ rango.value.semaforo }}
+                  </span>
+                </td>
+                <td>
+                  <input type="number" step="0.0001" class="form-control form-control-sm text-end"
+                    formControlName="puntajeMinimo" />
+                </td>
+                <td>
+                  <input type="number" step="0.0001" class="form-control form-control-sm text-end"
+                    formControlName="puntajeMaximo" />
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm"
+                    formControlName="descripcion" placeholder="Riesgo alto" />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (errorRangos()) {
+        <div class="alert alert-danger py-2 small mt-3 mb-0">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          {{ errorRangos() }}
+        </div>
+      }
+
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="submit" class="btn btn-success btn-sm" [disabled]="!!errorRangos()">
+      <ion-icon name="checkmark-outline"></ion-icon> Guardar Modelo
+    </button>
+  </div>
+
+</form>

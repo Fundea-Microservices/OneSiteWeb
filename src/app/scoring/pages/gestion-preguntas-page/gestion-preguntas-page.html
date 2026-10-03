@@ -1,0 +1,234 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item">Módulo de Scoring Crediticio</li>
+    <li class="breadcrumb-item active" aria-current="page">Gestión de Preguntas</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <span class="fw-semibold">Gestión de Cuestionario</span>
+      <div class="text-muted small">
+        Configuración de preguntas, catálogos enlazados y fórmulas matemáticas calculadas.
+      </div>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="openModal(true)" [disabled]="!scoringId()">
+      <ion-icon name="add-outline"></ion-icon> Nueva Pregunta
+    </button>
+  </div>
+
+  <div class="card-body">
+
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-5">
+        <label class="form-label fw-semibold small mb-1">Tipo de Scoring (*)</label>
+        <select class="form-select form-select-sm" [class.is-invalid]="!scoringId()"
+          (change)="onScoringChange(selScoring.value)" #selScoring>
+          <option value="">Seleccione un scoring...</option>
+          @for (scoring of scoringList(); track scoring.scoringId) {
+            <option [value]="scoring.scoringId">
+              {{ scoring.nombreScoring }} ({{ scoring.codigoInterno }} v{{ scoring.version }})
+            </option>
+          }
+        </select>
+      </div>
+      <div class="col-12 col-md-5">
+        <label class="form-label fw-semibold small mb-1">Buscar Pregunta</label>
+        <input type="text" class="form-control form-control-sm"
+          placeholder="Buscar por código (P1...) o enunciado..."
+          [disabled]="!scoringId()"
+          (input)="buscador.set(txtBuscar.value)" (keyup.enter)="fetchData()" #txtBuscar />
+      </div>
+      <div class="col-12 col-md-2 d-flex align-items-end">
+        <button type="button" class="btn btn-success btn-sm w-100"
+          [disabled]="!scoringId()" (click)="fetchData()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+      </div>
+    </div>
+
+    @if (!scoringId()) {
+      <div class="alert alert-secondary text-center py-4 mb-0">
+        <ion-icon name="help-circle-outline" style="font-size: 2rem;"></ion-icon>
+        <div class="mt-2">Seleccione un scoring para listar su cuestionario.</div>
+      </div>
+    } @else {
+
+      @if (isLoading()) {
+        <div class="text-center py-3">
+          <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        </div>
+      }
+
+      <div class="table-responsive d-none d-md-block">
+        <table class="table table-striped table-sm table-bordered table-hover align-middle">
+          <thead>
+            <tr>
+              <th class="text-center" style="width: 4%;"></th>
+              <th class="text-center" style="width: 8%;">Cód</th>
+              <th style="width: 32%;">Enunciado</th>
+              <th class="text-center" style="width: 14%;">Tipo Control</th>
+              <th class="text-center" style="width: 12%;">Catálogo</th>
+              <th class="text-center" style="width: 8%;">Calculada</th>
+              <th class="text-center" style="width: 8%;">Visible</th>
+              <th class="text-center" style="width: 14%;">Acc.</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of preguntaList(); track item.preguntaId; let i = $index) {
+              <tr draggable="true"
+                (dragstart)="onDragStart(i)"
+                (dragover)="onDragOver($event)"
+                (drop)="onDrop(i)">
+                <td class="text-center text-muted" style="cursor: grab;">
+                  <ion-icon name="reorder-two-outline"></ion-icon>
+                </td>
+                <td class="text-center fw-semibold text-primary font-monospace">
+                  {{ item.codigoPregunta }}
+                </td>
+                <td class="text-break">
+                  {{ item.enunciado }}
+                  @if (item.respuestaCalculada && item.formula) {
+                    <div class="small text-muted font-monospace mt-1">
+                      f(x) = {{ item.formula }}
+                    </div>
+                  }
+                  @if (!item.aplicaScore) {
+                    <span class="badge text-bg-light border mt-1">No aporta al punteo</span>
+                  }
+                </td>
+                <td class="text-center">
+                  <span class="badge text-bg-light border">{{ etiquetaTipo(item.tipoPregunta) }}</span>
+                </td>
+                <td class="text-center small font-monospace"
+                  [class.text-muted]="!item.catalogoRespuestasId">
+                  {{ nombreCatalogo(item.catalogoRespuestasId) }}
+                </td>
+                <td class="text-center">
+                  @if (item.respuestaCalculada) {
+                    <span class="badge text-bg-warning">SÍ</span>
+                  } @else {
+                    <span class="badge text-bg-light border">NO</span>
+                  }
+                </td>
+                <td class="text-center">
+                  @if (item.preguntaVisible) {
+                    <span class="badge text-bg-success">SÍ</span>
+                  } @else {
+                    <span class="badge text-bg-secondary">NO</span>
+                  }
+                </td>
+                <td class="text-center text-nowrap">
+                  <button class="btn btn-sm btn-success mx-1" title="Editar"
+                    (click)="openModal(false, item)">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+                  <button class="btn btn-sm btn-danger mx-1" title="Eliminar"
+                    (click)="openDeleteModal(item)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              @if (!isLoading()) {
+                <tr>
+                  <td colspan="8" class="text-center text-muted py-3">
+                    Este scoring aún no tiene preguntas
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Cards Mobile -->
+      <div class="d-md-none">
+        @for (item of preguntaList(); track item.preguntaId) {
+          <div class="card mb-2">
+            <div class="card-body py-2">
+              <div class="d-flex justify-content-between">
+                <span class="fw-semibold text-primary font-monospace">{{ item.codigoPregunta }}</span>
+                <span class="badge text-bg-light border">{{ etiquetaTipo(item.tipoPregunta) }}</span>
+              </div>
+              <div class="mt-1">{{ item.enunciado }}</div>
+              @if (item.respuestaCalculada && item.formula) {
+                <div class="small text-muted font-monospace">f(x) = {{ item.formula }}</div>
+              }
+              <div class="d-flex gap-2 mt-2">
+                <button class="btn btn-sm btn-success flex-fill" (click)="openModal(false, item)">
+                  Editar
+                </button>
+                <button class="btn btn-sm btn-danger flex-fill" (click)="openDeleteModal(item)">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        } @empty {
+          @if (!isLoading()) {
+            <p class="text-center text-muted py-3">Este scoring aún no tiene preguntas</p>
+          }
+        }
+      </div>
+
+    }
+
+  </div>
+</div>
+
+<!-- Modal Configurar Pregunta -->
+<div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <ion-icon name="help-circle-outline" class="me-1"></ion-icon>
+          {{ modal().titulo }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        @if (scoringId(); as id) {
+          <app-upsert-pregunta-dinamica
+            [pregunta]="preguntaEdit()"
+            [scoringId]="id"
+            [catalogos]="catalogos()"
+            [nuevo]="nuevo()"
+            [formKey]="formKey()"
+            (save)="guardar($event)"
+            (cancel)="closeModal()" />
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal eliminar -->
+<div #deleteModal class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">Eliminar pregunta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          ¿Desea eliminar la pregunta
+          <b class="font-monospace">{{ preguntaAccion()?.codigoPregunta }}</b> —
+          {{ preguntaAccion()?.enunciado }}?
+        </p>
+        <div class="alert alert-warning py-2 small mb-0">
+          No se permite si otra fórmula referencia su código, ni si ya tiene
+          respuestas en evaluaciones registradas.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger btn-sm" (click)="confirmarEliminar()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>

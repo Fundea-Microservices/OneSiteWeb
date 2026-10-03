@@ -1,0 +1,219 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+
+  <!-- Sección 1: Enunciado y Tipo de Control -->
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2 py-2">
+      <span class="badge rounded-pill text-bg-primary">1</span>
+      <div>
+        <div class="fw-semibold">Enunciado y Tipo de Control</div>
+        <div class="text-muted small">Definición del campo, tipo de dato y enlace a catálogos</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-semibold small">Código Pregunta (*)</label>
+          <input type="text" class="form-control form-control-sm font-monospace"
+            formControlName="codigoPregunta" placeholder="P05"
+            [class.is-invalid]="campoInvalido('codigoPregunta')" />
+          @if (campoInvalido('codigoPregunta')) {
+            <div class="invalid-feedback">
+              Obligatorio. Debe empezar por letra y no repetirse en el scoring.
+            </div>
+          }
+          <div class="form-text">Es lo que referencian las fórmulas de otras preguntas.</div>
+        </div>
+
+        <div class="col-12 col-md-8">
+          <label class="form-label fw-semibold small">Tipo de Pregunta (*)</label>
+          <select class="form-select form-select-sm" formControlName="tipoPregunta">
+            @for (tipo of tiposPregunta; track tipo.valor) {
+              <option [value]="tipo.valor">{{ tipo.etiqueta }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Enunciado de la Pregunta (*)</label>
+          <input type="text" class="form-control form-control-sm"
+            formControlName="enunciado" placeholder="¿Cuál es la utilidad?"
+            [class.is-invalid]="campoInvalido('enunciado')" />
+          @if (campoInvalido('enunciado')) {
+            <div class="invalid-feedback">Obligatorio.</div>
+          }
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-semibold small">
+            Catálogo de Respuestas @if (requiereCatalogo()) { (*) }
+          </label>
+          <select class="form-select form-select-sm" formControlName="catalogoRespuestasId"
+            [class.is-invalid]="campoInvalido('catalogoRespuestasId')"
+            [attr.disabled]="requiereCatalogo() ? null : ''">
+            <option [ngValue]="null">Ninguno</option>
+            @for (catalogo of catalogosActivos(); track catalogo.catalogoId) {
+              <option [ngValue]="catalogo.catalogoId">
+                {{ catalogo.descripcionCatalogo }}
+                @if (catalogo.codigoExterno) { ({{ catalogo.codigoExterno }}) }
+              </option>
+            }
+          </select>
+          @if (campoInvalido('catalogoRespuestasId')) {
+            <div class="invalid-feedback">
+              Las preguntas de selección necesitan un catálogo de respuestas.
+            </div>
+          }
+          @if (!requiereCatalogo()) {
+            <div class="form-text">Solo aplica a botón de opción y lista desplegable.</div>
+          }
+        </div>
+
+        <div class="col-6 col-md-3">
+          <label class="form-label fw-semibold small">Pregunta Visible (*)</label>
+          <select class="form-select form-select-sm" formControlName="preguntaVisible">
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <label class="form-label fw-semibold small">Aplica a Score (*)</label>
+          <select class="form-select form-select-sm" formControlName="aplicaScore">
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
+          <div class="form-text">Si es No, se captura pero no suma al punteo.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección 2: Configuración Matemática y Fórmulas -->
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2 py-2">
+      <span class="badge rounded-pill text-bg-primary">2</span>
+      <div>
+        <div class="fw-semibold">Configuración Matemática y Fórmulas</div>
+        <div class="text-muted small">Ponderación, coeficientes de regresión y expresiones de cálculo</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-semibold small">¿Respuesta Calculada? (*)</label>
+          <select class="form-select form-select-sm" formControlName="respuestaCalculada">
+            <option [ngValue]="false">No</option>
+            <option [ngValue]="true">Sí</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-8">
+          <label class="form-label fw-semibold small">
+            Fórmula Matemática @if (respuestaCalculada()) { (*) }
+          </label>
+          <input type="text" class="form-control form-control-sm font-monospace"
+            formControlName="formula" placeholder="P01 - P02"
+            [attr.disabled]="respuestaCalculada() ? null : ''"
+            [class.is-invalid]="formulaEstado() === 'invalida'"
+            [class.is-valid]="formulaEstado() === 'valida'" />
+
+          @switch (formulaEstado()) {
+            @case ('validando') {
+              <div class="form-text">
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                Validando...
+              </div>
+            }
+            @case ('valida') {
+              <div class="valid-feedback d-block">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+                Fórmula válida.
+                @if (formulaReferencias().length) {
+                  Usa: <span class="font-monospace">{{ formulaReferencias().join(', ') }}</span>
+                }
+              </div>
+            }
+            @case ('invalida') {
+              <div class="invalid-feedback d-block">{{ formulaMensaje() }}</div>
+            }
+            @default {
+              @if (respuestaCalculada()) {
+                <div class="form-text">
+                  Referencie otras preguntas por su código: <span class="font-monospace">P01 - P02</span>.
+                  Solo se admiten los operadores + − × ÷ y paréntesis.
+                </div>
+              } @else {
+                <div class="form-text">Solo aplica si la respuesta es calculada.</div>
+              }
+            }
+          }
+        </div>
+
+        <div class="col-12">
+          <div class="alert alert-info py-2 small mb-0">
+            El aporte de esta pregunta al punteo es
+            <span class="font-monospace">peso × (a + b · x)</span>, donde
+            <span class="font-monospace">x</span> es el valor capturado o el resultado
+            de la fórmula. En preguntas de selección los coeficientes salen de la
+            opción elegida, no de aquí.
+          </div>
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-label fw-semibold small">Peso (*)</label>
+          <input type="number" step="0.0001" class="form-control form-control-sm text-end"
+            formControlName="peso" />
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-label fw-semibold small">Constante (*)</label>
+          <input type="number" step="0.0001" class="form-control form-control-sm text-end"
+            formControlName="constante" />
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-label fw-semibold small">Valor de Referencia (*)</label>
+          <input type="number" step="0.0001" class="form-control form-control-sm text-end"
+            formControlName="valorReferencia" />
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-label fw-semibold small">Coeficiente A (*)</label>
+          <input type="number" step="0.0001" class="form-control form-control-sm text-end"
+            formControlName="coeficienteA" />
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-label fw-semibold small">Coeficiente B (*)</label>
+          <input type="number" step="0.0001" class="form-control form-control-sm text-end"
+            formControlName="coeficienteB" />
+        </div>
+
+        <div class="col-6 col-md-4">
+          <label class="form-label fw-semibold small">Orden</label>
+          <input type="number" class="form-control form-control-sm"
+            formControlName="ordenDespliegue" placeholder="Automático" />
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Observaciones</label>
+          <textarea class="form-control form-control-sm" rows="2"
+            formControlName="observacionesPregunta"></textarea>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="submit" class="btn btn-success btn-sm"
+      [disabled]="respuestaCalculada() && formulaEstado() === 'invalida'">
+      <ion-icon name="checkmark-outline"></ion-icon> Guardar Pregunta
+    </button>
+  </div>
+
+</form>
