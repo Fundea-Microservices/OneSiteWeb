@@ -1,0 +1,262 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item">Módulo de Scoring Crediticio</li>
+    <li class="breadcrumb-item active" aria-current="page">Creación de Scoring</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <span class="fw-semibold">Creación de Scoring</span>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="openModal(true)">
+      <ion-icon name="add-outline"></ion-icon> Nuevo Modelo de Scoring
+    </button>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Filtros -->
+    <form class="row g-2 mb-3">
+      <div class="col-12 col-md-5">
+        <input type="text" class="form-control form-control-sm"
+          placeholder="Buscar por código o nombre..."
+          (input)="buscador.set(txtBuscar.value)" (keyup.enter)="fetchData()" #txtBuscar />
+      </div>
+      <div class="col-8 col-md-3">
+        <select class="form-select form-select-sm"
+          (change)="filtroEstado.set(selEstado.value); fetchData()" #selEstado>
+          <option value="">Todos</option>
+          <option value="Activo">Activo</option>
+          <option value="Inactivo">Inactivo</option>
+        </select>
+      </div>
+      <div class="col-4 col-md-auto d-grid d-md-block">
+        <button type="button" class="btn btn-success btn-sm" (click)="fetchData()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+      </div>
+    </form>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted small">Cargando...</span>
+      </div>
+    }
+
+    <!-- Tabla Desktop -->
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 3%;"></th>
+            <th class="text-center" style="width: 8%;">Cód.</th>
+            <th style="width: 20%;">Nombre Scoring</th>
+            <th style="width: 29%;">Descripción</th>
+            <th class="text-center" style="width: 11%;">Vigencia</th>
+            <th class="text-center" style="width: 6%;">Ver.</th>
+            <th class="text-center" style="width: 9%;">Estado</th>
+            <th class="text-center" style="width: 14%;">Accion.</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of modeloList(); track item.scoringId; let i = $index) {
+            <tr draggable="true"
+              (dragstart)="onDragStart(i)"
+              (dragover)="onDragOver($event)"
+              (drop)="onDrop(i)">
+              <td class="text-center text-muted" style="cursor: grab;" title="Arrastrar para reordenar">
+                <ion-icon name="reorder-two-outline"></ion-icon>
+              </td>
+              <td class="text-center fw-semibold text-primary">{{ item.codigoInterno }}</td>
+              <td class="text-break fw-semibold">{{ item.nombreScoring }}</td>
+              <td class="text-break">
+                <div class="small">{{ item.descripcion }}</div>
+                <div class="mt-1">
+                  <span class="badge text-bg-info border me-1">
+                    {{ nombreTipo(item.idTipoScoring) }}
+                  </span>
+                  @if (ejecutaSP(item.idTipoScoring)) {
+                    <span class="badge text-bg-success">Ejecuta SP</span>
+                  } @else {
+                    <span class="badge text-bg-secondary">Cálculo Directo</span>
+                  }
+                </div>
+              </td>
+              <td class="text-center small">{{ item.fechaVigencia | slice:0:10 }}</td>
+              <td class="text-center">{{ item.version }}</td>
+              <td class="text-center">
+                @if (item.estado === 'Activo') {
+                  <span class="badge text-bg-success">ACTIVO</span>
+                } @else {
+                  <span class="badge text-bg-danger">INACT.</span>
+                }
+              </td>
+              <td class="text-center text-nowrap">
+                <button class="btn btn-sm btn-success mx-1" title="Editar"
+                  (click)="openModal(false, item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm btn-info mx-1" title="Generar nueva versión"
+                  (click)="openVersionModal(item)">
+                  <ion-icon name="git-branch-outline"></ion-icon>
+                </button>
+                <button class="btn btn-sm mx-1"
+                  [class.btn-danger]="item.estado === 'Activo'"
+                  [class.btn-outline-success]="item.estado !== 'Activo'"
+                  [title]="item.estado === 'Activo' ? 'Inactivar' : 'Activar'"
+                  (click)="openEstadoModal(item)">
+                  <ion-icon [name]="item.estado === 'Activo' ? 'trash-outline' : 'refresh-outline'"></ion-icon>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr>
+                <td colspan="8" class="text-center text-muted py-3">No hay modelos registrados</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none">
+      @for (item of modeloList(); track item.scoringId) {
+        <div class="card mb-2">
+          <div class="card-body py-2">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="fw-semibold text-primary">{{ item.codigoInterno }}</span>
+                <span class="ms-1 fw-semibold">{{ item.nombreScoring }}</span>
+                <div class="text-muted small">v{{ item.version }} · {{ item.fechaVigencia | slice:0:10 }}</div>
+              </div>
+              @if (item.estado === 'Activo') {
+                <span class="badge text-bg-success">ACTIVO</span>
+              } @else {
+                <span class="badge text-bg-danger">INACT.</span>
+              }
+            </div>
+            <div class="small mt-2">{{ item.descripcion }}</div>
+            <div class="d-flex gap-2 mt-2">
+              <button class="btn btn-sm btn-success flex-fill" (click)="openModal(false, item)">
+                <ion-icon name="create-outline"></ion-icon> Editar
+              </button>
+              <button class="btn btn-sm btn-info flex-fill" (click)="openVersionModal(item)">
+                <ion-icon name="git-branch-outline"></ion-icon> Versionar
+              </button>
+              <button class="btn btn-sm flex-fill"
+                [class.btn-danger]="item.estado === 'Activo'"
+                [class.btn-outline-success]="item.estado !== 'Activo'"
+                (click)="openEstadoModal(item)">
+                {{ item.estado === 'Activo' ? 'Inactivar' : 'Activar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        @if (!isLoading()) {
+          <p class="text-center text-muted py-3">No hay modelos registrados</p>
+        }
+      }
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="changePage($event)" />
+
+  </div>
+</div>
+
+<!-- Modal Nuevo / Editar -->
+<div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white" style="background-color: #293444 !important;">
+        <h5 class="modal-title fw-bold d-flex align-items-center text-white">
+          <ion-icon name="layers-outline" class="text-warning me-2" style="font-size: 1.3rem;"></ion-icon>
+          {{ modal().titulo }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <app-upsert-modelo-scoring
+          [modelo]="modeloEdit()"
+          [tipos]="tipos()"
+          [nuevo]="nuevo()"
+          [formKey]="formKey()"
+          (save)="guardar($event)"
+          (cancel)="closeModal()" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal cambio de estado -->
+<div #estadoModal class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" [class.text-danger]="modeloAccion()?.estado === 'Activo'">
+          {{ modeloAccion()?.estado === 'Activo' ? 'Inactivar scoring' : 'Activar scoring' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          ¿Desea {{ modeloAccion()?.estado === 'Activo' ? 'inactivar' : 'activar' }} el scoring
+          <b>{{ modeloAccion()?.codigoInterno }}</b> — {{ modeloAccion()?.nombreScoring }}
+          (v{{ modeloAccion()?.version }})?
+        </p>
+        @if (modeloAccion()?.estado === 'Activo') {
+          <div class="alert alert-warning py-2 small mb-0">
+            No se permite inactivar un scoring con evaluaciones en estado
+            <strong>Solicitud</strong>. El registro no se elimina: solo deja de
+            estar disponible para evaluaciones nuevas.
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-sm"
+          [class.btn-danger]="modeloAccion()?.estado === 'Activo'"
+          [class.btn-success]="modeloAccion()?.estado !== 'Activo'"
+          (click)="confirmarCambioEstado()">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal versionar -->
+<div #versionModal class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Generar nueva versión</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          Se creará la versión siguiente de
+          <b>{{ modeloAccion()?.codigoInterno }}</b> (actual: v{{ modeloAccion()?.version }}),
+          clonando sus catálogos, opciones, preguntas y rangos.
+        </p>
+        <div class="alert alert-info py-2 small mb-0">
+          La versión nueva <strong>nace inactiva</strong> para que se revise antes
+          de recibir evaluaciones. Las evaluaciones ya emitidas siguen apuntando a
+          la versión con la que se calcularon, así que sus dictámenes no cambian.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-info btn-sm" (click)="confirmarVersionar()">
+          Generar versión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
