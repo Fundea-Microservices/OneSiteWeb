@@ -1,0 +1,61 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2 py-2">
+      <span class="badge rounded-pill text-bg-primary">1</span>
+      <div>
+        <div class="fw-semibold">Datos del Catálogo</div>
+        <div class="text-muted small">Scoring asociado: {{ scoringId() }}</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Código Externo</label>
+          <input type="text" class="form-control form-control-sm font-monospace"
+            formControlName="codigoExterno" placeholder="BT_CAT_01" />
+          <div class="form-text">
+            Mapeo hacia el Core Bantotal u otro sistema. Opcional, pero no puede
+            repetirse dentro del mismo scoring.
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Descripción del Catálogo (*)</label>
+          <input type="text" class="form-control form-control-sm"
+            formControlName="descripcionCatalogo" placeholder="PROGRAMA DE CRÉDITO"
+            [class.is-invalid]="campoInvalido('descripcionCatalogo')" />
+          @if (campoInvalido('descripcionCatalogo')) {
+            <div class="invalid-feedback">Obligatoria.</div>
+          }
+        </div>
+
+        <div class="col-6">
+          <label class="form-label fw-semibold small">Orden</label>
+          <input type="number" class="form-control form-control-sm"
+            formControlName="ordenDespliegue" placeholder="Automático" />
+          <div class="form-text">Si se deja vacío, va al final.</div>
+        </div>
+
+        <div class="col-6">
+          <label class="form-label fw-semibold small">Estado (*)</label>
+          <select class="form-select form-select-sm" formControlName="estado">
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+          <div class="form-text">
+            Un catálogo inactivo no despliega sus opciones en las evaluaciones.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>
+    <button type="submit" class="btn btn-success btn-sm">Guardar Catálogo</button>
+  </div>
+
+</form>

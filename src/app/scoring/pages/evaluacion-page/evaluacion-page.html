@@ -1,0 +1,187 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item">Módulo de Scoring Crediticio</li>
+    <li class="breadcrumb-item active" aria-current="page">Evaluación de Crédito</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header">
+    <span class="fw-semibold">Evaluación de Solicitudes de Crédito</span>
+    <div class="text-muted small">
+      Bandeja de operaciones enlazadas con Core Bantotal para inferencia de scoring.
+    </div>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Búsqueda en Bantotal -->
+    <div class="card bg-light mb-3">
+      <div class="card-body py-3">
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-md-8">
+            <label class="form-label fw-semibold small mb-1">Búsqueda Solicitud Bantotal</label>
+            <input type="number" class="form-control form-control-sm"
+              placeholder="10928374"
+              (input)="numeroSolicitud.set(txtSolicitud.value)"
+              (keyup.enter)="consultarBantotal()" #txtSolicitud />
+          </div>
+          <div class="col-12 col-md-4 d-grid d-md-flex gap-2">
+            <button type="button" class="btn btn-dark btn-sm flex-fill"
+              [disabled]="!numeroSolicitud() || isConsultando()"
+              (click)="consultarBantotal()">
+              @if (isConsultando()) {
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+              } @else {
+                <ion-icon name="sync-outline"></ion-icon>
+              }
+              Consultar Bantotal
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill"
+              (click)="fetchData()">
+              <ion-icon name="search-outline"></ion-icon> Filtrar bandeja
+            </button>
+          </div>
+        </div>
+        <div class="form-text mt-1">
+          Al consultar, se abre la captura con los datos del cliente ya cargados.
+          Si la solicitud no existe en el core, la consulta se detiene.
+        </div>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+      </div>
+    }
+
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 8%;">ID Eval.</th>
+            <th class="text-center" style="width: 13%;">DPI</th>
+            <th class="text-center" style="width: 11%;">Cuenta</th>
+            <th style="width: 22%;">Cliente</th>
+            <th class="text-center" style="width: 10%;">Operación</th>
+            <th class="text-center" style="width: 11%;">Estado</th>
+            <th class="text-center" style="width: 13%;">Resultado</th>
+            <th class="text-center" style="width: 12%;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of evaluacionList(); track item.evaluacionId) {
+            <tr>
+              <td class="text-center fw-semibold text-primary">{{ item.evaluacionId }}</td>
+              <td class="text-center font-monospace small">{{ item.dpi }}</td>
+              <td class="text-center font-monospace small">{{ item.cuenta }}</td>
+              <td class="text-break">
+                {{ item.nombreCliente }}
+                <div class="text-muted small">
+                  Solicitud {{ item.numeroSolicitud }} ·
+                  {{ item.modelo?.codigoInterno }} v{{ item.modelo?.version }}
+                </div>
+              </td>
+              <td class="text-center">{{ item.numeroOperacion || '—' }}</td>
+              <td class="text-center">
+                @if (item.estadoEvaluacion === 'Solicitud') {
+                  <span class="badge text-bg-warning">SOLICITUD</span>
+                } @else {
+                  <span class="badge text-bg-success">PROCESADO</span>
+                }
+              </td>
+              <td class="text-center">
+                @if (item.estadoEvaluacion === 'Procesado') {
+                  <span class="badge" [class]="claseSemaforo(item.resultadoSemaforo)">
+                    {{ item.punteoTotal }} — {{ item.resultadoSemaforo }}
+                  </span>
+                } @else {
+                  <span class="text-muted small">
+                    <ion-icon name="ellipse-outline"></ion-icon> Pendiente
+                  </span>
+                }
+              </td>
+              <td class="text-center text-nowrap">
+                @if (item.estadoEvaluacion === 'Solicitud') {
+                  <button class="btn btn-sm btn-success mx-1" title="Editar captura"
+                    (click)="abrirCaptura(item)">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+                  <button class="btn btn-sm btn-warning mx-1" title="Procesar dictamen"
+                    [disabled]="procesando() === item.evaluacionId"
+                    (click)="procesar(item)">
+                    @if (procesando() === item.evaluacionId) {
+                      <span class="spinner-border spinner-border-sm" role="status"></span>
+                    } @else {
+                      <ion-icon name="play-outline"></ion-icon>
+                    }
+                  </button>
+                } @else {
+                  <button class="btn btn-sm btn-outline-primary mx-1" title="Ver expediente"
+                    (click)="verExpediente(item)">
+                    <ion-icon name="eye-outline"></ion-icon>
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr>
+                <td colspan="8" class="text-center text-muted py-3">No hay evaluaciones</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none">
+      @for (item of evaluacionList(); track item.evaluacionId) {
+        <div class="card mb-2">
+          <div class="card-body py-2">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="fw-semibold">{{ item.nombreCliente }}</div>
+                <div class="text-muted small font-monospace">{{ item.dpi }}</div>
+              </div>
+              @if (item.estadoEvaluacion === 'Solicitud') {
+                <span class="badge text-bg-warning">SOLICITUD</span>
+              } @else {
+                <span class="badge" [class]="claseSemaforo(item.resultadoSemaforo)">
+                  {{ item.resultadoSemaforo }}
+                </span>
+              }
+            </div>
+            <div class="small mt-1">
+              Solicitud {{ item.numeroSolicitud }} · Operación {{ item.numeroOperacion || '—' }}
+            </div>
+            <div class="d-flex gap-2 mt-2">
+              @if (item.estadoEvaluacion === 'Solicitud') {
+                <button class="btn btn-sm btn-success flex-fill" (click)="abrirCaptura(item)">
+                  Editar
+                </button>
+                <button class="btn btn-sm btn-warning flex-fill" (click)="procesar(item)">
+                  Procesar
+                </button>
+              } @else {
+                <button class="btn btn-sm btn-outline-primary flex-fill" (click)="verExpediente(item)">
+                  Ver expediente
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      } @empty {
+        @if (!isLoading()) {
+          <p class="text-center text-muted py-3">No hay evaluaciones</p>
+        }
+      }
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="changePage($event)" />
+
+  </div>
+</div>

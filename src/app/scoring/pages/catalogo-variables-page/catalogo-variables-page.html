@@ -1,0 +1,357 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item">Módulo de Scoring Crediticio</li>
+    <li class="breadcrumb-item active" aria-current="page">Catálogo de Variables</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <span class="fw-semibold">Catálogo de Variables</span>
+      <div class="text-muted small">
+        Diccionario de catálogos y coeficientes matemáticos asociados a cada modelo de scoring.
+      </div>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="openCatalogoModal(true)"
+      [disabled]="!scoringId()">
+      <ion-icon name="add-outline"></ion-icon> Nuevo Catálogo
+    </button>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Cabecera: selección de scoring -->
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-5">
+        <label class="form-label fw-semibold small mb-1">Selección de Scoring (*)</label>
+        <select class="form-select form-select-sm"
+          [class.is-invalid]="!scoringId()"
+          (change)="onScoringChange(selScoring.value)" #selScoring>
+          <option value="">Seleccione un scoring...</option>
+          @for (scoring of scoringList(); track scoring.scoringId) {
+            <option [value]="scoring.scoringId">
+              {{ scoring.nombreScoring }} ({{ scoring.codigoInterno }} v{{ scoring.version }})
+            </option>
+          }
+        </select>
+        @if (!scoringId()) {
+          <div class="invalid-feedback d-block">
+            Elija un scoring para ver y crear sus catálogos.
+          </div>
+        }
+      </div>
+      <div class="col-12 col-md-5">
+        <label class="form-label fw-semibold small mb-1">Filtro Libre</label>
+        <input type="text" class="form-control form-control-sm"
+          placeholder="Búsqueda de catálogo por código o descripción..."
+          [disabled]="!scoringId()"
+          (input)="buscador.set(txtBuscar.value)"
+          (keyup.enter)="fetchCatalogos()" #txtBuscar />
+      </div>
+      <div class="col-12 col-md-2 d-flex align-items-end">
+        <button type="button" class="btn btn-success btn-sm w-100"
+          [disabled]="!scoringId()" (click)="fetchCatalogos()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+      </div>
+    </div>
+
+    @if (!scoringId()) {
+      <div class="alert alert-secondary text-center py-4 mb-0">
+        <ion-icon name="albums-outline" style="font-size: 2rem;"></ion-icon>
+        <div class="mt-2">Seleccione un scoring para administrar sus catálogos.</div>
+      </div>
+    } @else {
+
+      @if (isLoading()) {
+        <div class="text-center py-3">
+          <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+          <span class="ms-2 text-muted small">Cargando...</span>
+        </div>
+      }
+
+      <!-- Tabla 1: catálogos -->
+      <div class="table-responsive d-none d-md-block">
+        <table class="table table-striped table-sm table-bordered table-hover align-middle">
+          <thead>
+            <tr>
+              <th class="text-center" style="width: 4%;"></th>
+              <th style="width: 20%;">Código Externo</th>
+              <th style="width: 40%;">Descripción del Catálogo</th>
+              <th class="text-center" style="width: 10%;">Orden</th>
+              <th class="text-center" style="width: 11%;">Estado</th>
+              <th class="text-center" style="width: 15%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of catalogoList(); track item.catalogoId; let i = $index) {
+              <tr draggable="true"
+                (dragstart)="onDragStartCatalogo(i)"
+                (dragover)="onDragOver($event)"
+                (drop)="onDropCatalogo(i)">
+                <td class="text-center text-muted" style="cursor: grab;" title="Arrastrar para reordenar">
+                  <ion-icon name="reorder-two-outline"></ion-icon>
+                </td>
+                <td class="font-monospace text-primary">{{ item.codigoExterno || '—' }}</td>
+                <td class="text-break fw-semibold">{{ item.descripcionCatalogo }}</td>
+                <td class="text-center">{{ item.ordenDespliegue }}</td>
+                <td class="text-center">
+                  @if (item.estado === 'Activo') {
+                    <span class="badge text-bg-success">ACTIVO</span>
+                  } @else {
+                    <span class="badge text-bg-danger">INACT.</span>
+                  }
+                </td>
+                <td class="text-center text-nowrap">
+                  <button class="btn btn-sm btn-warning mx-1" title="Opciones del catálogo"
+                    (click)="verOpciones(item)">
+                    <ion-icon name="list-outline"></ion-icon>
+                  </button>
+                  <button class="btn btn-sm btn-success mx-1" title="Editar"
+                    (click)="openCatalogoModal(false, item)">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+                  @if (item.estado === 'Activo') {
+                    <button class="btn btn-sm btn-danger mx-1" title="Inactivar"
+                      (click)="openInactivarModal(item)">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              @if (!isLoading()) {
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-3">
+                    Este scoring aún no tiene catálogos
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Cards Mobile -->
+      <div class="d-md-none">
+        @for (item of catalogoList(); track item.catalogoId) {
+          <div class="card mb-2">
+            <div class="card-body py-2">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">{{ item.descripcionCatalogo }}</div>
+                  <div class="font-monospace small text-primary">{{ item.codigoExterno || '—' }}</div>
+                </div>
+                @if (item.estado === 'Activo') {
+                  <span class="badge text-bg-success">ACTIVO</span>
+                } @else {
+                  <span class="badge text-bg-danger">INACT.</span>
+                }
+              </div>
+              <div class="d-flex gap-2 mt-2">
+                <button class="btn btn-sm btn-warning flex-fill" (click)="verOpciones(item)">
+                  Opciones
+                </button>
+                <button class="btn btn-sm btn-success flex-fill" (click)="openCatalogoModal(false, item)">
+                  Editar
+                </button>
+                @if (item.estado === 'Activo') {
+                  <button class="btn btn-sm btn-danger flex-fill" (click)="openInactivarModal(item)">
+                    Inactivar
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        } @empty {
+          @if (!isLoading()) {
+            <p class="text-center text-muted py-3">Este scoring aún no tiene catálogos</p>
+          }
+        }
+      </div>
+
+    }
+
+  </div>
+</div>
+
+<!-- Modal 1: Nuevo / Editar Catálogo -->
+<div #catalogoModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <ion-icon name="grid-outline" class="me-1"></ion-icon>
+          {{ modalCatalogo().titulo }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        @if (scoringId(); as id) {
+          <app-upsert-catalogo-variable
+            [catalogo]="catalogoEdit()"
+            [scoringId]="id"
+            [nuevo]="nuevoCatalogo()"
+            [formKey]="formKeyCatalogo()"
+            (save)="guardarCatalogo($event)"
+            (cancel)="closeCatalogoModal()" />
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 2: Opciones del catálogo (tabla 2 + formulario) -->
+<div #opcionesModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <ion-icon name="list-outline" class="me-1"></ion-icon>
+          Opciones de: {{ catalogoSeleccionado()?.descripcionCatalogo }}
+          <span class="text-muted small ms-1 font-monospace">
+            {{ catalogoSeleccionado()?.codigoExterno }}
+          </span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        @if (modoOpcion() === 'lista') {
+
+          <div class="d-flex justify-content-end mb-2">
+            <button class="btn btn-primary btn-sm" (click)="openOpcionForm(true)">
+              <ion-icon name="add-outline"></ion-icon> Agregar Opción
+            </button>
+          </div>
+
+          @if (isLoadingOpciones()) {
+            <div class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            </div>
+          }
+
+          <div class="table-responsive">
+            <table class="table table-striped table-sm table-bordered table-hover align-middle">
+              <thead>
+                <tr>
+                  <th class="text-center" style="width: 4%;"></th>
+                  <th style="width: 12%;">Código</th>
+                  <th style="width: 22%;">Descripción</th>
+                  <th class="text-center" style="width: 9%;">Peso</th>
+                  <th class="text-center" style="width: 9%;">Const.</th>
+                  <th class="text-center" style="width: 10%;">Val. Ref.</th>
+                  <th class="text-center" style="width: 8%;">Coef. A</th>
+                  <th class="text-center" style="width: 8%;">Coef. B</th>
+                  <th class="text-center" style="width: 8%;">Estado</th>
+                  <th class="text-center" style="width: 10%;">Acc.</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (opcion of opcionList(); track opcion.opcionId; let i = $index) {
+                  <tr draggable="true"
+                    (dragstart)="onDragStartOpcion(i)"
+                    (dragover)="onDragOver($event)"
+                    (drop)="onDropOpcion(i)">
+                    <td class="text-center text-muted" style="cursor: grab;">
+                      <ion-icon name="reorder-two-outline"></ion-icon>
+                    </td>
+                    <td class="font-monospace">{{ opcion.codigoOpcion }}</td>
+                    <td class="text-break">{{ opcion.descripcionOpcion }}</td>
+                    <td class="text-end">{{ opcion.peso }}</td>
+                    <td class="text-end">{{ opcion.constante }}</td>
+                    <td class="text-end">{{ opcion.valorReferencia }}</td>
+                    <td class="text-end">{{ opcion.coeficienteA }}</td>
+                    <td class="text-end">{{ opcion.coeficienteB }}</td>
+                    <td class="text-center">
+                      @if (opcion.estado === 'Activo') {
+                        <span class="badge text-bg-success">ACT.</span>
+                      } @else {
+                        <span class="badge text-bg-danger">INACT.</span>
+                      }
+                    </td>
+                    <td class="text-center text-nowrap">
+                      <button class="btn btn-sm btn-success mx-1" title="Editar"
+                        (click)="openOpcionForm(false, opcion)">
+                        <ion-icon name="create-outline"></ion-icon>
+                      </button>
+                      @if (opcion.estado === 'Activo') {
+                        <button class="btn btn-sm btn-danger mx-1" title="Inactivar"
+                          (click)="inactivarOpcion(opcion)">
+                          <ion-icon name="trash-outline"></ion-icon>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  @if (!isLoadingOpciones()) {
+                    <tr>
+                      <td colspan="10" class="text-center text-muted py-3">
+                        Este catálogo aún no tiene opciones
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="alert alert-secondary py-2 small mb-0">
+            Las opciones inactivas no se despliegan en las evaluaciones, pero se
+            conservan: las evaluaciones ya procesadas siguen mostrando la opción
+            con la que se calcularon.
+          </div>
+
+        } @else {
+
+          <button class="btn btn-link btn-sm px-0 mb-2" (click)="volverALista()">
+            <ion-icon name="arrow-back-outline"></ion-icon> Volver a las opciones
+          </button>
+
+          @if (catalogoSeleccionado()?.catalogoId; as catId) {
+            <app-upsert-opcion-variable
+              [opcion]="opcionEdit()"
+              [catalogoId]="catId"
+              [nuevo]="nuevaOpcion()"
+              [formKey]="formKeyOpcion()"
+              (save)="guardarOpcion($event)"
+              (cancel)="volverALista()" />
+          }
+
+        }
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal inactivar catálogo -->
+<div #inactivarModal class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">Inactivar catálogo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          ¿Desea inactivar el catálogo
+          <b>{{ catalogoAccion()?.descripcionCatalogo }}</b>?
+        </p>
+        <div class="alert alert-warning py-2 small mb-0">
+          No se permite si alguna pregunta lo usa como catálogo de respuestas:
+          esa pregunta quedaría sin opciones que desplegar. El registro no se
+          elimina, solo deja de estar disponible.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger btn-sm" (click)="confirmarInactivar()">
+          Inactivar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

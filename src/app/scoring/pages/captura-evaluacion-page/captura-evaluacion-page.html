@@ -1,0 +1,282 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a [routerLink]="['/scoring/evaluacion']">Evaluación de Crédito</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Captura de Datos</li>
+  </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h4 class="mb-0">
+    Captura de Datos — Solicitud #{{ numeroSolicitud() }}
+  </h4>
+  <button class="btn btn-secondary btn-sm" (click)="volver()">
+    <ion-icon name="arrow-back-outline"></ion-icon> Volver a Solicitudes
+  </button>
+</div>
+
+@if (isLoading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="text-muted small mt-2">Cargando datos de la solicitud...</div>
+  </div>
+} @else {
+
+  <!-- Sección 1: Datos del Cliente y Crédito -->
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2 py-2">
+      <span class="badge rounded-pill text-bg-primary">1</span>
+      <div>
+        <div class="fw-semibold">Datos del Cliente y Crédito (Solo Lectura — Core Bantotal)</div>
+        <div class="text-muted small">
+          Información sincronizada del core al momento de la captura. Se conserva
+          tal cual para que el expediente refleje lo que se tuvo a la vista.
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      @if (datosBantotal(); as datos) {
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <div class="text-muted small text-uppercase">Cliente</div>
+            <div class="fw-semibold">{{ datos.nombreCliente }}</div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="text-muted small text-uppercase">DPI</div>
+            <div class="font-monospace">{{ datos.dpi }}</div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="text-muted small text-uppercase">Cuenta Bantotal</div>
+            <div class="font-monospace text-primary">{{ datos.cuenta }}</div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="text-muted small text-uppercase">Operación</div>
+            <div>{{ datos.numeroOperacion || '—' }}</div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="text-muted small text-uppercase">Monto Solicitado</div>
+            <div class="fw-semibold text-success">
+              Q{{ datos.montoCredito | number: '1.2-2' }}
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="text-muted small text-uppercase">Producto</div>
+            <div>{{ datos.productoCredito }}</div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="text-muted small text-uppercase">Región</div>
+            <div>{{ datos.region || '—' }}</div>
+          </div>
+          <div class="col-6 col-md-4">
+            <div class="text-muted small text-uppercase">Agencia</div>
+            <div>{{ datos.agencia || '—' }}</div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="text-muted small text-uppercase">Estado Actual</div>
+            @if (evaluacion(); as evaluacion) {
+              @if (evaluacion.estadoEvaluacion === 'Solicitud') {
+                <span class="badge text-bg-warning">SOLICITUD</span>
+              } @else {
+                <span class="badge text-bg-success">PROCESADO</span>
+              }
+            } @else {
+              <span class="badge text-bg-light border">SIN GUARDAR</span>
+            }
+          </div>
+          @if (datos.direccion) {
+            <div class="col-12">
+              <div class="text-muted small text-uppercase">Dirección</div>
+              <div>{{ datos.direccion }}</div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Sección 2: Cuestionario Dinámico -->
+  <div class="card mb-3">
+    <div class="card-header d-flex align-items-center gap-2 py-2">
+      <span class="badge rounded-pill text-bg-primary">2</span>
+      <div>
+        <div class="fw-semibold">Cuestionario Dinámico de Evaluación</div>
+        <div class="text-muted small">Parámetros financieros y captura de variables predictivas</div>
+      </div>
+    </div>
+    <div class="card-body">
+
+      @if (soloLectura()) {
+        <div class="alert alert-warning py-2 small">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+          Esta evaluación ya fue procesada, así que el formulario es de solo
+          lectura. Su dictamen no puede alterarse.
+        </div>
+      }
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Seleccionar Tipo de Scoring Aplicable (*)</label>
+        <select class="form-select form-select-sm"
+          [class.is-invalid]="!scoringId()"
+          [attr.disabled]="esEdicion() ? '' : null"
+          (change)="onScoringChange(selScoring.value)" #selScoring>
+          <option value="">Seleccione...</option>
+          @for (scoring of scoringList(); track scoring.scoringId) {
+            <option [value]="scoring.scoringId"
+              [selected]="scoring.scoringId === scoringId()">
+              {{ scoring.nombreScoring }} ({{ scoring.codigoInterno }})
+            </option>
+          }
+        </select>
+        @if (esEdicion()) {
+          <div class="form-text">
+            El scoring no se cambia después de guardar: el dictamen quedaría
+            atado a una parametrización distinta de la que se capturó.
+          </div>
+        }
+      </div>
+
+      @if (!scoringId()) {
+        <div class="alert alert-secondary text-center py-4 mb-0">
+          Seleccione un tipo de scoring para renderizar el cuestionario.
+        </div>
+      } @else if (preguntas().length === 0) {
+        <div class="alert alert-warning py-2 mb-0">
+          Este scoring no tiene preguntas visibles configuradas.
+        </div>
+      } @else {
+
+        <div class="row g-3">
+          @for (pregunta of preguntas(); track pregunta.preguntaId; let i = $index) {
+            <div class="col-12 col-md-4">
+              <label class="form-label fw-semibold small">
+                {{ i + 1 }}. {{ pregunta.enunciado }}
+                @if (pregunta.respuestaCalculada) {
+                  <span class="text-muted">(Campo Calculado Automático)</span>
+                }
+              </label>
+
+              @if (pregunta.respuestaCalculada) {
+                <!-- Lo calcula el motor; no se captura a mano -->
+                <input type="text" class="form-control form-control-sm bg-success-subtle fw-semibold"
+                  [value]="calculadoDe(pregunta.preguntaId) ?? ''"
+                  readonly />
+                @if (pregunta.formula) {
+                  <div class="form-text font-monospace">
+                    Fórmula automática: {{ pregunta.formula }}
+                  </div>
+                }
+              } @else {
+                @switch (pregunta.tipoPregunta) {
+                  @case ('Casilla') {
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch"
+                        [checked]="valorDe(pregunta.preguntaId) === 'true'"
+                        [disabled]="soloLectura()"
+                        (change)="setCasilla(pregunta, chk.checked)" #chk />
+                    </div>
+                  }
+                  @case ('Desplegable') {
+                    <select class="form-select form-select-sm"
+                      [disabled]="soloLectura()"
+                      (change)="setOpcion(pregunta, sel.value)" #sel>
+                      <option value="">Seleccione...</option>
+                      @for (opcion of pregunta.opciones; track opcion.opcionId) {
+                        <option [value]="opcion.opcionId"
+                          [selected]="opcion.opcionId === opcionDe(pregunta.preguntaId)">
+                          {{ opcion.descripcionOpcion }}
+                        </option>
+                      }
+                    </select>
+                  }
+                  @case ('BotonOpcion') {
+                    @for (opcion of pregunta.opciones; track opcion.opcionId) {
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio"
+                          [name]="'p' + pregunta.preguntaId"
+                          [value]="opcion.opcionId"
+                          [checked]="opcion.opcionId === opcionDe(pregunta.preguntaId)"
+                          [disabled]="soloLectura()"
+                          (change)="setOpcion(pregunta, opcion.opcionId + '')" />
+                        <label class="form-check-label small">{{ opcion.descripcionOpcion }}</label>
+                      </div>
+                    }
+                  }
+                  @case ('Entero') {
+                    <input type="number" step="1" class="form-control form-control-sm"
+                      [value]="valorDe(pregunta.preguntaId)"
+                      [disabled]="soloLectura()"
+                      (input)="setValor(pregunta, inpEnt.value)" #inpEnt />
+                  }
+                  @case ('Decimal') {
+                    <input type="number" step="0.01" class="form-control form-control-sm"
+                      [value]="valorDe(pregunta.preguntaId)"
+                      [disabled]="soloLectura()"
+                      (input)="setValor(pregunta, inpDec.value)" #inpDec />
+                  }
+                  @default {
+                    <input type="text" class="form-control form-control-sm"
+                      [value]="valorDe(pregunta.preguntaId)"
+                      [disabled]="soloLectura()"
+                      (input)="setValor(pregunta, inpTxt.value)" #inpTxt />
+                  }
+                }
+              }
+
+              @if (!pregunta.aplicaScore) {
+                <div class="form-text">No aporta al punteo.</div>
+              }
+            </div>
+          }
+        </div>
+
+      }
+
+    </div>
+  </div>
+
+  <!-- Punteo proyectado -->
+  @if (scoringId() && punteoProyectado() !== null) {
+    <div class="card mb-3 border-primary">
+      <div class="card-body py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <span class="text-muted small text-uppercase">Punteo proyectado</span>
+          <div class="fs-5 fw-semibold">
+            {{ punteoProyectado() }}
+            @if (isSimulando()) {
+              <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
+            }
+          </div>
+        </div>
+        <span class="badge fs-6" [class]="claseSemaforo(semaforoProyectado())">
+          {{ semaforoProyectado() }}
+        </span>
+      </div>
+      <div class="card-footer py-1">
+        <div class="text-muted small">
+          Proyección de referencia. El dictamen oficial se emite al presionar
+          Procesar en la bandeja, y es el que queda en el expediente.
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="d-flex justify-content-end gap-2 mb-4">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="volver()">
+      Cancelar / Volver
+    </button>
+    @if (!soloLectura()) {
+      <button type="button" class="btn btn-success btn-sm"
+        [disabled]="!scoringId() || isGuardando()"
+        (click)="guardar()">
+        @if (isGuardando()) {
+          <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+        } @else {
+          <ion-icon name="checkmark-outline"></ion-icon>
+        }
+        Guardar Evaluación
+      </button>
+    }
+  </div>
+
+}

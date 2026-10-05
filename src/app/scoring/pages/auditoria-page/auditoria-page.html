@@ -1,0 +1,309 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item">Módulo de Scoring Crediticio</li>
+    <li class="breadcrumb-item active" aria-current="page">Auditoría de Scoring</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header">
+    <span class="fw-semibold">Auditoría y Trazabilidad de Dictámenes</span>
+    <div class="text-muted small">
+      Registro inmutable de fórmulas, pesos, coeficientes y dictámenes del motor de scoring.
+    </div>
+  </div>
+
+  <div class="card-body">
+
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-9">
+        <label class="form-label fw-semibold small mb-1">Solicitud Bantotal</label>
+        <input type="number" class="form-control form-control-sm"
+          placeholder="10928374"
+          (input)="numeroSolicitud.set(txtSolicitud.value)"
+          (keyup.enter)="fetchData()" #txtSolicitud />
+      </div>
+      <div class="col-12 col-md-3 d-flex align-items-end">
+        <button type="button" class="btn btn-dark btn-sm w-100" (click)="fetchData()">
+          <ion-icon name="search-outline"></ion-icon> Consultar Auditoría
+        </button>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+      </div>
+    }
+
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 9%;">ID Eval.</th>
+            <th class="text-center" style="width: 14%;">DPI</th>
+            <th class="text-center" style="width: 12%;">Cuenta</th>
+            <th style="width: 23%;">Cliente</th>
+            <th class="text-center" style="width: 11%;">Operación</th>
+            <th class="text-center" style="width: 12%;">Estado</th>
+            <th class="text-center" style="width: 12%;">Resultado</th>
+            <th class="text-center" style="width: 7%;">Acc.</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of evaluacionList(); track item.evaluacionId) {
+            <tr>
+              <td class="text-center fw-semibold text-primary">{{ item.evaluacionId }}</td>
+              <td class="text-center font-monospace small">{{ item.dpi }}</td>
+              <td class="text-center font-monospace small">{{ item.cuenta }}</td>
+              <td class="text-break">
+                {{ item.nombreCliente }}
+                <div class="text-muted small">Solicitud {{ item.numeroSolicitud }}</div>
+              </td>
+              <td class="text-center">{{ item.numeroOperacion || '—' }}</td>
+              <td class="text-center">
+                @if (item.estadoEvaluacion === 'Solicitud') {
+                  <span class="badge text-bg-warning">SOLICITUD</span>
+                } @else {
+                  <span class="badge text-bg-success">PROCESADO</span>
+                }
+              </td>
+              <td class="text-center">
+                @if (item.estadoEvaluacion === 'Procesado') {
+                  <span class="badge" [class]="claseSemaforo(item.resultadoSemaforo)">
+                    {{ item.resultadoSemaforo }}
+                  </span>
+                } @else {
+                  <span class="text-muted small">
+                    <ion-icon name="ellipse-outline"></ion-icon> Sin dictamen
+                  </span>
+                }
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary" title="Ver expediente"
+                  [disabled]="isCargandoExpediente()"
+                  (click)="verExpediente(item.evaluacionId!)">
+                  <ion-icon name="eye-outline"></ion-icon>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr>
+                <td colspan="8" class="text-center text-muted py-3">No hay evaluaciones</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards Mobile -->
+    <div class="d-md-none">
+      @for (item of evaluacionList(); track item.evaluacionId) {
+        <div class="card mb-2">
+          <div class="card-body py-2">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="fw-semibold">{{ item.nombreCliente }}</div>
+                <div class="text-muted small">Solicitud {{ item.numeroSolicitud }}</div>
+              </div>
+              @if (item.estadoEvaluacion === 'Procesado') {
+                <span class="badge" [class]="claseSemaforo(item.resultadoSemaforo)">
+                  {{ item.resultadoSemaforo }}
+                </span>
+              } @else {
+                <span class="badge text-bg-warning">SOLICITUD</span>
+              }
+            </div>
+            <button class="btn btn-sm btn-outline-primary w-100 mt-2"
+              (click)="verExpediente(item.evaluacionId!)">
+              Ver expediente
+            </button>
+          </div>
+        </div>
+      } @empty {
+        @if (!isLoading()) {
+          <p class="text-center text-muted py-3">No hay evaluaciones</p>
+        }
+      }
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="changePage($event)" />
+
+    <div class="alert alert-secondary py-2 small mt-3 mb-0">
+      El expediente solo está disponible para evaluaciones en estado
+      <strong>Procesado</strong>. Una evaluación sin procesar no tiene desglose,
+      y mostrarla equivaldría a presentar un expediente vacío como si fuera un
+      dictamen.
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: Expediente / Desglose Matemático del Dictamen -->
+<div #expedienteModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <ion-icon name="shield-checkmark-outline" class="me-1"></ion-icon>
+          Desglose Matemático del Dictamen
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        @if (expediente(); as exp) {
+
+          @if (!exp.cuadra) {
+            <div class="alert alert-danger py-2 small">
+              <ion-icon name="warning-outline"></ion-icon>
+              <strong>La suma de los aportes no coincide con el punteo almacenado.</strong>
+              Las filas del desglose fueron alteradas fuera del motor de cálculo.
+              Este expediente no debe usarse como respaldo del dictamen.
+            </div>
+          }
+
+          <!-- Ficha general -->
+          <div class="card mb-3">
+            <div class="card-header py-2 fw-semibold">Ficha General del Cliente y Solicitud</div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <div class="text-muted small text-uppercase">Cliente</div>
+                  <div class="fw-semibold">{{ exp.evaluacion.nombreCliente }}</div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="text-muted small text-uppercase">DPI</div>
+                  <div class="font-monospace">{{ exp.evaluacion.dpi }}</div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="text-muted small text-uppercase">Cuenta</div>
+                  <div class="font-monospace">{{ exp.evaluacion.cuenta }}</div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="text-muted small text-uppercase">Solicitud</div>
+                  <div>{{ exp.evaluacion.numeroSolicitud }}</div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="text-muted small text-uppercase">Operación</div>
+                  <div>{{ exp.evaluacion.numeroOperacion || '—' }}</div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="text-muted small text-uppercase">Monto</div>
+                  <div class="fw-semibold">Q{{ exp.evaluacion.montoCredito | number: '1.2-2' }}</div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="text-muted small text-uppercase">Producto</div>
+                  <div>{{ exp.evaluacion.productoCredito }}</div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="text-muted small text-uppercase">Agencia / Región</div>
+                  <div>{{ exp.evaluacion.agencia || '—' }} / {{ exp.evaluacion.region || '—' }}</div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <div class="text-muted small text-uppercase">Procesado por</div>
+                  <div>{{ exp.evaluacion.usuarioProcesa || '—' }}</div>
+                  <div class="text-muted small">{{ exp.evaluacion.fechaProcesamiento }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modelo usado -->
+          <div class="alert alert-info py-2 small">
+            Calculado con <strong>{{ exp.scoring.nombreScoring }}</strong>
+            (<span class="font-monospace">{{ exp.scoring.codigoInterno }}</span>),
+            <strong>versión {{ exp.scoring.version }}</strong>
+            @if (exp.scoring.tipoScoring) { · {{ exp.scoring.tipoScoring }} }
+            <div class="mt-1">
+              Los coeficientes de abajo son los que estaban vigentes en esa
+              versión al momento de procesar. Reparametrizar el modelo después no
+              altera este expediente.
+            </div>
+          </div>
+
+          <!-- Desglose -->
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-striped align-middle">
+              <thead>
+                <tr>
+                  <th class="text-center" style="width: 4%;">#</th>
+                  <th style="width: 26%;">Factor</th>
+                  <th class="text-center" style="width: 9%;">Peso</th>
+                  <th class="text-center" style="width: 9%;">Coef A</th>
+                  <th class="text-center" style="width: 9%;">Coef B</th>
+                  <th class="text-center" style="width: 11%;">Valor x</th>
+                  <th class="text-center" style="width: 11%;">Result. bx</th>
+                  <th class="text-center" style="width: 11%;">Result. a+bx</th>
+                  <th class="text-center" style="width: 10%;">Aporte</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (fila of exp.desglose; track fila.desgloseId) {
+                  <tr>
+                    <td class="text-center">{{ fila.secuencia }}</td>
+                    <td class="text-break">
+                      {{ fila.factor }}
+                      @if (fila.formulaAplicada) {
+                        <div class="text-muted small font-monospace">
+                          f(x) = {{ fila.formulaAplicada }}
+                        </div>
+                      }
+                    </td>
+                    <td class="text-end">{{ fila.peso }}</td>
+                    <td class="text-end">{{ fila.coeficienteA }}</td>
+                    <td class="text-end">{{ fila.coeficienteB }}</td>
+                    <td class="text-end">{{ fila.valorX }}</td>
+                    <td class="text-end">{{ fila.resultadoBX }}</td>
+                    <td class="text-end">{{ fila.resultadoABX }}</td>
+                    <td class="text-end fw-semibold">{{ fila.aportePonderado }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="9" class="text-center text-muted py-3">
+                      El dictamen no registró factores
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr class="table-secondary">
+                  <td colspan="8" class="text-end fw-semibold">Punteo Total</td>
+                  <td class="text-end fw-semibold">{{ exp.punteoTotal }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Dictamen -->
+          <div class="card border-2" [class.border-success]="exp.resultadoSemaforo === 'Verde'"
+            [class.border-warning]="exp.resultadoSemaforo === 'Amarillo'"
+            [class.border-danger]="exp.resultadoSemaforo === 'Rojo'">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <div>
+                <div class="text-muted small text-uppercase">Punteo Total Obtenido</div>
+                <div class="fs-4 fw-semibold">{{ exp.punteoTotal }}</div>
+              </div>
+              <div class="text-end">
+                <div class="text-muted small text-uppercase">Resultado Semáforo</div>
+                <span class="badge fs-5" [class]="claseSemaforo(exp.resultadoSemaforo)">
+                  {{ exp.resultadoSemaforo }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+        }
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="cerrarExpediente()">
+          Cerrar Lectura
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

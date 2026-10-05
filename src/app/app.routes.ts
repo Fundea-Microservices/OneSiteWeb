@@ -425,6 +425,47 @@ export const routes: Routes = [
             },
 
             {
+                path: 'scoring',
+                children: [
+                    {
+                        path: '',
+                        redirectTo: 'creacion',
+                        pathMatch: 'full',
+                    },
+                    {
+                        path: 'creacion',
+                        loadComponent: () => import('./scoring/pages/creacion-scoring-page/creacion-scoring-page'),
+                    },
+                    {
+                        path: 'catalogo-variables',
+                        loadComponent: () => import('./scoring/pages/catalogo-variables-page/catalogo-variables-page'),
+                    },
+                    {
+                        path: 'preguntas',
+                        loadComponent: () => import('./scoring/pages/gestion-preguntas-page/gestion-preguntas-page'),
+                    },
+                    {
+                        path: 'evaluacion',
+                        loadComponent: () => import('./scoring/pages/evaluacion-page/evaluacion-page'),
+                    },
+                    // Alta: los datos del cliente se traen del core.
+                    {
+                        path: 'evaluacion/captura/solicitud/:numeroSolicitud',
+                        loadComponent: () => import('./scoring/pages/captura-evaluacion-page/captura-evaluacion-page'),
+                    },
+                    // Edición: el snapshot sale de la evaluación guardada.
+                    {
+                        path: 'evaluacion/captura/evaluacion/:evaluacionId',
+                        loadComponent: () => import('./scoring/pages/captura-evaluacion-page/captura-evaluacion-page'),
+                    },
+                    {
+                        path: 'auditoria',
+                        loadComponent: () => import('./scoring/pages/auditoria-page/auditoria-page'),
+                    },
+                ]
+            },
+
+            {
                 path: 'siucom',
                 children: [
                     {
