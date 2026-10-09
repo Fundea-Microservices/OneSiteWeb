@@ -6,7 +6,8 @@ import { HttpService } from '../HttpService';
 import {
   CargarPartidasDto,
   CargarPartidasResponse,
-  EstadoEjecucionResponse
+  EstadoEjecucionResponse,
+  ReenviarErroresDto
 } from '../../interfaces/erp-bc/partidas-contables';
 
 @Injectable({
@@ -28,7 +29,8 @@ export class PartidasContablesService extends HttpService {
    * Dispara la carga de partidas contables hacia Business Central para la fecha
    * indicada. Responde 202 casi inmediato: el proceso sigue corriendo en el
    * backend y el avance se consulta con `getEjecucion`.
-   * Responde 409 si ya hay una carga viva para ese día.
+   * Responde 409 si ya hay una carga viva para ese día, aunque tenga otro
+   * `alcance`. Sin `alcance` el backend asume `AMBAS`.
    * El token se envía automáticamente en los headers por HttpService.
    */
   cargar(dto: CargarPartidasDto): Observable<CargarPartidasResponse> {
@@ -46,11 +48,12 @@ export class PartidasContablesService extends HttpService {
 
   /**
    * Reenvía únicamente los asientos que quedaron en error para la fecha
-   * indicada. El backend los busca solo, sin volver a recorrer Bantotal, así
-   * que termina en segundos. Responde 202 con la bitácora de tipo `REENVIO`.
+   * indicada, en todos sus lotes (el del día y los de fecha valor anterior).
+   * El backend los busca solo, sin volver a recorrer Bantotal, así que termina
+   * en segundos. Responde 202 con la bitácora de tipo `REENVIO`.
    * Solo se manda `fecha`: cualquier campo extra devuelve 400.
    */
-  reenviarErrores(dto: CargarPartidasDto): Observable<CargarPartidasResponse> {
+  reenviarErrores(dto: ReenviarErroresDto): Observable<CargarPartidasResponse> {
     return this.post<CargarPartidasResponse>(this.endpoints.reenviarErrores, dto).pipe(
       map(response => response.body!),
       catchError(error => {
@@ -64,10 +67,11 @@ export class PartidasContablesService extends HttpService {
   }
 
   /**
-   * Consulta el registro de LogsCargaAsientos de la fecha indicada: si existe,
-   * si sigue en ejecución, su progreso, si el cuadre por cuenta externa falló
-   * (`descuadre`) y qué acción se puede ofrecer (`puedeEjecutar`,
-   * `puedeReenviar`).
+   * Consulta las bitácoras de la fecha indicada: el último resultado del lote
+   * del día (`ejecucion`), el de cada lote de fecha valor anterior
+   * (`anteriores`) y la última corrida con cualquier alcance
+   * (`ultimaEjecucion`). Las banderas generales (`enEjecucion`, `descuadre`,
+   * `puedeReenviar`...) resumen todos los lotes.
    *
    * Un descuadre responde 200 con `success: true`: la carga terminó bien, lo
    * que falló son los datos de origen. No hay que tratarlo como error de red.

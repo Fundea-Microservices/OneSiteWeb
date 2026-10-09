@@ -3,7 +3,12 @@ import { CommonModule, formatNumber } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { PartidasContablesService } from '../../../../services/erp-bc/partidas-contables.service';
-import { CuentaExternaCuadre, EstadoEjecucionData } from '../../../../interfaces/erp-bc/partidas-contables';
+import {
+  AlcanceCarga,
+  CuadrePoliza,
+  EstadoEjecucionData,
+  LoteCargaAsientos
+} from '../../../../interfaces/erp-bc/partidas-contables';
 
 /**
  * Cada cuánto se re-consulta el estado mientras el proceso sigue corriendo.
@@ -14,24 +19,36 @@ const POLL_CARGA_MS   = 5 * 60 * 1000;
 const POLL_REENVIO_MS = 12 * 1000;
 
 /**
- * Cuántas cuentas descuadradas se listan de entrada. `cuentasDescuadradas` no
- * tiene tope: un día mal cargado puede traer cientos de filas.
+ * Cuántas pólizas descuadradas se listan de entrada. El lote del día puede
+ * traer hasta 500: un día mal cargado llena la pantalla.
  */
-const CUENTAS_VISIBLES = 15;
+const POLIZAS_VISIBLES = 15;
 
 /**
- * El backend reescribe `comentario` en cada página (fase 1) y en cada lote
- * (fase 2). Es la única fuente del total por enviar de la fase 2.
+ * El backend reescribe `comentario` en cada página (fases 1 y 3) y en cada
+ * bloque enviado (fases 2 y 4). Es la única fuente del avance por página y
+ * del total por enviar.
+ * - Fases 1 y 2: lote del día, sobre la bitácora principal.
+ * - Fases 3 y 4: lotes de fecha valor anterior, sobre la bitácora de cada lote.
  */
-const RE_FASE_CARGA = /^Fase 1 en proceso \| página (\d+) de (\d+)/;
-const RE_FASE_ENVIO = /^Fase 2 en proceso \| (\d+) de (\d+)/;
+const RE_FASE_CARGA          = /^Fase 1 en proceso \| página (\d+) de (\d+)/;
+const RE_FASE_ENVIO          = /^Fase 2 en proceso \| (\d+) de (\d+)/;
+const RE_FASE_CARGA_ANTERIOR = /^Fase 3 en proceso \| página (\d+) de (\d+)/;
+const RE_FASE_ENVIO_ANTERIOR = /^Fase 4 en proceso \| (\d+) de (\d+)/;
 
-const COLOR_FASE_CARGA = 'bg-primary';
-const COLOR_FASE_ENVIO = 'bg-success';
+/**
+ * Lo que el backend agrega al comentario de la bitácora principal al terminar
+ * el lote del día y pasar a las fases 3-4.
+ */
+const MARCA_FASES_ANTERIORES = 'Procesando asientos con fecha valor anterior';
+
+const COLOR_FASE_CARGA    = 'bg-primary';
+const COLOR_FASE_ENVIO    = 'bg-success';
+const COLOR_FASE_DETENIDA = 'bg-warning';
 
 type AccionEnCurso = 'carga' | 'reenvio' | null;
 
-type EstadoFase = 'pendiente' | 'en-curso' | 'completa';
+type EstadoFase = 'pendiente' | 'en-curso' | 'completa' | 'detenida';
 
 interface ProgresoFase {
   titulo:     string;
@@ -55,6 +72,36 @@ type VistaEstado =
   | 'error'
   | 'ok';
 
+/** Desenlace de un lote suelto (el del día o uno de fecha valor anterior). */
+type VistaLote = Exclude<VistaEstado, 'sin-registro'>;
+
+const ESTADO_LOTE: Record<VistaLote, { texto: string; clase: string }> = {
+  avance:       { texto: 'En ejecución',        clase: 'bg-primary' },
+  descuadre:    { texto: 'Pólizas sin cuadrar', clase: 'bg-danger' },
+  interrumpida: { texto: 'Interrumpido',        clase: 'bg-warning text-dark' },
+  reenvio:      { texto: 'Con rechazos',        clase: 'bg-danger' },
+  error:        { texto: 'Con fallo',           clase: 'bg-danger' },
+  ok:           { texto: 'Enviado',             clase: 'bg-success' },
+};
+
+const OPCIONES_ALCANCE: { valor: AlcanceCarga; texto: string; ayuda: string }[] = [
+  {
+    valor: 'AMBAS',
+    texto: 'Todo',
+    ayuda: 'El lote del día y un lote por cada fecha valor anterior registrada en la fecha.',
+  },
+  {
+    valor: 'DIA',
+    texto: 'Solo fecha del día',
+    ayuda: 'Solo los asientos con fecha valor igual a la fecha.',
+  },
+  {
+    valor: 'ANTERIORES',
+    texto: 'Solo fechas anteriores',
+    ayuda: 'Solo los asientos registrados en la fecha con fecha valor anterior.',
+  },
+];
+
 @Component({
   selector: 'app-ejecutar-carga-asientos-contables-page',
   standalone: true,
@@ -69,6 +116,8 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   private service = inject(PartidasContablesService);
   private locale  = inject(LOCALE_ID);
 
+  readonly opcionesAlcance = OPCIONES_ALCANCE;
+
   fecha  = signal('');
   estado = signal<EstadoEjecucionData | null>(null);
 
@@ -80,8 +129,15 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   errorMsg       = signal('');
   avisoMsg       = signal('');
   ultimaConsulta = signal<Date | null>(null);
-  /** La tabla de cuentas descuadradas arranca recortada. */
-  verTodasLasCuentas = signal(false);
+  /** La tabla de pólizas descuadradas del día arranca recortada. */
+  verTodasLasPolizas = signal(false);
+  /** Id del lote anterior desplegado en la tabla, si hay alguno. */
+  loteAbierto = signal<string | null>(null);
+
+  /** Alcance con el que se lanzará la próxima carga. */
+  alcance = signal<AlcanceCarga>('AMBAS');
+  /** Mientras el usuario no toque el selector, el alcance sigue a la sugerencia. */
+  private alcanceElegido = false;
 
   private pollId: ReturnType<typeof setInterval> | null = null;
   private pollMsActual: number | null = null;
@@ -116,29 +172,63 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     this.errorMsg.set('');
     this.avisoMsg.set('');
     this.ultimaConsulta.set(null);
-    this.verTodasLasCuentas.set(false);
+    this.reiniciarVista();
   }
+
+  private reiniciarVista() {
+    this.verTodasLasPolizas.set(false);
+    this.loteAbierto.set(null);
+    this.alcanceElegido = false;
+    this.alcance.set('AMBAS');
+  }
+
+  // ── Alcance ────────────────────────────────────────────────────────────────
+
+  onAlcanceChange(valor: AlcanceCarga) {
+    this.alcance.set(valor);
+    this.alcanceElegido = true;
+  }
+
+  etiquetaAlcance(alcance: AlcanceCarga | null | undefined): string {
+    return OPCIONES_ALCANCE.find(o => o.valor === alcance)?.texto ?? '';
+  }
+
+  ayudaAlcance = computed(() =>
+    OPCIONES_ALCANCE.find(o => o.valor === this.alcance())?.ayuda ?? ''
+  );
 
   // ── Estado derivado ────────────────────────────────────────────────────────
 
-  ejecucion   = computed(() => this.estado()?.ejecucion ?? null);
+  /** Último resultado del lote del día. `null` si ninguna corrida lo procesó. */
+  ejecucion       = computed(() => this.estado()?.ejecucion ?? null);
+  anteriores      = computed(() => this.estado()?.anteriores ?? []);
+  ultimaEjecucion = computed(() => this.estado()?.ultimaEjecucion ?? null);
+
+  /** Ya considera todos los lotes. */
   enEjecucion = computed(() => this.estado()?.enEjecucion === true);
 
-  /** El último registro de la fecha es un reenvío de errores, no una carga. */
+  /** El último resultado del lote del día es un reenvío de errores, no una carga. */
   esReenvio = computed(() => this.ejecucion()?.tipo === 'REENVIO');
 
-  /**
-   * La carga se detuvo en la validación de cuadre. Los asientos quedaron
-   * guardados en el intermedio y el ERP no recibió nada.
-   */
-  descuadre = computed(() => this.estado()?.descuadre === true);
+  /** La corrida en curso (o la última) es un reenvío: define la cadencia del polling. */
+  ultimaEsReenvio = computed(() => this.ultimaEjecucion()?.tipo === 'REENVIO');
 
-  /** Hay asientos en ERROR que el ERP rechazó y tiene sentido reintentar. */
+  /**
+   * La última corrida no es la que dejó el resultado del lote del día: pasa
+   * con alcance ANTERIORES, o si solo se han corrido cargas de ese alcance.
+   */
+  ultimaDistinta = computed(() => {
+    const u = this.ultimaEjecucion();
+    return !!u && u.id !== this.ejecucion()?.id;
+  });
+
+  /** Hay asientos en ERROR en algún lote que el ERP rechazó y tiene sentido reintentar. */
   puedeReenviar = computed(() => this.estado()?.puedeReenviar === true);
 
   /**
-   * Desenlace a pintar. `tieneErrores` sale `true` también en un descuadre, así
-   * que el orden importa: el descuadre se resuelve antes que el reenvío.
+   * Desenlace general a pintar. Las banderas generales resumen todos los
+   * lotes. `tieneErrores` sale `true` también en un descuadre, así que el
+   * orden importa: el descuadre se resuelve antes que el reenvío.
    */
   vista = computed<VistaEstado>(() => {
     const e = this.estado();
@@ -147,41 +237,114 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     if (e.descuadre)       return 'descuadre';
     if (e.interrumpida)    return 'interrumpida';
     if (e.puedeReenviar)   return 'reenvio';
-    if (e.ejecucion?.error) return 'error';
+    if (e.tieneErrores)    return 'error';
     return 'ok';
   });
 
-  /** Terminó sin incidencias: solo se muestra el resumen. */
-  finalizadaLimpia = computed(() => this.vista() === 'ok');
-
-  // ── Cuentas que no cuadran ─────────────────────────────────────────────────
-
-  cuentasDescuadradas = computed<CuentaExternaCuadre[]>(
-    () => this.ejecucion()?.cuentasDescuadradas ?? []
-  );
-
-  /** Total de cuentas externas de la fecha, cuadren o no. `null` si no se calculó. */
-  totalCuentasExternas = computed(() => this.ejecucion()?.cuentasExternas?.length ?? null);
-
-  /** La tabla se recorta salvo que el usuario pida verla entera. */
-  cuentasVisibles = computed<CuentaExternaCuadre[]>(() => {
-    const cuentas = this.cuentasDescuadradas();
-    return this.verTodasLasCuentas() ? cuentas : cuentas.slice(0, CUENTAS_VISIBLES);
-  });
-
-  cuentasOcultas = computed(() =>
-    Math.max(0, this.cuentasDescuadradas().length - this.cuentasVisibles().length)
-  );
-
-  hayCuentasOcultas = computed(() => this.cuentasOcultas() > 0);
-
-  alternarCuentas() {
-    this.verTodasLasCuentas.update(v => !v);
+  /** Mismo criterio que `vista`, pero con las banderas de un solo lote. */
+  vistaDeLote(lote: LoteCargaAsientos): VistaLote {
+    if (lote.enEjecucion)                return 'avance';
+    if (lote.descuadre)                  return 'descuadre';
+    if (lote.interrumpida)               return 'interrumpida';
+    if (lote.puedeReenviar)              return 'reenvio';
+    if (lote.tieneErrores || lote.error) return 'error';
+    return 'ok';
   }
 
-  /** Los asientos sin cuenta externa se agrupan bajo cadena vacía. */
-  etiquetaCuenta(cuenta: string): string {
-    return cuenta?.trim() ? cuenta : 'Sin cuenta externa';
+  estadoLote(lote: LoteCargaAsientos) {
+    return ESTADO_LOTE[this.vistaDeLote(lote)];
+  }
+
+  /** Desenlace del lote del día; `null` si no hay resultado del día. */
+  vistaDia = computed<VistaLote | null>(() => {
+    const ej = this.ejecucion();
+    return ej ? this.vistaDeLote(ej) : null;
+  });
+
+  /** Lotes anteriores que no terminaron limpios. */
+  anterioresConIncidencia = computed(() =>
+    this.anteriores().filter(l => {
+      const v = this.vistaDeLote(l);
+      return v !== 'ok' && v !== 'avance';
+    }).length
+  );
+
+  anterioresConDescuadre = computed(() => this.anteriores().some(l => l.descuadre));
+
+  /** Terminó sin incidencias en ningún lote. */
+  finalizadaLimpia = computed(() => this.vista() === 'ok');
+
+  /** Existe registro de la fecha, pero ninguna corrida ha procesado el lote del día. */
+  diaPendiente = computed(() => !!this.estado()?.existe && !this.ejecucion());
+
+  /**
+   * No hay rastro de que se hayan procesado las fechas valor anteriores: no
+   * hay lotes y ninguna corrida visible tuvo un alcance que las incluyera
+   * (p. ej. ejecuciones previas a este cambio, o cargas con alcance DIA).
+   */
+  anterioresPendientes = computed(() => {
+    const e = this.estado();
+    if (!e?.existe || e.anteriores.length > 0) return false;
+    const alcances = [e.ultimaEjecucion?.alcance, e.ejecucion?.alcance];
+    return !alcances.some(a => a === 'AMBAS' || a === 'ANTERIORES');
+  });
+
+  /**
+   * Alcance que conviene relanzar según qué lotes quedaron mal o sin procesar.
+   * Es solo la opción preseleccionada: el usuario puede cambiarla.
+   */
+  alcanceSugerido = computed<AlcanceCarga>(() => {
+    const e = this.estado();
+    if (!e?.existe) return 'AMBAS';
+    if (e.interrumpida && !e.enEjecucion) return e.ultimaEjecucion?.alcance ?? 'AMBAS';
+
+    const ej = e.ejecucion;
+    const dia = !ej || this.vistaDeLote(ej) !== 'ok';
+    const ant = this.anterioresPendientes() || e.anteriores.some(l => this.vistaDeLote(l) !== 'ok');
+
+    if (dia && !ant) return 'DIA';
+    if (ant && !dia) return 'ANTERIORES';
+    return 'AMBAS';
+  });
+
+  // ── Pólizas que no cuadran (lote del día) ──────────────────────────────────
+
+  polizasDescuadradas = computed<CuadrePoliza[]>(
+    () => this.ejecucion()?.polizasDescuadradas ?? []
+  );
+
+  /** Total real: la lista puede venir recortada por el backend. */
+  totalPolizasDescuadradas = computed(() => this.ejecucion()?.totalPolizasDescuadradas ?? 0);
+
+  /** Total de pólizas del lote, cuadren o no. `null` si no se calculó el cuadre. */
+  totalPolizas = computed(() => {
+    const ej = this.ejecucion();
+    return ej?.polizas ? ej.totalPolizas : null;
+  });
+
+  /** La tabla se recorta salvo que el usuario pida verla entera. */
+  polizasVisibles = computed<CuadrePoliza[]>(() => {
+    const polizas = this.polizasDescuadradas();
+    return this.verTodasLasPolizas() ? polizas : polizas.slice(0, POLIZAS_VISIBLES);
+  });
+
+  polizasOcultas = computed(() =>
+    Math.max(0, this.polizasDescuadradas().length - this.polizasVisibles().length)
+  );
+
+  hayPolizasOcultas = computed(() => this.polizasOcultas() > 0);
+
+  alternarPolizas() {
+    this.verTodasLasPolizas.update(v => !v);
+  }
+
+  /** Los asientos sin póliza se agrupan bajo cadena vacía. */
+  etiquetaPoliza(poliza: string): string {
+    return poliza?.trim() ? poliza : 'Sin póliza';
+  }
+
+  alternarLote(id: string) {
+    this.loteAbierto.update(actual => actual === id ? null : id);
   }
 
   /**
@@ -193,31 +356,113 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     return !!ej && ej.tipo === 'REENVIO' && !this.enEjecucion() && ej.registrosObtenidos === 0;
   });
 
+  // ── Progreso por fase ──────────────────────────────────────────────────────
+
+  /** Lotes anteriores creados por la corrida en curso (los demás son de corridas previas). */
+  private lotesAnterioresEnCurso = computed(() => {
+    const ult = this.ultimaEjecucion();
+    if (!ult) return [];
+    const desde = Date.parse(ult.fechaInicio);
+    return this.anteriores().filter(l => Date.parse(l.fechaInicio) >= desde);
+  });
+
   /**
-   * Una barra por fase mientras el proceso corre. `porcentaje` solo mide la
-   * fase 1 (procesados / obtenidos); el avance de la fase 2 sale del
-   * `comentario` del lote. El reenvío no pasa por Bantotal: solo tiene envío.
+   * Una barra por fase mientras el proceso corre. El alcance de la corrida
+   * decide cuáles se muestran: DIA = 1-2, ANTERIORES = 3-4, AMBAS = 1-4. El
+   * reenvío no pasa por Bantotal: solo tiene envío.
    *
    * Una barra sin porcentaje real se pinta indeterminada: un proceso recién
    * arrancado reporta 0% y una barra vacía parece colgada.
    */
   fases = computed<ProgresoFase[]>(() => {
-    const ej = this.ejecucion();
-    if (!ej || !this.enEjecucion()) return [];
+    if (!this.enEjecucion()) return [];
+
+    const ult = this.ultimaEjecucion();
+    const ej  = this.ejecucion();
+
+    // `ejecucion` solo describe la corrida en curso si es la misma bitácora:
+    // con alcance ANTERIORES es el resultado de una corrida previa.
+    const dia = ej && (!ult || ej.id === ult.id) ? ej : null;
+
+    if ((ult?.tipo ?? dia?.tipo) === 'REENVIO') {
+      return dia ? [this.faseReenvio(dia)] : [];
+    }
+
+    const alcance: AlcanceCarga = ult?.alcance ?? 'AMBAS';
+    const lotes = this.lotesAnterioresEnCurso();
+
+    // Con AMBAS las fases 3-4 arrancan cuando el lote del día ya terminó.
+    const enAnteriores = alcance === 'ANTERIORES'
+      || lotes.length > 0
+      || (ult?.comentario ?? '').includes(MARCA_FASES_ANTERIORES);
+
+    const fases: ProgresoFase[] = [];
+    if (alcance !== 'ANTERIORES') fases.push(...this.fasesDelDia(dia, enAnteriores));
+    if (alcance !== 'DIA')        fases.push(...this.fasesAnteriores(lotes, enAnteriores));
+    return fases;
+  });
+
+  private faseReenvio(ej: LoteCargaAsientos): ProgresoFase {
+    return {
+      titulo:     'Reenvío a Business Central',
+      estado:     'en-curso',
+      porcentaje: ej.porcentaje > 0 ? ej.porcentaje : null,
+      detalle:    ej.registrosObtenidos > 0
+        ? `${this.num(ej.registrosProcesados)} de ${this.num(ej.registrosObtenidos)} asiento(s)`
+        : 'Buscando asientos en error…',
+      color:      COLOR_FASE_ENVIO,
+    };
+  }
+
+  /**
+   * Fases 1 y 2. `porcentaje` solo mide la fase 1 (procesados / obtenidos);
+   * el avance de la fase 2 sale del `comentario` de la bitácora.
+   */
+  private fasesDelDia(ej: LoteCargaAsientos | null, terminado: boolean): ProgresoFase[] {
+    const tituloCarga = 'Fase 1 · Obtener lote del día de Bantotal';
+    const tituloEnvio = 'Fase 2 · Enviar lote del día a Business Central';
+
+    if (!ej) {
+      return [
+        { titulo: tituloCarga, estado: 'en-curso', porcentaje: null,
+          detalle: 'Consultando Bantotal…', color: COLOR_FASE_CARGA },
+        { titulo: tituloEnvio, estado: 'pendiente', porcentaje: 0,
+          detalle: 'Empieza al terminar la fase 1', color: COLOR_FASE_ENVIO },
+      ];
+    }
+
+    // El lote del día ya cerró y la corrida sigue con las fechas anteriores.
+    if (terminado) {
+      const carga: ProgresoFase = {
+        titulo: tituloCarga, estado: 'completa', porcentaje: 100,
+        detalle: `${this.num(ej.registrosProcesados)} registro(s)`, color: COLOR_FASE_CARGA,
+      };
+
+      let envio: ProgresoFase;
+      if (ej.enviado) {
+        envio = {
+          titulo: tituloEnvio, estado: 'completa', porcentaje: 100,
+          detalle: `${this.num(ej.registrosEnviados ?? 0)} aceptado(s)`
+            + (ej.registrosConError > 0 ? ` · ${this.num(ej.registrosConError)} con error` : ''),
+          color: COLOR_FASE_ENVIO,
+        };
+      } else if (ej.registrosObtenidos === 0) {
+        envio = {
+          titulo: tituloEnvio, estado: 'completa', porcentaje: 100,
+          detalle: 'Sin asientos que enviar', color: COLOR_FASE_ENVIO,
+        };
+      } else {
+        // Descuadre o fallo: el lote del día no llegó al ERP, pero los lotes
+        // anteriores son independientes y siguen.
+        envio = {
+          titulo: tituloEnvio, estado: 'detenida', porcentaje: 100,
+          detalle: 'No se envió: el lote se detuvo antes del envío', color: COLOR_FASE_DETENIDA,
+        };
+      }
+      return [carga, envio];
+    }
 
     const comentario = ej.comentario ?? '';
-
-    if (ej.tipo === 'REENVIO') {
-      return [{
-        titulo:     'Reenvío a Business Central',
-        estado:     'en-curso',
-        porcentaje: ej.porcentaje > 0 ? ej.porcentaje : null,
-        detalle:    ej.registrosObtenidos > 0
-          ? `${this.num(ej.registrosProcesados)} de ${this.num(ej.registrosObtenidos)} asiento(s)`
-          : 'Buscando asientos en error…',
-        color:      COLOR_FASE_ENVIO,
-      }];
-    }
 
     // Durante la fase 1 enviados y errores se escriben en 0, así que cualquier
     // valor mayor indica que ya arrancó el envío.
@@ -233,7 +478,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     const pagina = cargaLista ? null : RE_FASE_CARGA.exec(comentario);
 
     const carga: ProgresoFase = {
-      titulo:     'Fase 1 · Obtener de Bantotal',
+      titulo:     tituloCarga,
       estado:     cargaLista ? 'completa' : 'en-curso',
       porcentaje: cargaLista ? 100 : (ej.porcentaje > 0 ? ej.porcentaje : null),
       detalle:    ej.registrosObtenidos > 0
@@ -243,7 +488,6 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
       color:      COLOR_FASE_CARGA,
     };
 
-    const titulo = 'Fase 2 · Enviar a Business Central';
     let envio: ProgresoFase;
 
     if (enEnvio) {
@@ -251,7 +495,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
       const total  = lote ? +lote[2] : 0;
       const pct    = total > 0 ? Math.min(100, Math.round((hechos / total) * 100)) : 0;
       envio = {
-        titulo,
+        titulo:     tituloEnvio,
         estado:     'en-curso',
         porcentaje: pct > 0 ? pct : null,
         detalle:    total > 0
@@ -261,25 +505,94 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
       };
     } else {
       envio = {
-        titulo,
+        titulo:     tituloEnvio,
         estado:     'pendiente',
         porcentaje: 0,
-        detalle:    cargaLista ? 'Validando cuadre de cuentas…' : 'Empieza al terminar la fase 1',
+        detalle:    cargaLista ? 'Validando cuadre de pólizas…' : 'Empieza al terminar la fase 1',
         color:      COLOR_FASE_ENVIO,
       };
     }
 
     return [carga, envio];
-  });
+  }
+
+  /**
+   * Fases 3 y 4. La fase 3 recorre Bantotal una sola vez y reparte cada página
+   * en un lote por fecha valor: todos los lotes reportan la misma página. La
+   * fase 4 cuadra y envía lote por lote, y cierra cada bitácora al terminar.
+   */
+  private fasesAnteriores(lotes: LoteCargaAsientos[], iniciado: boolean): ProgresoFase[] {
+    const tituloCarga = 'Fase 3 · Obtener fechas valor anteriores de Bantotal';
+    const tituloEnvio = 'Fase 4 · Enviar lotes anteriores a Business Central';
+
+    if (!iniciado) {
+      return [
+        { titulo: tituloCarga, estado: 'pendiente', porcentaje: 0,
+          detalle: 'Empieza al terminar el lote del día', color: COLOR_FASE_CARGA },
+        { titulo: tituloEnvio, estado: 'pendiente', porcentaje: 0,
+          detalle: 'Empieza al terminar la fase 3', color: COLOR_FASE_ENVIO },
+      ];
+    }
+
+    const cerrados   = lotes.filter(l => !!l.fechaFin).length;
+    const enviando   = lotes.find(l => RE_FASE_ENVIO_ANTERIOR.test(l.comentario ?? ''));
+    const pagina     = lotes
+      .map(l => RE_FASE_CARGA_ANTERIOR.exec(l.comentario ?? ''))
+      .find((m): m is RegExpExecArray => !!m);
+    const ultimaPag  = !!pagina && +pagina[1] >= +pagina[2];
+    const cargaLista = cerrados > 0 || !!enviando || ultimaPag;
+    const nLotes     = `${this.num(lotes.length)} lote(s)`;
+
+    let carga: ProgresoFase;
+    if (cargaLista) {
+      carga = {
+        titulo: tituloCarga, estado: 'completa', porcentaje: 100,
+        detalle: nLotes, color: COLOR_FASE_CARGA,
+      };
+    } else if (pagina) {
+      const pct = Math.min(100, Math.round((+pagina[1] / +pagina[2]) * 100));
+      carga = {
+        titulo: tituloCarga, estado: 'en-curso', porcentaje: pct > 0 ? pct : null,
+        detalle: `${nLotes} · página ${this.num(+pagina[1])} de ${this.num(+pagina[2])}`,
+        color: COLOR_FASE_CARGA,
+      };
+    } else {
+      carga = {
+        titulo: tituloCarga, estado: 'en-curso', porcentaje: null,
+        detalle: 'Consultando Bantotal…', color: COLOR_FASE_CARGA,
+      };
+    }
+
+    if (!cargaLista) {
+      return [carga, {
+        titulo: tituloEnvio, estado: 'pendiente', porcentaje: 0,
+        detalle: 'Empieza al terminar la fase 3', color: COLOR_FASE_ENVIO,
+      }];
+    }
+
+    const pct = lotes.length > 0 ? Math.round((cerrados / lotes.length) * 100) : 0;
+    let detalle = `${this.num(cerrados)} de ${nLotes}`;
+    const bloque = enviando ? RE_FASE_ENVIO_ANTERIOR.exec(enviando.comentario ?? '') : null;
+    if (enviando && bloque) {
+      detalle += ` · ${enviando.fechaValor}: ${this.num(+bloque[1])} de ${this.num(+bloque[2])} asiento(s)`;
+    } else if (cerrados === 0) {
+      detalle += ' · validando cuadre de pólizas…';
+    }
+
+    return [carga, {
+      titulo: tituloEnvio, estado: 'en-curso', porcentaje: pct > 0 ? pct : null,
+      detalle, color: COLOR_FASE_ENVIO,
+    }];
+  }
 
   private num(valor: number): string {
     return formatNumber(valor, this.locale, '1.0-0');
   }
 
   /**
-   * Reenvío rápido: solo lo que quedó en error. Se decide con `puedeReenviar`,
-   * nunca con `tieneErrores`: en un descuadre los asientos están en INICIO y el
-   * reenvío no encontraría nada que hacer.
+   * Reenvío rápido: solo lo que quedó en error, en todos los lotes. Se decide
+   * con `puedeReenviar`, nunca con `tieneErrores`: en un descuadre los asientos
+   * están en INICIO y el reenvío no encontraría nada que hacer.
    */
   mostrarBotonReenviarErrores = computed(() => {
     const e = this.estado();
@@ -287,15 +600,18 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   });
 
   /**
-   * Carga completa: sin registro previo, interrumpida, descuadrada, con
-   * rechazos del ERP o con fallo técnico. Vuelve a recorrer Bantotal y también
-   * levanta lo que quedó en PENDIENTE. Una carga que terminó limpia no se
-   * relanza.
+   * Carga: sin registro previo, interrumpida, descuadrada, con rechazos del
+   * ERP o con fallo técnico. Vuelve a recorrer Bantotal y también levanta lo
+   * que quedó en PENDIENTE. Una carga que terminó limpia no se relanza, salvo
+   * que quede una parte de la fecha (día o anteriores) sin procesar.
    */
   mostrarBotonEjecutar = computed(() => {
     const e = this.estado();
     if (!e || !e.puedeEjecutar) return false;
-    return this.vista() !== 'avance' && this.vista() !== 'ok';
+    const v = this.vista();
+    if (v === 'avance') return false;
+    if (v === 'ok') return this.diaPendiente() || this.anterioresPendientes();
+    return true;
   });
 
   textoBotonEjecutar = computed(() => {
@@ -307,8 +623,17 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     }
   });
 
+  /** Asientos rechazados que cubre el reenvío: suma de todos los lotes reenviables. */
+  asientosAReenviar = computed(() => {
+    const e = this.estado();
+    if (!e) return 0;
+    return [e.ejecucion, ...e.anteriores]
+      .filter((l): l is LoteCargaAsientos => !!l?.puedeReenviar)
+      .reduce((total, l) => total + (l.registrosConError ?? 0), 0);
+  });
+
   textoBotonReenviar = computed(() => {
-    const n = this.ejecucion()?.registrosConError ?? 0;
+    const n = this.asientosAReenviar();
     return n === 1 ? 'Reenviar 1 asiento' : `Reenviar ${n} asientos`;
   });
 
@@ -345,7 +670,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   });
 
   textoFrecuencia = computed(() =>
-    this.esReenvio()
+    this.ultimaEsReenvio()
       ? `cada ${POLL_REENVIO_MS / 1000} segundos`
       : `cada ${POLL_CARGA_MS / 60000} minutos`
   );
@@ -371,7 +696,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     this.errorMsg.set('');
     this.avisoMsg.set('');
     this.estado.set(null);
-    this.verTodasLasCuentas.set(false);
+    this.reiniciarVista();
 
     await this.consultar();
 
@@ -389,13 +714,13 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     this.isRefrescando.set(false);
   }
 
-  /** Dispara la carga completa para la fecha. */
+  /** Dispara la carga para la fecha con el alcance elegido. */
   ejecutar() {
     if (!this.mostrarBotonEjecutar()) return;
     return this.disparar('carga');
   }
 
-  /** Reenvía únicamente los asientos que quedaron en error. */
+  /** Reenvía únicamente los asientos que quedaron en error, en todos los lotes. */
   reenviarErrores() {
     if (!this.mostrarBotonReenviarErrores()) return;
     return this.disparar('reenvio');
@@ -408,10 +733,10 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     this.errorMsg.set('');
     this.avisoMsg.set('');
 
-    const dto = { fecha: this.fecha() };
+    const fecha = this.fecha();
     const peticion$ = modo === 'reenvio'
-      ? this.service.reenviarErrores(dto)
-      : this.service.cargar(dto);
+      ? this.service.reenviarErrores({ fecha })
+      : this.service.cargar({ fecha, alcance: this.alcance() });
 
     const porDefecto = modo === 'reenvio'
       ? 'Reenvío iniciado. El avance se actualiza automáticamente.'
@@ -427,7 +752,8 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
         return;
       }
     } catch (error: any) {
-      // 409: ya hay un proceso vivo de ese día. No es un fallo, el GET manda.
+      // 409: ya hay un proceso vivo de ese día (con cualquier alcance). No es
+      // un fallo, el GET manda.
       if (error?.status === 409) {
         this.avisoMsg.set(
           this.mensajeError(error, 'Ya hay un proceso en curso para esta fecha.')
@@ -440,6 +766,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     }
 
     // El 202 solo confirma que arrancó: el estado real lo da la consulta.
+    this.alcanceElegido = false;
     await this.consultar();
     this.consultado.set(true);
     this.accion.set(null);
@@ -451,8 +778,10 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     try {
       const resp = await firstValueFrom(this.service.getEjecucion(this.fecha()));
       if (resp?.success) {
-        this.estado.set(resp.data);
+        // Respuestas de un backend previo al cambio no traen la lista.
+        this.estado.set({ ...resp.data, anteriores: resp.data.anteriores ?? [] });
         this.ultimaConsulta.set(new Date());
+        if (!this.alcanceElegido) this.alcance.set(this.alcanceSugerido());
         this.sincronizarPolling();
       } else {
         this.errorMsg.set(resp?.message ?? 'No se pudo consultar la ejecución.');
@@ -464,9 +793,9 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   }
 
   /**
-   * Mantiene el ciclo de consulta vivo solo mientras el proceso está corriendo,
-   * y lo reinicia si cambia la cadencia (una carga y un reenvío no se consultan
-   * al mismo ritmo).
+   * Mantiene el ciclo de consulta vivo solo mientras algún lote está
+   * corriendo, y lo reinicia si cambia la cadencia (una carga y un reenvío no
+   * se consultan al mismo ritmo).
    */
   private sincronizarPolling() {
     if (!this.enEjecucion()) {
@@ -474,7 +803,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
       return;
     }
 
-    const ms = this.esReenvio() ? POLL_REENVIO_MS : POLL_CARGA_MS;
+    const ms = this.ultimaEsReenvio() ? POLL_REENVIO_MS : POLL_CARGA_MS;
     if (this.pollId !== null && this.pollMsActual === ms) return;
 
     this.detenerPolling();

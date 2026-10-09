@@ -17,7 +17,7 @@
     <form class="row g-3 mb-4" (ngSubmit)="buscar()">
 
       <div class="col-md-5">
-        <label for="fecha" class="form-label">Fecha *</label>
+        <label for="fecha" class="form-label">Fecha de aplicación *</label>
         <input
           type="date"
           class="form-control"
@@ -30,7 +30,7 @@
           [disabled]="isBuscando()"
           required>
         <div class="form-text">
-          Solo se permiten fechas de ayer hacia atrás.
+          Día en que se registraron los asientos. Solo se permiten fechas de ayer hacia atrás.
         </div>
         @if (fecha() && !fechaValida) {
           <div class="invalid-feedback d-block">
@@ -83,9 +83,9 @@
         </div>
       } @else {
 
-        <!-- Encabezado del estado -->
+        <!-- Encabezado del estado: las banderas generales resumen todos los lotes -->
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex flex-wrap align-items-center gap-2">
             @switch (vista()) {
               @case ('avance') {
                 <span class="badge bg-primary">
@@ -94,7 +94,7 @@
                 </span>
               }
               @case ('descuadre') {
-                <span class="badge bg-danger">Detenida: cuentas sin cuadrar</span>
+                <span class="badge bg-danger">Con pólizas sin cuadrar</span>
               }
               @case ('interrumpida') {
                 <span class="badge bg-warning text-dark">Interrumpida</span>
@@ -110,10 +110,13 @@
               }
             }
 
-            @if (ejecucion(); as ej) {
-              <span class="badge bg-light text-dark border">{{ ej.tipo }}</span>
-              @if (ej.userName) {
-                <span class="text-muted small">por {{ ej.userName }}</span>
+            @if (ultimaEjecucion(); as ult) {
+              <span class="badge bg-light text-dark border">{{ ult.tipo }}</span>
+              @if (ult.alcance) {
+                <span class="badge bg-light text-dark border">{{ etiquetaAlcance(ult.alcance) }}</span>
+              }
+              @if (ult.userName) {
+                <span class="text-muted small">por {{ ult.userName }}</span>
               }
             }
           </div>
@@ -138,79 +141,136 @@
           </div>
         </div>
 
-        <!-- Progreso -->
-        @if (ejecucion(); as ej) {
-          @if (data.enEjecucion) {
-            <div class="mb-3">
-              @for (fase of fases(); track fase.titulo) {
-                <div class="mb-2">
-                  <div class="d-flex justify-content-between gap-2 small mb-1">
-                    <span>
-                      <span class="fw-semibold" [class.text-muted]="fase.estado === 'pendiente'">
-                        {{ fase.titulo }}
-                      </span>
-                      <span class="text-muted ms-1">{{ fase.detalle }}</span>
+        <!-- Progreso: enEjecucion ya considera todos los lotes -->
+        @if (data.enEjecucion) {
+          <div class="mb-3">
+            @for (fase of fases(); track fase.titulo) {
+              <div class="mb-2">
+                <div class="d-flex justify-content-between gap-2 small mb-1">
+                  <span>
+                    <span class="fw-semibold" [class.text-muted]="fase.estado === 'pendiente'">
+                      {{ fase.titulo }}
                     </span>
-                    <span class="text-muted text-nowrap">
-                      @switch (fase.estado) {
-                        @case ('completa') {
-                          <ion-icon name="checkmark-circle" class="text-success align-middle"></ion-icon>
-                          Completada
-                        }
-                        @case ('pendiente') {
-                          Pendiente
-                        }
-                        @default {
-                          @if (fase.porcentaje !== null) {
-                            {{ fase.porcentaje }}%
-                          }
+                    <span class="text-muted ms-1">{{ fase.detalle }}</span>
+                  </span>
+                  <span class="text-muted text-nowrap">
+                    @switch (fase.estado) {
+                      @case ('completa') {
+                        <ion-icon name="checkmark-circle" class="text-success align-middle"></ion-icon>
+                        Completada
+                      }
+                      @case ('detenida') {
+                        <ion-icon name="warning" class="text-warning align-middle"></ion-icon>
+                        Detenida
+                      }
+                      @case ('pendiente') {
+                        Pendiente
+                      }
+                      @default {
+                        @if (fase.porcentaje !== null) {
+                          {{ fase.porcentaje }}%
                         }
                       }
-                    </span>
-                  </div>
-                  <div class="progress" role="progressbar"
-                       [attr.aria-label]="fase.titulo"
-                       [attr.aria-valuenow]="fase.porcentaje"
-                       aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-bar {{ fase.color }}"
-                         [class.progress-bar-striped]="fase.estado === 'en-curso'"
-                         [class.progress-bar-animated]="fase.estado === 'en-curso'"
-                         [style.width.%]="fase.porcentaje ?? 100"></div>
-                  </div>
+                    }
+                  </span>
                 </div>
-              }
-              <div class="form-text">
-                El estado se actualiza automáticamente {{ textoFrecuencia() }}.
-                Puedes salir de la pantalla: el proceso sigue corriendo en el servidor.
+                <div class="progress" role="progressbar"
+                     [attr.aria-label]="fase.titulo"
+                     [attr.aria-valuenow]="fase.porcentaje"
+                     aria-valuemin="0" aria-valuemax="100">
+                  <div class="progress-bar {{ fase.color }}"
+                       [class.progress-bar-striped]="fase.estado === 'en-curso'"
+                       [class.progress-bar-animated]="fase.estado === 'en-curso'"
+                       [style.width.%]="fase.porcentaje ?? 100"></div>
+                </div>
               </div>
+            }
+            <div class="form-text">
+              El estado se actualiza automáticamente {{ textoFrecuencia() }}.
+              Puedes salir de la pantalla: el proceso sigue corriendo en el servidor.
             </div>
-          } @else if (ej.comentario && vista() !== 'descuadre') {
+          </div>
+        }
+
+        @if (vista() === 'interrumpida') {
+          <div class="alert alert-warning" role="alert">
+            <ion-icon name="warning-outline" class="me-2"></ion-icon>
+            El proceso quedó sin finalizar y ya superó su tiempo máximo de vida.
+            Puedes reintentar la carga: solo se reprocesará lo que no quedó cargado.
+          </div>
+        }
+
+        <!-- Última corrida, cuando no es la que dejó el resultado del lote del día
+             (p. ej. una carga con alcance «Solo fechas anteriores»). -->
+        @if (ultimaDistinta() && !data.enEjecucion) {
+          @if (ultimaEjecucion(); as ult) {
+            <div class="alert alert-light border" role="alert">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <ion-icon name="time-outline"></ion-icon>
+                <strong>Última ejecución</strong>
+                <span class="badge bg-light text-dark border">{{ ult.tipo }}</span>
+                @if (ult.alcance) {
+                  <span class="badge bg-light text-dark border">{{ etiquetaAlcance(ult.alcance) }}</span>
+                }
+                @if (ult.error) {
+                  <span class="badge bg-danger">Con fallo</span>
+                }
+              </div>
+              <div class="small text-muted">
+                {{ ult.fechaInicio | date:'dd/MM/yyyy HH:mm:ss' }}
+                → {{ ult.fechaFin ? (ult.fechaFin | date:'dd/MM/yyyy HH:mm:ss') : '—' }}
+                · {{ formatDuracion(ult.duracionSegundos) }}
+              </div>
+              @if (ult.comentario) {
+                <div class="small mt-1">{{ ult.comentario }}</div>
+              }
+            </div>
+          }
+        }
+
+        <!-- ── Lote del día ─────────────────────────────────────────────── -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2 mt-4">
+          <h6 class="text-uppercase text-muted small mb-0">Lote del día · fecha valor {{ data.fecha || fecha() }}</h6>
+          @if (ejecucion(); as ej) {
+            <span class="badge {{ estadoLote(ej).clase }}">{{ estadoLote(ej).texto }}</span>
+          }
+        </div>
+
+        @if (ejecucion(); as ej) {
+
+          @if (ultimaDistinta()) {
+            <div class="form-text mb-2">
+              Resultado de la ejecución iniciada el {{ ej.fechaInicio | date:'dd/MM/yyyy HH:mm:ss' }}.
+            </div>
+          }
+
+          @if (!data.enEjecucion && ej.comentario && vistaDia() !== 'descuadre') {
             <div class="alert alert-light border" role="alert">
               <ion-icon name="chatbox-ellipses-outline" class="me-2"></ion-icon>
               {{ ej.comentario }}
             </div>
           }
 
-          <!-- Avisos por estado. El orden lo fija vista(): los flags del backend no
-               son excluyentes (tieneErrores también sale true en un descuadre). -->
-          @switch (vista()) {
+          <!-- Avisos del lote del día. El orden lo fija vistaDia(): los flags del
+               backend no son excluyentes (tieneErrores también sale true en un descuadre). -->
+          @switch (vistaDia()) {
 
-            <!-- La validación de cuadre detuvo la carga antes de tocar el ERP -->
+            <!-- La validación de cuadre detuvo el lote antes de tocar el ERP -->
             @case ('descuadre') {
               <div class="alert alert-danger" role="alert">
                 <div class="d-flex align-items-start gap-2">
                   <ion-icon name="alert-circle-outline" class="fs-5 flex-shrink-0"></ion-icon>
                   <div>
-                    <h6 class="alert-heading mb-1">La carga se detuvo: hay cuentas que no cuadran</h6>
+                    <h6 class="alert-heading mb-1">El lote del día se detuvo: hay pólizas que no cuadran</h6>
                     <p class="mb-2">
                       {{ ej.comentario
-                         || 'La suma de las partidas de una o más cuentas externas no da cero.' }}
+                         || 'La suma de las partidas de una o más pólizas no da cero.' }}
                     </p>
                     <p class="mb-0 small">
                       Los asientos <strong>sí quedaron guardados</strong>, pero
-                      <strong>no se envió nada a Business Central</strong>. Hay que corregir
-                      el origen en Bantotal antes de volver a ejecutar: relanzar la carga sin
-                      corregir da exactamente el mismo resultado.
+                      <strong>no se envió nada de este lote a Business Central</strong>. Hay que
+                      corregir el origen en Bantotal antes de volver a ejecutar: relanzar la carga
+                      sin corregir da exactamente el mismo resultado.
                     </p>
                   </div>
                 </div>
@@ -218,10 +278,10 @@
 
               <div class="mb-3">
                 <h6 class="text-uppercase text-muted small mb-2">
-                  Cuentas que no cuadran
-                  <span class="badge bg-danger ms-1">{{ cuentasDescuadradas().length | number }}</span>
-                  @if (totalCuentasExternas(); as total) {
-                    <span class="fw-normal text-lowercase">de {{ total | number }} cuenta(s) externa(s)</span>
+                  Pólizas que no cuadran
+                  <span class="badge bg-danger ms-1">{{ totalPolizasDescuadradas() | number }}</span>
+                  @if (totalPolizas(); as total) {
+                    <span class="fw-normal text-lowercase">de {{ total | number }} póliza(s)</span>
                   }
                 </h6>
 
@@ -229,24 +289,24 @@
                   <table class="table table-sm table-bordered align-middle mb-0">
                     <thead>
                       <tr>
-                        <th class="table-light">Cuenta externa</th>
+                        <th class="table-light">Póliza</th>
                         <th class="table-light text-end" style="width: 32%;">Diferencia</th>
                       </tr>
                     </thead>
                     <tbody>
-                      @for (cuenta of cuentasVisibles(); track cuenta.cuentaExterna) {
+                      @for (p of polizasVisibles(); track $index) {
                         <tr>
-                          <td class="font-monospace" [class.text-muted]="!cuenta.cuentaExterna">
-                            {{ etiquetaCuenta(cuenta.cuentaExterna) }}
+                          <td class="font-monospace" [class.text-muted]="!p.poliza">
+                            {{ etiquetaPoliza(p.poliza) }}
                           </td>
                           <td class="text-end font-monospace fw-bold text-danger">
-                            {{ cuenta.valorCuenta | number:'1.4-4' }}
+                            {{ p.valorCuenta | number:'1.4-4' }}
                           </td>
                         </tr>
                       } @empty {
                         <tr>
                           <td colspan="2" class="text-center text-muted">
-                            No se recibió el detalle de las cuentas descuadradas.
+                            No se recibió el detalle de las pólizas descuadradas.
                           </td>
                         </tr>
                       }
@@ -254,35 +314,34 @@
                   </table>
                 </div>
 
-                @if (hayCuentasOcultas() || verTodasLasCuentas()) {
-                  <button type="button" class="btn btn-link btn-sm px-0" (click)="alternarCuentas()">
-                    @if (verTodasLasCuentas()) {
+                @if (hayPolizasOcultas() || verTodasLasPolizas()) {
+                  <button type="button" class="btn btn-link btn-sm px-0" (click)="alternarPolizas()">
+                    @if (verTodasLasPolizas()) {
                       Mostrar solo las primeras
                     } @else {
-                      Ver las {{ cuentasOcultas() | number }} cuenta(s) restantes
+                      Ver las {{ polizasOcultas() | number }} póliza(s) restantes
                     }
                   </button>
                 }
 
+                @if (ej.polizasDescuadradasTruncadas) {
+                  <div class="form-text text-warning">
+                    Se muestran {{ polizasDescuadradas().length | number }} de
+                    {{ totalPolizasDescuadradas() | number }} pólizas descuadradas.
+                  </div>
+                }
+
                 <div class="form-text">
-                  Una cuenta cuadra cuando la suma de sus partidas da cero. Un importe
+                  Una póliza cuadra cuando la suma de sus partidas da cero. Un importe
                   negativo significa que sobran débitos; positivo, que sobran créditos.
                 </div>
-              </div>
-            }
-
-            @case ('interrumpida') {
-              <div class="alert alert-warning" role="alert">
-                <ion-icon name="warning-outline" class="me-2"></ion-icon>
-                El proceso quedó sin finalizar y ya superó su tiempo máximo de vida.
-                Puedes reintentar la carga: solo se reprocesará lo que no quedó cargado.
               </div>
             }
 
             @case ('reenvio') {
               <div class="alert alert-danger" role="alert">
                 <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
-                Business Central rechazó {{ ej.registrosConError | number }} asiento(s).
+                Business Central rechazó {{ ej.registrosConError | number }} asiento(s) del lote del día.
                 El reenvío toma solo esos asientos y no vuelve a recorrer Bantotal.
               </div>
             }
@@ -290,7 +349,7 @@
             @case ('error') {
               <div class="alert alert-danger" role="alert">
                 <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
-                El proceso terminó con un fallo. Revisa el detalle y vuelve a ejecutar la carga.
+                El lote del día terminó con un fallo. Revisa el detalle y vuelve a ejecutar la carga.
               </div>
             }
 
@@ -306,10 +365,6 @@
 
           <!-- Detalle -->
           <div class="row g-3">
-
-            <div class="col-12">
-              <h6 class="text-uppercase text-muted small mb-2">Detalle del proceso</h6>
-            </div>
 
             <div class="col-md-6 col-lg-3">
               <div class="card border-0 bg-light h-100">
@@ -426,6 +481,152 @@
             </div>
 
           </div>
+        } @else {
+          <!-- existe = true pero ninguna corrida procesó el lote del día -->
+          <div class="alert alert-secondary" role="alert">
+            <ion-icon name="document-outline" class="me-2"></ion-icon>
+            Ninguna ejecución ha procesado todavía el lote del día. Para cargarlo, ejecuta
+            la carga con alcance «Todo» o «Solo fecha del día».
+          </div>
+        }
+
+        <!-- ── Lotes de fecha valor anterior ────────────────────────────── -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2 mt-4">
+          <h6 class="text-uppercase text-muted small mb-0">Fechas valor anteriores</h6>
+          @if (anteriores().length) {
+            <span class="badge bg-secondary">{{ anteriores().length }} lote(s)</span>
+            @if (anterioresConIncidencia(); as n) {
+              <span class="badge bg-danger">{{ n }} con incidencias</span>
+            }
+          }
+        </div>
+
+        @if (anteriores().length) {
+          @if (anterioresConDescuadre()) {
+            <div class="alert alert-warning" role="alert">
+              <ion-icon name="warning-outline" class="me-2"></ion-icon>
+              Hay lotes de fecha valor anterior con pólizas que no cuadran. Esos lotes no se
+              enviaron a Business Central; los demás lotes no se ven afectados.
+            </div>
+          }
+
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle mb-0">
+              <thead>
+                <tr>
+                  <th class="table-light">Fecha valor</th>
+                  <th class="table-light text-end">Registros</th>
+                  <th class="table-light text-end">Enviados</th>
+                  <th class="table-light text-end">Con error</th>
+                  <th class="table-light">Estado</th>
+                  <th class="table-light" style="width: 1%;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (lote of anteriores(); track lote.id) {
+                  @let abierto = loteAbierto() === lote.id;
+                  @let est = estadoLote(lote);
+                  <tr class="lote-fila" [class.table-active]="abierto" (click)="alternarLote(lote.id)">
+                    <td class="font-monospace">{{ lote.fechaValor }}</td>
+                    <td class="text-end">{{ lote.registrosProcesados | number }}</td>
+                    <td class="text-end">
+                      @if (lote.registrosEnviados === null) {
+                        <span class="text-muted">—</span>
+                      } @else {
+                        {{ lote.registrosEnviados | number }}
+                      }
+                    </td>
+                    <td class="text-end" [class.text-danger]="lote.registrosConError > 0">
+                      {{ lote.registrosConError | number }}
+                    </td>
+                    <td>
+                      <span class="badge {{ est.clase }}">
+                        @if (lote.enEjecucion) {
+                          <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        {{ est.texto }}
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <button type="button" class="btn btn-sm btn-link p-0"
+                              [attr.aria-expanded]="abierto"
+                              [attr.aria-label]="abierto ? 'Ocultar detalle' : 'Ver detalle'">
+                        <ion-icon [name]="abierto ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                      </button>
+                    </td>
+                  </tr>
+
+                  @if (abierto) {
+                    <tr>
+                      <td colspan="6" class="bg-light">
+                        <div class="small text-muted mb-1">
+                          {{ lote.fechaInicio | date:'dd/MM/yyyy HH:mm:ss' }}
+                          → {{ lote.fechaFin ? (lote.fechaFin | date:'dd/MM/yyyy HH:mm:ss') : '—' }}
+                          · {{ formatDuracion(lote.duracionSegundos) }}
+                          · Enviado a Business Central: {{ lote.enviado ? 'Sí' : 'No' }}
+                        </div>
+                        @if (lote.comentario) {
+                          <div class="small mb-2">{{ lote.comentario }}</div>
+                        }
+
+                        @if (lote.descuadre) {
+                          <div class="small fw-bold mb-1">
+                            Pólizas que no cuadran:
+                            {{ lote.totalPolizasDescuadradas | number }}
+                            @if (lote.polizas) {
+                              <span class="fw-normal text-muted">de {{ lote.totalPolizas | number }}</span>
+                            }
+                          </div>
+                          <table class="table table-sm table-bordered align-middle mb-1 bg-white">
+                            <thead>
+                              <tr>
+                                <th class="table-light">Póliza</th>
+                                <th class="table-light text-end" style="width: 32%;">Diferencia</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (p of lote.polizasDescuadradas; track $index) {
+                                <tr>
+                                  <td class="font-monospace" [class.text-muted]="!p.poliza">
+                                    {{ etiquetaPoliza(p.poliza) }}
+                                  </td>
+                                  <td class="text-end font-monospace fw-bold text-danger">
+                                    {{ p.valorCuenta | number:'1.4-4' }}
+                                  </td>
+                                </tr>
+                              } @empty {
+                                <tr>
+                                  <td colspan="2" class="text-center text-muted">
+                                    No se recibió el detalle de las pólizas descuadradas.
+                                  </td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                          @if (lote.polizasDescuadradasTruncadas) {
+                            <div class="form-text text-warning">
+                              Se muestran {{ lote.polizasDescuadradas.length | number }} de
+                              {{ lote.totalPolizasDescuadradas | number }} pólizas descuadradas.
+                            </div>
+                          }
+                        }
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else if (anterioresPendientes()) {
+          <div class="alert alert-secondary" role="alert">
+            <ion-icon name="document-outline" class="me-2"></ion-icon>
+            No hay registro de que se hayan procesado asientos con fecha valor anterior para
+            esta fecha. Para cargarlos, ejecuta la carga con alcance «Todo» o «Solo fechas anteriores».
+          </div>
+        } @else if (!data.enEjecucion) {
+          <p class="text-muted small mb-0">
+            No se registraron asientos con fecha valor anterior en esta fecha.
+          </p>
         }
       }
 
@@ -439,9 +640,27 @@
 
       <!-- Disparo del proceso -->
       @if (mostrarBotonReenviarErrores() || mostrarBotonEjecutar()) {
-        <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
+        <div class="d-flex flex-wrap justify-content-end align-items-end gap-2 mt-4">
 
-          <!-- Carga completa: secundaria cuando el reenvío es la opción natural -->
+          <!-- Alcance de la carga: el reenvío no lo usa, siempre cubre todos los lotes -->
+          @if (mostrarBotonEjecutar()) {
+            <div class="me-auto alcance-carga">
+              <label for="alcance" class="form-label small mb-1">Alcance de la carga</label>
+              <select
+                id="alcance"
+                class="form-select"
+                [ngModel]="alcance()"
+                (ngModelChange)="onAlcanceChange($event)"
+                [disabled]="accion() !== null">
+                @for (op of opcionesAlcance; track op.valor) {
+                  <option [ngValue]="op.valor">{{ op.texto }}</option>
+                }
+              </select>
+              <div class="form-text">{{ ayudaAlcance() }}</div>
+            </div>
+          }
+
+          <!-- Carga: secundaria cuando el reenvío es la opción natural -->
           @if (mostrarBotonEjecutar()) {
             <button
               type="button"
@@ -458,7 +677,7 @@
             </button>
           }
 
-          <!-- Reenvío de errores: rápido, no vuelve a recorrer Bantotal -->
+          <!-- Reenvío de errores: rápido, no vuelve a recorrer Bantotal; cubre todos los lotes -->
           @if (mostrarBotonReenviarErrores()) {
             <button
               type="button"
