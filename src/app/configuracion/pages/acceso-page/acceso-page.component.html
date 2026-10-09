@@ -12,7 +12,7 @@
         Administrar accesos
     </div>
     <div class="card-body">
-        <form class="row g-3">
+        <form (submit)="$event.preventDefault()" class="row g-3">
             <div class="col-auto">
                 <label for="selectTipoRol" class="visually-hidden">Tipo de rol</label>
                 <select class="form-select form-select-sm" aria-label="Tipo de rol" id="selectTipoRol"

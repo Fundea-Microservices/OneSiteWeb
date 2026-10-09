@@ -118,7 +118,7 @@
                 </div>
                 }
 
-                <form class="row g-3">
+                <form (submit)="$event.preventDefault()" class="row g-3">
                     <div class="col-md-6">
                         <label for="identificador" class="form-label fw-semibold small text-gray-700">Identificador <span class="text-danger">*</span></label>
                         <input

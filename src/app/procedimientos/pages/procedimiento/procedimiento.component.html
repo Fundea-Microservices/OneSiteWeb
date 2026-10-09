@@ -14,7 +14,7 @@
             nuevo procedimiento</button>
     </div>
     <div class="card-body">
-        <form class="row g-3">
+        <form (submit)="$event.preventDefault()" class="row g-3">
             <div class="col-auto">
                 <label for="inputPassword2" class="visually-hidden">Nombre procedimiento</label>
                 <input type="text" class="form-control" id="inputPassword2" placeholder="Nombre procedimiento"

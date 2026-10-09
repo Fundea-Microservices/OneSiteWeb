@@ -13,7 +13,7 @@
             nuevo usuario</button>
     </div>
     <div class="card-body">
-        <form class="row g-3">
+        <form (submit)="$event.preventDefault()" class="row g-3">
             <div class="col-auto">
                 <label for="inputPassword2" class="visually-hidden">Buscar por nombre</label>
                 <input type="text" class="form-control form-control-sm" id="search" placeholder="Nombre usuario"
