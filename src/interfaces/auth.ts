@@ -102,6 +102,8 @@ export interface IRol {
     isAdmin?: boolean;
     /** Rol pensado para usuarios de OneSiteEx. Solo informativo: no da ni quita permisos. */
     externo?: boolean;
+    /** Indica si el rol puede gestionar accesos */
+    gestionAccesos?: boolean;
     created_at?: Date;
     updated_at?:  Date;
     deleted_at?:  Date;

@@ -57,6 +57,7 @@ export class UpsertRolComponent {
       active: [rol.active],
       guest: [rol.guest],
       externo: [rol.externo ?? false],
+      gestionAccesos: [rol.gestionAccesos ?? false],
     });
 
     if (isNuevo) {
@@ -65,6 +66,7 @@ export class UpsertRolComponent {
         active: true,
         guest: false,
         externo: false,
+        gestionAccesos: false,
       });
     }
 

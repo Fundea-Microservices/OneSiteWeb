@@ -44,6 +44,7 @@
                     <th class="text-center" scope="col">Nombre</th>
                     <th class="text-center" scope="col">Activo</th>
                     <th class="text-center" scope="col">Externo</th>
+                    <th class="text-center" scope="col">Gestión accesos</th>
                     <th class="text-center" scope="col">Creado</th>
                     <th class="text-center" scope="col">Acciones</th>
                 </tr>
@@ -69,6 +70,13 @@
                         <span class="badge text-bg-info">Externo</span>
                         } @else {
                         <span class="badge text-bg-light border">Interno</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        @if (item.gestionAccesos) {
+                        <span class="badge text-bg-success">Sí</span>
+                        } @else {
+                        <span class="badge text-bg-light border">No</span>
                         }
                     </td>
                     <td class="text-center justify-items-center items-center">

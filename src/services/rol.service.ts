@@ -72,8 +72,8 @@ export class RolService extends HttpService {
   async createRol(createRol: IRol) {
     try {
       //Obtenemos solo lo necesario para crear el rol
-      const { name, active, guest, externo = false } = createRol;
-      const resp =  await firstValueFrom(this.post<RolesResponse>(`${this.endpoints.rol}`, {name, active, guest, externo}));
+      const { name, active, guest, externo = false, gestionAccesos = false } = createRol;
+      const resp =  await firstValueFrom(this.post<RolesResponse>(`${this.endpoints.rol}`, {name, active, guest, externo, gestionAccesos}));
       if (resp.body?.success) {
         this.toastr.success(resp.body.message, 'Success');
         return resp.body;
