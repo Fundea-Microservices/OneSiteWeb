@@ -54,8 +54,10 @@ export default class LoginPageComponent {
     isError: false
   });
 
+  private readonly AMBIENTE_DEFAULT = 'SIN DEFINIR';
+
   entorno = signal({
-    ambiente: 'SIN DEFINIR',
+    ambiente: this.AMBIENTE_DEFAULT,
     version: '1.0.0',
     textColor: '#3c5ce8',
     bgColor: '#d1d6f0'
@@ -73,18 +75,24 @@ export default class LoginPageComponent {
       const cached = localStorage.getItem(this.ENTORNO_CACHE_KEY);
       if (cached) {
         try {
-          this.entorno.set({ ...this.entorno(), ...JSON.parse(cached) });
-          return;
+          const parsed = JSON.parse(cached);
+          // Solo se usa el caché si contiene un ambiente real; si no, se reintenta con el API
+          if (parsed?.ambiente && parsed.ambiente !== this.AMBIENTE_DEFAULT) {
+            this.entorno.set({ ...this.entorno(), ...parsed });
+            return;
+          }
         } catch {
           // caché corrupto, continuar con el API
         }
+        localStorage.removeItem(this.ENTORNO_CACHE_KEY);
       }
     }
 
     const [entornoAmbiente, entornoColor, entornoColorFondo] = await Promise.all([
-      this.configService.getConfigByKey('entorno_ambiente'),
-      this.configService.getConfigByKey('entorno_color'),
-      this.configService.getConfigByKey('entorno_color_fondo'),
+      // Sin toast: si el API no responde basta con mostrar "SIN DEFINIR"
+      this.configService.getConfigByKey('entorno_ambiente', false),
+      this.configService.getConfigByKey('entorno_color', false),
+      this.configService.getConfigByKey('entorno_color_fondo', false),
     ]);
 
     const updates: Partial<{ ambiente: string; textColor: string; bgColor: string }> = {};
@@ -94,6 +102,11 @@ export default class LoginPageComponent {
 
     const newEntorno = { ...this.entorno(), ...updates };
     this.entorno.set(newEntorno);
+
+    // Si el API no respondió con el ambiente no se guarda en caché,
+    // así la próxima carga vuelve a intentarlo en lugar de quedarse en "SIN DEFINIR"
+    if (!updates.ambiente) return;
+
     localStorage.setItem(this.ENTORNO_CACHE_KEY, JSON.stringify({
       ambiente:  newEntorno.ambiente,
       textColor: newEntorno.textColor,

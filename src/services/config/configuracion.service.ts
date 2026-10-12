@@ -38,13 +38,13 @@ export class ConfiguracionService extends HttpService {
     }
   }
 
-  async getConfigByKey(key: string) {
+  async getConfigByKey(key: string, mostrarError = true) {
     try {
       const resp = await firstValueFrom(this.get<ConfiguracionByKeyResponse>(`${this.endpoints.configuracion}/${key}`));
       return resp.body?.success ? resp.body : null;
     } catch (error: any) {
       console.error("Error en getConfigByKey:", error);
-      this.toastr.error(error?.error?.message || '', 'Error en configuraciones');
+      if (mostrarError) this.toastr.error(error?.error?.message || '', 'Error en configuraciones');
       return null;
     }
   }
