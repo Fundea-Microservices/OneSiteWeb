@@ -291,6 +291,18 @@ export default class SeguimientoSolicitudesComponent {
 		return !!estado?.nombre?.toUpperCase().includes('CORREGIR');
 	}
 
+	esEstadoRechazado(): boolean {
+		const estado = this.estadosSolicitud().find(
+			e => e.estadoSolicitudId === this.nuevoSeguimiento.estadoAprobacionId
+		);
+		return !!estado?.nombre?.toUpperCase().includes('RECHAZ');
+	}
+
+	/** Corregir y Rechazar se notifican al usuario creador de la solicitud: no se envía correo */
+	notificaAlCreador(): boolean {
+		return this.esEstadoCorregir() || this.esEstadoRechazado();
+	}
+
 	async guardarSeguimiento() {
 		const solicitud = this.solicitud();
 		if (!solicitud || !this.nuevoSeguimiento.estadoAprobacionId || !this.nuevoSeguimiento.observaciones.trim()) {
@@ -344,7 +356,7 @@ export default class SeguimientoSolicitudesComponent {
 				ordenSeguimiento: nuevoOrden,
 				estadoAprobacionId: this.nuevoSeguimiento.estadoAprobacionId,
 				observaciones: this.nuevoSeguimiento.observaciones,
-				...(this.correoSeleccionado && !this.esEstadoCorregir() ? { correoNotificacion: this.correoSeleccionado } : {})
+				...(this.correoSeleccionado && !this.notificaAlCreador() ? { correoNotificacion: this.correoSeleccionado } : {})
 			};
 
 			const response = await this.seguimientoService.createSeguimientoSolicitud(seguimientoData);
