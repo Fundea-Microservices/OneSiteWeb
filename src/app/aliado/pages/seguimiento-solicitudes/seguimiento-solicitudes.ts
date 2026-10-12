@@ -78,6 +78,8 @@ export default class SeguimientoSolicitudesComponent {
 	catalogoBancos = signal<any[]>([]);
 	catalogoTiposCuenta = signal<any[]>([]);
 
+	/** Habilita el select para elegir otro correo de notificación; deshabilitado se usa siempre el del representante */
+	readonly permitirSeleccionCorreo = false;
 	correosNotificacion = signal<ICorreoNotificacion[]>([]);
 	correoSeleccionado = '';
 
@@ -108,7 +110,9 @@ export default class SeguimientoSolicitudesComponent {
 		this.cargarEstadosSolicitud();
 		this.cargarCatalogos();
 		this.cargarCatalogosBancos();
-		this.cargarCorreosNotificacion();
+		if (this.permitirSeleccionCorreo) {
+			this.cargarCorreosNotificacion();
+		}
 	}
 
 	private async cargarSolicitud(solicitudId: string) {
@@ -365,8 +369,8 @@ export default class SeguimientoSolicitudesComponent {
 				console.log('✅ Seguimiento creado exitosamente');
 				// Recargar la solicitud para ver el nuevo seguimiento
 				await this.cargarSolicitud(solicitud.solicitudId);
-				// Limpiar formulario
-				this.correoSeleccionado = '';
+				// Limpiar formulario (el correo vuelve al del representante para el siguiente seguimiento)
+				this.correoSeleccionado = this.solicitud()?.representante?.correoElectronico || '';
 				this.nuevoSeguimiento = {
 					estadoAprobacionId: '',
 					observaciones: ''
