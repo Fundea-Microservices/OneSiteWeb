@@ -46,6 +46,7 @@ export default class DocumentoVersionPage {
   variables = signal<string[]>([]);
   variablesDefault = signal<Record<string, string>>({});
   isLoadingPreview = signal(false);
+  errorCargaArchivo = signal(false);
 
   // Parámetros existentes (para edición)
   parametrosExistentes = signal<IParametro[]>([]);
@@ -94,6 +95,36 @@ export default class DocumentoVersionPage {
     if (resp?.data) {
       this.form.set({ ...resp.data });
       this.cdr.markForCheck();
+      if (resp.data.rutaArchivo) await this.cargarArchivoVersion(resp.data.rutaArchivo);
+    }
+  }
+
+  /** En edición el archivo no se reemplaza: solo se descarga para previsualizarlo */
+  private async cargarArchivoVersion(rutaArchivo: string) {
+    this.isLoadingPreview.set(true);
+    this.errorCargaArchivo.set(false);
+    this.cdr.markForCheck();
+
+    const blob = await this.storage.downloadFileAsBlob(rutaArchivo);
+    if (!blob) {
+      this.isLoadingPreview.set(false);
+      this.errorCargaArchivo.set(true);
+      this.cdr.markForCheck();
+      return;
+    }
+
+    try {
+      const buffer = await blob.arrayBuffer();
+      this.archivoOriginal.set(buffer);
+      this.cdr.detectChanges(); // force DOM render so #previewContainer is available
+      await this.renderizarPreview(buffer);
+    } catch (err) {
+      console.error('Error al visualizar documento de la versión:', err);
+      this.archivoOriginal.set(null);
+      this.errorCargaArchivo.set(true);
+    } finally {
+      this.isLoadingPreview.set(false);
+      this.cdr.markForCheck();
     }
   }
 
@@ -110,6 +141,9 @@ export default class DocumentoVersionPage {
   }
 
   async onFileSelected(event: Event): Promise<void> {
+    // Cambios de estructura o variables se hacen creando una nueva versión
+    if (!this.esNuevo()) return;
+
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -131,22 +165,7 @@ export default class DocumentoVersionPage {
     this.cdr.detectChanges(); // force DOM render so #previewContainer is available
 
     try {
-      const container = this.previewContainer.nativeElement;
-      container.innerHTML = '';
-      const tempDiv = document.createElement('div');
-      await renderDocx.renderAsync(buffer, tempDiv, undefined, {
-        className: 'docx',
-        inWrapper: false,
-        ignoreWidth: false,
-        ignoreHeight: false,
-      });
-      this.resaltarVariables(tempDiv);
-      const paged = new Previewer();
-      const styleSheet = `@page { size: 215.9mm 279.4mm; margin: 25.4mm; } .pagedjs_page_content { overflow: hidden !important; }`;
-      // Paged.js trata los strings como URL a descargar; el CSS en línea debe ir como { href: css }.
-      // Si se pasa como string, en el server el fallback del SPA devuelve index.html y falla el parseo.
-      await paged.preview(tempDiv.innerHTML, [{ [window.location.href]: styleSheet }], container);
-      setTimeout(() => this.eliminarPaginaExtra(container), 500);
+      await this.renderizarPreview(buffer);
 
       const zip = new PizZip(buffer);
       const doc = new Docxtemplater(zip, { delimiters: { start: '{', end: '}' } });
@@ -161,6 +180,25 @@ export default class DocumentoVersionPage {
       this.mostrarToast('Error al procesar el documento Word', 'error');
     }
     this.cdr.markForCheck();
+  }
+
+  private async renderizarPreview(buffer: ArrayBuffer): Promise<void> {
+    const container = this.previewContainer.nativeElement;
+    container.innerHTML = '';
+    const tempDiv = document.createElement('div');
+    await renderDocx.renderAsync(buffer, tempDiv, undefined, {
+      className: 'docx',
+      inWrapper: false,
+      ignoreWidth: false,
+      ignoreHeight: false,
+    });
+    this.resaltarVariables(tempDiv);
+    const paged = new Previewer();
+    const styleSheet = `@page { size: 215.9mm 279.4mm; margin: 25.4mm; } .pagedjs_page_content { overflow: hidden !important; }`;
+    // Paged.js trata los strings como URL a descargar; el CSS en línea debe ir como { href: css }.
+    // Si se pasa como string, en el server el fallback del SPA devuelve index.html y falla el parseo.
+    await paged.preview(tempDiv.innerHTML, [{ [window.location.href]: styleSheet }], container);
+    setTimeout(() => this.eliminarPaginaExtra(container), 500);
   }
 
   private resaltarVariables(container: HTMLElement): void {
@@ -202,7 +240,7 @@ export default class DocumentoVersionPage {
       this.mostrarToast('El correlativo es obligatorio', 'error');
       return;
     }
-    if (!this.archivoFile()) {
+    if (this.esNuevo() && !this.archivoFile()) {
       this.mostrarToast('Debes cargar una plantilla o documento Word antes de guardar', 'error');
       return;
     }
@@ -210,39 +248,58 @@ export default class DocumentoVersionPage {
     this.isSaving.set(true);
     this.cdr.markForCheck();
     try {
-      const uploadResp = await this.storage.uploadFile(this.archivoFile()!, 'documento');
-      if (!uploadResp?.data?.url) {
-        this.isSaving.set(false);
-        this.cdr.markForCheck();
-        return;
-      }
-      const rutaArchivo = uploadResp.data.url;
-
-      const payload: Partial<IVersionDocumento> = { ...f, documentoId: this.documentoId(), rutaArchivo };
-      if (!payload.fechaAprobacion) delete payload.fechaAprobacion;
-      if (!payload.aprobadoPor) delete payload.aprobadoPor;
-      const resp = this.esNuevo()
-        ? await this.service.createVersion(payload)
-        : await this.service.updateVersion(payload);
-
-      if (resp?.success) {
-        const verId = resp.data?.versionId ?? this.versionId() ?? '';
-        const vars = this.variables();
-        if (vars.length > 0) {
-          const defaults = this.variablesDefault();
-          const parametros = vars.map((tag) => ({
-            versionId: verId,
-            nombreTag: tag,
-            valor: defaults[tag] || undefined,
-          }));
-          await this.service.createParametrosBulk(parametros);
-        }
-        this.router.navigate(['/config/documentos/detalle', this.documentoId()]);
-      }
+      const ok = this.esNuevo() ? await this.crearVersion(f) : await this.actualizarVersion(f);
+      if (ok) this.router.navigate(['/config/documentos/detalle', this.documentoId()]);
     } finally {
       this.isSaving.set(false);
       this.cdr.markForCheck();
     }
+  }
+
+  private async crearVersion(f: Partial<IVersionDocumento>): Promise<boolean> {
+    const uploadResp = await this.storage.uploadFile(this.archivoFile()!, 'documento');
+    if (!uploadResp?.data?.url) return false;
+
+    const payload: Partial<IVersionDocumento> = { ...f, documentoId: this.documentoId(), rutaArchivo: uploadResp.data.url };
+    if (!payload.fechaAprobacion) delete payload.fechaAprobacion;
+    if (!payload.aprobadoPor) delete payload.aprobadoPor;
+
+    const resp = await this.service.createVersion(payload);
+    if (!resp?.success) return false;
+
+    const vars = this.variables();
+    if (vars.length > 0) {
+      const defaults = this.variablesDefault();
+      const parametros = vars.map((tag) => ({
+        versionId: resp.data?.versionId ?? '',
+        nombreTag: tag,
+        valor: defaults[tag] || undefined,
+      }));
+      await this.service.createParametrosBulk(parametros);
+    }
+    return true;
+  }
+
+  /** Edición: solo datos de la versión y valores por defecto; el archivo y los tags no cambian */
+  private async actualizarVersion(f: Partial<IVersionDocumento>): Promise<boolean> {
+    const verId = this.versionId()!;
+    const resp = await this.service.updateVersion({
+      versionId: verId,
+      correlativo: f.correlativo,
+      codigoVersion: f.codigoVersion ?? '',
+      notasCambio: f.notasCambio ?? '',
+    });
+    if (!resp?.success) return false;
+
+    const defaults = this.variablesDefault();
+    const cambios = this.parametrosExistentes()
+      .filter((p) => p.parametroId && (defaults[p.nombreTag] ?? '') !== (p.valor ?? ''))
+      .map((p) => ({ parametroId: p.parametroId!, valor: defaults[p.nombreTag] ?? '' }));
+
+    if (cambios.length > 0) {
+      return this.service.updateParametrosBulk(verId, cambios);
+    }
+    return true;
   }
 
   cancelar() {

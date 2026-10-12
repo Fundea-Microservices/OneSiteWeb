@@ -261,4 +261,20 @@ export class DocumentosService extends HttpService {
       return false;
     }
   }
+
+  /** Actualiza solo los valores por defecto de parámetros existentes de una versión */
+  async updateParametrosBulk(versionId: string, parametros: { parametroId: string; valor: string }[]): Promise<boolean> {
+    try {
+      const resp = await firstValueFrom(
+        this.put<ParametroBulkResponse>(
+          `${this.endpoints.parametro}/bulk`,
+          { versionId, parametros }
+        )
+      );
+      return !!resp.body?.success;
+    } catch (error: any) {
+      this.toastr.error(error?.error?.message || '', 'Error al actualizar parámetros');
+      return false;
+    }
+  }
 }

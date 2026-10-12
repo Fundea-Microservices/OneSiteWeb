@@ -31,33 +31,48 @@
   <!-- ── Panel izquierdo ──────────────────────────────── -->
   <div class="left-panel custom-scrollbar">
 
-    <!-- Card: Cargar archivo -->
-    <div class="card shrink-0">
-      <div class="card-header fw-semibold d-flex align-items-center gap-2">
-        <ion-icon name="document-outline"></ion-icon>
-        Cargar Documento Word
+    @if (esNuevo()) {
+      <!-- Card: Cargar archivo (solo al crear) -->
+      <div class="card shrink-0">
+        <div class="card-header fw-semibold d-flex align-items-center gap-2">
+          <ion-icon name="document-outline"></ion-icon>
+          Cargar Documento Word
+        </div>
+        <div class="card-body">
+          <input
+            type="file"
+            accept=".doc,.docx"
+            (change)="onFileSelected($event)"
+            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer"
+          />
+          @if (isLoadingPreview()) {
+            <div class="d-flex align-items-center gap-2 mt-3 text-primary">
+              <div class="spinner-border spinner-border-sm" role="status"></div>
+              <span class="small">Procesando documento...</span>
+            </div>
+          }
+        </div>
       </div>
-      <div class="card-body">
-        <input
-          type="file"
-          accept=".doc,.docx"
-          (change)="onFileSelected($event)"
-          class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer"
-        />
-        @if (isLoadingPreview()) {
-          <div class="d-flex align-items-center gap-2 mt-3 text-primary">
-            <div class="spinner-border spinner-border-sm" role="status"></div>
-            <span class="small">Procesando documento...</span>
-          </div>
-        }
-        @if (!archivoOriginal() && !esNuevo()) {
-          <div class="mt-3 p-2 bg-light rounded border text-muted" style="font-size:0.8rem">
+    } @else {
+      <!-- Card: Documento de la versión (solo lectura al editar) -->
+      <div class="card shrink-0">
+        <div class="card-header fw-semibold d-flex align-items-center gap-2">
+          <ion-icon name="document-outline"></ion-icon>
+          Documento de la versión
+        </div>
+        <div class="card-body">
+          <div class="p-2 bg-light rounded border text-muted" style="font-size:0.8rem">
             <ion-icon name="information-circle-outline"></ion-icon>
-            El archivo actual seguirá si no subes uno nuevo.
+            El archivo de una versión no se puede reemplazar. Para cambiar la estructura o las variables del documento, crea una nueva versión.
           </div>
-        }
+          <a class="btn btn-outline-primary btn-sm mt-3"
+            [routerLink]="['/config/documentos/detalle', documentoId(), 'version']">
+            <ion-icon name="add-outline" class="me-1"></ion-icon>
+            Crear nueva versión
+          </a>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Card: Datos de la versión -->
     <div class="card shrink-0">
@@ -159,6 +174,16 @@
     @if (archivoOriginal()) {
       <div class="preview-window-container custom-scrollbar">
         <div #previewContainer id="preview-container"></div>
+      </div>
+    } @else if (!esNuevo() && isLoadingPreview()) {
+      <div class="preview-empty">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 text-slate-400 font-medium">Cargando documento de la versión...</p>
+      </div>
+    } @else if (!esNuevo() && errorCargaArchivo()) {
+      <div class="preview-empty">
+        <ion-icon name="alert-circle-outline" style="font-size:3rem;color:#99A1AF"></ion-icon>
+        <p class="mt-3 text-slate-400 font-medium">No se pudo cargar el documento de esta versión</p>
       </div>
     } @else {
       <div class="preview-empty">

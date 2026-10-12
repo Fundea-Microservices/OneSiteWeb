@@ -10,7 +10,9 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
+import { ToastrService } from 'ngx-toastr';
 import { DocumentosService } from '../../../../services/config/documentos.service';
+import { StorageService } from '../../../../services/storage.service';
 import { IDocumento, IVersionDocumento } from '../../../../interfaces/documentos/documento';
 
 @Component({
@@ -22,6 +24,8 @@ import { IDocumento, IVersionDocumento } from '../../../../interfaces/documentos
 })
 export default class DocumentoDetallePage {
   private service = inject(DocumentosService);
+  private storage = inject(StorageService);
+  private toastr = inject(ToastrService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -32,6 +36,7 @@ export default class DocumentoDetallePage {
   pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0, totalPages: 0 });
 
   versionEdit = signal<IVersionDocumento | null>(null);
+  descargandoId = signal<string | null>(null);
 
   @ViewChild('deleteVersionModal') deleteVersionModalRef!: ElementRef;
   private deleteVersionModalInstance!: Modal;
@@ -88,6 +93,33 @@ export default class DocumentoDetallePage {
       this.router.navigate(['/config/documentos/detalle', docId, 'version', item.versionId]);
     } else {
       this.router.navigate(['/config/documentos/detalle', docId, 'version']);
+    }
+  }
+
+  /** rutaArchivo es "categoria/archivo.ext": se descarga del API (requiere token), no es una URL pública */
+  async descargarVersion(item: IVersionDocumento) {
+    if (!item.rutaArchivo) {
+      this.toastr.error('La versión no tiene un archivo asociado', 'Error');
+      return;
+    }
+
+    this.descargandoId.set(item.versionId ?? null);
+    try {
+      const blob = await this.storage.downloadFileAsBlob(item.rutaArchivo);
+      if (!blob) {
+        this.toastr.error('No se pudo descargar el documento', 'Error');
+        return;
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = item.rutaArchivo.split('/').pop() || 'documento.docx';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      this.descargandoId.set(null);
+      this.cdr.markForCheck();
     }
   }
 

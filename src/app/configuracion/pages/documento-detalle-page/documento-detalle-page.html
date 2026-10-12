@@ -104,10 +104,15 @@
                             </td>
                             <td class="text-muted" style="font-size:0.82rem">{{ item.aprobadoPor || '—' }}</td>
                             <td class="text-center">
-                                <a class="btn btn-sm btn-outline-secondary mx-1"
-                                    [href]="item.rutaArchivo" target="_blank" title="Descargar">
+                                <button class="btn btn-sm btn-outline-secondary mx-1"
+                                    [disabled]="descargandoId() === item.versionId"
+                                    (click)="descargarVersion(item)" title="Descargar">
+                                    @if (descargandoId() === item.versionId) {
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                    } @else {
                                     <ion-icon name="download-outline"></ion-icon>
-                                </a>
+                                    }
+                                </button>
                                 <button class="btn btn-sm btn-outline-success mx-1"
                                     (click)="navigateToVersion(item)" title="Editar">
                                     <ion-icon name="create-outline"></ion-icon>
@@ -162,10 +167,15 @@
         }
 
         <div class="flex gap-2 pt-3 border-t border-gray-200">
-            <a class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded text-sm font-medium flex items-center justify-center gap-2"
-                [href]="item.rutaArchivo" target="_blank">
+            <button class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded text-sm font-medium flex items-center justify-center gap-2"
+                [disabled]="descargandoId() === item.versionId"
+                (click)="descargarVersion(item)">
+                @if (descargandoId() === item.versionId) {
+                <span class="spinner-border spinner-border-sm"></span> Descargando...
+                } @else {
                 <ion-icon name="download-outline"></ion-icon> Descargar
-            </a>
+                }
+            </button>
             <button class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium flex items-center justify-center gap-2"
                 (click)="navigateToVersion(item)">
                 <ion-icon name="create-outline"></ion-icon> Editar
