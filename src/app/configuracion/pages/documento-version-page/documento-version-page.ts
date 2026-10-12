@@ -143,7 +143,9 @@ export default class DocumentoVersionPage {
       this.resaltarVariables(tempDiv);
       const paged = new Previewer();
       const styleSheet = `@page { size: 215.9mm 279.4mm; margin: 25.4mm; } .pagedjs_page_content { overflow: hidden !important; }`;
-      await paged.preview(tempDiv.innerHTML, [styleSheet], container);
+      // Paged.js trata los strings como URL a descargar; el CSS en línea debe ir como { href: css }.
+      // Si se pasa como string, en el server el fallback del SPA devuelve index.html y falla el parseo.
+      await paged.preview(tempDiv.innerHTML, [{ [window.location.href]: styleSheet }], container);
       setTimeout(() => this.eliminarPaginaExtra(container), 500);
 
       const zip = new PizZip(buffer);
