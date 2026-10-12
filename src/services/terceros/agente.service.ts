@@ -38,11 +38,11 @@ export class AgenteService {
       catchError(error => {
         console.error('❌ Error al validar documento:', error);
         
-        // Intentar extraer el mensaje de error del servidor
-        const errorMessage = error.error?.documento?.metadata?.mensaje_usuario 
+        // Intentar extraer el mensaje de error del servidor; si el agente no respondió
+        // (sin conexión, timeout, gateway caído) se indica que se ingresen los datos manualmente
+        const errorMessage = error.error?.documento?.metadata?.mensaje_usuario
           || error.error?.metadata?.mensaje_usuario
-          || error.message 
-          || 'Error al validar el documento';
+          || 'No se puede establecer comunicación con el agente, por favor ingresar los datos manualmente';
 
         // Retornar respuesta de error estructurada
         const errorResponse: ValidarDocumentoResponse = {
