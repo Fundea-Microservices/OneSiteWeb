@@ -1015,10 +1015,14 @@ export default class EmpresasRepresentantePage {
       : null;
     const codigo = (tipoSolicitud?.codigo || solicitud?.tipoSolicitud?.codigo || '').toUpperCase();
 
+    // Si la empresa aún no tiene solicitud de afiliación, la cuenta sin solicitud es la
+    // primera de la empresa: le corresponde la carta de entendimiento (y habilita crear la solicitud).
+    const empresaSinAfiliacion = !this.listadoSolicitudes().some(s => s.empresaId === empresaId);
+
     // Solo la cuenta ligada a la solicitud de AFILIACIÓN genera la carta de
     // entendimiento. Cualquier otra cuenta genera la carta de cambio de cuenta,
     // que ya no requiere una solicitud previa (basta el cuentaBancariaId).
-    if (codigo === 'AFILIACION') {
+    if (codigo === 'AFILIACION' || (!solicitud && empresaSinAfiliacion)) {
       await this.generarCartaEmpresa(empresaId, cuentaBancariaId);
     } else {
       await this.generarCartaCambioCuenta(empresaId, cuentaBancariaId, solicitud?.solicitudId);

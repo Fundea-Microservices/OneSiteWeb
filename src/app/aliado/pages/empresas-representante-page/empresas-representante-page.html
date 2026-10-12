@@ -509,6 +509,13 @@
                                                             <ion-icon name="create-outline"></ion-icon>
                                                         </button>
                                                         }
+                                                        @if (obtenerEstadoSolicitudPorCuenta(cuenta.cuentaBancariaId || '') === null && esPropietarioRepresentante()) {
+                                                        <button type="button"
+                                                            (click)="crearSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '')"
+                                                            class="btn btn-sm btn-primary" title="Crear solicitud">
+                                                            <ion-icon name="add-outline"></ion-icon>
+                                                        </button>
+                                                        }
                                                         @if (puedeEditarSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '') && esPropietarioRepresentante()) {
                                                         <button type="button"
                                                             (click)="editarSolicitudDesdeCuenta(cuenta.cuentaBancariaId || '')"
