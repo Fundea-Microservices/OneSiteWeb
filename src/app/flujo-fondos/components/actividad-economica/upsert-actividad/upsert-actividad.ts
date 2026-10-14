@@ -29,11 +29,13 @@ import { CatalogoService } from '../../../../../services/flujo-fondos/catalogo.s
 import {
   aFormulario,
   aPayload,
+  DECIMALES_PORCENTAJE,
+  diferenciaCien,
   distribucionCompleta,
   DistribucionForm,
   MESES,
   repartoUniforme,
-  sumaCentesimas,
+  sumaPorcentajes,
   TIPOS_DISTRIBUCION,
 } from '../../../utils/distribucion';
 
@@ -47,7 +49,7 @@ const ceros = () => MESES.map(() => 0);
 
 const mismoCodigo = (a?: string | null, b?: string | null) => (a ?? '').toUpperCase() === (b ?? '').toUpperCase();
 
-/** Máximo `n` decimales (el backend valida IsNumber({ maxDecimalPlaces: 2 })). */
+/** Máximo `n` decimales (el backend valida IsNumber({ maxDecimalPlaces: n })). */
 const maxDecimales = (n: number): ValidatorFn => (control: AbstractControl): ValidationErrors | null => {
   const valor = control.value;
   if (valor === null || valor === undefined || valor === '') return null;
@@ -76,6 +78,8 @@ export class UpsertActividadComponent {
 
   readonly meses = MESES;
   readonly tipos = TIPOS_DISTRIBUCION;
+  readonly decimalesPorcentaje = DECIMALES_PORCENTAJE;
+  readonly stepPorcentaje = 1 / 10 ** DECIMALES_PORCENTAJE;
 
   form = signal<FormGroup>(this.fb.group({}));
   opciones = signal<OpcionesCampos>(sinOpciones());
@@ -83,10 +87,10 @@ export class UpsertActividadComponent {
   esCuerdas = signal(false);
   distribucion = signal<DistribucionForm>({ INGRESO: ceros(), EGRESO: ceros() });
 
-  // Totales en porcentaje (sumados en centésimas)
+  // Totales en porcentaje (sumados en diezmilésimas)
   totales = computed<Record<TipoDistribucion, number>>(() => {
     const d = this.distribucion();
-    return { INGRESO: sumaCentesimas(d.INGRESO) / 100, EGRESO: sumaCentesimas(d.EGRESO) / 100 };
+    return { INGRESO: sumaPorcentajes(d.INGRESO), EGRESO: sumaPorcentajes(d.EGRESO) };
   });
   distribucionOk = computed(() => distribucionCompleta(this.distribucion()));
 
@@ -124,7 +128,7 @@ export class UpsertActividadComponent {
 
     const a = nuevo ? null : actividad;
     const distribucion = a ? aFormulario(a.distribucion) : { INGRESO: ceros(), EGRESO: ceros() };
-    const porcentaje = (valor: number) => [valor, [Validators.required, Validators.min(0), Validators.max(100), maxDecimales(2)]];
+    const porcentaje = (valor: number) => [valor, [Validators.required, Validators.min(0), Validators.max(100), maxDecimales(DECIMALES_PORCENTAJE)]];
 
     const form = this.fb.group({
       codigo: [{ value: a?.codigo ?? '', disabled: true }],
@@ -267,7 +271,7 @@ export class UpsertActividadComponent {
 
   /** Cuánto falta (positivo) o sobra (negativo) para llegar a 100 %. */
   diferencia(tipo: TipoDistribucion): number {
-    return (10000 - Math.round(this.totales()[tipo] * 100)) / 100;
+    return diferenciaCien(this.totales()[tipo]);
   }
 
   // ── Envío ────────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ export type TipoDistribucion = 'INGRESO' | 'EGRESO';
 export interface IDistribucion {
     tipo: TipoDistribucion;
     numero: number;      // mes del ciclo: 1 .. 12 (el mes 1 es el inicio del ciclo, no enero)
-    porcentaje: number;  // 0 .. 100, máx. 2 decimales
+    porcentaje: number;  // 0 .. 100, máx. 4 decimales
 }
 
 // Lo que devuelve el GET (cada fila trae datos extra)

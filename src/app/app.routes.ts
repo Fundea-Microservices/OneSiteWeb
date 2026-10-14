@@ -313,6 +313,18 @@ export const routes: Routes = [
                         loadComponent: () => import('./flujo-fondos/pages/actividades-economicas/actividades-economicas.component'),
                     },
                     {
+                        path: 'flujos',
+                        loadComponent: () => import('./flujo-fondos/pages/flujos/flujos.component'),
+                    },
+                    {
+                        path: 'flujos/nuevo',
+                        loadComponent: () => import('./flujo-fondos/pages/flujo/flujo.component'),
+                    },
+                    {
+                        path: 'flujos/:id',
+                        loadComponent: () => import('./flujo-fondos/pages/flujo/flujo.component'),
+                    },
+                    {
                         path: '**',
                         redirectTo: '',
                     }

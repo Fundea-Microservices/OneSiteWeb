@@ -1,0 +1,172 @@
+@let p = proyeccion();
+
+<div class="table-responsive border rounded">
+  <table class="table table-sm table-bordered table-hover mb-0 text-[0.8em] text-nowrap">
+    <thead class="table-light">
+      <tr>
+        <th scope="col" class="sticky left-0 z-2 bg-(--bs-tertiary-bg) min-w-50">
+          {{ p.agrupado ? 'Actividad' : 'Línea' }}
+        </th>
+        <th scope="col" class="text-center">Concepto</th>
+        @for (col of columnas(); track col.numeroMes) {
+        <th scope="col" class="text-center">
+          <div>{{ col.etiqueta }}</div>
+          <div class="fw-normal text-muted">Mes {{ col.numeroMes }}</div>
+        </th>
+        }
+        <th scope="col" class="text-center">Total</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (fila of p.filas; track $index) {
+      <tr>
+        <td rowspan="2" class="sticky left-0 z-1 bg-(--bs-body-bg) align-middle">
+          @if (p.agrupado) {
+          <div class="fw-semibold">{{ fila.nombreActividad }}</div>
+          <div class="text-muted"><code>{{ fila.codigoActividad }}</code> · {{ fila.lineas }} {{ fila.lineas === 1 ? 'línea' : 'líneas' }} · {{ fila.cantidad | number:'1.0-2' }}</div>
+          } @else {
+          <div class="fw-semibold">{{ fila.nombre }}</div>
+          <div class="text-muted">
+            <code>{{ fila.codigoActividad }}</code> {{ fila.nombreActividad }} · {{ fila.cantidad | number:'1.0-2' }}
+          </div>
+          <div class="text-muted">Siembra: {{ formatoFecha(fila.fechaSiembra) }}</div>
+          }
+        </td>
+        <td class="text-success">Ingreso</td>
+        @for (col of columnas(); track col.numeroMes; let j = $index) {
+        @let mes = fila.meses[j];
+        <td class="text-end" [class.bg-body-tertiary]="antesDeSiembra(mes)" [attr.title]="detalleMes(mes, 'INGRESO') || null">
+          @if (mes?.ingreso) { {{ mes.ingreso | number:'1.2-2' }} } @else { <span class="text-body-tertiary">–</span> }
+        </td>
+        }
+        <td class="text-end fw-semibold text-success">{{ fila.totalIngreso | number:'1.2-2' }}</td>
+      </tr>
+      <tr>
+        <td class="text-danger">Egreso</td>
+        @for (col of columnas(); track col.numeroMes; let j = $index) {
+        @let mes = fila.meses[j];
+        <td class="text-end" [class.bg-body-tertiary]="antesDeSiembra(mes)" [attr.title]="detalleMes(mes, 'EGRESO') || null">
+          @if (mes?.egreso) { {{ mes.egreso | number:'1.2-2' }} } @else { <span class="text-body-tertiary">–</span> }
+        </td>
+        }
+        <td class="text-end fw-semibold text-danger">{{ fila.totalEgreso | number:'1.2-2' }}</td>
+      </tr>
+      } @empty {
+      <tr>
+        <td [attr.colspan]="columnas().length + 3" class="text-center text-muted py-3">Sin líneas</td>
+      </tr>
+      }
+    </tbody>
+
+    @if (p.estacionales.length) {
+    <tbody class="border-top border-2">
+      <tr>
+        <th [attr.colspan]="columnas().length + 3" class="table-light">Actividades estacionales</th>
+      </tr>
+      @for (est of p.estacionales; track $index) {
+      <tr>
+        <td rowspan="2" class="sticky left-0 z-1 bg-(--bs-body-bg) align-middle">
+          <div class="fw-semibold">{{ est.orden }}. {{ est.descripcion }}</div>
+        </td>
+        <td class="text-success">Ingreso</td>
+        @for (col of columnas(); track col.numeroMes; let j = $index) {
+        @let mes = est.meses[j];
+        <td class="text-end">
+          @if (mes?.ingreso) { {{ mes.ingreso | number:'1.2-2' }} } @else { <span class="text-body-tertiary">–</span> }
+        </td>
+        }
+        <td class="text-end fw-semibold text-success">{{ est.totalIngreso | number:'1.2-2' }}</td>
+      </tr>
+      <tr>
+        <td class="text-danger">Egreso</td>
+        @for (col of columnas(); track col.numeroMes; let j = $index) {
+        @let mes = est.meses[j];
+        <td class="text-end">
+          @if (mes?.egreso) { {{ mes.egreso | number:'1.2-2' }} } @else { <span class="text-body-tertiary">–</span> }
+        </td>
+        }
+        <td class="text-end fw-semibold text-danger">{{ est.totalEgreso | number:'1.2-2' }}</td>
+      </tr>
+      }
+    </tbody>
+    }
+
+    @if (p.prestamos.length) {
+    <tbody class="border-top border-2">
+      <tr>
+        <th [attr.colspan]="columnas().length + 3" class="table-light">Préstamos en otras instituciones</th>
+      </tr>
+      @for (prestamo of p.prestamos; track $index) {
+      <tr>
+        <td class="sticky left-0 z-1 bg-(--bs-body-bg)">
+          <div class="fw-semibold">{{ prestamo.orden }}. {{ prestamo.institucion }}</div>
+          <div class="text-muted">{{ etiquetaFormaPago(prestamo.formaPago) }}</div>
+        </td>
+        <td class="text-danger">Cuota</td>
+        @for (col of columnas(); track col.numeroMes; let j = $index) {
+        @let mes = prestamo.meses[j];
+        <td class="text-end" [attr.title]="detallePago(mes) || null">
+          @if (mes?.cuota) { {{ mes.cuota | number:'1.2-2' }} } @else { <span class="text-body-tertiary">–</span> }
+        </td>
+        }
+        <td class="text-end fw-semibold text-danger">{{ prestamo.totalCuota | number:'1.2-2' }}</td>
+      </tr>
+      }
+    </tbody>
+    }
+
+    <tfoot class="table-light fw-semibold">
+      <tr>
+        <th rowspan="7" class="sticky left-0 z-1 bg-(--bs-tertiary-bg) align-middle">Totales</th>
+        <td class="text-success">Ingreso</td>
+        @for (m of p.totales.meses; track m.numeroMes) {
+        <td class="text-end">{{ m.ingreso | number:'1.2-2' }}</td>
+        }
+        <td class="text-end text-success">{{ p.totales.totalIngreso | number:'1.2-2' }}</td>
+      </tr>
+      <tr>
+        <td class="text-danger">Egreso</td>
+        @for (m of p.totales.meses; track m.numeroMes) {
+        <td class="text-end">{{ m.egreso | number:'1.2-2' }}</td>
+        }
+        <td class="text-end text-danger">{{ p.totales.totalEgreso | number:'1.2-2' }}</td>
+      </tr>
+      <tr>
+        <td class="text-success text-nowrap">Ingreso estacional</td>
+        @for (m of p.totales.meses; track m.numeroMes) {
+        <td class="text-end">{{ m.ingresoEstacional | number:'1.2-2' }}</td>
+        }
+        <td class="text-end text-success">{{ p.totales.totalIngresoEstacional | number:'1.2-2' }}</td>
+      </tr>
+      <tr>
+        <td class="text-danger text-nowrap">Egreso estacional</td>
+        @for (m of p.totales.meses; track m.numeroMes) {
+        <td class="text-end">{{ m.egresoEstacional | number:'1.2-2' }}</td>
+        }
+        <td class="text-end text-danger">{{ p.totales.totalEgresoEstacional | number:'1.2-2' }}</td>
+      </tr>
+      <tr>
+        <td class="text-danger text-nowrap">Pago de préstamos</td>
+        @for (m of p.totales.meses; track m.numeroMes) {
+        <td class="text-end">{{ m.pagoPrestamos | number:'1.2-2' }}</td>
+        }
+        <td class="text-end text-danger">{{ p.totales.totalPagoPrestamos | number:'1.2-2' }}</td>
+      </tr>
+      <tr>
+        <td>Neto</td>
+        @for (m of p.totales.meses; track m.numeroMes) {
+        <td class="text-end" [class.text-danger]="m.neto < 0">{{ m.neto | number:'1.2-2' }}</td>
+        }
+        <td class="text-end" [class.text-danger]="p.totales.neto < 0">{{ p.totales.neto | number:'1.2-2' }}</td>
+      </tr>
+      <tr>
+        <td>Acumulado</td>
+        @for (m of p.totales.meses; track m.numeroMes) {
+        <td class="text-end" [class.text-danger]="m.acumulado < 0">{{ m.acumulado | number:'1.2-2' }}</td>
+        }
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>

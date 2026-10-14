@@ -1,0 +1,225 @@
+@if (editable()) {
+<form [formGroup]="form" (ngSubmit)="agregar()" class="border rounded p-2 mb-3"
+  [class.border-primary]="editandoIndex() !== null">
+  @if (editandoIndex() !== null) {
+  <div class="small text-primary fw-semibold mb-2">Editando el préstamo {{ editandoIndex()! + 1 }}</div>
+  }
+  <div class="row g-2">
+    <div class="col-md-4">
+      <label class="form-label small mb-1" for="txtInstitucion">Institución</label>
+      <input type="text" class="form-control form-control-sm" id="txtInstitucion" formControlName="institucion"
+        maxlength="150" placeholder="Ej. ECOSABA" [class.is-invalid]="invalido('institucion')">
+      @if (hasError('institucion', 'required')) {
+      <div class="text-danger small">Institución es requerida</div>
+      }
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="txtMonto">Monto del préstamo</label>
+      <input type="number" min="0.01" step="0.01" class="form-control form-control-sm" id="txtMonto"
+        formControlName="montoPrestamo" [class.is-invalid]="invalido('montoPrestamo')">
+      @if (hasError('montoPrestamo', 'required')) { <div class="text-danger small">Requerido</div> }
+      @if (hasError('montoPrestamo', 'min')) { <div class="text-danger small">Debe ser mayor que 0</div> }
+      @if (hasError('montoPrestamo', 'decimales')) { <div class="text-danger small">Máximo 2 decimales</div> }
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="txtSaldo">Saldo</label>
+      <input type="number" min="0.01" step="0.01" class="form-control form-control-sm" id="txtSaldo"
+        formControlName="saldo" [class.is-invalid]="invalido('saldo') || saldoMayor()">
+      @if (hasError('saldo', 'required')) { <div class="text-danger small">Requerido</div> }
+      @if (hasError('saldo', 'min')) { <div class="text-danger small">Debe ser mayor que 0</div> }
+      @if (hasError('saldo', 'decimales')) { <div class="text-danger small">Máximo 2 decimales</div> }
+      @if (saldoMayor()) { <div class="text-danger small">No puede ser mayor que el monto</div> }
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="txtCuota">Cuota</label>
+      <input type="number" min="0.01" step="0.01" class="form-control form-control-sm" id="txtCuota"
+        formControlName="cuota" [class.is-invalid]="invalido('cuota')">
+      @if (hasError('cuota', 'required')) { <div class="text-danger small">Requerida</div> }
+      @if (hasError('cuota', 'min')) { <div class="text-danger small">Debe ser mayor que 0</div> }
+      @if (hasError('cuota', 'decimales')) { <div class="text-danger small">Máximo 2 decimales</div> }
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="selFormaPago">Forma de pago</label>
+      <select class="form-select form-select-sm" id="selFormaPago" formControlName="formaPago">
+        @for (f of formasPago; track f.value) {
+        <option [ngValue]="f.value">{{ f.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="txtFechaPago">Fecha siguiente pago</label>
+      <input type="date" class="form-control form-control-sm" id="txtFechaPago" formControlName="fechaSiguientePago"
+        [class.is-invalid]="invalido('fechaSiguientePago')">
+      @if (hasError('fechaSiguientePago', 'required')) { <div class="text-danger small">Requerida</div> }
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="txtTasa">Tasa interés anual (%)</label>
+      <input type="number" min="0" [max]="maxTasa" step="0.0001" class="form-control form-control-sm" id="txtTasa"
+        formControlName="tasaInteresAnual" [class.is-invalid]="invalido('tasaInteresAnual')">
+      @if (hasError('tasaInteresAnual', 'required')) { <div class="text-danger small">Requerida</div> }
+      @if (hasError('tasaInteresAnual', 'min') || hasError('tasaInteresAnual', 'max')) {
+      <div class="text-danger small">Entre 0 y {{ maxTasa }}</div>
+      }
+      @if (hasError('tasaInteresAnual', 'decimales')) { <div class="text-danger small">Máximo 4 decimales</div> }
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small mb-1" for="txtTasaPeriodo">{{ etiquetaTasaPeriodo() }} (automático)</label>
+      <input type="text" class="form-control form-control-sm bg-body-tertiary" id="txtTasaPeriodo" readonly
+        [value]="tasaPeriodo() === null ? '' : (tasaPeriodo() | number:'1.0-4') + ' %'">
+    </div>
+    <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+      @if (editandoIndex() !== null || capturaPendiente()) {
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="limpiar()">
+        {{ editandoIndex() !== null ? 'Cancelar edición' : 'Limpiar' }}
+      </button>
+      }
+      <button type="submit" class="btn btn-primary btn-sm"
+        [disabled]="calculando() || (editandoIndex() === null && prestamos().length >= maxPrestamos)">
+        @if (calculando()) {
+        <span class="spinner-border spinner-border-sm me-1"></span> Calculando...
+        } @else if (editandoIndex() !== null) {
+        Actualizar préstamo
+        } @else {
+        + Agregar préstamo
+        }
+      </button>
+    </div>
+  </div>
+
+  @if (error()) {
+  <div class="alert alert-warning py-2 small mt-2 mb-0" role="alert">{{ error() }}</div>
+  }
+  @if (capturaPendiente() && !error()) {
+  <div class="small text-muted mt-2">El préstamo no se toma en cuenta hasta que se agregue a la tabla.</div>
+  }
+</form>
+}
+
+<div class="table-responsive">
+  <table class="table table-striped table-sm table-bordered mb-0">
+    <thead>
+      <tr>
+        <th class="text-center">#</th>
+        <th class="text-center">Institución</th>
+        <th class="text-center">Monto</th>
+        <th class="text-center">Saldo</th>
+        <th class="text-center">Cuota</th>
+        <th class="text-center">Forma de pago</th>
+        <th class="text-center">Siguiente pago</th>
+        <th class="text-center">Tasa anual</th>
+        <th class="text-center">Tasa periodo</th>
+        <th class="text-center">Cuotas</th>
+        <th class="text-center">Último pago</th>
+        <th class="text-center">Total interés</th>
+        <th class="text-center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="text-[0.85em]">
+      @for (p of prestamos(); track $index; let i = $index) {
+      <tr [class.table-primary]="editandoIndex() === i">
+        <th scope="row" class="text-center">{{ i + 1 }}</th>
+        <td>{{ p.institucion }}</td>
+        <td class="text-end text-nowrap">Q {{ p.montoPrestamo | number:'1.2-2' }}</td>
+        <td class="text-end text-nowrap">Q {{ p.saldo | number:'1.2-2' }}</td>
+        <td class="text-end text-nowrap">Q {{ p.cuota | number:'1.2-2' }}</td>
+        <td class="text-center">{{ etiquetaFormaPago(p.formaPago) }}</td>
+        <td class="text-center text-nowrap">{{ formatoFecha(p.fechaSiguientePago) }}</td>
+        <td class="text-end text-nowrap">{{ p.tasaInteresAnual | number:'1.0-4' }} %</td>
+        <td class="text-end text-nowrap">{{ p.tasaPeriodo | number:'1.0-4' }} %</td>
+        <td class="text-center">{{ p.numeroCuotas }}</td>
+        <td class="text-center text-nowrap">{{ formatoFecha(p.fechaUltimoPago) }}</td>
+        <td class="text-end text-nowrap">Q {{ p.totalInteres | number:'1.2-2' }}</td>
+        <td class="text-center text-nowrap">
+          <button type="button" class="btn btn-sm btn-outline-primary mx-1" title="Calendario de amortización"
+            (click)="verCalendario(p)">
+            <ion-icon name="calendar-outline"></ion-icon>
+          </button>
+          @if (editable()) {
+          <button type="button" class="btn btn-sm btn-success mx-1" title="Editar" (click)="editar(i)">
+            <ion-icon name="create-outline"></ion-icon>
+          </button>
+          <button type="button" class="btn btn-sm btn-danger mx-1" title="Quitar" (click)="quitar(i)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </button>
+          }
+        </td>
+      </tr>
+      } @empty {
+      <tr>
+        <td colspan="13" class="text-center text-muted py-3">Sin préstamos en otras instituciones</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Calendario de Amortización -->
+<div #calendarioModal class="modal fade" tabindex="-1" aria-labelledby="titleCalendarioModal" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="titleCalendarioModal">
+          Calendario de Amortización
+          @if (prestamoCalendario(); as p) { <span class="text-muted fs-6">· {{ p.institucion }}</span> }
+        </h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        @if (prestamoCalendario(); as p) {
+        <div class="row g-2 small mb-3">
+          <div class="col-6 col-md-3"><div class="text-muted">Saldo</div><div>Q {{ p.saldo | number:'1.2-2' }}</div></div>
+          <div class="col-6 col-md-3"><div class="text-muted">Cuota</div><div>Q {{ p.cuota | number:'1.2-2' }} · {{ etiquetaFormaPago(p.formaPago) }}</div></div>
+          <div class="col-6 col-md-3"><div class="text-muted">Tasa anual / periodo</div><div>{{ p.tasaInteresAnual | number:'1.0-4' }} % / {{ p.tasaPeriodo | number:'1.0-4' }} %</div></div>
+          <div class="col-6 col-md-3"><div class="text-muted">Cuotas</div><div>{{ p.numeroCuotas }} (hasta {{ formatoFecha(p.fechaUltimoPago) }})</div></div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered table-striped mb-0 text-[0.85em]">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center">No.</th>
+                <th class="text-center">Fecha</th>
+                <th class="text-center">Cuota</th>
+                <th class="text-center">Capital</th>
+                <th class="text-center">Interés</th>
+                <th class="text-center">Saldo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="5" class="fw-semibold">Saldo Inicial</td>
+                <td class="text-end">{{ p.saldo | number:'1.2-2' }}</td>
+              </tr>
+              @for (c of p.calendario; track c.numeroCuota) {
+              <tr>
+                <td class="text-center">{{ c.numeroCuota }}</td>
+                <td class="text-center text-nowrap">{{ formatoFecha(c.fecha) }}</td>
+                <td class="text-end">{{ c.cuota | number:'1.2-2' }}</td>
+                <td class="text-end">{{ c.capital | number:'1.2-2' }}</td>
+                <td class="text-end">{{ c.interes | number:'1.2-2' }}</td>
+                <td class="text-end">{{ c.saldo | number:'1.2-2' }}</td>
+              </tr>
+              }
+            </tbody>
+            <tfoot class="table-light fw-semibold">
+              <tr>
+                <td colspan="2">Totales</td>
+                <td class="text-end">{{ p.totalPagado | number:'1.2-2' }}</td>
+                <td class="text-end">{{ p.saldo | number:'1.2-2' }}</td>
+                <td class="text-end">{{ p.totalInteres | number:'1.2-2' }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="small text-muted mt-2">
+          La última cuota es el saldo pendiente más su interés, por eso puede ser menor que la cuota normal.
+        </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

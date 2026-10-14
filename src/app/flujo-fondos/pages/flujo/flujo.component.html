@@ -1,0 +1,410 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/flujo-fondos']">Flujo de Fondos</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/flujo-fondos/flujos']">Flujos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ flujoId() ? (flujo()?.codigo ?? 'Flujo') : 'Nuevo flujo' }}</li>
+    </ol>
+</nav>
+
+<ng-template #ayudaCalculo>
+    <details class="small text-muted mb-2">
+        <summary class="cursor-pointer">¿Cómo se calcula?</summary>
+        <ul class="mt-2 mb-0">
+            <li>La proyección empieza el día 1 del mes de inicio y dura el plazo indicado.</li>
+            <li>El mes de la fecha de siembra es el <strong>mes 1 del ciclo</strong>. Al terminar el ciclo vuelve a empezar.</li>
+            <li>La siembra puede ser anterior al inicio (por ejemplo, un cultivo ya en curso).</li>
+            <li>Ingreso del ciclo = cantidad × cantidad estimada × precio U. Egreso del ciclo = cantidad × cantidad estimada × costo U.</li>
+            <li>Cada mes del ciclo aplica su porcentaje de la distribución de la actividad. Los meses antes de la siembra van en 0 (en gris).</li>
+            <li>Una misma actividad puede ir en varias líneas, por ejemplo dos terrenos con fechas distintas.</li>
+            <li>Las cuotas de los préstamos en otras instituciones se proyectan desde la fecha del siguiente pago; las que caen fuera del horizonte no se cuentan.</li>
+            <li>Las actividades estacionales entran en el mes de cada transacción; las que caen fuera del horizonte no se proyectan.</li>
+            <li>Neto = ingreso − egreso + ingreso estacional − egreso estacional − pago de préstamos. El acumulado se calcula sobre ese neto.</li>
+        </ul>
+    </details>
+</ng-template>
+
+<ng-template #agrupacion>
+    <div class="form-check form-switch mb-0">
+        <input class="form-check-input" type="checkbox" role="switch" id="chkAgrupar" [checked]="agrupar()"
+            (change)="cambiarAgrupacion(chkAgrupar.checked)" #chkAgrupar>
+        <label class="form-check-label small" for="chkAgrupar">Agrupar por actividad</label>
+    </div>
+</ng-template>
+
+@if (flujoId()) {
+<!-- ═══════════════════════ Detalle ═══════════════════════ -->
+@if (cargandoFlujo() && !flujo()) {
+<div class="text-center py-3">
+    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    <span class="ms-2 text-muted small">Cargando...</span>
+</div>
+}
+
+@if (flujo(); as f) {
+<div class="card mb-3">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>
+            Flujo de fondos <code>{{ f.codigo }}</code>
+            <span class="badge ms-1" [class]="claseEstado[f.estado]">{{ f.estado }}</span>
+        </span>
+        <a class="btn btn-primary btn-sm" [routerLink]="['/flujo-fondos/flujos/nuevo']">Nuevo flujo</a>
+    </div>
+    <div class="card-body">
+        <div class="row g-3 small">
+            <div class="col-md-4"><div class="text-muted">Cliente</div><div class="fw-semibold">{{ f.nombreCliente }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Documento</div><div>{{ f.documento }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Solicitud</div><div>{{ f.numeroSolicitud }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Operación</div><div>{{ f.numeroOperacion ?? '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Cuenta</div><div>{{ f.cuenta || '—' }}</div></div>
+            <div class="col-md-4"><div class="text-muted">Producto</div><div>{{ f.productoCredito || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Monto del crédito</div><div>Q {{ f.montoCredito | number:'1.2-2' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Agencia</div><div>{{ f.agencia || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Región</div><div>{{ f.region || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Horizonte</div><div>{{ formatoPeriodo(f.fechaInicio) }} · {{ f.plazoMeses }} meses</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Líneas</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-sm table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th class="text-center">Nombre</th>
+                        <th class="text-center">Actividad</th>
+                        <th class="text-center">Siembra</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-center">Ciclo</th>
+                        <th class="text-center">Producción / u.</th>
+                        <th class="text-center">Precio U.</th>
+                        <th class="text-center">Costo U.</th>
+                    </tr>
+                </thead>
+                <tbody class="text-[0.85em]">
+                    @for (l of f.lineas; track l.id ?? $index; let i = $index) {
+                    <tr>
+                        <th scope="row">{{ i + 1 }}</th>
+                        <td>{{ l.nombre }}</td>
+                        <td><code>{{ l.codigoActividad }}</code> {{ l.nombreActividad }}</td>
+                        <td class="text-center text-nowrap">{{ formatoFecha(l.fechaSiembra) }}</td>
+                        <td class="text-end text-nowrap">{{ l.cantidad | number:'1.0-2' }} {{ unidad(l.unidadGiro) }}</td>
+                        <td class="text-center text-nowrap">{{ l.ciclo }} {{ l.ciclo === 1 ? 'mes' : 'meses' }}</td>
+                        <td class="text-end text-nowrap">{{ l.cantidadEstimada | number:'1.0-2' }} {{ medida(l.medidaProduccion) }}</td>
+                        <td class="text-end text-nowrap">Q {{ l.precioU | number:'1.2-2' }}</td>
+                        <td class="text-end text-nowrap">{{ l.costoU === null ? '—' : 'Q ' + (l.costoU | number:'1.2-2') }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Actividades estacionales</div>
+    <div class="card-body">
+        <app-actividades-estacionales [estacionales]="f.estacionales" />
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Préstamos en otras instituciones</div>
+    <div class="card-body">
+        <app-otros-prestamos [prestamos]="f.otrosPrestamos" />
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>
+            Proyección
+            @if (cargandoFlujo()) { <span class="spinner-border spinner-border-sm text-primary ms-2"></span> }
+        </span>
+        <ng-container [ngTemplateOutlet]="agrupacion" />
+    </div>
+    <div class="card-body">
+        <ng-container [ngTemplateOutlet]="ayudaCalculo" />
+        <app-proyeccion-flujo [proyeccion]="f.proyeccion" />
+    </div>
+</div>
+}
+
+} @else {
+<!-- ═══════════════════════ Creación ═══════════════════════ -->
+<div class="card mb-3">
+    <div class="card-header">Nuevo flujo de fondos</div>
+    <div class="card-body">
+        <form (submit)="$event.preventDefault(); consultarSolicitud()" class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label for="txtSolicitud" class="form-label small mb-1">Número de solicitud</label>
+                <input type="text" inputmode="numeric" class="form-control form-control-sm" id="txtSolicitud"
+                    placeholder="Ej. 10928374" [value]="numeroSolicitud()" [disabled]="!!solicitud() || consultando()"
+                    (input)="onNumeroSolicitud(txtSolicitud)" #txtSolicitud>
+            </div>
+            <div class="col-auto">
+                @if (solicitud()) {
+                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cambiarSolicitud()">Cambiar solicitud</button>
+                } @else {
+                <button type="submit" class="btn btn-success btn-sm" [disabled]="!numeroSolicitud() || consultando()">
+                    @if (consultando()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span> Consultando...
+                    } @else {
+                    Consultar
+                    }
+                </button>
+                }
+            </div>
+        </form>
+
+        @if (falloConsulta(); as fc) {
+        <div class="alert py-2 small mt-3 mb-0" role="alert"
+            [class.alert-warning]="fc.fallo === 'NO_EXISTE' || fc.fallo === 'DATOS_INCOMPLETOS'"
+            [class.alert-danger]="fc.fallo === 'SIN_CONEXION' || fc.fallo === 'OTRO'">
+            {{ fc.mensaje }}
+        </div>
+        }
+
+        @if (solicitud(); as s) {
+        <hr>
+        <div class="row g-3 small">
+            <div class="col-md-4"><div class="text-muted">Cliente</div><div class="fw-semibold">{{ s.nombreCliente }}</div></div>
+            <div class="col-md-2"><div class="text-muted">DPI</div><div>{{ s.dpi }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Operación</div><div>{{ s.numeroOperacion ?? '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Cuenta</div><div>{{ s.cuenta || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Monto del crédito</div><div>Q {{ s.montoCredito | number:'1.2-2' }}</div></div>
+            <div class="col-md-4"><div class="text-muted">Producto</div><div>{{ s.productoCredito || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Agencia</div><div>{{ s.agencia || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Región</div><div>{{ s.region || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Evaluación</div><div>{{ s.evaluacion || '—' }}</div></div>
+            <div class="col-md-2">
+                <div class="text-muted">Clasificación</div>
+                <div>{{ s.clasificacion || '—' }} @if (s.fechaEvaluacion) { <span class="text-muted">({{ formatoFecha(s.fechaEvaluacion) }})</span> }</div>
+            </div>
+        </div>
+        }
+
+        @if (flujoActivo(); as fa) {
+        <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 small mt-3 mb-0" role="alert">
+            <span>
+                Esta solicitud ya tiene el flujo <code>{{ fa.codigo }}</code>
+                <span class="badge ms-1" [class]="claseEstado[fa.estado]">{{ fa.estado }}</span>.
+                No se puede crear otro mientras no se anule.
+            </span>
+            <button type="button" class="btn btn-primary btn-sm" (click)="abrirFlujo(fa.id)">Abrir flujo</button>
+        </div>
+        }
+    </div>
+</div>
+
+@if (puedeCapturar()) {
+<form [formGroup]="form" (ngSubmit)="guardar()">
+
+    <div class="card mb-3">
+        <div class="card-header">Horizonte</div>
+        <div class="card-body">
+            <div class="row g-3 align-items-start">
+                <div class="col-md-3">
+                    <label for="txtFechaInicio" class="form-label small mb-1">Mes de inicio</label>
+                    <input type="month" class="form-control form-control-sm" id="txtFechaInicio" formControlName="fechaInicio"
+                        [class.is-invalid]="invalido(form.controls.fechaInicio)">
+                    @if (hasError(form.controls.fechaInicio, 'required')) {
+                    <div class="text-danger small">Mes de inicio es requerido</div>
+                    }
+                </div>
+                <div class="col-md-2">
+                    <label for="txtPlazo" class="form-label small mb-1">Plazo (meses)</label>
+                    <input type="number" min="1" [max]="maxPlazo" step="1" class="form-control form-control-sm" id="txtPlazo"
+                        formControlName="plazoMeses" [class.is-invalid]="invalido(form.controls.plazoMeses)">
+                    @if (invalido(form.controls.plazoMeses)) {
+                    <div class="text-danger small">Entero de 1 a {{ maxPlazo }}</div>
+                    }
+                </div>
+                @if (rangoHorizonte()) {
+                <div class="col-md-4 small text-muted pt-md-4">{{ rangoHorizonte() }}</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>Líneas <span class="text-muted small">({{ lineas.length }} de {{ maxLineas }})</span></span>
+            <button type="button" class="btn btn-primary btn-sm" (click)="agregarLinea()" [disabled]="lineas.length >= maxLineas">
+                Agregar línea
+            </button>
+        </div>
+        <div class="card-body">
+            @if (cargandoActividades()) {
+            <div class="small text-muted mb-2"><span class="spinner-border spinner-border-sm me-1"></span> Cargando actividades...</div>
+            }
+
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-top mb-0" formArrayName="lineas">
+                    <thead>
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th class="text-center min-w-60">Actividad</th>
+                            <th class="text-center min-w-45">Nombre</th>
+                            <th class="text-center">Fecha de siembra</th>
+                            <th class="text-center min-w-40">Cantidad</th>
+                            <th class="text-center">Por ciclo</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-[0.85em]">
+                        @for (linea of lineas.controls; track linea; let i = $index) {
+                        @let valor = lineasValor()[i];
+                        @let act = actividad(valor?.actividadEconomicaId);
+                        @let montos = valor ? montosLinea(valor) : null;
+                        <tr [formGroupName]="i">
+                            <th scope="row" class="text-center">{{ i + 1 }}</th>
+                            <td>
+                                <select class="form-select form-select-sm" formControlName="actividadEconomicaId"
+                                    [class.is-invalid]="invalido(linea.get('actividadEconomicaId'))">
+                                    <option [ngValue]="null">Seleccione...</option>
+                                    @for (a of actividades(); track a.id) {
+                                    <option [ngValue]="a.id">{{ a.codigo }} · {{ a.nombre }}</option>
+                                    }
+                                </select>
+                                @if (act) {
+                                <div class="text-muted mt-1">
+                                    Ciclo de {{ act.ciclo }} {{ act.ciclo === 1 ? 'mes' : 'meses' }} ·
+                                    {{ act.cantidadEstimada | number:'1.0-2' }} {{ medida(act.medidaProduccion) }} por {{ unidad(act.unidadGiro) | lowercase }}
+                                </div>
+                                }
+                                @if (hasError(linea.get('actividadEconomicaId'), 'required')) {
+                                <div class="text-danger small">Actividad es requerida</div>
+                                }
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm" formControlName="nombre" maxlength="150"
+                                    placeholder="Ej. Siembra terreno 1" [class.is-invalid]="invalido(linea.get('nombre'))">
+                                @if (hasError(linea.get('nombre'), 'required')) {
+                                <div class="text-danger small">Nombre es requerido</div>
+                                }
+                            </td>
+                            <td>
+                                <input type="date" class="form-control form-control-sm" formControlName="fechaSiembra"
+                                    [class.is-invalid]="invalido(linea.get('fechaSiembra'))">
+                                @if (hasError(linea.get('fechaSiembra'), 'required')) {
+                                <div class="text-danger small">Fecha es requerida</div>
+                                }
+                            </td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" min="0.01" step="0.01" class="form-control" formControlName="cantidad"
+                                        [class.is-invalid]="invalido(linea.get('cantidad'))">
+                                    @if (act) {
+                                    <span class="input-group-text">{{ unidad(act.unidadGiro) }}</span>
+                                    }
+                                </div>
+                                @if (hasError(linea.get('cantidad'), 'required')) {
+                                <div class="text-danger small">Cantidad es requerida</div>
+                                }
+                                @if (hasError(linea.get('cantidad'), 'min')) {
+                                <div class="text-danger small">Debe ser mayor que 0</div>
+                                }
+                                @if (hasError(linea.get('cantidad'), 'decimales')) {
+                                <div class="text-danger small">Máximo 2 decimales</div>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                @if (montos) {
+                                <div class="text-success">+ Q {{ montos.ingreso | number:'1.2-2' }}</div>
+                                <div class="text-danger">− Q {{ montos.egreso | number:'1.2-2' }}</div>
+                                } @else {
+                                <span class="text-body-tertiary">–</span>
+                                }
+                            </td>
+                            <td class="text-center text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-secondary mx-1" title="Duplicar"
+                                    [disabled]="lineas.length >= maxLineas" (click)="duplicarLinea(i)">
+                                    <ion-icon name="copy-outline"></ion-icon>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger mx-1" title="Quitar"
+                                    [disabled]="lineas.length === 1" (click)="quitarLinea(i)">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="small text-muted mt-2">
+                Solo se pueden usar actividades que tengan distribución. La cantidad va en la unidad de giro de la actividad (por ejemplo, cuerdas).
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Fuera del <form> del flujo: estas secciones tienen sus propios controles y un Enter ahí no debe guardar el flujo -->
+<div class="card mb-3">
+    <div class="card-header">
+        Actividades estacionales <span class="text-muted small">({{ cantidadEstacionales() }} de {{ maxEstacionales }})</span>
+    </div>
+    <div class="card-body">
+        <app-actividades-estacionales [editable]="true" [horizonte]="horizonte()" (cambio)="onEstacionalesChange($event)" />
+        <div class="small text-muted mt-2">
+            Ingresos y egresos del cliente por fuera de las actividades del catálogo (por ejemplo, venta de duraznos).
+            Las transacciones fuera del horizonte se guardan, pero no entran a la proyección.
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        Préstamos en otras instituciones <span class="text-muted small">({{ otrosPrestamos().length }} de {{ maxPrestamos }})</span>
+    </div>
+    <div class="card-body">
+        <app-otros-prestamos [prestamos]="otrosPrestamos()" [editable]="true" (prestamosChange)="onOtrosPrestamosChange($event)" />
+        <div class="small text-muted mt-2">
+            Las cuotas de cada préstamo entran al flujo como egresos y se restan del neto. El cálculo parte del saldo; el monto del préstamo es informativo.
+        </div>
+    </div>
+</div>
+
+    <div class="card mb-3">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>
+                Vista previa
+                @if (simulando()) { <span class="spinner-border spinner-border-sm text-primary ms-2"></span> }
+            </span>
+            <ng-container [ngTemplateOutlet]="agrupacion" />
+        </div>
+        <div class="card-body">
+            <ng-container [ngTemplateOutlet]="ayudaCalculo" />
+
+            @if (errorSimulacion()) {
+            <div class="alert alert-warning py-2 small" role="alert">{{ errorSimulacion() }}</div>
+            }
+
+            @if (simulacion(); as sim) {
+            <div [class.opacity-50]="simulando() || form.invalid">
+                <app-proyeccion-flujo [proyeccion]="sim.proyeccion" />
+            </div>
+            @if (form.invalid) {
+            <div class="small text-muted mt-2">Complete las líneas para actualizar la vista previa.</div>
+            }
+            } @else if (!simulando()) {
+            <div class="text-center text-muted small py-3">Complete el horizonte y al menos una línea para ver la proyección.</div>
+            }
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mb-4">
+        <button type="button" class="btn btn-secondary" (click)="cambiarSolicitud()">Cancelar</button>
+        <button type="button" class="btn btn-primary" [disabled]="guardando()" (click)="guardar()">
+            @if (guardando()) {
+            <span class="spinner-border spinner-border-sm me-1"></span> Guardando...
+            } @else {
+            Guardar flujo
+            }
+        </button>
+    </div>
+}
+}

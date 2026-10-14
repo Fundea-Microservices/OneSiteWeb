@@ -1,0 +1,236 @@
+@if (editable()) {
+<div class="row g-2 align-items-start mb-3">
+  <div class="col-md-6">
+    <label for="txtNuevaEstacional" class="visually-hidden">Descripción de la actividad</label>
+    <input type="text" class="form-control form-control-sm" id="txtNuevaEstacional" maxlength="150"
+      placeholder="Ej. Venta de Duraznos" [class.is-invalid]="!!errorNueva()"
+      (input)="onNuevaDescripcion(txtNueva)" (keyup.enter)="agregarActividad(txtNueva)" #txtNueva>
+    @if (errorNueva()) {
+    <div class="text-danger small">{{ errorNueva() }}</div>
+    }
+  </div>
+  <div class="col-auto">
+    <button type="button" class="btn btn-primary btn-sm" (click)="agregarActividad(txtNueva)"
+      [disabled]="actividades.length >= maxEstacionales">
+      + Agregar actividad
+    </button>
+  </div>
+</div>
+}
+
+<div class="table-responsive">
+  <table class="table table-striped table-sm table-bordered mb-0">
+    <thead>
+      <tr>
+        <th class="text-center">#</th>
+        <th class="text-center min-w-60">Descripción</th>
+        <th class="text-center">Ingreso Estimado</th>
+        <th class="text-center">Egreso Estimado</th>
+        <th class="text-center">Margen Neto</th>
+        <th class="text-center">Transacciones</th>
+        <th class="text-center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="text-[0.85em]">
+      @for (fila of filas(); track $index; let i = $index) {
+      <tr>
+        <th scope="row" class="text-center">{{ i + 1 }}</th>
+        <td>
+          @if (editable()) {
+          <input type="text" class="form-control form-control-sm" maxlength="150" [formControl]="descripcion(i)"
+            [class.is-invalid]="invalido(descripcion(i))">
+          @if (hasError(descripcion(i), 'required')) {
+          <div class="text-danger small">Descripción es requerida</div>
+          }
+          } @else {
+          {{ fila.descripcion }}
+          }
+        </td>
+        <td class="text-end text-nowrap text-success">Q {{ fila.totalIngreso | number:'1.2-2' }}</td>
+        <td class="text-end text-nowrap text-danger">Q {{ fila.totalEgreso | number:'1.2-2' }}</td>
+        <td class="text-end text-nowrap fw-semibold" [class.text-danger]="fila.margenNeto < 0">Q {{ fila.margenNeto | number:'1.2-2' }}</td>
+        <td class="text-center text-nowrap">
+          <span class="text-muted">({{ fila.transacciones }} {{ fila.transacciones === 1 ? 'tx' : 'txs' }})</span>
+          @if (fila.fueraDeHorizonte) {
+          <span class="badge text-bg-warning ms-1"
+            title="Se guardan, pero no entran a la proyección. Por eso los totales pueden ser mayores que los de la matriz.">
+            {{ fila.fueraDeHorizonte }} fuera del horizonte
+          </span>
+          }
+          @if (editable() && fila.incompleta) {
+          <span class="badge text-bg-danger ms-1">{{ fila.transacciones === 0 ? 'Sin transacciones' : 'Incompleta' }}</span>
+          }
+        </td>
+        <td class="text-center text-nowrap">
+          <button type="button" class="btn btn-sm btn-outline-primary mx-1" title="Detalle de transacciones" (click)="verDetalle(i)">
+            <ion-icon name="list-outline"></ion-icon>
+          </button>
+          @if (editable()) {
+          <button type="button" class="btn btn-sm btn-danger mx-1" title="Quitar" (click)="quitarActividad(i)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </button>
+          }
+        </td>
+      </tr>
+      } @empty {
+      <tr>
+        <td colspan="7" class="text-center text-muted py-3">Sin actividades estacionales</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Detalle de Transacciones -->
+<div #detalleModal class="modal fade" tabindex="-1" aria-labelledby="titleDetalleTransacciones" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="titleDetalleTransacciones">
+          Detalle de Transacciones
+          @if (resumenSeleccionada(); as r) { <span class="text-muted fs-6">· {{ r.descripcion }}</span> }
+        </h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        @if (resumenSeleccionada(); as r) {
+        <div class="row g-2 small mb-3">
+          <div class="col-6 col-md-3"><div class="text-muted">Ingreso estimado</div><div class="text-success">Q {{ r.totalIngreso | number:'1.2-2' }}</div></div>
+          <div class="col-6 col-md-3"><div class="text-muted">Egreso estimado</div><div class="text-danger">Q {{ r.totalEgreso | number:'1.2-2' }}</div></div>
+          <div class="col-6 col-md-3"><div class="text-muted">Margen neto</div><div class="fw-semibold" [class.text-danger]="r.margenNeto < 0">Q {{ r.margenNeto | number:'1.2-2' }}</div></div>
+          <div class="col-6 col-md-3"><div class="text-muted">Transacciones</div><div>{{ r.transacciones }} de {{ maxTransacciones }}</div></div>
+        </div>
+
+        @if (r.fueraDeHorizonte) {
+        <div class="alert alert-warning py-2 small" role="alert">
+          {{ r.fueraDeHorizonte }} {{ r.fueraDeHorizonte === 1 ? 'transacción cae' : 'transacciones caen' }} fuera del horizonte del flujo.
+          Se guardan, pero no entran a la proyección: por eso los totales de la actividad pueden ser mayores que los de la matriz.
+        </div>
+        }
+        }
+
+        @if (seleccionada() !== null) {
+        @let i = seleccionada()!;
+        @if (editable()) {
+        @if (actividades.at(i)) {
+        <div [formGroup]="actividad(i)">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-top mb-2" formArrayName="transacciones">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-center">#</th>
+                  <th class="text-center min-w-60">Concepto</th>
+                  <th class="text-center">Tipo</th>
+                  <th class="text-center">Fecha</th>
+                  <th class="text-center min-w-35">Monto</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="text-[0.85em]">
+                @for (tx of transacciones(i).controls; track tx; let j = $index) {
+                <tr [formGroupName]="j" [class.table-warning]="fuera(tx.get('fecha')?.value)">
+                  <th scope="row" class="text-center">{{ j + 1 }}</th>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" formControlName="concepto" maxlength="150"
+                      [class.is-invalid]="invalido(tx.get('concepto'))">
+                    @if (hasError(tx.get('concepto'), 'required')) {
+                    <div class="text-danger small">Concepto es requerido</div>
+                    }
+                  </td>
+                  <td>
+                    <select class="form-select form-select-sm" formControlName="tipo">
+                      <option value="INGRESO">Ingreso</option>
+                      <option value="EGRESO">Egreso</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="date" class="form-control form-control-sm" formControlName="fecha"
+                      [class.is-invalid]="invalido(tx.get('fecha'))">
+                    @if (hasError(tx.get('fecha'), 'required')) {
+                    <div class="text-danger small">Fecha es requerida</div>
+                    }
+                    @if (fuera(tx.get('fecha')?.value)) {
+                    <div class="text-warning-emphasis small">Fuera del horizonte</div>
+                    }
+                  </td>
+                  <td>
+                    <input type="number" min="0.01" step="0.01" class="form-control form-control-sm text-end" formControlName="monto"
+                      [class.is-invalid]="invalido(tx.get('monto'))">
+                    @if (hasError(tx.get('monto'), 'required')) {
+                    <div class="text-danger small">Monto es requerido</div>
+                    }
+                    @if (hasError(tx.get('monto'), 'min')) {
+                    <div class="text-danger small">Debe ser mayor que 0</div>
+                    }
+                    @if (hasError(tx.get('monto'), 'decimales')) {
+                    <div class="text-danger small">Máximo 2 decimales</div>
+                    }
+                  </td>
+                  <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-sm btn-outline-secondary mx-1" title="Copiar al mes siguiente"
+                      [disabled]="transacciones(i).length >= maxTransacciones" (click)="duplicarAlMesSiguiente(i, j)">
+                      <ion-icon name="copy-outline"></ion-icon>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger mx-1" title="Quitar" (click)="quitarTransaccion(i, j)">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </td>
+                </tr>
+                } @empty {
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-3">Agregue al menos una transacción</td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="small text-muted">
+              Si el cliente vende todos los meses, capture una transacción por fecha (el botón de copiar la pasa al mes siguiente).
+            </span>
+            <button type="button" class="btn btn-primary btn-sm" (click)="agregarTransaccion(i)"
+              [disabled]="transacciones(i).length >= maxTransacciones">
+              + Agregar transacción
+            </button>
+          </div>
+        </div>
+        }
+        } @else if (estacionales()[i]; as e) {
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered table-striped mb-0 text-[0.85em]">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center">#</th>
+                <th class="text-center">Concepto</th>
+                <th class="text-center">Tipo</th>
+                <th class="text-center">Fecha</th>
+                <th class="text-center">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of e.transacciones; track t.id ?? $index; let j = $index) {
+              <tr [class.table-warning]="t.fueraDeHorizonte">
+                <th scope="row" class="text-center">{{ j + 1 }}</th>
+                <td>{{ t.concepto }}</td>
+                <td class="text-center" [class.text-success]="t.tipo === 'INGRESO'" [class.text-danger]="t.tipo === 'EGRESO'">
+                  {{ t.tipo === 'INGRESO' ? 'Ingreso' : 'Egreso' }}
+                </td>
+                <td class="text-center text-nowrap">
+                  {{ formatoFecha(t.fecha) }}
+                  @if (t.fueraDeHorizonte) { <span class="badge text-bg-warning ms-1">Fuera del horizonte</span> }
+                </td>
+                <td class="text-end text-nowrap">Q {{ t.monto | number:'1.2-2' }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        }
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
