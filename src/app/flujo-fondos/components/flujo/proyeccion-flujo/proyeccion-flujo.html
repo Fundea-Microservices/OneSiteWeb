@@ -4,7 +4,7 @@
   <table class="table table-sm table-bordered table-hover mb-0 text-[0.8em] text-nowrap">
     <thead class="table-light">
       <tr>
-        <th scope="col" class="sticky left-0 z-2 bg-(--bs-tertiary-bg) min-w-50">
+        <th scope="col" class="col-fija col-fija-encabezado min-w-50">
           {{ p.agrupado ? 'Actividad' : 'Línea' }}
         </th>
         <th scope="col" class="text-center">Concepto</th>
@@ -21,7 +21,7 @@
     <tbody>
       @for (fila of p.filas; track $index) {
       <tr>
-        <td rowspan="2" class="sticky left-0 z-1 bg-(--bs-body-bg) align-middle">
+        <td rowspan="2" class="col-fija align-middle">
           @if (p.agrupado) {
           <div class="fw-semibold">{{ fila.nombreActividad }}</div>
           <div class="text-muted"><code>{{ fila.codigoActividad }}</code> · {{ fila.lineas }} {{ fila.lineas === 1 ? 'línea' : 'líneas' }} · {{ fila.cantidad | number:'1.0-2' }}</div>
@@ -62,11 +62,11 @@
     @if (p.estacionales.length) {
     <tbody class="border-top border-2">
       <tr>
-        <th [attr.colspan]="columnas().length + 3" class="table-light">Actividades estacionales</th>
+        <th [attr.colspan]="columnas().length + 3" class="table-light"><span class="sticky left-2 inline-block">Actividades estacionales</span></th>
       </tr>
       @for (est of p.estacionales; track $index) {
       <tr>
-        <td rowspan="2" class="sticky left-0 z-1 bg-(--bs-body-bg) align-middle">
+        <td rowspan="2" class="col-fija align-middle">
           <div class="fw-semibold">{{ est.orden }}. {{ est.descripcion }}</div>
         </td>
         <td class="text-success">Ingreso</td>
@@ -95,11 +95,11 @@
     @if (p.prestamos.length) {
     <tbody class="border-top border-2">
       <tr>
-        <th [attr.colspan]="columnas().length + 3" class="table-light">Préstamos en otras instituciones</th>
+        <th [attr.colspan]="columnas().length + 3" class="table-light"><span class="sticky left-2 inline-block">Préstamos en otras instituciones</span></th>
       </tr>
       @for (prestamo of p.prestamos; track $index) {
       <tr>
-        <td class="sticky left-0 z-1 bg-(--bs-body-bg)">
+        <td class="col-fija">
           <div class="fw-semibold">{{ prestamo.orden }}. {{ prestamo.institucion }}</div>
           <div class="text-muted">{{ etiquetaFormaPago(prestamo.formaPago) }}</div>
         </td>
@@ -118,7 +118,7 @@
 
     <tfoot class="table-light fw-semibold">
       <tr>
-        <th rowspan="7" class="sticky left-0 z-1 bg-(--bs-tertiary-bg) align-middle">Totales</th>
+        <th rowspan="7" class="col-fija col-fija-encabezado align-middle">Totales</th>
         <td class="text-success">Ingreso</td>
         @for (m of p.totales.meses; track m.numeroMes) {
         <td class="text-end">{{ m.ingreso | number:'1.2-2' }}</td>

@@ -134,7 +134,7 @@
                 </div>
                 <div class="modal-body">
                     <app-upsert-actividad [actividad]="actividadEdit()" [nuevo]="nuevaActividad()" [formKey]="formKey()"
-                        (save)="onSave($event)" (cancel)="closeModal()"></app-upsert-actividad>
+                        [guardando]="guardando()" (save)="onSave($event)" (cancel)="closeModal()"></app-upsert-actividad>
                 </div>
             </div>
         </div>

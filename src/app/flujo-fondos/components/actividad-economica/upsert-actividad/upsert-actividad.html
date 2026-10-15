@@ -301,8 +301,12 @@
   <div class="row justify-content-end">
     <div class="col-auto">
       <button type="button" class="btn btn-secondary m-2" (click)="onCancel()">Cancelar</button>
-      <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid || !distribucionOk()">
+      <button type="submit" class="btn btn-primary m-2" [disabled]="form().invalid || !distribucionOk() || guardando()">
+        @if (guardando()) {
+        <span class="spinner-border spinner-border-sm me-1" role="status"></span> {{ nuevo() ? 'Creando...' : 'Actualizando...' }}
+        } @else {
         {{ btnText }}
+        }
       </button>
     </div>
   </div>

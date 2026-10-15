@@ -57,7 +57,11 @@
             <div class="col-md-2"><div class="text-muted">Solicitud</div><div>{{ f.numeroSolicitud }}</div></div>
             <div class="col-md-2"><div class="text-muted">Operación</div><div>{{ f.numeroOperacion ?? '—' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Cuenta</div><div>{{ f.cuenta || '—' }}</div></div>
-            <div class="col-md-4"><div class="text-muted">Producto</div><div>{{ f.productoCredito || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Evaluación</div><div>{{ f.evaluacion || '—' }}</div></div>
+            <div class="col-md-2">
+                <div class="text-muted">Clasificación</div>
+                <div>{{ f.clasificacion || '—' }} @if (f.fechaEvaluacion) { <span class="text-muted">({{ formatoFecha(f.fechaEvaluacion) }})</span> }</div>
+            </div>
             <div class="col-md-2"><div class="text-muted">Monto del crédito</div><div>Q {{ f.montoCredito | number:'1.2-2' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Agencia</div><div>{{ f.agencia || '—' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Región</div><div>{{ f.region || '—' }}</div></div>
@@ -161,10 +165,13 @@
         </form>
 
         @if (falloConsulta(); as fc) {
-        <div class="alert py-2 small mt-3 mb-0" role="alert"
-            [class.alert-warning]="fc.fallo === 'NO_EXISTE' || fc.fallo === 'DATOS_INCOMPLETOS'"
-            [class.alert-danger]="fc.fallo === 'SIN_CONEXION' || fc.fallo === 'OTRO'">
-            {{ fc.mensaje }}
+        <div class="alert d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 small mt-3 mb-0" role="alert"
+            [class.alert-warning]="fc.fallo === 'SOLICITUD'"
+            [class.alert-danger]="fc.fallo !== 'SOLICITUD'">
+            <span>{{ fc.mensaje }}</span>
+            @if (fc.fallo === 'SIN_CONEXION') {
+            <button type="button" class="btn btn-outline-danger btn-sm" [disabled]="consultando()" (click)="consultarSolicitud()">Reintentar</button>
+            }
         </div>
         }
 
@@ -172,11 +179,10 @@
         <hr>
         <div class="row g-3 small">
             <div class="col-md-4"><div class="text-muted">Cliente</div><div class="fw-semibold">{{ s.nombreCliente }}</div></div>
-            <div class="col-md-2"><div class="text-muted">DPI</div><div>{{ s.dpi }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Documento</div><div>{{ s.documento }}</div></div>
             <div class="col-md-2"><div class="text-muted">Operación</div><div>{{ s.numeroOperacion ?? '—' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Cuenta</div><div>{{ s.cuenta || '—' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Monto del crédito</div><div>Q {{ s.montoCredito | number:'1.2-2' }}</div></div>
-            <div class="col-md-4"><div class="text-muted">Producto</div><div>{{ s.productoCredito || '—' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Agencia</div><div>{{ s.agencia || '—' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Región</div><div>{{ s.region || '—' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Evaluación</div><div>{{ s.evaluacion || '—' }}</div></div>
@@ -184,6 +190,9 @@
                 <div class="text-muted">Clasificación</div>
                 <div>{{ s.clasificacion || '—' }} @if (s.fechaEvaluacion) { <span class="text-muted">({{ formatoFecha(s.fechaEvaluacion) }})</span> }</div>
             </div>
+            <!-- Referencias: solo se muestran, no se guardan en el flujo -->
+            <div class="col-md-2"><div class="text-muted">Asesor</div><div>{{ s.referencias.asesor || '—' }}</div></div>
+            <div class="col-md-2"><div class="text-muted">Tarea</div><div>{{ s.referencias.tarea || '—' }}</div></div>
         </div>
         }
 
@@ -240,6 +249,16 @@
         <div class="card-body">
             @if (cargandoActividades()) {
             <div class="small text-muted mb-2"><span class="spinner-border spinner-border-sm me-1"></span> Cargando actividades...</div>
+            } @else if (solicitud()?.regionId == null) {
+            <div class="alert alert-warning py-2 small mb-2" role="alert">
+                La solicitud no tiene región en Bantotal (el asesor no tiene agencias asignadas), así que no hay actividades económicas para elegir.
+            </div>
+            } @else if (actividadesRegion().length === 0) {
+            <div class="alert alert-warning py-2 small mb-2" role="alert">
+                No hay actividades económicas registradas para la región {{ solicitud()?.region || solicitud()?.regionId }}.
+            </div>
+            } @else {
+            <div class="small text-muted mb-2">Actividades de la región {{ solicitud()?.region || solicitud()?.regionId }}.</div>
             }
 
             <div class="table-responsive">
@@ -266,7 +285,7 @@
                                 <select class="form-select form-select-sm" formControlName="actividadEconomicaId"
                                     [class.is-invalid]="invalido(linea.get('actividadEconomicaId'))">
                                     <option [ngValue]="null">Seleccione...</option>
-                                    @for (a of actividades(); track a.id) {
+                                    @for (a of actividadesRegion(); track a.id) {
                                     <option [ngValue]="a.id">{{ a.codigo }} · {{ a.nombre }}</option>
                                     }
                                 </select>

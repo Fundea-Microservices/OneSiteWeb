@@ -16,7 +16,7 @@ import { DecimalPipe } from '@angular/common';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import {
-  CampoCatalogoActividad,
+  CampoOpcionActividad,
   CATALOGOS_ACTIVIDAD,
   IActividadCreate,
   IActividadEconomica,
@@ -26,6 +26,7 @@ import {
 } from '../../../../../interfaces/actividad-economica';
 import { IOpcionSelect } from '../../../../../interfaces/catalogo';
 import { CatalogoService } from '../../../../../services/flujo-fondos/catalogo.service';
+import { SucursalesBantotalService } from '../../../../../services/api-bantotal/sucursales.service';
 import {
   aFormulario,
   aPayload,
@@ -39,7 +40,7 @@ import {
   TIPOS_DISTRIBUCION,
 } from '../../../utils/distribucion';
 
-type OpcionesCampos = Record<CampoCatalogoActividad, IOpcionSelect[]>;
+type OpcionesCampos = Record<CampoOpcionActividad, IOpcionSelect[]>;
 
 const sinOpciones = (): OpcionesCampos => ({
   giro: [], unidadGiro: [], region: [], actividad: [], subActividad: [], area: [], medidaProduccion: [],
@@ -68,10 +69,13 @@ const maxDecimales = (n: number): ValidatorFn => (control: AbstractControl): Val
 export class UpsertActividadComponent {
   private fb = inject(FormBuilder);
   private catalogoService = inject(CatalogoService);
+  private sucursalesService = inject(SucursalesBantotalService);
 
   actividad = input<IActividadEconomica | null>(null);
   nuevo = input<boolean>(true);
   formKey = input<number>(0);
+  // La petición la hace la página: mientras dura no se vuelve a enviar
+  guardando = input<boolean>(false);
 
   @Output() save = new EventEmitter<IActividadCreate | IActividadUpdate>();
   @Output() cancel = new EventEmitter<void>();
@@ -197,7 +201,7 @@ export class UpsertActividadComponent {
   }
 
   private async cargarOpciones(form: FormGroup, nuevo: boolean) {
-    const campos: CampoCatalogoActividad[] = ['giro', 'unidadGiro', 'region', 'actividad', 'area', 'medidaProduccion'];
+    const campos: CampoOpcionActividad[] = ['giro', 'unidadGiro', 'region', 'actividad', 'area', 'medidaProduccion'];
     await Promise.all(campos.map(campo => this.cargarCampo(form, campo, null, nuevo)));
 
     // En altas la subactividad se carga al preseleccionar la actividad (valueChanges)
@@ -207,21 +211,29 @@ export class UpsertActividadComponent {
     }
   }
 
+  /** La región sale de Bantotal; el resto, de su catálogo. */
+  private async opcionesDe(campo: CampoOpcionActividad, padre: string | null, incluirInactivos = false): Promise<IOpcionSelect[]> {
+    if (campo === 'region') return this.sucursalesService.getRegionesSelect();
+    const resp = await this.catalogoService.select(CATALOGOS_ACTIVIDAD[campo], padre, incluirInactivos);
+    return resp?.opciones ?? [];
+  }
+
   /**
    * Llena el select de un campo. Si el valor guardado ya no está activo, se agrega
    * marcado como inactivo para no perderlo al editar.
    */
-  private async cargarCampo(form: FormGroup, campo: CampoCatalogoActividad, padre: string | null, aplicarDefault: boolean) {
-    const codigo = CATALOGOS_ACTIVIDAD[campo];
+  private async cargarCampo(form: FormGroup, campo: CampoOpcionActividad, padre: string | null, aplicarDefault: boolean) {
     if (campo === 'subActividad') this.cargandoSubactividades.set(true);
 
-    const resp = await this.catalogoService.select(codigo, padre);
-    let lista = resp?.opciones ?? [];
+    let lista = await this.opcionesDe(campo, padre);
 
     const actual = form.get(campo)?.value;
-    if (actual && !lista.some(o => mismoCodigo(o.value, actual))) {
-      const todas = await this.catalogoService.select(codigo, padre, true);
-      const guardada = todas?.opciones.find(o => mismoCodigo(o.value, actual));
+    // Una región que no está en Bantotal (p.ej. un código del catálogo anterior) no se
+    // conserva: el back la rechazaría, así que se vacía para que se elija otra
+    const regionInvalida = campo === 'region' && !!actual && lista.length > 0 && !lista.some(o => o.value === actual);
+    if (actual && campo !== 'region' && !lista.some(o => mismoCodigo(o.value, actual))) {
+      const todas = await this.opcionesDe(campo, padre, true);
+      const guardada = todas.find(o => mismoCodigo(o.value, actual));
       lista = [...lista, {
         value: actual,
         label: `${guardada?.label ?? actual} (inactiva)`,
@@ -240,13 +252,14 @@ export class UpsertActividadComponent {
     }
 
     this.opciones.update(o => ({ ...o, [campo]: lista }));
+    if (regionInvalida) form.get('region')?.setValue(null);
     if (aplicarDefault && !actual && (campo !== 'area' || this.esCuerdas())) {
       this.aplicarPorDefecto(form, campo);
     }
   }
 
   /** En altas se preselecciona la opción marcada como por defecto. */
-  private aplicarPorDefecto(form: FormGroup, campo: CampoCatalogoActividad) {
+  private aplicarPorDefecto(form: FormGroup, campo: CampoOpcionActividad) {
     const porDefecto = this.opciones()[campo].find(o => o.porDefecto && o.activo);
     if (porDefecto) form.get(campo)?.setValue(porDefecto.value);
   }
@@ -291,6 +304,7 @@ export class UpsertActividadComponent {
   }
 
   onSubmit() {
+    if (this.guardando()) return;
     const form = this.form();
     form.markAllAsTouched();
     if (form.invalid || !this.distribucionOk()) return;

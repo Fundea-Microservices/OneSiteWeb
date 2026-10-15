@@ -11,6 +11,23 @@ import { etiquetaFormaPago, formatoFecha, formatoPeriodo } from '../../../utils/
   selector: 'app-proyeccion-flujo',
   imports: [DecimalPipe],
   templateUrl: './proyeccion-flujo.html',
+  // La identidad deja las celdas de .table con fondo transparente (--bs-table-bg) y esa regla
+  // de Bootstrap le gana a las utilidades de Tailwind (que van en @layer): la columna fija
+  // necesita un fondo sólido propio para que los meses no se vean por debajo al deslizar.
+  styles: `
+    .col-fija {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background-color: var(--bs-body-bg);
+      /* Con border-collapse el borde no viaja con la celda fija: se dibuja la separación */
+      box-shadow: inset -1px 0 0 var(--bs-border-color);
+    }
+    .col-fija-encabezado {
+      z-index: 2;
+      background-color: var(--bs-tertiary-bg);
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProyeccionFlujoComponent {

@@ -99,6 +99,12 @@ export default class FlujoComponent implements OnInit {
   // ── Captura ──────────────────────────────────────────────────────────────
   actividades = signal<IActividadEconomica[]>([]);
   cargandoActividades = signal(false);
+  // Solo las de la región de la solicitud (la actividad guarda el id de región de Bantotal como texto)
+  actividadesRegion = computed(() => {
+    const regionId = this.solicitud()?.regionId;
+    if (regionId === null || regionId === undefined) return [];
+    return this.actividades().filter(a => a.region === String(regionId));
+  });
   private unidades = signal<Map<string, string>>(new Map());
   private medidas = signal<Map<string, string>>(new Map());
 

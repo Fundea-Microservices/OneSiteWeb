@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import {
   CampoCatalogoActividad,
+  CampoOpcionActividad,
   CATALOGOS_ACTIVIDAD,
   IActividadCreate,
   IActividadEconomica,
@@ -12,11 +13,12 @@ import {
 import { IOpcionSelect } from '../../../../interfaces/catalogo';
 import { ActividadEconomicaService } from '../../../../services/flujo-fondos/actividad-economica.service';
 import { CatalogoService } from '../../../../services/flujo-fondos/catalogo.service';
+import { SucursalesBantotalService } from '../../../../services/api-bantotal/sucursales.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { UpsertActividadComponent } from '../../components/actividad-economica/upsert-actividad/upsert-actividad';
 
-// Catálogos que se muestran en la tabla (el listado trae códigos, no nombres)
-const CAMPOS_TABLA: CampoCatalogoActividad[] = ['region', 'actividad', 'subActividad', 'giro', 'medidaProduccion'];
+// Catálogos que se muestran en la tabla (el listado trae códigos, no nombres). La región sale de Bantotal
+const CAMPOS_TABLA: CampoCatalogoActividad[] = ['actividad', 'subActividad', 'giro', 'medidaProduccion'];
 
 @Component({
   selector: 'app-actividades-economicas',
@@ -29,11 +31,13 @@ export default class ActividadesEconomicasComponent {
 
   actividadService = inject(ActividadEconomicaService);
   catalogoService = inject(CatalogoService);
+  sucursalesService = inject(SucursalesBantotalService);
 
   actividadesList = signal<IActividadEconomica[]>([]);
   nuevaActividad = signal(true);
   actividadEdit = signal<IActividadEconomica | null>(null);
   cargandoEdicionId = signal<string | null>(null);
+  guardando = signal(false);
 
   pagination = signal<IPagination>({
     page: 1,
@@ -62,7 +66,7 @@ export default class ActividadesEconomicasComponent {
   opcionesSubActividad = signal<IOpcionSelect[]>([]);
 
   // value -> label por campo, incluyendo opciones desactivadas
-  nombres = signal<Partial<Record<CampoCatalogoActividad, Map<string, string>>>>({});
+  nombres = signal<Partial<Record<CampoOpcionActividad, Map<string, string>>>>({});
 
   ngOnInit() {
     this.cargarCatalogos();
@@ -76,21 +80,24 @@ export default class ActividadesEconomicasComponent {
 
   private async cargarCatalogos() {
     // incluirInactivos: así se traducen también registros con opciones ya desactivadas
-    const catalogos = await Promise.all(
-      CAMPOS_TABLA.map(campo => this.catalogoService.select(CATALOGOS_ACTIVIDAD[campo], null, true)),
-    );
+    const [regiones, ...catalogos] = await Promise.all([
+      this.sucursalesService.getRegionesSelect(),
+      ...CAMPOS_TABLA.map(campo => this.catalogoService.select(CATALOGOS_ACTIVIDAD[campo], null, true)),
+    ]);
 
-    const nombres: Partial<Record<CampoCatalogoActividad, Map<string, string>>> = {};
+    const nombres: Partial<Record<CampoOpcionActividad, Map<string, string>>> = {
+      region: new Map(regiones.map(o => [o.value, o.label])),
+    };
     CAMPOS_TABLA.forEach((campo, i) => {
       nombres[campo] = new Map((catalogos[i]?.opciones ?? []).map(o => [o.value.toUpperCase(), o.label]));
     });
     this.nombres.set(nombres);
 
-    this.opcionesRegion.set(catalogos[CAMPOS_TABLA.indexOf('region')]?.opciones ?? []);
+    this.opcionesRegion.set(regiones);
     this.opcionesActividad.set(catalogos[CAMPOS_TABLA.indexOf('actividad')]?.opciones ?? []);
   }
 
-  nombre(campo: CampoCatalogoActividad, codigo: string | null | undefined): string {
+  nombre(campo: CampoOpcionActividad, codigo: string | null | undefined): string {
     if (!codigo) return '—';
     return this.nombres()[campo]?.get(codigo.toUpperCase()) ?? codigo;
   }
@@ -180,9 +187,13 @@ export default class ActividadesEconomicasComponent {
   }
 
   async onSave(actividad: IActividadCreate | IActividadUpdate) {
-    const resp = 'id' in actividad
-      ? await this.actividadService.updateActividad(actividad)
-      : await this.actividadService.createActividad(actividad);
+    // La petición tarda: un segundo clic crearía la actividad dos veces
+    if (this.guardando()) return;
+    this.guardando.set(true);
+    const resp = await ('id' in actividad
+      ? this.actividadService.updateActividad(actividad)
+      : this.actividadService.createActividad(actividad)
+    ).finally(() => this.guardando.set(false));
     if (resp?.success) {
       this.fetchData();
       this.closeModal();
