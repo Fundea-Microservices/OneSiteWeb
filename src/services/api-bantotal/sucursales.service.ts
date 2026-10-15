@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { MisSucursalesData, MisSucursalesResponse, TodasSucursalesResponse } from '../../interfaces/api-bantotal/sucursales';
+import { IOpcionSelect } from '../../interfaces/catalogo';
 
 @Injectable({
   providedIn: 'root'
@@ -49,6 +50,29 @@ export class SucursalesBantotalService extends HttpService {
       console.error('❌ Error al obtener todas las sucursales:', error);
       return null;
     }
+  }
+
+  private regionesSelect: Promise<IOpcionSelect[]> | null = null;
+
+  /**
+   * Regiones de Bantotal como opciones de select: value = id como texto (lo que guardan
+   * las actividades económicas). Se piden una vez; si fallan, se reintenta en la siguiente llamada.
+   */
+  getRegionesSelect(): Promise<IOpcionSelect[]> {
+    this.regionesSelect ??= this.getTodasLasSucursales().then(data => {
+      if (!data) {
+        this.regionesSelect = null;
+        return [];
+      }
+      return data.regiones.map(r => ({
+        value: String(r.id),
+        label: r.descripcion,
+        padre: null,
+        porDefecto: false,
+        activo: true,
+      }));
+    });
+    return this.regionesSelect;
   }
 
   async getMisSucursales(usuario?: string): Promise<MisSucursalesResponse | null> {

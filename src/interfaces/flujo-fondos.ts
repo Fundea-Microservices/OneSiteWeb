@@ -26,20 +26,32 @@ export const FORMAS_PAGO: { value: FormaPago; label: string; meses: number }[] =
 ];
 
 // ---------- Solicitud en Bantotal ----------
+/** Datos de apoyo de la solicitud: solo se muestran, no se guardan en el flujo. */
+export interface IReferenciasSolicitud {
+    clienteUId: number;
+    personaUId: number;
+    asesor: string;
+    tipoEvaluacion: number;
+    tarea: string;
+}
+
+/** Detalle de la solicitud (GET /detalle/:numeroSolicitud): lo que se copia al flujo al crearlo, más `referencias`. */
 export interface ISolicitudCreditoBantotal {
     numeroSolicitud: number;
     numeroOperacion: number | null;
-    nombreCliente: string;
-    dpi: string;                 // en el flujo se llama `documento`
     cuenta: string;
-    direccion: string | null;
-    region: string | null;
-    agencia: string | null;
+    documento: string;
+    nombreCliente: string;
     montoCredito: number;
-    productoCredito: string;
+    // Si el asesor no tiene agencias asignadas, agencia y región (id y nombre) llegan en null
+    agenciaId: number | null;
+    agencia: string | null;
+    regionId: number | null;
+    region: string | null;
     evaluacion: string | null;
     clasificacion: string | null;
     fechaEvaluacion: string | null; // YYYY-MM-DD
+    referencias: IReferenciasSolicitud;
 }
 
 // ---------- Flujo ----------
@@ -52,8 +64,9 @@ export interface IFlujoEncabezado {
     documento: string;
     nombreCliente: string;
     montoCredito: number;
-    productoCredito: string;
+    agenciaId: number | null;
     agencia: string | null;
+    regionId: number | null;
     region: string | null;
     evaluacion: string | null;
     clasificacion: string | null;

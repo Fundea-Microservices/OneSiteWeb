@@ -22,7 +22,7 @@ export interface IActividadEconomica {
     nombre: string;
     giro: string;                // código de opción de GIRO
     unidadGiro: string;          // código de opción de UNI-GIR
-    region: string;              // código de opción de REGION
+    region: string;              // id de la región en Bantotal, como texto ('700')
     actividad: string;           // código de opción de ACTI
     subActividad: string;        // código de opción de SUB-ACT
     area: string | null;         // código de opción de CUERDA
@@ -62,11 +62,13 @@ export interface IActividadUpdate extends Partial<IActividadCreate> {
 export type ActividadesResponse = ApiResponse<{ actividades: IActividadEconomica[]; metadata: Metadata }>;
 export type ActividadResponse = ApiResponse<IActividadEconomica>;
 
-/** Catálogo del que sale cada campo (debe coincidir con CATALOGOS del microservicio). */
+/**
+ * Catálogo del que sale cada campo (debe coincidir con CATALOGOS del microservicio).
+ * `region` no sale de un catálogo: son las regiones de Bantotal (SucursalesBantotalService).
+ */
 export const CATALOGOS_ACTIVIDAD = {
     giro: 'GIRO',
     unidadGiro: 'UNI-GIR',
-    region: 'REGION',
     actividad: 'ACTI',
     subActividad: 'SUB-ACT',
     area: 'CUERDA',
@@ -74,6 +76,9 @@ export const CATALOGOS_ACTIVIDAD = {
 } as const;
 
 export type CampoCatalogoActividad = keyof typeof CATALOGOS_ACTIVIDAD;
+
+/** Campos de la actividad que se eligen de una lista: los de catálogo y la región. */
+export type CampoOpcionActividad = CampoCatalogoActividad | 'region';
 
 /** Opción de unidad de giro con la que se muestra el campo `area`. */
 export const UNIDAD_GIRO_CUERDAS = 'CUERDAS';

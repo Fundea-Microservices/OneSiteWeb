@@ -30,8 +30,13 @@ export interface FlujosFiltro {
   estado?: EstadoFlujo | '';
 }
 
-/** Por qué falló la consulta de la solicitud: cada caso se explica distinto al asesor. */
-export type FalloConsulta = 'NO_EXISTE' | 'DATOS_INCOMPLETOS' | 'SIN_CONEXION' | 'OTRO';
+/**
+ * Por qué falló la consulta de la solicitud: cada caso se explica distinto al asesor.
+ * - SOLICITUD: Bantotal rechazó la solicitud (FF-01-*: sin evaluación, sin cuenta, no activa...)
+ * - CONFIGURACION: el gateway no se autenticó con Bantotal o no vino data (502); no es del asesor
+ * - SIN_CONEXION: Bantotal no respondió (503) o no hay red; se puede reintentar
+ */
+export type FalloConsulta = 'SOLICITUD' | 'CONFIGURACION' | 'SIN_CONEXION' | 'OTRO';
 
 export type ResultadoConsultaSolicitud =
   | { ok: true; solicitud: ISolicitudCreditoBantotal; flujoActivo: IFlujoEncabezado | null }
@@ -84,11 +89,12 @@ export class FlujoFondosService extends HttpService {
    * Consulta la solicitud en Bantotal y si ya tiene un flujo no anulado.
    *
    * Sin toast: la pantalla muestra el resultado junto al buscador. Una caída del
-   * core (5xx) no debe decir "no existe", o el asesor daría la solicitud por perdida.
+   * core (5xx) no debe parecer un problema de la solicitud, o el asesor la daría por perdida.
+   * El 401 lo maneja el flujo normal de sesión.
    */
   async consultarSolicitud(numeroSolicitud: number): Promise<ResultadoConsultaSolicitud> {
     try {
-      const resp = await firstValueFrom(this.get<ConsultaSolicitudResponse>(`${this.endpoint}/solicitud/${numeroSolicitud}`));
+      const resp = await firstValueFrom(this.get<ConsultaSolicitudResponse>(`${this.endpoint}/detalle/${numeroSolicitud}`));
       if (resp.body?.success) {
         return { ok: true, ...resp.body.data };
       }
@@ -99,18 +105,15 @@ export class FlujoFondosService extends HttpService {
       const status: number = error?.status ?? 0;
       const mensaje: string = error?.error?.message || '';
 
-      if (status === 404) {
-        return { ok: false, fallo: 'NO_EXISTE', mensaje: mensaje || `La solicitud ${numeroSolicitud} no existe en Bantotal.` };
+      // Bantotal explica qué le pasa a la solicitud (FF-01-NO_EVALUACION, FF-01-NO_CLIENTE...)
+      if (status === 400) {
+        return { ok: false, fallo: 'SOLICITUD', mensaje: mensaje || `Bantotal rechazó la solicitud ${numeroSolicitud}.` };
       }
-      if (status === 422) {
-        return { ok: false, fallo: 'DATOS_INCOMPLETOS', mensaje: mensaje || 'Bantotal respondió, pero a la solicitud le faltan datos.' };
+      if (status === 502) {
+        return { ok: false, fallo: 'CONFIGURACION', mensaje: mensaje || 'No se pudo consultar el Core Bantotal. Contacte al administrador.' };
       }
-      if (status === 0 || status >= 500) {
-        return {
-          ok: false,
-          fallo: 'SIN_CONEXION',
-          mensaje: 'No se pudo conectar con Bantotal. Intente de nuevo en unos minutos.',
-        };
+      if (status === 0 || status === 503) {
+        return { ok: false, fallo: 'SIN_CONEXION', mensaje: mensaje || 'No se pudo conectar con Bantotal. Intente de nuevo en unos minutos.' };
       }
       return { ok: false, fallo: 'OTRO', mensaje: mensaje || 'No se pudo consultar la solicitud.' };
     }
