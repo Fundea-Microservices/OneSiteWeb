@@ -553,6 +553,14 @@ export const routes: Routes = [
                 path: 'seguimiento-solicitudes/:solicitudId',
                 loadComponent: () => import('./aliado/pages/seguimiento-solicitudes/seguimiento-solicitudes'),
             },
+            {
+                path: 'validacion-prospectos',
+                loadComponent: () => import('./aliado/pages/lotes-desembolso-page/lotes-desembolso-page'),
+            },
+            {
+                path: 'desembolso/:loteId',
+                loadComponent: () => import('./aliado/pages/detalle-lote-desembolso-page/detalle-lote-desembolso-page'),
+            },
         ]
     },
     // {
