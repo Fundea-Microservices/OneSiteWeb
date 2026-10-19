@@ -10,9 +10,9 @@
   <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
     <div>
       <span class="fw-semibold">Catálogo de Variables</span>
-      <div class="text-muted small">
+      <!--<div class="text-muted small">
         Diccionario de catálogos y coeficientes matemáticos asociados a cada modelo de scoring.
-      </div>
+      </div>-->
     </div>
     <button class="btn btn-primary btn-sm" (click)="openCatalogoModal(true)"
       [disabled]="!scoringId()">
@@ -78,9 +78,9 @@
           <thead>
             <tr>
               <th class="text-center" style="width: 4%;"></th>
-              <th style="width: 20%;">Código Externo</th>
+              <th style="width: 7%;">Código<br /> Externo</th>
               <th style="width: 40%;">Descripción del Catálogo</th>
-              <th class="text-center" style="width: 10%;">Orden</th>
+              <th class="text-center" style="width: 8%;">Orden</th>
               <th class="text-center" style="width: 11%;">Estado</th>
               <th class="text-center" style="width: 15%;">Acciones</th>
             </tr>
@@ -95,7 +95,7 @@
                   <ion-icon name="reorder-two-outline"></ion-icon>
                 </td>
                 <td class="font-monospace text-primary">{{ item.codigoExterno || '—' }}</td>
-                <td class="text-break fw-semibold">{{ item.descripcionCatalogo }}</td>
+                <td class="text-break">{{ item.descripcionCatalogo }}</td>
                 <td class="text-center">{{ item.ordenDespliegue }}</td>
                 <td class="text-center">
                   @if (item.estado === 'Activo') {
@@ -193,6 +193,7 @@
           <app-upsert-catalogo-variable
             [catalogo]="catalogoEdit()"
             [scoringId]="id"
+            [nombreScoring]="nombreScoringSeleccionado()"
             [nuevo]="nuevoCatalogo()"
             [formKey]="formKeyCatalogo()"
             (save)="guardarCatalogo($event)"
@@ -211,9 +212,9 @@
         <h5 class="modal-title">
           <ion-icon name="list-outline" class="me-1"></ion-icon>
           Opciones de: {{ catalogoSeleccionado()?.descripcionCatalogo }}
-          <span class="text-muted small ms-1 font-monospace">
+          <!--<span class="text-muted small ms-1 font-monospace">
             {{ catalogoSeleccionado()?.codigoExterno }}
-          </span>
+          </span>-->
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -296,12 +297,6 @@
                 }
               </tbody>
             </table>
-          </div>
-
-          <div class="alert alert-secondary py-2 small mb-0">
-            Las opciones inactivas no se despliegan en las evaluaciones, pero se
-            conservan: las evaluaciones ya procesadas siguen mostrando la opción
-            con la que se calcularon.
           </div>
 
         } @else {

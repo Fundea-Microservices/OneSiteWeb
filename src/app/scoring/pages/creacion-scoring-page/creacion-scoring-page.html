@@ -54,8 +54,10 @@
           <tr>
             <th class="text-center" style="width: 3%;"></th>
             <th class="text-center" style="width: 8%;">Cód.</th>
-            <th style="width: 20%;">Nombre Scoring</th>
-            <th style="width: 29%;">Descripción</th>
+            <th style="width: 17%;">Nombre Scoring</th>
+            <th style="width: 19%;">Descripción</th>
+            <th class="text-center" style="width: 8%;">Datos<br />Bantotal</th>
+            <th class="text-center" style="width: 8%;">Captura<br />de Datos</th>
             <th class="text-center" style="width: 11%;">Vigencia</th>
             <th class="text-center" style="width: 6%;">Ver.</th>
             <th class="text-center" style="width: 9%;">Estado</th>
@@ -85,6 +87,24 @@
                     <span class="badge text-bg-secondary">Cálculo Directo</span>
                   }
                 </div>
+              </td>
+              <td class="text-center">
+                @if (item.origenBantotal) {
+                  <ion-icon name="checkmark-circle" class="text-success fs-5"
+                    title="Toma los datos del Core Bantotal"></ion-icon>
+                } @else {
+                  <ion-icon name="close-circle" class="text-danger fs-5"
+                    title="No toma datos del Core"></ion-icon>
+                }
+              </td>
+              <td class="text-center">
+                @if (item.origenCaptura) {
+                  <ion-icon name="checkmark-circle" class="text-success fs-5"
+                    title="Admite captura manual"></ion-icon>
+                } @else {
+                  <ion-icon name="close-circle" class="text-danger fs-5"
+                    title="No admite captura manual"></ion-icon>
+                }
               </td>
               <td class="text-center small">{{ item.fechaVigencia | slice:0:10 }}</td>
               <td class="text-center">{{ item.version }}</td>
@@ -116,7 +136,7 @@
           } @empty {
             @if (!isLoading()) {
               <tr>
-                <td colspan="8" class="text-center text-muted py-3">No hay modelos registrados</td>
+                <td colspan="10" class="text-center text-muted py-3">No hay modelos registrados</td>
               </tr>
             }
           }
@@ -142,6 +162,18 @@
               }
             </div>
             <div class="small mt-2">{{ item.descripcion }}</div>
+            <div class="mt-2">
+              <span class="badge me-1"
+                [class.text-bg-success]="item.origenBantotal"
+                [class.text-bg-secondary]="!item.origenBantotal">
+                Bantotal
+              </span>
+              <span class="badge"
+                [class.text-bg-success]="item.origenCaptura"
+                [class.text-bg-secondary]="!item.origenCaptura">
+                Captura
+              </span>
+            </div>
             <div class="d-flex gap-2 mt-2">
               <button class="btn btn-sm btn-success flex-fill" (click)="openModal(false, item)">
                 <ion-icon name="create-outline"></ion-icon> Editar
@@ -174,9 +206,9 @@
 <div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header bg-dark text-white" style="background-color: #293444 !important;">
-        <h5 class="modal-title fw-bold d-flex align-items-center text-white">
-          <ion-icon name="layers-outline" class="text-warning me-2" style="font-size: 1.3rem;"></ion-icon>
+      <div class="modal-header " >
+        <h5 class="modal-title fw-bold d-flex align-items-center">
+          <ion-icon name="layers-outline" class="text me-2" style="font-size: 1.3rem;"></ion-icon>
           {{ modal().titulo }}
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

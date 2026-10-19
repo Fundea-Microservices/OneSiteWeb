@@ -18,7 +18,6 @@ import {
   IPreguntaCuestionario,
   IRespuestaCaptura,
   ISolicitudBantotal,
-  Semaforo,
 } from '../../../../interfaces/scoring/scoring';
 
 /**
@@ -56,9 +55,6 @@ export default class CapturaEvaluacionPage implements OnInit {
   respuestas = signal<Map<number, IRespuestaCaptura>>(new Map());
   /** preguntaId -> valor resuelto por el motor (incluye las calculadas). */
   valoresCalculados = signal<Record<string, number>>({});
-
-  punteoProyectado = signal<number | null>(null);
-  semaforoProyectado = signal<Semaforo | null>(null);
 
   isLoading = signal(false);
   isGuardando = signal(false);
@@ -161,8 +157,6 @@ export default class CapturaEvaluacionPage implements OnInit {
     this.scoringId.set(scoringId);
     this.respuestas.set(new Map());
     this.valoresCalculados.set({});
-    this.punteoProyectado.set(null);
-    this.semaforoProyectado.set(null);
 
     if (scoringId) await this.cargarCuestionario(scoringId);
     else this.cuestionario.set(null);
@@ -248,18 +242,15 @@ export default class CapturaEvaluacionPage implements OnInit {
       const resultado = await this.evaluacionService.simular(
         scoringId,
         this.respuestasArray(),
+        this.evaluacion()?.evaluacionId,
       );
 
+      /* Solo interesan los campos calculados: el punteo se consulta en
+         Auditoría. Si la simulación falla —el modelo todavía incompleto, un
+         punteo que no cae en ningún rango— no es un error de captura, así que
+         se conservan los valores que ya había en pantalla. */
       if (resultado) {
         this.valoresCalculados.set(resultado.valoresCalculados ?? {});
-        this.punteoProyectado.set(resultado.punteoTotal);
-        this.semaforoProyectado.set(resultado.semaforo);
-      } else {
-        // La simulación falla mientras el modelo esté incompleto (por ejemplo,
-        // un punteo que aún no cae en ningún rango). No es un error de captura,
-        // así que solo se limpia la proyección.
-        this.punteoProyectado.set(null);
-        this.semaforoProyectado.set(null);
       }
     } finally {
       this.isSimulando.set(false);
@@ -324,16 +315,4 @@ export default class CapturaEvaluacionPage implements OnInit {
     this.router.navigate(['/scoring/evaluacion']);
   }
 
-  claseSemaforo(semaforo: string | null): string {
-    switch (semaforo) {
-      case 'Verde':
-        return 'text-bg-success';
-      case 'Amarillo':
-        return 'text-bg-warning';
-      case 'Rojo':
-        return 'text-bg-danger';
-      default:
-        return 'text-bg-secondary';
-    }
-  }
 }

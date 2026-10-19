@@ -20,11 +20,11 @@
               Obligatorio. Solo letras, números, guion y guion bajo.
             </div>
           }
-          @if (!nuevo()) {
+          <!--@if (!nuevo()) {
             <div class="form-text">
               El código no se edita. Para cambiar la parametrización, genere una versión nueva.
             </div>
-          }
+          }-->
         </div>
 
         <div class="col-12 col-md-8">
@@ -53,14 +53,14 @@
           @if (campoInvalido('fechaVigencia')) {
             <div class="invalid-feedback">Obligatoria.</div>
           }
-          <div class="form-text">No puede ser anterior a hoy.</div>
+          <!--<div class="form-text">No puede ser anterior a hoy.</div>-->
         </div>
 
         <div class="col-6 col-md-4">
           <label class="form-label fw-semibold small">Versión</label>
           <input type="text" class="form-control form-control-sm"
             [value]="modelo()?.version ?? 1" disabled />
-          <div class="form-text">La administra el sistema.</div>
+          <!--<div class="form-text">La administra el sistema.</div>-->
         </div>
 
         <div class="col-6 col-md-4">
@@ -98,6 +98,52 @@
           @if (campoInvalido('idTipoScoring')) {
             <div class="invalid-feedback">Obligatorio.</div>
           }
+        </div>
+
+        <!-- Origen de los datos del cliente -->
+        <div class="col-12">
+          <div class="border rounded p-3"
+            [class.border-danger]="errorOrigen()">
+            <div class="fw-semibold small mb-2">
+              Origen de los Datos del Cliente (*)
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="origenBantotal"
+                formControlName="origenBantotal" />
+              <label class="form-check-label" for="origenBantotal">
+                <span class="fw-semibold">Datos Bantotal</span>
+                <!--<div class="text-muted small">
+                  El asesor consulta la solicitud en el Core y los datos llegan
+                  en modo solo lectura.
+                </div>-->
+              </label>
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="origenCaptura"
+                formControlName="origenCaptura" />
+              <label class="form-check-label" for="origenCaptura">
+                <span class="fw-semibold">Captura de Datos</span>
+                <!--<div class="text-muted small">
+                  Habilita el botón Crear Evaluación Manual, donde el asesor
+                  teclea los datos del cliente.
+                </div>-->
+              </label>
+            </div>
+
+            @if (errorOrigen()) {
+              <div class="alert alert-danger py-2 small mt-3 mb-0">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                {{ errorOrigen() }}
+              </div>
+            } <!-- @else if (origenBantotal() && origenCaptura()) {
+              <div class="alert alert-info py-2 small mt-3 mb-0">
+                Con los dos activos, el asesor elige en cada evaluación si
+                consulta el core o captura los datos a mano.
+              </div>
+            }-->
+          </div>
         </div>
 
         <div class="col-12">

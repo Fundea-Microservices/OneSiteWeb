@@ -29,36 +29,43 @@ export class UpsertCatalogoVariableComponent {
 
   catalogo = input<ICatalogoVariable | null>(null);
   scoringId = input.required<number>();
+  nombreScoring =input<string>('');
   nuevo = input<boolean>(true);
   formKey = input<number>(0);
 
   @Output() save = new EventEmitter<ICatalogoVariable>();
   @Output() cancel = new EventEmitter<void>();
 
-  form = signal<FormGroup>(this.fb.group({}));
+  /**
+   * Se construye con sus controles desde el inicio, no vacío.
+   *
+   * Este componente se crea dentro de un `@if`, y los `effect()` corren después
+   * del primer ciclo de detección de cambios. Si el formulario naciera vacío,
+   * en ese primer render los `formControlName` no encontrarían sus controles y
+   * Angular abortaría el componente: el modal saldría en blanco.
+   */
+  form = signal<FormGroup>(this.construirForm(null));
 
   constructor() {
     effect(() => {
       const _ = this.formKey();
-      this.initForm(this.catalogo());
+      this.form.set(this.construirForm(this.catalogo()));
     });
   }
 
-  private initForm(catalogo: ICatalogoVariable | null): void {
-    this.form.set(
-      this.fb.group({
-        codigoExterno: [
-          catalogo?.codigoExterno ?? '',
-          [Validators.maxLength(50)],
-        ],
-        descripcionCatalogo: [
-          catalogo?.descripcionCatalogo ?? '',
-          [Validators.required, Validators.maxLength(150)],
-        ],
-        ordenDespliegue: [catalogo?.ordenDespliegue ?? null],
-        estado: [catalogo?.estado ?? 'Activo', [Validators.required]],
-      }),
-    );
+  private construirForm(catalogo: ICatalogoVariable | null): FormGroup {
+    return this.fb.group({
+      codigoExterno: [
+        catalogo?.codigoExterno ?? '',
+        [Validators.maxLength(50)],
+      ],
+      descripcionCatalogo: [
+        catalogo?.descripcionCatalogo ?? '',
+        [Validators.required, Validators.maxLength(150)],
+      ],
+      ordenDespliegue: [catalogo?.ordenDespliegue ?? null],
+      estado: [catalogo?.estado ?? 'Activo', [Validators.required]],
+    });
   }
 
   onSubmit(): void {

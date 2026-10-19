@@ -10,9 +10,9 @@
   <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
     <div>
       <span class="fw-semibold">Gestión de Cuestionario</span>
-      <div class="text-muted small">
+      <!--<div class="text-muted small">
         Configuración de preguntas, catálogos enlazados y fórmulas matemáticas calculadas.
-      </div>
+      </div>-->
     </div>
     <button class="btn btn-primary btn-sm" (click)="openModal(true)" [disabled]="!scoringId()">
       <ion-icon name="add-outline"></ion-icon> Nueva Pregunta
@@ -73,7 +73,7 @@
               <th class="text-center" style="width: 12%;">Catálogo</th>
               <th class="text-center" style="width: 8%;">Calculada</th>
               <th class="text-center" style="width: 8%;">Visible</th>
-              <th class="text-center" style="width: 14%;">Acc.</th>
+              <th class="text-center" style="width: 14%;">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -95,9 +95,9 @@
                       f(x) = {{ item.formula }}
                     </div>
                   }
-                  @if (!item.aplicaScore) {
+                  <!--@if (!item.aplicaScore) {
                     <span class="badge text-bg-light border mt-1">No aporta al punteo</span>
-                  }
+                }-->
                 </td>
                 <td class="text-center">
                   <span class="badge text-bg-light border">{{ etiquetaTipo(item.tipoPregunta) }}</span>

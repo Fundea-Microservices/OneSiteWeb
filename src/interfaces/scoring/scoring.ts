@@ -22,9 +22,15 @@ export interface PaginadoScoring<T> {
 }
 
 export type Estado = 'Activo' | 'Inactivo';
-export type Semaforo = 'Gris' | 'Verde' | 'Amarillo' | 'Rojo';
+export type Semaforo = 'Gris' | 'Verde' | 'Amarillo' | 'Naranja' | 'Rojo';
 export type SemaforoDictamen = Exclude<Semaforo, 'Gris'>;
 export type EstadoEvaluacion = 'Solicitud' | 'Procesado';
+
+/**
+ * De dónde salieron los datos del cliente de una evaluación.
+ * Qué orígenes admite cada modelo lo dicen origenBantotal y origenCaptura.
+ */
+export type OrigenDatos = 'Bantotal' | 'Captura';
 
 export type TipoPregunta =
   | 'Casilla'
@@ -88,6 +94,10 @@ export interface IModeloScoring {
   /** AAAA-MM-DD. */
   fechaVigencia: string;
   estado: Estado;
+  /** Toma los datos del cliente del Core Bantotal. */
+  origenBantotal: boolean;
+  /** Admite captura manual de los datos del cliente. */
+  origenCaptura: boolean;
   ordenDespliegue?: number;
   fechaCreacion?: string;
   usuarioCreacion?: string | null;
@@ -121,6 +131,8 @@ export interface IOpcionVariable {
   coeficienteA: number;
   coeficienteB: number;
   observacionesVar?: string | null;
+  /** Cascada: la opción de Municipio apunta a la de Departamento. */
+  opcionPadreId?: number | null;
   estado: Estado;
   ordenDespliegue?: number;
 }
@@ -142,11 +154,29 @@ export interface IPreguntaDinamica {
   coeficienteA: number;
   coeficienteB: number;
   preguntaVisible: boolean;
+  /** FlgCalculo del origen: la pregunta participa del cálculo del punteo. */
+  preguntaCalculada: boolean;
+  /** Su valor sale de una fórmula en vez de capturarse. */
   respuestaCalculada: boolean;
-  /** Obligatoria si respuestaCalculada. Sintaxis "P01 - P02". */
+  /**
+   * Sintaxis "P01 - P02". Obligatoria si respuestaCalculada y no se indicó una
+   * rutina en calculoId.
+   */
   formula?: string | null;
+  /**
+   * Rutina de scoring.Calculo que resuelve el valor cuando no sale de una
+   * operación entre campos de pantalla (RTE). Alternativa a formula.
+   */
+  calculoId?: number | null;
+  /**
+   * Bandera RTE del sistema de origen: la respuesta misma se calcula a partir
+   * de otras preguntas antes de derivar x y los coeficientes.
+   */
+  requiereRTE?: boolean;
   aplicaScore: boolean;
   observacionesPregunta?: string | null;
+  /** Dependencia padre-hijo: Municipio depende de Departamento. */
+  preguntaPadreId?: number | null;
   ordenDespliegue?: number;
   catalogoRespuestas?: ICatalogoVariable | null;
 }
@@ -225,6 +255,7 @@ export interface IEvaluacionCredito {
   montoCredito: number;
   productoCredito: string;
   fechaConsultaBantotal?: string | null;
+  origenDatos: OrigenDatos;
   estadoEvaluacion: EstadoEvaluacion;
   punteoTotal?: number | null;
   resultadoSemaforo: Semaforo;
@@ -243,8 +274,25 @@ export interface IRespuestaEvaluacion {
   opcionId?: number | null;
   valorIngresado?: string | null;
   valorCalculado?: number | null;
+  /**
+   * Las columnas Valor(x), bx y a+bx del reporte de resultados. Se llenan al
+   * procesar; en una evaluación en Solicitud vienen en null.
+   *
+   * resultadoBX y resultadoABX son null cuando la pregunta no aporta al punteo
+   * (aplicaScore = false): no participa, que no es lo mismo que aportar cero.
+   */
+  valorX?: number | null;
+  resultadoBX?: number | null;
+  resultadoABX?: number | null;
   pregunta?: IPreguntaDinamica;
   opcion?: IOpcionVariable;
+}
+
+/** Valor(x), bx y a+bx que devuelve la simulación, por preguntaId. */
+export interface IDetalleCalculo {
+  valorX: number;
+  resultadoBX: number | null;
+  resultadoABX: number | null;
 }
 
 // ─── Pantalla 5: Auditoría ───────────────────────────────────────────────────
@@ -267,6 +315,13 @@ export interface IDesgloseAuditoria {
   coeficienteA: number;
   coeficienteB: number;
   valorX: number;
+  /**
+   * El procedimiento del modelo resolvió esta fila.
+   *
+   * `false` = salió de la parametrización. Sin esto, un Valor(x) en 0 no
+   * distingue "la rutina devolvió 0" de "la rutina no corrió".
+   */
+  rte?: boolean;
   /** b · x */
   resultadoBX: number;
   /** a + (b · x) */
@@ -289,6 +344,7 @@ export interface IExpediente {
     montoCredito: number;
     productoCredito: string;
     estadoEvaluacion: EstadoEvaluacion;
+    origenDatos: OrigenDatos;
     fechaProcesamiento: string | null;
     usuarioProcesa: string | null;
   };
@@ -304,8 +360,15 @@ export interface IExpediente {
   punteoTotal: number | null;
   resultadoSemaforo: Semaforo;
   /**
-   * Comprobación de integridad: la suma de los aportes debe dar el punteo
-   * almacenado. Si viene false, las filas se tocaron por fuera del motor.
+   * z = Σ(a + b·x) sobre las preguntas que aportan. Es el insumo de la
+   * sigmoide, y la invariante que el expediente verifica.
+   */
+  sumaVariables: number | null;
+  /** La sigmoide de z, en porcentaje. De su banda sale el bono del punteo. */
+  probabilidadMora: number | null;
+  /**
+   * Comprobación de integridad. Si viene false, las filas se tocaron por fuera
+   * del motor.
    */
   cuadra: boolean;
 }
@@ -317,4 +380,6 @@ export interface ISimulacion {
   desglose: Omit<IDesgloseAuditoria, 'desgloseId' | 'evaluacionId'>[];
   /** preguntaId -> valor numérico resuelto (incluye las calculadas). */
   valoresCalculados: Record<string, number>;
+  /** preguntaId -> Valor(x), bx y a+bx, el mismo desglose que se guardará. */
+  detalleCalculo: Record<string, IDetalleCalculo>;
 }

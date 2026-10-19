@@ -12,7 +12,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { Subscription, merge } from 'rxjs';
 import {
   FormArray,
   FormBuilder,
@@ -66,6 +66,23 @@ export class UpsertModeloScoringComponent {
   private tipoSub?: Subscription;
 
   /**
+   * Orígenes marcados. Misma razón que `tipoSeleccionado`: el valor de un
+   * FormControl no es señal, así que la plantilla no reaccionaría sola.
+   */
+  private origenes = signal({ bantotal: true, captura: false });
+  private origenSub?: Subscription;
+
+  origenBantotal = computed(() => this.origenes().bantotal);
+  origenCaptura = computed(() => this.origenes().captura);
+
+  /** La base lo respalda con CK_Modelo_Origen; aquí evita el viaje al servidor. */
+  errorOrigen = computed(() =>
+    !this.origenes().bantotal && !this.origenes().captura
+      ? 'Debe activar al menos un origen de datos.'
+      : '',
+  );
+
+  /**
    * El tipo de scoring decide si los procedimientos almacenados son
    * obligatorios. El backend valida lo mismo; aquí es para que el usuario no
    * llegue al Guardar sin enterarse.
@@ -85,7 +102,10 @@ export class UpsertModeloScoringComponent {
       this.initForm(this.modelo(), this.nuevo());
     });
 
-    inject(DestroyRef).onDestroy(() => this.tipoSub?.unsubscribe());
+    inject(DestroyRef).onDestroy(() => {
+      this.tipoSub?.unsubscribe();
+      this.origenSub?.unsubscribe();
+    });
   }
 
   get rangos(): FormArray {
@@ -119,6 +139,10 @@ export class UpsertModeloScoringComponent {
           [Validators.required],
         ],
         estado: [modelo?.estado ?? 'Activo', [Validators.required]],
+        // Un modelo nuevo nace como solo Bantotal, que es como se comportaba
+        // el módulo antes de que el origen fuera parametrizable.
+        origenBantotal: [modelo?.origenBantotal ?? true],
+        origenCaptura: [modelo?.origenCaptura ?? false],
         rangos: this.fb.array(
           rangos.map((rango) =>
             this.fb.group({
@@ -134,6 +158,29 @@ export class UpsertModeloScoringComponent {
 
     this.tipoSeleccionado.set(modelo?.idTipoScoring ?? null);
     this.sincronizarTipo();
+    this.sincronizarOrigen();
+  }
+
+  /** Mantiene al día la señal de orígenes desde los dos checks. */
+  private sincronizarOrigen(): void {
+    this.origenSub?.unsubscribe();
+
+    const form = this.form();
+    const bantotal = form.get('origenBantotal');
+    const captura = form.get('origenCaptura');
+    if (!bantotal || !captura) return;
+
+    const aplicar = (): void =>
+      this.origenes.set({
+        bantotal: bantotal.value === true,
+        captura: captura.value === true,
+      });
+
+    aplicar();
+    this.origenSub = merge(
+      bantotal.valueChanges,
+      captura.valueChanges,
+    ).subscribe(aplicar);
   }
 
   /**
@@ -214,7 +261,7 @@ export class UpsertModeloScoringComponent {
       return;
     }
 
-    if (this.errorRangos()) return;
+    if (this.errorRangos() || this.errorOrigen()) return;
 
     // procesoPunteo ya no se revisa aquí: sincronizarTipo le pone y le quita el
     // validador required según el tipo, así que form.invalid lo cubre.
