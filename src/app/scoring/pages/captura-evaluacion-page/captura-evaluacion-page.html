@@ -29,10 +29,10 @@
       <span class="badge rounded-pill text-bg-primary">1</span>
       <div>
         <div class="fw-semibold">Datos del Cliente y Crédito (Solo Lectura — Core Bantotal)</div>
-        <div class="text-muted small">
+        <!--<div class="text-muted small">
           Información sincronizada del core al momento de la captura. Se conserva
           tal cual para que el expediente refleje lo que se tuvo a la vista.
-        </div>
+        </div>-->
       </div>
     </div>
     <div class="card-body">
@@ -101,7 +101,7 @@
       <span class="badge rounded-pill text-bg-primary">2</span>
       <div>
         <div class="fw-semibold">Cuestionario Dinámico de Evaluación</div>
-        <div class="text-muted small">Parámetros financieros y captura de variables predictivas</div>
+        <!--<div class="text-muted small">Parámetros financieros y captura de variables predictivas</div>-->
       </div>
     </div>
     <div class="card-body">
@@ -129,10 +129,10 @@
           }
         </select>
         @if (esEdicion()) {
-          <div class="form-text">
+          <!--<div class="form-text">
             El scoring no se cambia después de guardar: el dictamen quedaría
             atado a una parametrización distinta de la que se capturó.
-          </div>
+          </div>-->
         }
       </div>
 
@@ -223,9 +223,9 @@
                 }
               }
 
-              @if (!pregunta.aplicaScore) {
+              <!--@if (!pregunta.aplicaScore) {
                 <div class="form-text">No aporta al punteo.</div>
-              }
+            }-->
             </div>
           }
         </div>
@@ -235,29 +235,14 @@
     </div>
   </div>
 
-  <!-- Punteo proyectado -->
-  @if (scoringId() && punteoProyectado() !== null) {
-    <div class="card mb-3 border-primary">
-      <div class="card-body py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-          <span class="text-muted small text-uppercase">Punteo proyectado</span>
-          <div class="fs-5 fw-semibold">
-            {{ punteoProyectado() }}
-            @if (isSimulando()) {
-              <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
-            }
-          </div>
-        </div>
-        <span class="badge fs-6" [class]="claseSemaforo(semaforoProyectado())">
-          {{ semaforoProyectado() }}
-        </span>
-      </div>
-      <div class="card-footer py-1">
-        <div class="text-muted small">
-          Proyección de referencia. El dictamen oficial se emite al presionar
-          Procesar en la bandeja, y es el que queda en el expediente.
-        </div>
-      </div>
+  <!-- El punteo NO se muestra aquí: el dictamen se consulta en Auditoría.
+       La simulación se sigue llamando, porque es la que resuelve los campos
+       calculados de arriba; lo que se quitó es el panel, no el cálculo. -->
+
+  @if (isSimulando()) {
+    <div class="text-muted small mb-3">
+      <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+      Actualizando campos calculados...
     </div>
   }
 

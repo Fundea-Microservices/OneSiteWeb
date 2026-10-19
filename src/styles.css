@@ -164,3 +164,13 @@ textarea:not(:disabled) {
   border-radius: 4px;
   background: var(--ui-cta);
 }
+
+/* Scoring: cuarto color del semáforo.
+
+   Bootstrap no trae naranja entre sus colores de tema, y este dictamen sí lo
+   necesita: Score_MICROCREDITO_Punteo lo emite cuando el Punteo Precalificado
+   de TransUnion queda entre 1 y 19. El tono es el del sistema de origen. */
+.text-bg-orange {
+  color: #fff;
+  background-color: #e67700;
+}

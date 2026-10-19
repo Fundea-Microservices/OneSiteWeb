@@ -6,7 +6,7 @@
       <span class="badge rounded-pill text-bg-primary">1</span>
       <div>
         <div class="fw-semibold">Enunciado y Tipo de Control</div>
-        <div class="text-muted small">Definición del campo, tipo de dato y enlace a catálogos</div>
+        <!--<div class="text-muted small">Definición del campo, tipo de dato y enlace a catálogos</div>-->
       </div>
     </div>
     <div class="card-body">
@@ -22,7 +22,7 @@
               Obligatorio. Debe empezar por letra y no repetirse en el scoring.
             </div>
           }
-          <div class="form-text">Es lo que referencian las fórmulas de otras preguntas.</div>
+          <!--<div class="form-text">Es lo que referencian las fórmulas de otras preguntas.</div>-->
         </div>
 
         <div class="col-12 col-md-8">
@@ -64,9 +64,9 @@
               Las preguntas de selección necesitan un catálogo de respuestas.
             </div>
           }
-          @if (!requiereCatalogo()) {
+          <!--@if (!requiereCatalogo()) {
             <div class="form-text">Solo aplica a botón de opción y lista desplegable.</div>
-          }
+        }-->
         </div>
 
         <div class="col-6 col-md-3">
@@ -83,7 +83,7 @@
             <option [ngValue]="true">Sí</option>
             <option [ngValue]="false">No</option>
           </select>
-          <div class="form-text">Si es No, se captura pero no suma al punteo.</div>
+          <!--<div class="form-text">Si es No, se captura pero no suma al punteo.</div>-->
         </div>
 
       </div>
@@ -96,11 +96,22 @@
       <span class="badge rounded-pill text-bg-primary">2</span>
       <div>
         <div class="fw-semibold">Configuración Matemática y Fórmulas</div>
-        <div class="text-muted small">Ponderación, coeficientes de regresión y expresiones de cálculo</div>
+        <!--<div class="text-muted small">Ponderación, coeficientes de regresión y expresiones de cálculo</div>-->
       </div>
     </div>
     <div class="card-body">
       <div class="row g-3">
+
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-semibold small">¿Pregunta Calculada? (*)</label>
+          <select class="form-select form-select-sm" formControlName="preguntaCalculada">
+            <option [ngValue]="false">No</option>
+            <option [ngValue]="true">Sí</option>
+          </select>
+          <!--<div class="form-text">
+            La pregunta participa del cálculo del punteo.
+          </div>-->
+        </div>
 
         <div class="col-12 col-md-4">
           <label class="form-label fw-semibold small">¿Respuesta Calculada? (*)</label>
@@ -108,9 +119,28 @@
             <option [ngValue]="false">No</option>
             <option [ngValue]="true">Sí</option>
           </select>
+          <!--<div class="form-text">
+            Su valor sale de una fórmula en vez de capturarse.
+          </div>-->
         </div>
 
-        <div class="col-12 col-md-8">
+        <div class="col-12 col-md-4">
+          <label class="form-label fw-semibold small">¿Ejecuta RTE? (*)</label>
+          <select class="form-select form-select-sm" formControlName="requiereRTE">
+            <option [ngValue]="false">No</option>
+            <option [ngValue]="true">Sí</option>
+          </select>
+          @if (form().get('requiereRTE')?.value) {
+            <div class="form-text">
+              Valor(x) y coeficientes los devuelve el
+              <strong>Proceso Cálculo de Variables</strong> del scoring. Los
+              campos de abajo quedan como respaldo, por si el procedimiento no
+              atiende esta pregunta.
+            </div>
+          }
+        </div>
+
+        <div class="col-12 col-md-4">
           <label class="form-label fw-semibold small">
             Fórmula Matemática @if (respuestaCalculada()) { (*) }
           </label>
@@ -145,14 +175,14 @@
                   Referencie otras preguntas por su código: <span class="font-monospace">P01 - P02</span>.
                   Solo se admiten los operadores + − × ÷ y paréntesis.
                 </div>
-              } @else {
+              } <!--@else {
                 <div class="form-text">Solo aplica si la respuesta es calculada.</div>
-              }
+            }-->
             }
           }
         </div>
 
-        <div class="col-12">
+        <!--<div class="col-12">
           <div class="alert alert-info py-2 small mb-0">
             El aporte de esta pregunta al punteo es
             <span class="font-monospace">peso × (a + b · x)</span>, donde
@@ -160,7 +190,7 @@
             de la fórmula. En preguntas de selección los coeficientes salen de la
             opción elegida, no de aquí.
           </div>
-        </div>
+        </div>-->
 
         <div class="col-6 col-md-4">
           <label class="form-label fw-semibold small">Peso (*)</label>

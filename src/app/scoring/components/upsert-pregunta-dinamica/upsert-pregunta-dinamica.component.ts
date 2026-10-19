@@ -49,7 +49,16 @@ export class UpsertPreguntaDinamicaComponent {
   @Output() save = new EventEmitter<IPreguntaDinamica>();
   @Output() cancel = new EventEmitter<void>();
 
-  form = signal<FormGroup>(this.fb.group({}));
+  /**
+   * Con sus controles desde el inicio. El componente se crea dentro de un
+   * `@if` y los `effect()` corren después del primer render: con un formulario
+   * vacío, los `formControlName` no encontrarían control y Angular abortaría el
+   * componente, dejando el modal en blanco.
+   *
+   * El effect vuelve a construirlo con los datos reales y engancha las
+   * suscripciones; aquí solo se arma la estructura.
+   */
+  form = signal<FormGroup>(this.construirForm(null));
   readonly tiposPregunta = TIPOS_PREGUNTA;
 
   /**
@@ -94,8 +103,23 @@ export class UpsertPreguntaDinamicaComponent {
   }
 
   private initForm(pregunta: IPreguntaDinamica | null): void {
-    this.form.set(
-      this.fb.group({
+    this.form.set(this.construirForm(pregunta));
+
+    this.tipoActual.set((pregunta?.tipoPregunta as TipoPregunta) ?? 'Texto');
+    this.esCalculada.set(pregunta?.respuestaCalculada ?? false);
+    this.formulaEstado.set('vacia');
+    this.formulaMensaje.set('');
+    this.formulaReferencias.set([]);
+
+    this.sincronizar();
+
+    if (pregunta?.respuestaCalculada && pregunta.formula) {
+      this.validarFormula(pregunta.formula);
+    }
+  }
+
+  private construirForm(pregunta: IPreguntaDinamica | null): FormGroup {
+    return this.fb.group({
         codigoPregunta: [
           pregunta?.codigoPregunta ?? '',
           [
@@ -111,8 +135,10 @@ export class UpsertPreguntaDinamicaComponent {
         tipoPregunta: [pregunta?.tipoPregunta ?? 'Texto', [Validators.required]],
         catalogoRespuestasId: [pregunta?.catalogoRespuestasId ?? null],
         preguntaVisible: [pregunta?.preguntaVisible ?? true],
+      preguntaCalculada: [pregunta?.preguntaCalculada ?? false],
         aplicaScore: [pregunta?.aplicaScore ?? true],
         respuestaCalculada: [pregunta?.respuestaCalculada ?? false],
+        requiereRTE: [pregunta?.requiereRTE ?? false],
         formula: [pregunta?.formula ?? ''],
         peso: [pregunta?.peso ?? 0, [Validators.required]],
         constante: [pregunta?.constante ?? 0, [Validators.required]],
@@ -123,21 +149,8 @@ export class UpsertPreguntaDinamicaComponent {
           pregunta?.observacionesPregunta ?? '',
           [Validators.maxLength(500)],
         ],
-        ordenDespliegue: [pregunta?.ordenDespliegue ?? null],
-      }),
-    );
-
-    this.tipoActual.set((pregunta?.tipoPregunta as TipoPregunta) ?? 'Texto');
-    this.esCalculada.set(pregunta?.respuestaCalculada ?? false);
-    this.formulaEstado.set('vacia');
-    this.formulaMensaje.set('');
-    this.formulaReferencias.set([]);
-
-    this.sincronizar();
-
-    if (pregunta?.respuestaCalculada && pregunta.formula) {
-      this.validarFormula(pregunta.formula);
-    }
+      ordenDespliegue: [pregunta?.ordenDespliegue ?? null],
+    });
   }
 
   /**
@@ -253,6 +266,7 @@ export class UpsertPreguntaDinamicaComponent {
       coeficienteA: Number(valores.coeficienteA),
       coeficienteB: Number(valores.coeficienteB),
       catalogoRespuestasId: valores.catalogoRespuestasId || null,
+      preguntaPadreId: valores.preguntaPadreId ?? null,
       formula: valores.respuestaCalculada ? valores.formula : null,
       observacionesPregunta: valores.observacionesPregunta?.trim() || null,
       ordenDespliegue: valores.ordenDespliegue ?? undefined,

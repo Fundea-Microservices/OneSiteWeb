@@ -9,9 +9,9 @@
 <div class="card">
   <div class="card-header">
     <span class="fw-semibold">Evaluación de Solicitudes de Crédito</span>
-    <div class="text-muted small">
+    <!--<div class="text-muted small">
       Bandeja de operaciones enlazadas con Core Bantotal para inferencia de scoring.
-    </div>
+    </div>-->
   </div>
 
   <div class="card-body">
@@ -44,10 +44,24 @@
             </button>
           </div>
         </div>
-        <div class="form-text mt-1">
+        <!--<div class="form-text mt-1">
           Al consultar, se abre la captura con los datos del cliente ya cargados.
           Si la solicitud no existe en el core, la consulta se detiene.
-        </div>
+        </div>-->
+
+        @if (hayCaptura()) {
+          <hr class="my-3" />
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-primary btn-sm"
+              (click)="openManualModal()">
+              <ion-icon name="add-outline"></ion-icon> Crear Evaluación Manual
+            </button>
+            <!--<span class="text-muted small">
+              Para los scoring con Captura de Datos habilitada, cuando la
+              operación aún no existe en el core.
+            </span>-->
+          </div>
+        }
       </div>
     </div>
 
@@ -65,8 +79,9 @@
             <th class="text-center" style="width: 13%;">DPI</th>
             <th class="text-center" style="width: 11%;">Cuenta</th>
             <th style="width: 22%;">Cliente</th>
-            <th class="text-center" style="width: 10%;">Operación</th>
-            <th class="text-center" style="width: 11%;">Estado</th>
+            <th class="text-center" style="width: 9%;">Operación</th>
+            <th class="text-center" style="width: 9%;">Origen</th>
+            <th class="text-center" style="width: 10%;">Estado</th>
             <th class="text-center" style="width: 13%;">Resultado</th>
             <th class="text-center" style="width: 12%;">Acciones</th>
           </tr>
@@ -79,12 +94,23 @@
               <td class="text-center font-monospace small">{{ item.cuenta }}</td>
               <td class="text-break">
                 {{ item.nombreCliente }}
-                <div class="text-muted small">
+                <!--<div class="text-muted small">
                   Solicitud {{ item.numeroSolicitud }} ·
                   {{ item.modelo?.codigoInterno }} v{{ item.modelo?.version }}
-                </div>
+                </div>-->
               </td>
               <td class="text-center">{{ item.numeroOperacion || '—' }}</td>
+              <td class="text-center">
+                @if (item.origenDatos === 'Captura') {
+                  <span class="badge text-bg-light border" title="Datos capturados por el asesor">
+                    Manual
+                  </span>
+                } @else {
+                  <span class="badge text-bg-info" title="Datos traídos del Core Bantotal">
+                    Bantotal
+                  </span>
+                }
+              </td>
               <td class="text-center">
                 @if (item.estadoEvaluacion === 'Solicitud') {
                   <span class="badge text-bg-warning">SOLICITUD</span>
@@ -129,7 +155,7 @@
           } @empty {
             @if (!isLoading()) {
               <tr>
-                <td colspan="8" class="text-center text-muted py-3">No hay evaluaciones</td>
+                <td colspan="9" class="text-center text-muted py-3">No hay evaluaciones</td>
               </tr>
             }
           }
@@ -183,5 +209,27 @@
 
     <app-pagination [paginationObj]="pagination()" (changePage)="changePage($event)" />
 
+  </div>
+</div>
+
+<!-- Modal Crear Evaluación Manual -->
+<div #manualModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <ion-icon name="create-outline" class="me-1"></ion-icon>
+          Crear Evaluación Manual
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <app-crear-evaluacion-manual
+          [modelos]="modelos()"
+          [formKey]="formKeyManual()"
+          (save)="guardarManual($event)"
+          (cancel)="closeManualModal()" />
+      </div>
+    </div>
   </div>
 </div>

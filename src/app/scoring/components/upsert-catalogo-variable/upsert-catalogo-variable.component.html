@@ -5,7 +5,7 @@
       <span class="badge rounded-pill text-bg-primary">1</span>
       <div>
         <div class="fw-semibold">Datos del Catálogo</div>
-        <div class="text-muted small">Scoring asociado: {{ scoringId() }}</div>
+        <div class="text-muted small">Scoring asociado: {{ nombreScoring() }}</div>
       </div>
     </div>
     <div class="card-body">
@@ -15,10 +15,10 @@
           <label class="form-label fw-semibold small">Código Externo</label>
           <input type="text" class="form-control form-control-sm font-monospace"
             formControlName="codigoExterno" placeholder="BT_CAT_01" />
-          <div class="form-text">
+          <!--<div class="form-text">
             Mapeo hacia el Core Bantotal u otro sistema. Opcional, pero no puede
             repetirse dentro del mismo scoring.
-          </div>
+          </div>-->
         </div>
 
         <div class="col-12">
@@ -35,7 +35,7 @@
           <label class="form-label fw-semibold small">Orden</label>
           <input type="number" class="form-control form-control-sm"
             formControlName="ordenDespliegue" placeholder="Automático" />
-          <div class="form-text">Si se deja vacío, va al final.</div>
+          <!--<div class="form-text">Si se deja vacío, va al final.</div>-->
         </div>
 
         <div class="col-6">
@@ -44,9 +44,9 @@
             <option value="Activo">Activo</option>
             <option value="Inactivo">Inactivo</option>
           </select>
-          <div class="form-text">
+          <!--<div class="form-text">
             Un catálogo inactivo no despliega sus opciones en las evaluaciones.
-          </div>
+          </div>-->
         </div>
 
       </div>

@@ -1,26 +1,40 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  computed,
   CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
   inject,
   OnInit,
   signal,
+  ViewChild,
 } from '@angular/core';
+import { Modal } from 'bootstrap';
 import { Router, RouterLink } from '@angular/router';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { EvaluacionScoringService } from '../../../../services/scoring/evaluacion.service';
-import { IEvaluacionCredito } from '../../../../interfaces/scoring/scoring';
+import {
+  IEvaluacionCredito,
+  IModeloScoring,
+} from '../../../../interfaces/scoring/scoring';
+import { ModeloScoringService } from '../../../../services/scoring/modelo-scoring.service';
+import {
+  CrearEvaluacionManualComponent,
+  EvaluacionManual,
+} from '../../components/crear-evaluacion-manual/crear-evaluacion-manual.component';
 
 /** Pantalla 4: bandeja de Evaluación de Solicitudes de Crédito. */
 @Component({
   selector: 'app-evaluacion-page',
-  imports: [RouterLink, PaginationComponent],
+  imports: [RouterLink, PaginationComponent, CrearEvaluacionManualComponent],
   templateUrl: './evaluacion-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class EvaluacionPage implements OnInit {
+export default class EvaluacionPage implements OnInit, AfterViewInit {
   private evaluacionService = inject(EvaluacionScoringService);
+  private modeloService = inject(ModeloScoringService);
   private router = inject(Router);
 
   evaluacionList = signal<IEvaluacionCredito[]>([]);
@@ -30,8 +44,71 @@ export default class EvaluacionPage implements OnInit {
   procesando = signal<number | null>(null);
   pagination = signal<IPagination>({ page: 1, pageSize: 10, totalItems: 0 });
 
-  ngOnInit() {
-    this.fetchData();
+  modelos = signal<IModeloScoring[]>([]);
+  formKeyManual = signal(Date.now());
+  isCreandoManual = signal(false);
+
+  /**
+   * Cada boton aparece solo si algun modelo activo habilita ese origen. Si no,
+   * el asesor veria una accion que el backend va a rechazar.
+   */
+  hayBantotal = computed(() =>
+    this.modelos().some((m) => m.origenBantotal && m.estado === 'Activo'),
+  );
+  hayCaptura = computed(() =>
+    this.modelos().some((m) => m.origenCaptura && m.estado === 'Activo'),
+  );
+
+  @ViewChild('manualModal') manualModalRef!: ElementRef;
+  private manualModalInstance!: Modal;
+
+  async ngOnInit() {
+    const resp = await this.modeloService.getModelos({
+      estado: 'Activo',
+      limite: 200,
+    });
+    this.modelos.set(resp?.items ?? []);
+    await this.fetchData();
+  }
+
+  ngAfterViewInit() {
+    this.manualModalInstance = new Modal(this.manualModalRef.nativeElement);
+  }
+
+  openManualModal() {
+    this.formKeyManual.set(Date.now());
+    this.manualModalInstance.show();
+  }
+
+  closeManualModal() {
+    this.manualModalInstance.hide();
+  }
+
+  /**
+   * Guarda la evaluacion en estado Solicitud y lleva a la captura del
+   * cuestionario, que es la pantalla que ya resuelve el formulario dinamico.
+   */
+  async guardarManual(manual: EvaluacionManual) {
+    this.isCreandoManual.set(true);
+    try {
+      const resp = await this.evaluacionService.createEvaluacion({
+        numeroSolicitud: manual.numeroSolicitud,
+        scoringId: manual.scoringId,
+        datosBantotal: manual.datos,
+        respuestas: [],
+        origenDatos: 'Captura',
+      });
+
+      if (resp?.data?.evaluacionId) {
+        this.closeManualModal();
+        this.router.navigate([
+          '/scoring/evaluacion/captura/evaluacion',
+          resp.data.evaluacionId,
+        ]);
+      }
+    } finally {
+      this.isCreandoManual.set(false);
+    }
   }
 
   async fetchData() {
@@ -119,6 +196,9 @@ export default class EvaluacionPage implements OnInit {
         return 'text-bg-success';
       case 'Amarillo':
         return 'text-bg-warning';
+      // Cuarto color: Punteo Precalificado de TransUnion entre 1 y 19.
+      case 'Naranja':
+        return 'text-bg-orange';
       case 'Rojo':
         return 'text-bg-danger';
       default:
