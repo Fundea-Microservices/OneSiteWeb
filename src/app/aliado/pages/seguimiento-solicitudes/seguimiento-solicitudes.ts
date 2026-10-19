@@ -78,6 +78,8 @@ export default class SeguimientoSolicitudesComponent {
 	catalogoBancos = signal<any[]>([]);
 	catalogoTiposCuenta = signal<any[]>([]);
 
+	/** Habilita el select para elegir otro correo de notificación; deshabilitado se usa siempre el del representante */
+	readonly permitirSeleccionCorreo = false;
 	correosNotificacion = signal<ICorreoNotificacion[]>([]);
 	correoSeleccionado = '';
 
@@ -108,7 +110,9 @@ export default class SeguimientoSolicitudesComponent {
 		this.cargarEstadosSolicitud();
 		this.cargarCatalogos();
 		this.cargarCatalogosBancos();
-		this.cargarCorreosNotificacion();
+		if (this.permitirSeleccionCorreo) {
+			this.cargarCorreosNotificacion();
+		}
 	}
 
 	private async cargarSolicitud(solicitudId: string) {
@@ -291,6 +295,18 @@ export default class SeguimientoSolicitudesComponent {
 		return !!estado?.nombre?.toUpperCase().includes('CORREGIR');
 	}
 
+	esEstadoRechazado(): boolean {
+		const estado = this.estadosSolicitud().find(
+			e => e.estadoSolicitudId === this.nuevoSeguimiento.estadoAprobacionId
+		);
+		return !!estado?.nombre?.toUpperCase().includes('RECHAZ');
+	}
+
+	/** Corregir y Rechazar se notifican al usuario creador de la solicitud: no se envía correo */
+	notificaAlCreador(): boolean {
+		return this.esEstadoCorregir() || this.esEstadoRechazado();
+	}
+
 	async guardarSeguimiento() {
 		const solicitud = this.solicitud();
 		if (!solicitud || !this.nuevoSeguimiento.estadoAprobacionId || !this.nuevoSeguimiento.observaciones.trim()) {
@@ -344,7 +360,7 @@ export default class SeguimientoSolicitudesComponent {
 				ordenSeguimiento: nuevoOrden,
 				estadoAprobacionId: this.nuevoSeguimiento.estadoAprobacionId,
 				observaciones: this.nuevoSeguimiento.observaciones,
-				...(this.correoSeleccionado && !this.esEstadoCorregir() ? { correoNotificacion: this.correoSeleccionado } : {})
+				...(this.correoSeleccionado && !this.notificaAlCreador() ? { correoNotificacion: this.correoSeleccionado } : {})
 			};
 
 			const response = await this.seguimientoService.createSeguimientoSolicitud(seguimientoData);
@@ -353,8 +369,8 @@ export default class SeguimientoSolicitudesComponent {
 				console.log('✅ Seguimiento creado exitosamente');
 				// Recargar la solicitud para ver el nuevo seguimiento
 				await this.cargarSolicitud(solicitud.solicitudId);
-				// Limpiar formulario
-				this.correoSeleccionado = '';
+				// Limpiar formulario (el correo vuelve al del representante para el siguiente seguimiento)
+				this.correoSeleccionado = this.solicitud()?.representante?.correoElectronico || '';
 				this.nuevoSeguimiento = {
 					estadoAprobacionId: '',
 					observaciones: ''

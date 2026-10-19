@@ -680,11 +680,23 @@
                             <i class="bi bi-envelope me-1 text-blue-600"></i>
                             Correo para notificación <span class="text-danger">*</span>
                         </label>
-                        @if (esEstadoCorregir()) {
+                        @if (notificaAlCreador()) {
                         <div class="alert alert-info d-flex align-items-center gap-2 mb-0 py-2" role="alert">
                             <i class="bi bi-info-circle-fill text-info"></i>
                             <span class="text-sm">Se enviará correo al usuario creador de la solicitud</span>
                         </div>
+                        } @else if (!permitirSeleccionCorreo) {
+                        @if (solicitud()?.representante?.correoElectronico) {
+                        <p id="correoNotificacion" class="form-control-plaintext fw-semibold mb-0">
+                            {{ solicitud()!.representante!.correoElectronico }}
+                        </p>
+                        <small class="text-muted">Se enviará la notificación del cambio de estado al correo del representante</small>
+                        } @else {
+                        <div class="alert alert-warning d-flex align-items-center gap-2 mb-0 py-2" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span class="text-sm">El representante no tiene correo registrado</span>
+                        </div>
+                        }
                         } @else {
                         <select id="correoNotificacion" class="form-select" [(ngModel)]="correoSeleccionado" name="correoNotificacion">
                             @if (solicitud()?.representante?.correoElectronico) {
