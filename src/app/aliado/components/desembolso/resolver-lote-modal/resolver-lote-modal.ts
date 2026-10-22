@@ -5,7 +5,28 @@ import { DesembolsoService } from '../../../../../services/aliado/desembolso.ser
 import { ILoteDesembolso } from '../../../../../interfaces/aliado/desembolso';
 import { nombrePeriodo } from '../../../utils/desembolso.utils';
 
-export type AccionResolucion = 'aprobar' | 'rechazar';
+export type AccionResolucion = 'aprobar' | 'rechazar' | 'pagar';
+
+const TEXTOS: Record<AccionResolucion, { titulo: string; boton: string; etiqueta: string; placeholder: string }> = {
+  aprobar: {
+    titulo: 'Aprobar lote',
+    boton: 'Aprobar',
+    etiqueta: 'Observaciones (opcional)',
+    placeholder: 'Observaciones de la aprobación',
+  },
+  rechazar: {
+    titulo: 'Rechazar lote',
+    boton: 'Rechazar',
+    etiqueta: 'Motivo del rechazo',
+    placeholder: 'Indique el motivo del rechazo',
+  },
+  pagar: {
+    titulo: 'Marcar como pagado el lote',
+    boton: 'Marcar como Pagado',
+    etiqueta: 'Observaciones del pago (opcional)',
+    placeholder: 'Ej. Transferencias del 25/10',
+  },
+};
 
 @Component({
   selector: 'app-resolver-lote-modal',
@@ -27,6 +48,8 @@ export class ResolverLoteModal {
   isSaving = signal(false);
 
   esRechazo = computed(() => this.accion() === 'rechazar');
+  esPago = computed(() => this.accion() === 'pagar');
+  textos = computed(() => TEXTOS[this.accion()]);
   periodoLabel = computed(() => nombrePeriodo(this.lote().periodo));
   formularioValido = computed(() => !this.esRechazo() || this.observaciones().trim().length > 0);
 
@@ -34,10 +57,13 @@ export class ResolverLoteModal {
     if (!this.formularioValido() || this.isSaving()) return;
 
     this.isSaving.set(true);
+    const id = this.lote().id;
     const observaciones = this.observaciones().trim();
-    const resp = this.esRechazo()
-      ? await this.desembolsoService.rechazarLote(this.lote().id, { observaciones })
-      : await this.desembolsoService.aprobarLote(this.lote().id, observaciones ? { observaciones } : {});
+    const opcional = observaciones ? { observaciones } : {};
+    const resp =
+      this.accion() === 'rechazar' ? await this.desembolsoService.rechazarLote(id, { observaciones }) :
+      this.accion() === 'pagar' ? await this.desembolsoService.pagarLote(id, opcional) :
+      await this.desembolsoService.aprobarLote(id, opcional);
     this.isSaving.set(false);
 
     if (resp?.data) {

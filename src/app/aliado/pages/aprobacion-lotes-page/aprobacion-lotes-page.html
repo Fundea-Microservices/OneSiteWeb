@@ -1,0 +1,245 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Gestión Integral de Referidos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Aprobación de Lotes para Pago</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header">Aprobación de Lotes para Pago</div>
+    <div class="card-body">
+
+        <!-- RANGOS RÁPIDOS -->
+        <div class="flex flex-wrap gap-2 mb-3">
+            @for (rango of rangos; track rango.label) {
+            <button type="button" (click)="aplicarRango(rango)"
+                class="px-3 py-1.5 rounded-full border text-sm font-medium transition-colors"
+                [class]="rangoActivo(rango) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'">
+                {{ rango.label }}
+            </button>
+            }
+        </div>
+
+        <!-- FILTROS -->
+        <form class="flex flex-col md:flex-row flex-wrap items-end gap-3 md:gap-4 mb-4" (ngSubmit)="buscar()">
+            <div class="flex-1 min-w-37.5 w-full">
+                <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Fecha desde</label>
+                <input type="date" name="fechaDesde" [ngModel]="fechaDesde()" (ngModelChange)="fechaDesde.set($event)"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
+            </div>
+            <div class="flex-1 min-w-37.5 w-full">
+                <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Fecha hasta</label>
+                <input type="date" name="fechaHasta" [ngModel]="fechaHasta()" (ngModelChange)="fechaHasta.set($event)"
+                    [min]="fechaDesde()"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
+            </div>
+            <div class="flex-1 min-w-37.5 w-full">
+                <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Lote</label>
+                <input type="text" name="lote" [ngModel]="loteFiltro()" (ngModelChange)="loteFiltro.set($event)"
+                    placeholder="LOT-001"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
+            </div>
+            <div class="flex-1 min-w-37.5 w-full">
+                <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Estado</label>
+                <select name="estado" [ngModel]="estadoFiltro()" (ngModelChange)="estadoFiltro.set($event)"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5">
+                    <option value="">Todos</option>
+                    @for (estado of estados; track estado) {
+                    <option [value]="estado">{{ estado }}</option>
+                    }
+                </select>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto">
+                <button type="submit"
+                    class="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors text-sm font-medium">
+                    Buscar
+                </button>
+                <button type="button" (click)="limpiarFiltros()"
+                    class="flex-1 md:flex-none border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-2 rounded transition-colors text-sm font-medium">
+                    Limpiar
+                </button>
+            </div>
+        </form>
+
+        <h6 class="font-semibold text-gray-700 mb-2">Lotes para Aprobación de Pago</h6>
+
+        <!-- VERSIÓN DESKTOP (TABLA) -->
+        <div class="hidden md:block">
+            <div class="overflow-x-auto">
+                <table class="table table-striped table-sm table-bordered table-hover w-full align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-center" scope="col">Fecha</th>
+                            <th class="text-center" scope="col">Lote</th>
+                            <th class="text-center" scope="col">Casos Válidos</th>
+                            <th class="text-center" scope="col">Casos Rechazados</th>
+                            <th class="text-center" scope="col">Total Casos</th>
+                            <th class="text-center" scope="col">Monto Desembolso Aprobado</th>
+                            <th class="text-center" scope="col">Estado</th>
+                            <th class="text-center" scope="col">Acc.</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-[0.85em]">
+                        @if (isLoading()) {
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <span class="ms-2">Buscando lotes...</span>
+                            </td>
+                        </tr>
+                        } @else if (lotes().length === 0) {
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-gray-500">No se encontraron lotes</td>
+                        </tr>
+                        } @else {
+                        @for (item of lotes(); track item.id) {
+                        <tr>
+                            <td class="text-center">{{ item.fechaInicio | date:'dd/MM/yyyy':'UTC' }}</td>
+                            <td>
+                                <span class="font-semibold">{{ item.lote }}</span>
+                                <span class="text-gray-600"> ({{ nombrePeriodo(item.periodo) }})</span>
+                            </td>
+                            <td class="text-center text-green-700 font-medium">{{ item.aprobados }}</td>
+                            <td class="text-center text-red-700 font-medium">{{ item.rechazados }}</td>
+                            <td class="text-center font-medium">{{ item.desembolsos }}</td>
+                            <td class="text-end">{{ item.montoAprobado | currency:'GTQ':'symbol':'1.2-2' }}</td>
+                            <td class="text-center">
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded border" [class]="claseEstado(item.estado)">
+                                    {{ item.estado }}
+                                </span>
+                            </td>
+                            <td class="text-center whitespace-nowrap">
+                                <button type="button" class="btn btn-sm btn-primary me-1" title="Aprobación"
+                                    (click)="loteComisiones.set(item)">
+                                    <ion-icon name="calculator-outline"></ion-icon>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-1" title="Detalle"
+                                    (click)="loteVer.set(item)">
+                                    <ion-icon name="list-outline"></ion-icon>
+                                </button>
+                                @if (puedeRechazar(item)) {
+                                <button type="button" class="btn btn-sm btn-danger" title="Rechazar"
+                                    (click)="loteRechazar.set(item)">
+                                    <ion-icon name="ban-outline"></ion-icon>
+                                </button>
+                                }
+                                @if (puedePagar(item)) {
+                                <button type="button" class="btn btn-sm text-white bg-purple-600 hover:bg-purple-700" title="Marcar como Pagado"
+                                    (click)="lotePagar.set(item)">
+                                    <ion-icon name="cash-outline"></ion-icon>
+                                </button>
+                                }
+                                @if (esperaOtroUsuario(item)) {
+                                <span class="block text-[0.75em] text-gray-500 mt-1">Pendiente de aprobación por otro usuario</span>
+                                }
+                            </td>
+                        </tr>
+                        }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+        </div>
+
+        <!-- VERSIÓN MÓVIL (CARDS) -->
+        <div class="md:hidden space-y-4">
+            @if (isLoading()) {
+            <div class="text-center py-8">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2 text-gray-600">Buscando lotes...</p>
+            </div>
+            } @else if (lotes().length === 0) {
+            <div class="text-center py-8 text-gray-500">No se encontraron lotes</div>
+            } @else {
+            @for (item of lotes(); track item.id) {
+            <div class="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">{{ item.lote }}</h3>
+                        <p class="text-sm text-gray-600">{{ nombrePeriodo(item.periodo) }}</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded border" [class]="claseEstado(item.estado)">
+                        {{ item.estado }}
+                    </span>
+                </div>
+
+                <div class="space-y-2 text-sm text-gray-700 mb-4">
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Fecha:</span>
+                        <span>{{ item.fechaInicio | date:'dd/MM/yyyy':'UTC' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Válidos / Rechazados:</span>
+                        <span>{{ item.aprobados }} / {{ item.rechazados }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Total casos:</span>
+                        <span>{{ item.desembolsos }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Monto aprobado:</span>
+                        <span>{{ item.montoAprobado | currency:'GTQ':'symbol':'1.2-2' }}</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+                    <button type="button" (click)="loteComisiones.set(item)"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm font-medium">
+                        Aprobación
+                    </button>
+                    <button type="button" (click)="loteVer.set(item)"
+                        class="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-100 py-2 px-3 rounded text-sm font-medium">
+                        Detalle
+                    </button>
+                    @if (puedeRechazar(item)) {
+                    <button type="button" (click)="loteRechazar.set(item)"
+                        class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium">
+                        Rechazar
+                    </button>
+                    }
+                    @if (puedePagar(item)) {
+                    <button type="button" (click)="lotePagar.set(item)"
+                        class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-3 rounded text-sm font-medium">
+                        Marcar como Pagado
+                    </button>
+                    }
+                </div>
+                @if (esperaOtroUsuario(item)) {
+                <p class="text-xs text-gray-500 mt-2">Pendiente de aprobación por otro usuario</p>
+                }
+            </div>
+            }
+            <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+            }
+        </div>
+    </div>
+</div>
+
+<!-- MODAL APROBACIÓN DE PAGO DE COMISIONES -->
+@if (loteComisiones(); as lote) {
+<app-comisiones-lote-modal [loteId]="lote.id" (actualizado)="fetchData()" (cerrar)="loteComisiones.set(null)" />
+}
+
+<!-- MODAL DETALLE (SOLO LECTURA) -->
+@if (loteVer(); as lote) {
+<app-ver-lote-modal [lote]="lote" (cerrar)="loteVer.set(null)" />
+}
+
+<!-- MODAL RECHAZAR -->
+@if (loteRechazar(); as lote) {
+<app-resolver-lote-modal [lote]="lote" accion="rechazar" (resuelto)="onLoteRechazado()"
+    (cerrar)="loteRechazar.set(null)" />
+}
+
+<!-- MODAL MARCAR COMO PAGADO -->
+@if (lotePagar(); as lote) {
+<app-resolver-lote-modal [lote]="lote" accion="pagar" (resuelto)="onLotePagado()"
+    (cerrar)="lotePagar.set(null)" />
+}

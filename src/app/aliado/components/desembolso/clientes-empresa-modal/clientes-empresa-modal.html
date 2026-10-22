@@ -1,0 +1,122 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" (click)="cerrar.emit()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
+
+        <!-- CABECERA -->
+        <div class="flex items-start justify-between gap-2 px-6 py-4 border-b border-gray-200">
+            <div>
+                <h3 class="text-base font-semibold text-gray-800">
+                    Clientes Referidos: {{ data()?.empresa?.nombreEmpresa ?? nombreEmpresa() ?? '' }}
+                </h3>
+                @if (data(); as d) {
+                <p class="text-sm text-gray-600">
+                    Categoría {{ d.empresa.categoria ?? '—' }} · {{ d.empresa.casosValidos }} créditos aprobados
+                    · Total: <span class="font-semibold">{{ d.empresa.totalComision | currency:'GTQ':'symbol':'1.2-2' }}</span>
+                </p>
+                }
+            </div>
+            <button type="button" class="text-gray-500 hover:text-gray-800 text-xl leading-none" title="Cerrar"
+                (click)="cerrar.emit()">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+
+        <div class="px-6 py-4 overflow-y-auto">
+            @if (isLoading()) {
+            <div class="text-center py-8">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <span class="ms-2">Cargando clientes...</span>
+            </div>
+            } @else if (!data()) {
+            <div class="text-center py-8 text-gray-500">No se pudo obtener la información de la empresa.</div>
+            } @else {
+            @let d = data()!;
+
+            <!-- CUENTA DESTINO -->
+            @if (d.empresa.cuentaDestino; as cuenta) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm mb-4">
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <span class="block text-xs text-gray-500">Banco Destino</span>
+                    <span class="font-medium">{{ cuenta.nombreBanco || '—' }}</span>
+                </div>
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <span class="block text-xs text-gray-500">Tipo & No. Cuenta</span>
+                    <span class="font-medium">{{ cuenta.tipoCuenta || '—' }} · {{ cuenta.numeroCuenta || '—' }}</span>
+                    @if (cuenta.nombreCuenta) {
+                    <span class="block text-xs text-gray-500">{{ cuenta.nombreCuenta }}</span>
+                    }
+                </div>
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <span class="block text-xs text-gray-500">Tarifa por Caso</span>
+                    <span class="font-medium">{{ d.empresa.comisionPorCaso | currency:'GTQ':'symbol':'1.2-2' }}</span>
+                </div>
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <span class="block text-xs text-gray-500">Estado del Pago</span>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded border"
+                        [class]="d.estadoPago === 'PAGADO' ? 'bg-purple-100 text-purple-800 border-purple-300' : 'bg-yellow-100 text-yellow-800 border-yellow-300'">
+                        {{ d.estadoPago }}
+                    </span>
+                </div>
+            </div>
+            } @else {
+            <div class="mb-4 p-3 rounded border bg-red-50 border-red-200 text-red-800 text-sm flex items-center gap-2">
+                <ion-icon name="alert-circle-outline" class="text-lg shrink-0"></ion-icon>
+                <span>
+                    La empresa no tiene cuenta bancaria registrada. Tarifa por caso:
+                    {{ d.empresa.comisionPorCaso | currency:'GTQ':'symbol':'1.2-2' }} · Estado del pago: {{ d.estadoPago }}
+                </span>
+            </div>
+            }
+
+            <!-- CLIENTES -->
+            <div class="overflow-x-auto">
+                <table class="table table-sm table-bordered table-hover w-full align-middle">
+                    <thead>
+                        <tr class="text-[0.85em]">
+                            <th class="text-center" scope="col">Cliente</th>
+                            <th class="text-center" scope="col">DPI</th>
+                            <th class="text-center" scope="col">Cuenta Bantotal</th>
+                            <th class="text-center" scope="col">No. Gestión</th>
+                            <th class="text-center" scope="col">Monto Desembolsado</th>
+                            <th class="text-center" scope="col">Validado</th>
+                            <th class="text-center" scope="col">Causa de Invalidación</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-[0.85em]">
+                        @for (r of d.clientes; track r.id) {
+                        <tr>
+                            <td>{{ nombreCorto(r) }}</td>
+                            <td class="whitespace-nowrap">{{ r.dpi }}</td>
+                            <td class="whitespace-nowrap">{{ r.cuenta }}</td>
+                            <td class="whitespace-nowrap">{{ r.gestion || '-' }}</td>
+                            <td class="text-end whitespace-nowrap">{{ r.montoOtorgado | currency:'GTQ':'symbol':'1.2-2' }}</td>
+                            <td class="text-center">
+                                @if (r.validado) {
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-green-100 text-green-800">S</span>
+                                } @else {
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-800">N</span>
+                                }
+                            </td>
+                            <td>{{ r.comentarioValidado || '-' }}</td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-gray-500">La empresa no tiene clientes en el lote</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+        </div>
+
+        <div class="flex justify-end px-6 py-3 border-t border-gray-200">
+            <button type="button"
+                class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm"
+                (click)="cerrar.emit()">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>

@@ -38,6 +38,54 @@ export function mesesCerrados(cantidad = 12): { value: string; label: string }[]
   return meses;
 }
 
+export interface RangoFechas {
+  label: string;
+  desde: string; // "YYYY-MM-DD" ('' = sin límite)
+  hasta: string;
+}
+
+/** Último día del mes (mes en base 1) como "YYYY-MM-DD" */
+function finDeMes(anio: number, mes: number): string {
+  const dia = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
+  return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+}
+
+function inicioDeMes(anio: number, mes: number): string {
+  return `${anio}-${String(mes).padStart(2, '0')}-01`;
+}
+
+/**
+ * Rangos rápidos del filtro: Todos, último mes cerrado, último trimestre cerrado y año en curso,
+ * según la hora de Guatemala. Ej. en octubre 2026: Septiembre 2026 · Jul–Sep 2026 · Año 2026.
+ */
+export function rangosRapidos(): RangoFechas[] {
+  const ahora = new Date(Date.now() + OFFSET_GUATEMALA_MS);
+  const anioActual = ahora.getUTCFullYear();
+  const mesActual = ahora.getUTCMonth(); // 0-11
+
+  // Último mes cerrado (base 1)
+  const anioMes = mesActual === 0 ? anioActual - 1 : anioActual;
+  const mes = mesActual === 0 ? 12 : mesActual;
+
+  // Último trimestre cerrado: mes inicial en base 1 (1, 4, 7 o 10)
+  const trimestreActual = Math.floor(mesActual / 3);
+  const anioTrim = trimestreActual === 0 ? anioActual - 1 : anioActual;
+  const mesIniTrim = trimestreActual === 0 ? 10 : (trimestreActual - 1) * 3 + 1;
+  const mesFinTrim = mesIniTrim + 2;
+  const abrev = (m: number) => MESES[m - 1].slice(0, 3);
+
+  return [
+    { label: 'Todos', desde: '', hasta: '' },
+    { label: nombrePeriodo(`${anioMes}-${mes}`), desde: inicioDeMes(anioMes, mes), hasta: finDeMes(anioMes, mes) },
+    {
+      label: `${abrev(mesIniTrim)}–${abrev(mesFinTrim)} ${anioTrim}`,
+      desde: inicioDeMes(anioTrim, mesIniTrim),
+      hasta: finDeMes(anioTrim, mesFinTrim),
+    },
+    { label: `Año ${anioActual}`, desde: `${anioActual}-01-01`, hasta: `${anioActual}-12-31` },
+  ];
+}
+
 /** Clases Tailwind del badge según el estado del lote */
 export function claseEstadoLote(estado: EstadoLote): string {
   switch (estado) {
@@ -45,6 +93,7 @@ export function claseEstadoLote(estado: EstadoLote): string {
     case 'PROCESADO': return 'bg-blue-100 text-blue-800 border-blue-300';
     case 'APROBADO': return 'bg-green-100 text-green-800 border-green-300';
     case 'RECHAZADO': return 'bg-red-100 text-red-800 border-red-300';
+    case 'PAGADO': return 'bg-purple-100 text-purple-800 border-purple-300';
     default: return 'bg-gray-100 text-gray-800 border-gray-300';
   }
 }
@@ -67,4 +116,9 @@ export function puedeAprobar(lote: ILoteDesembolso, usuarioId: string): boolean 
 export function puedeRechazar(lote: ILoteDesembolso, usuarioId: string): boolean {
   if (lote.estado === 'SOLICITADO') return true;
   return lote.estado === 'PROCESADO' && !mismoUsuario(lote.usuarioIdProceso, usuarioId);
+}
+
+/** Solo un lote APROBADO puede marcarse como pagado */
+export function puedePagar(lote: ILoteDesembolso): boolean {
+  return lote.estado === 'APROBADO';
 }
