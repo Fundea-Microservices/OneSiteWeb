@@ -561,6 +561,14 @@ export const routes: Routes = [
                 path: 'desembolso/:loteId',
                 loadComponent: () => import('./aliado/pages/detalle-lote-desembolso-page/detalle-lote-desembolso-page'),
             },
+            {
+                path: 'aprobacion-lotes-pago',
+                loadComponent: () => import('./aliado/pages/aprobacion-lotes-page/aprobacion-lotes-page'),
+            },
+            {
+                path: 'pago-comision',
+                loadComponent: () => import('./aliado/pages/pago-comision-page/pago-comision-page'),
+            },
         ]
     },
     // {
