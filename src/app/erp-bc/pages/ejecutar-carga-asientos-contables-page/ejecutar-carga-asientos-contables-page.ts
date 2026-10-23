@@ -3,10 +3,13 @@ import { CommonModule, formatNumber } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { PartidasContablesService } from '../../../../services/erp-bc/partidas-contables.service';
+import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 import {
   AlcanceCarga,
   CuadrePoliza,
+  ErroresEjecucionMetadata,
   EstadoEjecucionData,
+  GrupoErrorAsientos,
   LoteCargaAsientos
 } from '../../../../interfaces/erp-bc/partidas-contables';
 
@@ -23,6 +26,13 @@ const POLL_REENVIO_MS = 12 * 1000;
  * traer hasta 500: un día mal cargado llena la pantalla.
  */
 const POLIZAS_VISIBLES = 15;
+
+/** Grupos de error por página: el mismo valor por defecto del backend. */
+const ERRORES_POR_PAGINA = 10;
+
+const PAGINACION_ERRORES_INICIAL: IPagination = {
+  page: 1, pageSize: ERRORES_POR_PAGINA, totalItems: 0, totalPages: 0,
+};
 
 /**
  * El backend reescribe `comentario` en cada página (fases 1 y 3) y en cada
@@ -105,7 +115,7 @@ const OPCIONES_ALCANCE: { valor: AlcanceCarga; texto: string; ayuda: string }[] 
 @Component({
   selector: 'app-ejecutar-carga-asientos-contables-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationAllComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './ejecutar-carga-asientos-contables-page.html',
   styleUrl: './ejecutar-carga-asientos-contables-page.css',
@@ -138,6 +148,16 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
   alcance = signal<AlcanceCarga>('AMBAS');
   /** Mientras el usuario no toque el selector, el alcance sigue a la sugerencia. */
   private alcanceElegido = false;
+
+  // Panel de errores de envío agrupados por mensaje.
+  verErrores         = signal(false);
+  errores            = signal<GrupoErrorAsientos[]>([]);
+  erroresMeta        = signal<ErroresEjecucionMetadata | null>(null);
+  paginacionErrores  = signal<IPagination>(PAGINACION_ERRORES_INICIAL);
+  isCargandoErrores  = signal(false);
+  erroresMsg         = signal('');
+  /** Descarta respuestas que llegan después de cambiar de fecha o cerrar el panel. */
+  private erroresSeq = 0;
 
   private pollId: ReturnType<typeof setInterval> | null = null;
   private pollMsActual: number | null = null;
@@ -180,6 +200,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     this.loteAbierto.set(null);
     this.alcanceElegido = false;
     this.alcance.set('AMBAS');
+    this.cerrarErrores();
   }
 
   // ── Alcance ────────────────────────────────────────────────────────────────
@@ -355,6 +376,88 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     const ej = this.ejecucion();
     return !!ej && ej.tipo === 'REENVIO' && !this.enEjecucion() && ej.registrosObtenidos === 0;
   });
+
+  // ── Errores de envío ───────────────────────────────────────────────────────
+
+  /**
+   * Hay asientos en ERROR en algún lote. En un descuadre también sale `true`;
+   * ahí el listado puede venir vacío porque los asientos quedan en INICIO.
+   */
+  mostrarBotonVerErrores = computed(() => this.estado()?.tieneErrores === true);
+
+  alternarErrores() {
+    if (this.verErrores()) {
+      this.cerrarErrores();
+      return;
+    }
+    this.verErrores.set(true);
+    this.paginacionErrores.set(PAGINACION_ERRORES_INICIAL);
+    this.cargarErrores();
+  }
+
+  cerrarErrores() {
+    this.erroresSeq++;
+    this.verErrores.set(false);
+    this.errores.set([]);
+    this.erroresMeta.set(null);
+    this.paginacionErrores.set(PAGINACION_ERRORES_INICIAL);
+    this.isCargandoErrores.set(false);
+    this.erroresMsg.set('');
+  }
+
+  onChangePageErrores(p: IPagination) {
+    this.paginacionErrores.set(p);
+    this.cargarErrores();
+  }
+
+  numeroFilaError(index: number): number {
+    const { page, pageSize } = this.paginacionErrores();
+    return index + 1 + (page - 1) * pageSize;
+  }
+
+  private async cargarErrores() {
+    const seq = ++this.erroresSeq;
+    const { page, pageSize } = this.paginacionErrores();
+
+    this.isCargandoErrores.set(true);
+    this.erroresMsg.set('');
+
+    try {
+      const resp = await firstValueFrom(
+        this.service.getErrores(this.fecha(), { page, limit: pageSize })
+      );
+      if (seq !== this.erroresSeq) return;
+
+      if (!resp?.success) {
+        this.erroresMsg.set(resp?.message ?? 'No se pudieron consultar los errores.');
+        return;
+      }
+
+      const m = resp.data.metadata;
+
+      // Tras un reenvío pueden quedar menos grupos y la página actual quedar
+      // fuera de rango: se salta a la última que exista.
+      if (resp.data.errores.length === 0 && page > 1 && m.totalPages > 0) {
+        this.paginacionErrores.update(p => ({ ...p, page: m.totalPages }));
+        this.cargarErrores();
+        return;
+      }
+
+      this.errores.set(resp.data.errores);
+      this.erroresMeta.set(m);
+      this.paginacionErrores.set({
+        page:       m.page,
+        pageSize:   m.limit,
+        totalItems: m.total,
+        totalPages: m.totalPages,
+      });
+    } catch (error) {
+      if (seq !== this.erroresSeq) return;
+      this.erroresMsg.set(this.mensajeError(error, 'Error al consultar los errores.'));
+    } finally {
+      if (seq === this.erroresSeq) this.isCargandoErrores.set(false);
+    }
+  }
 
   // ── Progreso por fase ──────────────────────────────────────────────────────
 
@@ -782,6 +885,7 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
         this.estado.set({ ...resp.data, anteriores: resp.data.anteriores ?? [] });
         this.ultimaConsulta.set(new Date());
         if (!this.alcanceElegido) this.alcance.set(this.alcanceSugerido());
+        this.sincronizarErrores();
         this.sincronizarPolling();
       } else {
         this.errorMsg.set(resp?.message ?? 'No se pudo consultar la ejecución.');
@@ -789,6 +893,19 @@ export default class EjecutarCargaAsientosContablesPage implements OnDestroy {
     } catch (error) {
       // Se conserva el último estado conocido para no perder el avance en pantalla.
       this.errorMsg.set(this.mensajeError(error, 'Error al consultar la ejecución.'));
+    }
+  }
+
+  /**
+   * Con el panel abierto, cada consulta del estado refresca también los
+   * errores (un reenvío los va reduciendo); si ya no quedan, se cierra.
+   */
+  private sincronizarErrores() {
+    if (!this.verErrores()) return;
+    if (this.mostrarBotonVerErrores()) {
+      this.cargarErrores();
+    } else {
+      this.cerrarErrores();
     }
   }
 

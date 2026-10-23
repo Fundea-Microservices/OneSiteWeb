@@ -226,3 +226,51 @@ export interface EstadoEjecucionResponse {
     message:    string;
     data:       EstadoEjecucionData;
 }
+
+// ── Errores de envío agrupados por mensaje ───────────────────────────────────
+
+/**
+ * Asientos en ERROR que comparten mensaje. El backend quita el CorrelationId
+ * de Business Central antes de agrupar; un mensaje vacío llega como
+ * "Sin detalle del error".
+ */
+export interface GrupoErrorAsientos {
+    mensaje:  string;
+    cantidad: number;
+}
+
+export interface ErroresEjecucionMetadata {
+    /** Cantidad de mensajes distintos (grupos). */
+    total:         number;
+    /** Cantidad de asientos en error, sumando todos los grupos. */
+    totalAsientos: number;
+    page:          number;
+    limit:         number;
+    totalPages:    number;
+    todos:         boolean;
+}
+
+/**
+ * Mismo alcance que el reenvío: asientos en ERROR del lote del día y de los
+ * lotes de fecha valor anterior registrados en la fecha. Los grupos vienen
+ * ordenados de mayor a menor cantidad.
+ */
+export interface ErroresEjecucionData {
+    fecha:    string;
+    errores:  GrupoErrorAsientos[];
+    metadata: ErroresEjecucionMetadata;
+}
+
+export interface ErroresEjecucionResponse {
+    success:     boolean;
+    statusCode?: number;
+    message?:    string;
+    data:        ErroresEjecucionData;
+}
+
+export interface ErroresEjecucionParams {
+    page?:  number;
+    limit?: number;
+    /** `true` devuelve todos los grupos sin paginar. */
+    todos?: boolean;
+}

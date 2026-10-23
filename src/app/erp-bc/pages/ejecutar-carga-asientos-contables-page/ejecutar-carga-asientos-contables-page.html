@@ -127,6 +127,16 @@
                 Actualizado {{ ts | date:'HH:mm:ss' }}
               </span>
             }
+            @if (mostrarBotonVerErrores()) {
+              <button
+                type="button"
+                class="btn btn-sm {{ verErrores() ? 'btn-danger' : 'btn-outline-danger' }}"
+                [attr.aria-expanded]="verErrores()"
+                (click)="alternarErrores()">
+                <ion-icon name="bug-outline" class="me-1"></ion-icon>
+                {{ verErrores() ? 'Ocultar errores' : 'Ver errores' }}
+              </button>
+            }
             <button
               type="button"
               class="btn btn-sm btn-outline-secondary"
@@ -140,6 +150,81 @@
             </button>
           </div>
         </div>
+
+        <!-- Errores de envío agrupados por mensaje: mismo alcance que el reenvío -->
+        @if (verErrores()) {
+          <div class="card border-danger-subtle mb-3">
+            <div class="card-header bg-danger-subtle d-flex flex-wrap align-items-center gap-2">
+              <ion-icon name="bug-outline"></ion-icon>
+              <span class="fw-semibold">Errores de envío a Business Central</span>
+              @if (erroresMeta(); as m) {
+                <span class="small text-muted">
+                  {{ m.totalAsientos | number }} asiento(s) en
+                  {{ m.total | number }} mensaje(s) distinto(s)
+                </span>
+              }
+              @if (isCargandoErrores()) {
+                <span class="spinner-border spinner-border-sm text-danger" role="status"></span>
+              }
+              <button type="button" class="btn-close ms-auto" aria-label="Cerrar"
+                      (click)="cerrarErrores()"></button>
+            </div>
+
+            <div class="card-body">
+              @if (erroresMsg()) {
+                <div class="alert alert-danger" role="alert">
+                  <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+                  {{ erroresMsg() }}
+                </div>
+              }
+
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-2">
+                  <thead>
+                    <tr>
+                      <th class="table-light text-center" style="width: 1%;">#</th>
+                      <th class="table-light">Mensaje</th>
+                      <th class="table-light text-end" style="width: 1%;">Asientos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (e of errores(); track $index) {
+                      <tr>
+                        <td class="text-center text-muted">{{ numeroFilaError($index) }}</td>
+                        <td class="small mensaje-error">{{ e.mensaje }}</td>
+                        <td class="text-end">
+                          <span class="badge bg-danger">{{ e.cantidad | number }}</span>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="3" class="text-center text-muted">
+                          @if (isCargandoErrores()) {
+                            Consultando errores…
+                          } @else if (data.descuadre) {
+                            No hay asientos rechazados por Business Central: con pólizas sin
+                            cuadrar los asientos no llegan a enviarse.
+                          } @else {
+                            No hay asientos en error para esta fecha.
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              @if (paginacionErrores().totalItems > 0) {
+                <app-pagination-all [paginationObj]="paginacionErrores()" (changePage)="onChangePageErrores($event)" />
+              }
+
+              <div class="form-text">
+                Incluye el lote del día y los lotes de fecha valor anterior registrados en la fecha.
+                Los asientos se agrupan por mensaje, sin el CorrelationId que agrega Business Central.
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Progreso: enEjecucion ya considera todos los lotes -->
         @if (data.enEjecucion) {

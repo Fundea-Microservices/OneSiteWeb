@@ -6,6 +6,8 @@ import { HttpService } from '../HttpService';
 import {
   CargarPartidasDto,
   CargarPartidasResponse,
+  ErroresEjecucionParams,
+  ErroresEjecucionResponse,
   EstadoEjecucionResponse,
   ReenviarErroresDto
 } from '../../interfaces/erp-bc/partidas-contables';
@@ -19,6 +21,7 @@ export class PartidasContablesService extends HttpService {
     cargar:          '/financiero-bc/partidas-contables/cargar',
     reenviarErrores: '/financiero-bc/partidas-contables/reenviar-errores',
     ejecuciones:     '/financiero-bc/partidas-contables/ejecuciones',
+    errores:         '/financiero-bc/partidas-contables/errores',
   };
 
   constructor(http: HttpClient) {
@@ -83,6 +86,27 @@ export class PartidasContablesService extends HttpService {
       map(response => response.body!),
       catchError(error => {
         console.error('❌ [PartidasContablesService] Error al consultar la ejecución:', {
+          status: error.status,
+          errorData: error.error
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Asientos en ERROR de la fecha agrupados por mensaje, paginados sobre los
+   * grupos. Cubre lo mismo que el reenvío: el lote del día y los de fecha
+   * valor anterior. Sin parámetros el backend usa `page=1`, `limit=10` y
+   * `todos=false`.
+   *
+   * @param fecha formato `YYYY-MM-DD`
+   */
+  getErrores(fecha: string, params: ErroresEjecucionParams = {}): Observable<ErroresEjecucionResponse> {
+    return this.get<ErroresEjecucionResponse>(`${this.endpoints.errores}/${fecha}`, params).pipe(
+      map(response => response.body!),
+      catchError(error => {
+        console.error('❌ [PartidasContablesService] Error al consultar los errores de la ejecución:', {
           status: error.status,
           errorData: error.error
         });

@@ -6,6 +6,12 @@
   cursor: pointer;
 }
 
+/* Los mensajes de Business Central pueden traer saltos de línea y JSON largo. */
+.mensaje-error {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .alcance-carga {
   min-width: 220px;
   max-width: 420px;
