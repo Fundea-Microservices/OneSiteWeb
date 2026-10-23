@@ -40,18 +40,22 @@ export class UpsertOpcionVariableComponent {
   @Output() save = new EventEmitter<IOpcionVariable>();
   @Output() cancel = new EventEmitter<void>();
 
-  form = signal<FormGroup>(this.fb.group({}));
+  /**
+   * Con sus controles desde el inicio: el componente se crea dentro de un
+   * `@if` y los `effect()` corren después del primer render, así que un
+   * formulario vacío dejaría los `formControlName` sin control que enlazar.
+   */
+  form = signal<FormGroup>(this.construirForm(null));
 
   constructor() {
     effect(() => {
       const _ = this.formKey();
-      this.initForm(this.opcion());
+      this.form.set(this.construirForm(this.opcion()));
     });
   }
 
-  private initForm(opcion: IOpcionVariable | null): void {
-    this.form.set(
-      this.fb.group({
+  private construirForm(opcion: IOpcionVariable | null): FormGroup {
+    return this.fb.group({
         codigoOpcion: [
           opcion?.codigoOpcion ?? '',
           [Validators.required, Validators.maxLength(50)],
@@ -69,10 +73,9 @@ export class UpsertOpcionVariableComponent {
           opcion?.observacionesVar ?? '',
           [Validators.maxLength(500)],
         ],
-        ordenDespliegue: [opcion?.ordenDespliegue ?? null],
-        estado: [opcion?.estado ?? 'Activo', [Validators.required]],
-      }),
-    );
+      ordenDespliegue: [opcion?.ordenDespliegue ?? null],
+      estado: [opcion?.estado ?? 'Activo', [Validators.required]],
+    });
   }
 
   onSubmit(): void {

@@ -1,0 +1,171 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+
+ <!--<div class="alert alert-info py-2 small">
+    <ion-icon name="information-circle-outline"></ion-icon>
+    Los datos de este formulario los captura el asesor y quedan registrados
+    como tales en el expediente de auditoría.
+  </div>-->
+
+  @if (modelosDisponibles().length === 0) {
+    <div class="alert alert-warning py-2 mb-0">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      Ningún scoring activo tiene habilitada la <strong>Captura de Datos</strong>.
+      Actívela en la pantalla de Creación de Scoring para poder capturar
+      evaluaciones a mano.
+    </div>
+  } @else {
+
+    <!-- Sección 1: Scoring y operación -->
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2 py-2">
+        <span class="badge rounded-pill text-bg-primary">1</span>
+        <div class="fw-semibold">Scoring y Operación</div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-semibold small">Tipo de Scoring (*)</label>
+            <select class="form-select form-select-sm" formControlName="scoringId"
+              [class.is-invalid]="campoInvalido('scoringId')">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (modelo of modelosDisponibles(); track modelo.scoringId) {
+                <option [ngValue]="modelo.scoringId">
+                  {{ modelo.nombreScoring }} ({{ modelo.codigoInterno }})
+                </option>
+              }
+            </select>
+            @if (campoInvalido('scoringId')) {
+              <div class="invalid-feedback">Obligatorio.</div>
+            }
+            <div class="form-text">Solo modelos con Captura de Datos.</div>
+          </div>
+
+          <div class="col-6 col-md-3">
+            <label class="form-label fw-semibold small">N° de Solicitud (*)</label>
+            <input type="number" class="form-control form-control-sm"
+              formControlName="numeroSolicitud" placeholder="10928374"
+              [class.is-invalid]="campoInvalido('numeroSolicitud')" />
+            @if (campoInvalido('numeroSolicitud')) {
+              <div class="invalid-feedback">Obligatorio, solo números.</div>
+            }
+          </div>
+
+          <div class="col-6 col-md-3">
+            <label class="form-label fw-semibold small">N° de Operación</label>
+            <input type="number" class="form-control form-control-sm"
+              formControlName="numeroOperacion" placeholder="8821" />
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 2: Datos del cliente -->
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2 py-2">
+        <span class="badge rounded-pill text-bg-primary">2</span>
+        <div class="fw-semibold">Datos del Cliente</div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Nombre del Cliente (*)</label>
+            <input type="text" class="form-control form-control-sm"
+              formControlName="nombreCliente" placeholder="Ana Lucía López Morales"
+              [class.is-invalid]="campoInvalido('nombreCliente')" />
+            @if (campoInvalido('nombreCliente')) {
+              <div class="invalid-feedback">Obligatorio.</div>
+            }
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-semibold small">DPI (*)</label>
+            <input type="text" class="form-control form-control-sm font-monospace"
+              formControlName="dpi" placeholder="1875509230101"
+              [class.is-invalid]="campoInvalido('dpi')" />
+            @if (campoInvalido('dpi')) {
+              <div class="invalid-feedback">Obligatorio.</div>
+            }
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-semibold small">Cuenta (*)</label>
+            <input type="text" class="form-control form-control-sm font-monospace"
+              formControlName="cuenta" placeholder="60031882"
+              [class.is-invalid]="campoInvalido('cuenta')" />
+            @if (campoInvalido('cuenta')) {
+              <div class="invalid-feedback">Obligatoria.</div>
+            }
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-semibold small">Dirección</label>
+            <input type="text" class="form-control form-control-sm"
+              formControlName="direccion"
+              placeholder="4a calle 5-20 zona 1, Chimaltenango" />
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-semibold small">Región</label>
+            <input type="text" class="form-control form-control-sm"
+              formControlName="region" placeholder="Central" />
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label fw-semibold small">Agencia</label>
+            <input type="text" class="form-control form-control-sm"
+              formControlName="agencia" placeholder="Chimaltenango" />
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 3: Datos del crédito -->
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2 py-2">
+        <span class="badge rounded-pill text-bg-primary">3</span>
+        <div class="fw-semibold">Datos del Crédito</div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-12 col-md-5">
+            <label class="form-label fw-semibold small">Monto Solicitado (Q) (*)</label>
+            <input type="number" step="0.01" class="form-control form-control-sm text-end"
+              formControlName="montoCredito" placeholder="25000.00"
+              [class.is-invalid]="campoInvalido('montoCredito')" />
+            @if (campoInvalido('montoCredito')) {
+              <div class="invalid-feedback">Obligatorio y mayor que cero.</div>
+            }
+          </div>
+
+          <div class="col-12 col-md-7">
+            <label class="form-label fw-semibold small">Producto (*)</label>
+            <input type="text" class="form-control form-control-sm"
+              formControlName="productoCredito" placeholder="Microcrédito Agrícola"
+              [class.is-invalid]="campoInvalido('productoCredito')" />
+            @if (campoInvalido('productoCredito')) {
+              <div class="invalid-feedback">Obligatorio.</div>
+            }
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  }
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">
+      Cancelar
+    </button>
+    <button type="submit" class="btn btn-success btn-sm"
+      [disabled]="modelosDisponibles().length === 0">
+      <ion-icon name="checkmark-outline"></ion-icon> Continuar a Captura
+    </button>
+  </div>
+
+</form>

@@ -120,6 +120,9 @@ export default class AuditoriaPage implements OnInit, AfterViewInit {
         return 'text-bg-success';
       case 'Amarillo':
         return 'text-bg-warning';
+      // Cuarto color: Punteo Precalificado de TransUnion entre 1 y 19.
+      case 'Naranja':
+        return 'text-bg-orange';
       case 'Rojo':
         return 'text-bg-danger';
       default:

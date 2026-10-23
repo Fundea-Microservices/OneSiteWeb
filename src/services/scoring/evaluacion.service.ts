@@ -9,6 +9,7 @@ import {
   IRespuestaCaptura,
   ISimulacion,
   ISolicitudBantotal,
+  OrigenDatos,
   PaginadoScoring,
   RespuestaScoring,
 } from '../../interfaces/scoring/scoring';
@@ -108,12 +109,20 @@ export class EvaluacionScoringService extends HttpService {
    * del mockup) y la proyección del punteo. Sin toast: se llama a cada cambio
    * del formulario.
    */
-  async simular(scoringId: number, respuestas: IRespuestaCaptura[]) {
+  async simular(
+    scoringId: number,
+    respuestas: IRespuestaCaptura[],
+    evaluacionId?: number,
+  ) {
     try {
       const resp = await firstValueFrom(
         this.post<ISimulacion>(`${this.base}/simular`, {
           scoringId,
           respuestas,
+          /* Sin el id, las rutinas de cálculo no pueden leer respuestas de
+             otras preguntas (P15 consulta la agencia, P22 el activo y el pasivo
+             corriente) y la proyección sale con la parametrización fija. */
+          ...(evaluacionId ? { evaluacionId } : {}),
         }),
       );
       return resp.body ?? null;
@@ -127,6 +136,8 @@ export class EvaluacionScoringService extends HttpService {
     scoringId: number;
     datosBantotal: Omit<ISolicitudBantotal, 'numeroSolicitud'>;
     respuestas: IRespuestaCaptura[];
+    /** 'Captura' cuando los datos los tecleo el asesor. */
+    origenDatos?: OrigenDatos;
   }) {
     try {
       const resp = await firstValueFrom(

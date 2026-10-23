@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  computed,
   CUSTOM_ELEMENTS_SCHEMA,
   ElementRef,
   inject,
@@ -43,6 +44,13 @@ export default class CatalogoVariablesPage implements OnInit, AfterViewInit {
   /** null hasta que se elige un scoring: la pantalla no lista nada sin él. */
   scoringId = signal<number | null>(null);
   buscador = signal('');
+
+  /** Nombre del scoring elegido, para el encabezado del modal de catálogo. */
+  nombreScoringSeleccionado = computed(
+    () =>
+      this.scoringList().find((s) => s.scoringId === this.scoringId())
+        ?.nombreScoring ?? '',
+  );
 
   // ── Tabla 1: catálogos ────────────────────────────────────────────────────
 
