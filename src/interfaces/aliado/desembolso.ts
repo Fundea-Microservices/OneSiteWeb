@@ -7,6 +7,9 @@ export const ESTADOS_LOTE: EstadoLote[] = ['SOLICITADO', 'PROCESADO', 'APROBADO'
 /** Estados que se trabajan en la vista de Aprobación de Lotes para Pago */
 export const ESTADOS_APROBACION_PAGO: EstadoLote[] = ['PROCESADO', 'APROBADO', 'PAGADO'];
 
+/** Estados que se trabajan en la vista de Pago de Comisión */
+export const ESTADOS_PAGO_COMISION: EstadoLote[] = ['APROBADO'];
+
 export interface DesembolsoResponse<T> {
   success: boolean;
   statusCode: string;
@@ -184,8 +187,184 @@ export interface IResumenComisiones {
 }
 
 export interface IClientesEmpresa {
-  lote: { id: string; lote: string; periodo: string; estado: EstadoLote };
+  lote: IResumenLote;
   empresa: IComisionEmpresa;
-  estadoPago: 'PENDIENTE' | 'PAGADO';
+  estadoPago: EstadoPagoEmpresa;      // pago de esta empresa, no el estado del lote
+  pago: {
+    monto: number;
+    fechaTransferencia: string | null; // date: formatear en UTC
+    numeroComprobante: string | null;
+    numeroCuenta: string | null;
+    nombreBanco: string | null;
+    archivoUrl: string | null;
+    usuario: string;
+    fechaRegistro: string;
+  } | null;
   clientes: IDesembolsoReferido[];
+}
+
+// ─── Pago de comisiones por empresa ──────────────────────────────────────────
+
+export type EstadoPagoEmpresa = 'PENDIENTE' | 'PAGADO';
+
+export interface ICuentaDestinoPago extends ICuentaDestino {
+  cuentaBancariaId: string | null;
+}
+
+export interface IPagoEmpresa {
+  comisionId: string;
+  idEmpresa: string;
+  nombreEmpresa: string | null;
+  agenciaNombre: string | null;
+  casos: number;
+  casosValidos: number;
+  categoria: CategoriaComision | null;
+  monto: number;                      // total a transferir (lo toma el backend de la comisión aprobada)
+  requiereTransferencia: boolean;     // monto > 0
+  estadoPago: EstadoPagoEmpresa;
+  /** Pendiente: cuenta activa actual de la empresa. Pagada: cuenta a la que se pagó. null = sin cuenta activa */
+  cuentaDestino: ICuentaDestinoPago | null;
+  pago: {
+    id: string;
+    monto: number;
+    fechaTransferencia: string | null; // date: formatear en UTC
+    numeroComprobante: string | null;
+    archivoUrl: string | null;
+    usuarioId: string;
+    usuario: string;
+    fechaRegistro: string;
+  } | null;
+}
+
+export interface IPagosLote {
+  lote: ILoteDesembolso;
+  empresas: IPagoEmpresa[];
+  totales: {
+    empresas: number;
+    pagadas: number;
+    pendientes: number;
+    montoTotal: number;
+    montoPagado: number;
+    montoPendiente: number;
+  };
+}
+
+export interface RegistrarPagoEmpresaRequest {
+  fechaTransferencia: string;         // "YYYY-MM-DD", no posterior a hoy
+  numeroComprobante: string;          // máx. 50
+  archivoUrl?: string;                // reservado para la foto del comprobante
+}
+
+export interface IResumenLote {
+  id: string;
+  lote: string;
+  periodo: string;
+  estado: EstadoLote;
+}
+
+// ─── Notificaciones (conversaciones sobre un lote y una empresa) ────────────
+
+export type EstadoNotificacion = 'ABIERTA' | 'CERRADA';
+export type EstadoCorreoNotificacion = 'PENDIENTE' | 'ENVIADO' | 'ERROR';
+
+export interface INotificacionMensaje {
+  id: string;
+  notificacionId: string;
+  mensajePadreId: string | null;      // null = mensaje inicial
+  asunto: string;
+  mensaje: string;
+  fechaEnvio: string;
+  remitenteId: string;
+  remitenteUsuario: string;
+  remitenteNombre: string | null;
+  remitenteCorreo: string | null;
+  destinatarioId: string;
+  destinatarioUsuario: string;
+  destinatarioNombre: string | null;
+  destinatarioCorreo: string;
+  visualizada: boolean;
+  fechaVisualizada: string | null;
+  respondida: boolean;
+  fechaRespuesta: string | null;
+  estadoCorreo: EstadoCorreoNotificacion;
+  fechaCorreo: string | null;
+  errorCorreo: string | null;
+}
+
+export interface INotificacionLote {
+  id: string;
+  ejecucionId: string;
+  idEmpresa: string;
+  nombreEmpresa: string | null;
+  desembolsoId: string | null;        // cliente puntual del lote (opcional)
+  asunto: string;
+  estado: EstadoNotificacion;
+  fechaUltimoMensaje: string;
+  creadoPorId: string;
+  creadoPor: string;
+  cerradoPorId: string | null;
+  cerradoPor: string | null;
+  fechaCierre: string | null;
+}
+
+/** Conversación en el listado del lote, con los conteos del usuario que consulta */
+export interface INotificacionLoteListado extends INotificacionLote {
+  mensajes: number;
+  sinLeer: number;
+  porResponder: number;
+}
+
+export interface IClienteNotificacion {
+  id: string;
+  dpi: string | null;
+  nombre: string;
+  cuenta: string | null;
+  operacion: string | null;
+  montoOtorgado: number | null;
+  validado: boolean | null;
+  comentarioValidado: string | null;
+}
+
+/** Conversación completa con las acciones disponibles para el usuario */
+export interface IHiloNotificacion extends INotificacionLote {
+  lote: IResumenLote;
+  cliente: IClienteNotificacion | null;
+  mensajes: INotificacionMensaje[];
+  acciones: {
+    puedeCerrar: boolean;
+    mensajeResponderId: string | null; // último mensaje recibido sin responder
+    sinLeer: number;
+  };
+}
+
+export interface IConteoNotificaciones {
+  abiertas: number;
+  cerradas: number;
+  sinLeer: number;
+  porResponder: number;
+}
+
+export interface IResumenNotificacionesLote {
+  lote: IResumenLote;
+  empresas: (IConteoNotificaciones & { idEmpresa: string; nombreEmpresa: string | null })[];
+  totales: IConteoNotificaciones;
+}
+
+export interface ListarNotificacionesLoteQuery {
+  page?: number;
+  limit?: number;
+  idEmpresa?: string;
+  estado?: EstadoNotificacion;
+}
+
+export interface CrearNotificacionRequest {
+  idEmpresa: string;
+  desembolsoId?: string;
+  destinatarioId: string;             // usuario interno de OneSite
+  asunto: string;                     // máx. 200
+  mensaje: string;                    // máx. 4000
+}
+
+export interface ResponderMensajeRequest {
+  mensaje: string;                    // máx. 4000
 }

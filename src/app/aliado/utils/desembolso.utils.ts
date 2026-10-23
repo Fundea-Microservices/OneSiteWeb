@@ -38,6 +38,11 @@ export function mesesCerrados(cantidad = 12): { value: string; label: string }[]
   return meses;
 }
 
+/** Fecha de hoy en Guatemala como "YYYY-MM-DD" */
+export function hoyGuatemala(): string {
+  return new Date(Date.now() + OFFSET_GUATEMALA_MS).toISOString().slice(0, 10);
+}
+
 export interface RangoFechas {
   label: string;
   desde: string; // "YYYY-MM-DD" ('' = sin límite)

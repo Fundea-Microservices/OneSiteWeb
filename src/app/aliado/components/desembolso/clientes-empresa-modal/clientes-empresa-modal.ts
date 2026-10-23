@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, input, output, signal } from '@angular/core';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { DesembolsoService } from '../../../../../services/aliado/desembolso.service';
 import { IClientesEmpresa, IDesembolsoReferido } from '../../../../../interfaces/aliado/desembolso';
 
 /** Clientes referidos de una empresa dentro de un lote (solo lectura) */
 @Component({
   selector: 'app-clientes-empresa-modal',
-  imports: [CurrencyPipe],
+  imports: [CurrencyPipe, DatePipe],
   templateUrl: './clientes-empresa-modal.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,

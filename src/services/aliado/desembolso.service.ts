@@ -7,12 +7,17 @@ import {
   AprobarLoteRequest,
   DesembolsoResponse,
   GenerarLoteRequest,
+  IClientesEmpresa,
   IDesembolsoReferido,
   ILoteDesembolso,
+  IPagosLote,
+  IResumenComisiones,
   ListarDesembolsosQuery,
   ListarLotesQuery,
+  PagarLoteRequest,
   ProcesarLoteRequest,
   RechazarLoteRequest,
+  RegistrarPagoEmpresaRequest,
 } from '../../interfaces/aliado/desembolso';
 
 @Injectable({ providedIn: 'root' })
@@ -70,6 +75,43 @@ export class DesembolsoService extends HttpService {
    */
   async rechazarLote(id: string, data: RechazarLoteRequest) {
     return this.executeRequest<ILoteDesembolso>('put', `${this.base}/${id}/rechazar`, data);
+  }
+
+  /**
+   * PUT - Marcar como pagado un lote APROBADO
+   */
+  async pagarLote(id: string, data: PagarLoteRequest) {
+    return this.executeRequest<ILoteDesembolso>('put', `${this.base}/${id}/pagar`, data);
+  }
+
+  /**
+   * GET - Pago de comisiones por empresa de un lote (cuenta destino, estado y comprobante)
+   */
+  async obtenerPagos(id: string) {
+    return this.executeRequest<IPagosLote>('get', `${this.base}/${id}/pagos`);
+  }
+
+  /**
+   * POST - Registrar el comprobante de transferencia de una empresa.
+   * Sin body cuando la empresa no requiere transferencia (Q0.00). El monto lo toma el backend.
+   * Si era la última empresa pendiente, el lote queda PAGADO.
+   */
+  async registrarPagoEmpresa(id: string, empresaId: string, data?: RegistrarPagoEmpresaRequest) {
+    return this.executeRequest<IPagosLote>('post', `${this.base}/${id}/pagos/${empresaId}`, data ?? {});
+  }
+
+  /**
+   * GET - Resumen de comisiones del lote (categorías, desglose por empresa y totales)
+   */
+  async obtenerComisiones(id: string) {
+    return this.executeRequest<IResumenComisiones>('get', `${this.base}/${id}/comisiones`);
+  }
+
+  /**
+   * GET - Clientes referidos de una empresa dentro del lote
+   */
+  async obtenerClientesEmpresa(id: string, empresaId: string) {
+    return this.executeRequest<IClientesEmpresa>('get', `${this.base}/${id}/comisiones/${empresaId}/clientes`);
   }
 
   /** Quita los parámetros vacíos para no enviarlos en el query string */

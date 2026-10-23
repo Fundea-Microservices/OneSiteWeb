@@ -1,0 +1,285 @@
+<!-- Encabezado clicable de cada sección del acordeón -->
+<ng-template #encabezado let-seccion="seccion" let-icono="icono" let-titulo="titulo" let-badge="badge">
+    <button type="button" (click)="toggleSeccion(seccion)" [attr.aria-expanded]="abierta(seccion)"
+        class="w-full flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 text-left transition-colors">
+        <span class="flex items-center gap-3">
+            <ion-icon [name]="icono" class="text-xl text-blue-700 shrink-0"></ion-icon>
+            <span class="font-semibold text-gray-800">{{ titulo }}</span>
+            @if (badge) {
+            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-700">{{ badge }}</span>
+            }
+        </span>
+        <ion-icon name="chevron-up-outline" class="text-lg text-gray-500 transition-transform duration-200"
+            [class.rotate-180]="!abierta(seccion)"></ion-icon>
+    </button>
+</ng-template>
+
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" (click)="cerrar.emit()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
+
+        <!-- CABECERA -->
+        <div class="flex items-start justify-between gap-2 px-6 py-4 border-b border-gray-200">
+            <div>
+                <h3 class="text-base font-semibold text-gray-800">Gestión de Pagos y Transferencias por Empresa</h3>
+                @if (lote(); as l) {
+                <p class="text-sm text-gray-600">
+                    Lote: <span class="font-semibold">{{ l.lote }}</span> ({{ periodoLabel() }}) · Liquidación bancaria de empresas afiliadas
+                </p>
+                }
+            </div>
+            <button type="button" class="text-gray-500 hover:text-gray-800 text-xl leading-none" title="Cerrar"
+                (click)="cerrar.emit()">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+
+        <div class="px-6 py-4 overflow-y-auto bg-gray-50/50">
+            @if (isLoading() && !pagos()) {
+            <div class="text-center py-8">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <span class="ms-2">Cargando liquidación del lote...</span>
+            </div>
+            } @else if (!pagos()) {
+            <div class="text-center py-8 text-gray-500">No se pudo obtener la liquidación del lote.</div>
+            } @else {
+            @let p = pagos()!;
+            @let l = p.lote;
+            @let t = p.totales;
+
+            <!-- 1. DATOS GENERALES DEL LOTE -->
+            <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4">
+                <ng-container *ngTemplateOutlet="encabezado; context: { seccion: 'datos', icono: 'business-outline', titulo: '1. Datos generales del lote' }" />
+                @if (abierta('datos')) {
+                <div class="p-4 border-t border-gray-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="rounded-lg border border-gray-200 bg-slate-50 p-4">
+                            <span class="block text-xs text-gray-500">Lote / Referencia</span>
+                            <span class="text-lg font-semibold">{{ l.lote }}</span>
+                            <span class="block text-xs text-gray-500">{{ periodoLabel() }}</span>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 bg-slate-50 p-4">
+                            <span class="block text-xs text-gray-500">Total comisiones</span>
+                            <span class="text-lg font-semibold text-blue-700">{{ t.montoTotal | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                            <span class="block text-xs text-gray-500">{{ t.empresas }} empresas afiliadas</span>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 bg-slate-50 p-4">
+                            <span class="block text-xs text-gray-500">Pagado / Pendiente</span>
+                            <span class="text-lg font-semibold text-purple-700">{{ t.montoPagado | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                            <span class="block text-xs text-gray-500">Pendiente: {{ t.montoPendiente | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 bg-slate-50 p-4">
+                            <span class="block text-xs text-gray-500 mb-1">Estado del lote</span>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded border" [class]="claseEstado(l.estado)">{{ l.estado }}</span>
+                            @if (l.usuarioResolucion) {
+                            <span class="block text-xs text-gray-500 mt-1">Aprobado por {{ l.usuarioResolucion }}</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                }
+            </section>
+
+            <!-- 2. PAGO DE COMISIONES A EMPRESAS -->
+            <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4">
+                <ng-container *ngTemplateOutlet="encabezado; context: { seccion: 'empresas', icono: 'card-outline', titulo: '2. Pago de comisiones a empresas', badge: t.pagadas + ' / ' + t.empresas + ' pagadas' }" />
+                @if (abierta('empresas')) {
+                <div class="p-4 border-t border-gray-200">
+                    <p class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                        <ion-icon name="swap-horizontal-outline" class="text-blue-700"></ion-icon>
+                        Desplace horizontalmente para consultar todas las columnas de la liquidación bancaria
+                    </p>
+                    <div class="overflow-x-auto">
+                        <table class="table table-sm table-bordered table-hover w-full align-middle mb-0">
+                            <thead>
+                                <tr class="text-[0.85em]">
+                                    <th class="text-center" scope="col">Región</th>
+                                    <th class="text-center" scope="col">Agencia</th>
+                                    <th class="text-center" scope="col">Empresa</th>
+                                    <th class="text-center" scope="col">Cuenta Bancaria Destino</th>
+                                    <th class="text-center" scope="col">Casos Válidos</th>
+                                    <th class="text-center" scope="col">Total a Transferir</th>
+                                    <th class="text-center" scope="col">Estado del Pago</th>
+                                    <th class="text-center" scope="col">Acc.</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-[0.85em]">
+                                @for (e of p.empresas; track e.idEmpresa) {
+                                @let cuenta = e.cuentaDestino;
+                                @let conteo = conteoNotificaciones(e);
+                                <tr>
+                                    <td class="whitespace-nowrap">{{ nombreRegion(e) }}</td>
+                                    <td>{{ e.agenciaNombre || '—' }}</td>
+                                    <td class="font-medium">{{ e.nombreEmpresa || '—' }}</td>
+                                    <td class="min-w-60">
+                                        @if (!e.requiereTransferencia) {
+                                        <span class="text-gray-400">No requiere transferencia</span>
+                                        } @else if (cuenta) {
+                                        <span class="block font-semibold text-gray-900">
+                                            {{ cuenta.nombreBanco || '—' }}
+                                            @if (cuenta.tipoCuenta) {
+                                            <span class="font-normal text-gray-500">({{ cuenta.tipoCuenta }})</span>
+                                            }
+                                        </span>
+                                        <span class="block font-mono font-semibold tracking-wide text-[1.05em]">{{ cuenta.numeroCuenta || '—' }}</span>
+                                        <span class="block text-gray-500">{{ cuenta.nombreCuenta || '—' }}</span>
+                                        } @else {
+                                        <span class="inline-flex items-center gap-1 text-red-700">
+                                            <ion-icon name="alert-circle-outline"></ion-icon>
+                                            Sin cuenta bancaria activa
+                                        </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">{{ e.casosValidos }}</td>
+                                    <td class="text-end whitespace-nowrap font-semibold">{{ e.monto | currency:'GTQ':'symbol-narrow':'1.2-2' }}</td>
+                                    <td class="text-center">
+                                        @if (e.estadoPago === 'PAGADO') {
+                                        <span class="text-xs font-semibold px-2 py-0.5 rounded border bg-purple-100 text-purple-800 border-purple-300">Pagado</span>
+                                        @if (e.pago; as pago) {
+                                        @if (pago.numeroComprobante) {
+                                        <span class="block font-mono text-gray-700 mt-1">{{ pago.numeroComprobante }}</span>
+                                        }
+                                        @if (pago.fechaTransferencia) {
+                                        <span class="block text-gray-500">{{ pago.fechaTransferencia | date:'dd/MM/yyyy':'UTC' }}</span>
+                                        }
+                                        }
+                                        } @else {
+                                        <span class="text-xs font-semibold px-2 py-0.5 rounded border bg-yellow-100 text-yellow-800 border-yellow-300">Pendiente</span>
+                                        }
+                                    </td>
+                                    <td class="text-center whitespace-nowrap">
+                                        @if (e.estadoPago === 'PENDIENTE' && l.estado === 'APROBADO') {
+                                        <button type="button" class="btn btn-sm btn-success me-1"
+                                            [title]="e.requiereTransferencia ? 'Registrar comprobante de transferencia' : 'Registrar pago en Q0.00'"
+                                            [disabled]="e.requiereTransferencia && !cuenta"
+                                            (click)="empresaPago.set(e.idEmpresa)">
+                                            <ion-icon name="cash-outline"></ion-icon>
+                                        </button>
+                                        } @else {
+                                        <button type="button" class="btn btn-sm btn-outline-success me-1" title="Ver pago registrado"
+                                            (click)="empresaPago.set(e.idEmpresa)">
+                                            <ion-icon name="receipt-outline"></ion-icon>
+                                        </button>
+                                        }
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" title="Ver clientes"
+                                            (click)="empresaClientes.set(e)">
+                                            <ion-icon name="people-outline"></ion-icon>
+                                        </button>
+                                        <button type="button" class="btn btn-sm position-relative"
+                                            [class]="conteo && (conteo.sinLeer > 0 || conteo.porResponder > 0) ? 'btn-outline-danger' : 'btn-outline-secondary'"
+                                            [title]="conteo ? conteo.abiertas + ' abiertas · ' + conteo.sinLeer + ' sin leer · ' + conteo.porResponder + ' por responder' : 'Notificaciones'"
+                                            (click)="empresaNotificaciones.set(e.idEmpresa)">
+                                            <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                                            @if (conteo && conteo.abiertas > 0) {
+                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-purple-600 text-[0.7em]">
+                                                {{ conteo.abiertas }}
+                                            </span>
+                                            }
+                                        </button>
+                                    </td>
+                                </tr>
+                                } @empty {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-gray-500">El lote no tiene empresas</td>
+                                </tr>
+                                }
+                            </tbody>
+                            @if (p.empresas.length > 0) {
+                            <tfoot class="text-[0.85em]">
+                                <tr class="font-semibold bg-gray-50">
+                                    <td colspan="5" class="text-end">TOTAL CONSOLIDADO</td>
+                                    <td class="text-end whitespace-nowrap">{{ t.montoTotal | currency:'GTQ':'symbol-narrow':'1.2-2' }}</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                            }
+                        </table>
+                    </div>
+                </div>
+                }
+            </section>
+
+            <!-- 3. CONCILIACIÓN -->
+            <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <ng-container *ngTemplateOutlet="encabezado; context: { seccion: 'conciliacion', icono: 'checkmark-circle-outline', titulo: '3. Conciliación y cambio de lote a estado Pagado' }" />
+                @if (abierta('conciliacion')) {
+                <div class="p-4 border-t border-gray-200">
+                    <div class="flex flex-wrap justify-between gap-2 text-sm mb-2">
+                        <span class="font-medium text-gray-700">Progreso de pagos registrados</span>
+                        <span class="font-semibold text-blue-700">{{ t.pagadas }} de {{ t.empresas }} empresas ({{ progreso() }}%)</span>
+                    </div>
+                    <div class="w-full h-2.5 rounded-full bg-gray-200 overflow-hidden" role="progressbar"
+                        [attr.aria-valuenow]="progreso()" aria-valuemin="0" aria-valuemax="100">
+                        <div class="h-full rounded-full bg-blue-600 transition-all duration-300" [style.width.%]="progreso()"></div>
+                    </div>
+                    <div class="flex flex-wrap justify-between gap-2 text-xs text-gray-500 mt-1">
+                        <span>Transferido: {{ t.montoPagado | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                        <span>Por transferir: {{ t.montoPendiente | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                    </div>
+
+                    <div class="mt-4 p-3 rounded border bg-blue-50 border-blue-200 text-blue-900 text-sm">
+                        <span class="font-semibold block mb-1">Observaciones:</span>
+                        @if (l.estado === 'PAGADO') {
+                        Lote pagado{{ l.usuarioPago ? ' por ' + l.usuarioPago : '' }}.
+                        @if (l.observacionesPago) { {{ l.observacionesPago }} }
+                        } @else if (transferenciasPendientes().length > 0) {
+                        El lote pasará a <span class="font-semibold">"Pagado"</span> automáticamente al registrar el comprobante
+                        de la última empresa. Faltan {{ transferenciasPendientes().length }} transferencias.
+                        } @else {
+                        Todas las transferencias tienen comprobante. Use <span class="font-semibold">"Marcar lote como Pagado"</span>
+                        para registrar en Q0.00 las empresas sin comisión y cerrar el lote.
+                        }
+                    </div>
+                </div>
+                }
+            </section>
+            }
+        </div>
+
+        <!-- PIE -->
+        <div class="flex flex-wrap items-center justify-between gap-2 px-6 py-3 border-t border-gray-200">
+            <button type="button"
+                class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm"
+                (click)="cerrar.emit()">
+                Cerrar
+            </button>
+            @if (lote()?.estado === 'APROBADO') {
+            <div class="flex flex-wrap items-center justify-end gap-3">
+                @if (transferenciasPendientes().length > 0) {
+                <span class="text-xs text-orange-700">* Debe completar la transferencia de todas las empresas para cerrar el lote.</span>
+                <button type="button" [disabled]="isLoading()"
+                    class="px-4 py-2 rounded bg-green-700 hover:bg-green-800 text-white text-sm disabled:opacity-50 flex items-center gap-2"
+                    (click)="empresaPago.set('')">
+                    <ion-icon name="cash-outline"></ion-icon>
+                    Registrar transferencia
+                </button>
+                }
+                <button type="button" [disabled]="!puedeMarcarPagado() || isLoading()"
+                    class="px-4 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    (click)="pagando.set(true)">
+                    <ion-icon name="checkmark-done-outline"></ion-icon>
+                    Marcar lote como Pagado
+                </button>
+            </div>
+            }
+        </div>
+
+        <!-- MODALES ANIDADOS (dentro del panel para que el clic no cierre esta ventana) -->
+        @if (empresaClientes(); as e) {
+        <app-clientes-empresa-modal [loteId]="loteId()" [empresaId]="e.idEmpresa" [nombreEmpresa]="e.nombreEmpresa"
+            (cerrar)="empresaClientes.set(null)" />
+        }
+        @if (empresaNotificaciones() !== null) {
+        <app-notificaciones-lote-modal [loteId]="loteId()" [idEmpresa]="empresaNotificaciones() || null"
+            (actualizado)="onNotificacionesActualizadas()" (cerrar)="empresaNotificaciones.set(null)" />
+        }
+        @if (empresaPago() !== null && pagos(); as p) {
+        <app-registrar-pago-modal [pagos]="p" [idEmpresa]="empresaPago() || null"
+            (registrado)="onPagoRegistrado($event)" (cerrar)="empresaPago.set(null)" />
+        }
+        @if (pagando() && lote(); as l) {
+        <app-resolver-lote-modal [lote]="l" accion="pagar" (resuelto)="onLotePagado()" (cerrar)="pagando.set(false)" />
+        }
+    </div>
+</div>

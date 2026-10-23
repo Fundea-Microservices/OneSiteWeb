@@ -1,0 +1,238 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" (click)="onCerrar()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden" (click)="$event.stopPropagation()">
+
+        <!-- CABECERA -->
+        <div class="flex items-start justify-between gap-3 px-6 py-4 bg-green-700 text-white">
+            <div class="flex items-center gap-3">
+                <span class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/15 shrink-0">
+                    <ion-icon name="card-outline" class="text-2xl"></ion-icon>
+                </span>
+                <div>
+                    <h3 class="text-base font-semibold mb-0">Registrar Comprobante de Transferencia Bancaria</h3>
+                    <p class="text-xs font-mono text-green-100 mb-0">Lote: {{ lote().lote }} · {{ periodoLabel() }}</p>
+                </div>
+            </div>
+            <button type="button" class="text-white/80 hover:text-white text-xl leading-none" title="Cerrar"
+                [disabled]="isSaving()" (click)="onCerrar()">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 overflow-y-auto bg-slate-50/60 space-y-4">
+
+            <!-- DESTINO -->
+            <div>
+                <label class="block mb-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Destino de la transferencia / liquidación
+                </label>
+                <select [ngModel]="empresaId()" (ngModelChange)="onEmpresa($event)" [disabled]="isSaving()"
+                    class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-600 focus:border-green-600 p-2.5">
+                    @for (e of pagos().empresas; track e.idEmpresa) {
+                    <option [value]="e.idEmpresa">{{ etiquetaEmpresa(e) }}</option>
+                    }
+                </select>
+            </div>
+
+            @if (empresa(); as e) {
+            @let cuenta = e.cuentaDestino;
+
+            <!-- CUENTA BANCARIA DESTINO -->
+            @if (e.requiereTransferencia) {
+            @if (cuenta) {
+            <div class="rounded-xl border-2 overflow-hidden"
+                [class]="e.estadoPago === 'PAGADO' ? 'border-purple-200 bg-white' : 'border-green-200 bg-white'">
+                <div class="flex items-center justify-between gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wide"
+                    [class]="e.estadoPago === 'PAGADO' ? 'bg-purple-50 text-purple-800' : 'bg-green-50 text-green-800'">
+                    <span class="flex items-center gap-1.5">
+                        <ion-icon name="business-outline" class="text-base"></ion-icon>
+                        {{ e.estadoPago === 'PAGADO' ? 'Cuenta a la que se pagó' : 'Cuenta bancaria destino' }}
+                    </span>
+                    @if (cuenta.tipoCuenta) {
+                    <span class="px-2 py-0.5 rounded-full bg-white border border-gray-200 normal-case">{{ cuenta.tipoCuenta }}</span>
+                    }
+                </div>
+                <div class="p-4 space-y-3">
+                    <div>
+                        <span class="block text-xs text-gray-500">Banco</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ cuenta.nombreBanco || '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-gray-500">No. de cuenta</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl font-bold font-mono tracking-wider text-gray-900 break-all">{{ cuenta.numeroCuenta || '—' }}</span>
+                            @if (cuenta.numeroCuenta) {
+                            <button type="button" class="text-gray-500 hover:text-green-700 text-lg leading-none shrink-0"
+                                title="Copiar número de cuenta" (click)="copiarCuenta()">
+                                <ion-icon name="copy-outline"></ion-icon>
+                            </button>
+                            }
+                        </div>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-gray-500">Titular de la cuenta</span>
+                        <span class="font-medium text-gray-900">{{ cuenta.nombreCuenta || '—' }}</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-0 pt-2 border-t border-gray-100">
+                        Empresa: <span class="font-medium text-gray-700">{{ e.nombreEmpresa || '—' }}</span>
+                        @if (e.agenciaNombre) { · Agencia {{ e.agenciaNombre }} }
+                        · {{ e.casosValidos }} casos válidos
+                        @if (e.categoria) { · Categoría {{ e.categoria }} }
+                    </p>
+                </div>
+            </div>
+            } @else {
+            <div class="p-3 rounded-lg border bg-red-50 border-red-200 text-red-800 text-sm flex items-start gap-2">
+                <ion-icon name="alert-circle-outline" class="text-lg shrink-0 mt-0.5"></ion-icon>
+                <span>
+                    <span class="font-semibold block">La empresa no tiene una cuenta bancaria activa.</span>
+                    No se puede registrar la transferencia hasta que la empresa tenga una cuenta activa registrada.
+                </span>
+            </div>
+            }
+            } @else {
+            <div class="p-3 rounded-lg border bg-gray-50 border-gray-200 text-gray-700 text-sm flex items-start gap-2">
+                <ion-icon name="information-circle-outline" class="text-lg shrink-0 mt-0.5"></ion-icon>
+                <span>
+                    <span class="font-semibold">{{ e.nombreEmpresa || '—' }}</span> no tiene comisión en este lote
+                    (todos sus clientes fueron rechazados), por lo que no requiere transferencia.
+                    @if (e.estadoPago === 'PENDIENTE') { Al guardar, el pago se registra en Q0.00. }
+                </span>
+            </div>
+            }
+
+            @if (e.estadoPago === 'PAGADO') {
+            <!-- PAGO REGISTRADO (SOLO LECTURA) -->
+            <div class="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm">
+                <span class="flex items-center gap-1.5 font-semibold text-purple-800 mb-3">
+                    <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                    Pago registrado
+                </span>
+                @if (e.pago; as p) {
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    @if (e.requiereTransferencia) {
+                    <div>
+                        <span class="block text-xs text-gray-500">Fecha de transferencia</span>
+                        <span class="font-medium">{{ p.fechaTransferencia ? (p.fechaTransferencia | date:'dd/MM/yyyy':'UTC') : '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-gray-500">No. de comprobante / autorización</span>
+                        <span class="font-medium font-mono">{{ p.numeroComprobante || '—' }}</span>
+                    </div>
+                    }
+                    <div>
+                        <span class="block text-xs text-gray-500">Monto pagado</span>
+                        <span class="font-medium">{{ p.monto | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-gray-500">Registrado por</span>
+                        <span class="font-medium">{{ p.usuario }}</span>
+                        <span class="text-gray-500"> · {{ p.fechaRegistro | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                </div>
+                } @else {
+                <p class="mb-0 text-gray-600">El lote se pagó antes del registro por empresa; no hay comprobante individual.</p>
+                }
+            </div>
+            } @else if (e.requiereTransferencia && cuenta) {
+            <!-- DATOS DE LA TRANSFERENCIA -->
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-1">
+                    <label class="text-sm font-semibold text-gray-900">
+                        Fecha de transferencia bancaria <span class="text-red-600">*</span>
+                    </label>
+                    @if (fechaTransferencia() === hoy) {
+                    <span class="text-xs px-2 py-0.5 rounded border bg-green-50 border-green-200 text-green-700">Hoy</span>
+                    }
+                </div>
+                <input type="date" [max]="hoy" [ngModel]="fechaTransferencia()" (ngModelChange)="fechaTransferencia.set($event)"
+                    [disabled]="isSaving() || confirmando()"
+                    class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-600 focus:border-green-600 p-2.5" />
+                @if (fechaTransferencia() && !fechaValida()) {
+                <span class="text-xs text-red-600">La fecha de transferencia no puede ser posterior a hoy.</span>
+                }
+            </div>
+
+            <div>
+                <label class="block mb-1 text-sm font-semibold text-gray-900">
+                    No. de comprobante / autorización bancaria <span class="text-red-600">*</span>
+                </label>
+                <input type="text" [attr.maxlength]="maxComprobante" [ngModel]="numeroComprobante()"
+                    (ngModelChange)="numeroComprobante.set($event)" [disabled]="isSaving() || confirmando()"
+                    placeholder="Ej: 90218412, TRX-ACH-89102, AUT-994120 o No. de boleta"
+                    class="w-full bg-white border border-gray-300 text-gray-900 text-sm font-mono rounded-lg focus:ring-green-600 focus:border-green-600 p-2.5" />
+                <div class="flex justify-between gap-2 text-xs text-gray-500 mt-1">
+                    <span>Número de referencia, boleta o comprobante de acreditamiento emitido por el banco.</span>
+                    <span class="shrink-0">{{ numeroComprobante().length }} / {{ maxComprobante }}</span>
+                </div>
+            </div>
+            }
+
+            <!-- TOTAL -->
+            @if (e.requiereTransferencia) {
+            <div class="flex items-center justify-between gap-2 p-4 rounded-lg border border-green-200 bg-green-50">
+                <span class="text-sm font-medium text-green-900">{{ e.estadoPago === 'PAGADO' ? 'Total transferido' : 'Total a transferir' }}</span>
+                <span class="text-2xl font-bold font-mono text-green-700">{{ e.monto | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+            </div>
+            }
+
+            @if (confirmando()) {
+            <div class="p-3 rounded-lg border bg-yellow-50 border-yellow-300 text-yellow-900 text-sm flex items-start gap-2">
+                <ion-icon name="warning-outline" class="text-lg shrink-0 mt-0.5"></ion-icon>
+                <span>
+                    @if (e.requiereTransferencia && cuenta) {
+                    Confirme que transfirió <span class="font-semibold">{{ e.monto | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                    a la cuenta <span class="font-semibold font-mono">{{ cuenta.numeroCuenta }}</span> de {{ cuenta.nombreBanco }}
+                    con el comprobante <span class="font-semibold font-mono">{{ numeroComprobante().trim() }}</span>.
+                    } @else {
+                    Confirme el registro del pago de {{ e.nombreEmpresa }} en Q0.00.
+                    }
+                    Una vez guardado, el pago no se puede editar ni anular.
+                </span>
+            </div>
+            }
+            }
+        </div>
+
+        <!-- PIE -->
+        <div class="flex flex-wrap justify-end gap-3 px-6 py-3 border-t border-gray-200 bg-white">
+            @if (confirmando()) {
+            <button type="button" [disabled]="isSaving()"
+                class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm disabled:opacity-50"
+                (click)="confirmando.set(false)">
+                Volver
+            </button>
+            <button type="button" [disabled]="isSaving()"
+                class="px-4 py-2 rounded bg-green-700 hover:bg-green-800 text-white text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+                (click)="guardar()">
+                @if (isSaving()) {
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                } @else {
+                <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                }
+                Confirmar y guardar
+            </button>
+            } @else {
+            <button type="button"
+                class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm"
+                (click)="onCerrar()">
+                {{ pendiente() ? 'Cancelar' : 'Cerrar' }}
+            </button>
+            @if (pendiente()) {
+            <button type="button" [disabled]="!formularioValido()"
+                class="px-4 py-2 rounded bg-green-700 hover:bg-green-800 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                (click)="confirmando.set(true)">
+                <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                {{ empresa()?.requiereTransferencia ? 'Guardar comprobante y transferir' : 'Registrar pago en Q0.00' }}
+            </button>
+            } @else if (siguientePendiente(); as siguiente) {
+            <button type="button"
+                class="px-4 py-2 rounded bg-green-700 hover:bg-green-800 text-white text-sm font-medium flex items-center gap-2"
+                (click)="onEmpresa(siguiente.idEmpresa)">
+                Siguiente pendiente
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+            </button>
+            }
+            }
+        </div>
+    </div>
+</div>
