@@ -15,7 +15,8 @@ import {
   CrearOrdenGytApiResponse,
   OrdenGytApiDetalle,
   ObtenerOrdenGytApiResponse,
-  ConsultarPorFechaGytDto
+  ConsultarPorFechaGytDto,
+  SincronizarPagoGytResponse
 } from '../../interfaces/ordenes-gyt/orden-gyt';
 
 /**
@@ -118,6 +119,22 @@ export class OrdenesGytService extends HttpService {
       map(response => response.body!),
       catchError(error => {
         console.error('❌ [OrdenesGytService] Error al pagar orden:', {
+          status: error.status,
+          errorData: error.error
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Consultar en GYT el resultado del pago de una orden que está en cola de pago
+   */
+  sincronizarPagoApi(numeroOrden: string): Observable<SincronizarPagoGytResponse> {
+    return this.post<SincronizarPagoGytResponse>('/ordenes/gyt/sincronizar-pago', { numeroOrden }).pipe(
+      map(response => response.body!),
+      catchError(error => {
+        console.error('❌ [OrdenesGytService] Error al sincronizar pago:', {
           status: error.status,
           errorData: error.error
         });

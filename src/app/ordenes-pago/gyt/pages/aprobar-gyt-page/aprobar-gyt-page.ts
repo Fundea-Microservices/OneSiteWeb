@@ -32,7 +32,10 @@ export default class AprobarGytPageComponent {
   
   // Señal para indicar si se está procesando la aprobación
   procesandoAprobacion = signal(false);
-  
+
+  // Señal para indicar si se está consultando el resultado del pago en GYT
+  sincronizandoPago = signal(false);
+
   // Señal para órdenes pendientes
   ordenesPendientes = signal<OrdenGyt[]>([]);
 
@@ -54,13 +57,15 @@ export default class AprobarGytPageComponent {
   estadoBadgeClass = computed<string>(() => {
     const estado = this.ultimoEstado()?.estado ?? '';
     switch (estado) {
-      case 'CREADO':    return 'bg-secondary';
-      case 'REVISADO':  return 'bg-info text-dark';
-      case 'PENDIENTE': return 'bg-warning text-dark';
-      case 'AUTORIZADO': return 'bg-primary';
-      case 'PAGADO':    return 'bg-success';
-      case 'ELIMINADO': return 'bg-danger';
-      default:          return 'bg-secondary';
+      case 'CREADO':       return 'bg-secondary';
+      case 'REVISADO':     return 'bg-info text-dark';
+      case 'PENDIENTE':    return 'bg-warning text-dark';
+      case 'AUTORIZADO':   return 'bg-primary';
+      case 'EN_COLA_PAGO': return 'bg-dark';
+      case 'PAGADO':       return 'bg-success';
+      case 'ERROR_PAGO':   return 'bg-danger';
+      case 'ELIMINADO':    return 'bg-danger';
+      default:             return 'bg-secondary';
     }
   });
 
@@ -151,6 +156,11 @@ export default class AprobarGytPageComponent {
         this.noEncontrada.set(false);
         this.buscando.set(false);
         this.toastr.success('Orden encontrada', 'Búsqueda exitosa');
+
+        // Si está en cola de pago, consultar a GYT si ya hay resultado
+        if (this.ultimoEstado()?.estado === 'EN_COLA_PAGO') {
+          this.consultarResultadoPago(true);
+        }
       },
       error: (error) => {
         this.ordenEncontrada.set(null);
@@ -184,7 +194,10 @@ export default class AprobarGytPageComponent {
 
     this.ordenesGytService.pagarOrdenApi(orden.numero).subscribe({
       next: () => {
-        this.toastr.success(`Orden ${orden.numero} aprobada exitosamente`, 'Aprobación exitosa');
+        this.toastr.success(
+          `Orden ${orden.numero} enviada a la cola de pago. El resultado se confirmará al consultarlo con GyT.`,
+          'Pago enviado'
+        );
         this.procesandoAprobacion.set(false);
         this.cerrarModal();
         this.limpiarBusqueda();
@@ -194,6 +207,52 @@ export default class AprobarGytPageComponent {
         this.toastr.error(msg, 'Error');
         this.procesandoAprobacion.set(false);
         this.cerrarModal();
+      }
+    });
+  }
+
+  /**
+   * Consulta en GYT el resultado del pago de la orden encontrada (consume /ordenes/gyt/sincronizar-pago)
+   * @param silencioso Si es true, no muestra aviso cuando aún no hay resultado o hay error
+   */
+  consultarResultadoPago(silencioso = false): void {
+    const orden = this.ordenEncontrada();
+    if (!orden || this.sincronizandoPago()) return;
+
+    this.sincronizandoPago.set(true);
+
+    this.ordenesGytService.sincronizarPagoApi(orden.numero).subscribe({
+      next: (resp) => {
+        this.sincronizandoPago.set(false);
+
+        if (!resp.data.actualizado) {
+          if (!silencioso) {
+            this.toastr.info('GyT aún no reporta el resultado del pago. Intente más tarde.', 'Pago en proceso');
+          }
+          return;
+        }
+
+        // Recargar la orden para mostrar el nuevo estado
+        this.ordenesGytService.obtenerOrdenPorNumeroApi(orden.numero).subscribe({
+          next: (ordenActualizada) => this.ordenEncontrada.set(ordenActualizada)
+        });
+
+        switch (resp.data.estado) {
+          case 'PAGADO':
+            this.toastr.success(resp.data.descripcion ?? 'Pago aplicado', `Orden ${orden.numero} pagada`);
+            break;
+          case 'ERROR_PAGO':
+            this.toastr.error(resp.data.descripcion ?? 'El pago no se aplicó', `Orden ${orden.numero} con error`);
+            break;
+          default:
+            this.toastr.warning(resp.data.descripcion ?? resp.message, `Orden ${orden.numero}`);
+        }
+      },
+      error: (error) => {
+        this.sincronizandoPago.set(false);
+        if (!silencioso) {
+          this.toastr.error(error?.error?.message ?? 'Error al consultar el resultado del pago', 'Error');
+        }
       }
     });
   }
@@ -240,12 +299,15 @@ export default class AprobarGytPageComponent {
   // Método para obtener clase de badge según estado
   getEstadoBadgeClass(estado: EstadoOrdenGyt): string {
     switch (estado) {
-      case 'CREADO':    return 'bg-secondary';
-      case 'REVISADO':  return 'bg-info text-dark';
-      case 'PENDIENTE': return 'bg-warning text-dark';
-      case 'AUTORIZADO': return 'bg-primary';
-      case 'PAGADO':    return 'bg-success';
-      case 'ELIMINADO': return 'bg-danger';
+      case 'CREADO':       return 'bg-secondary';
+      case 'REVISADO':     return 'bg-info text-dark';
+      case 'PENDIENTE':    return 'bg-warning text-dark';
+      case 'AUTORIZADO':   return 'bg-primary';
+      case 'EN_COLA_PAGO': return 'bg-dark';
+      case 'PAGADO':       return 'bg-success';
+      case 'ERROR_PAGO':   return 'bg-danger';
+      case 'ELIMINADO':    return 'bg-danger';
+      default:             return 'bg-secondary';
     }
   }
 

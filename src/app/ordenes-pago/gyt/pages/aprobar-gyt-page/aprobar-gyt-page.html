@@ -157,6 +157,34 @@
           Aprobar Orden
         </button>
       </div>
+    } @else if (ultimoEstado()?.estado === 'EN_COLA_PAGO') {
+      <div class="alert alert-info" role="alert">
+        <ion-icon name="time-outline" class="me-2"></ion-icon>
+        <strong>Pago en proceso</strong>
+        <br>La orden fue enviada a la cola de pago de GyT y aún no hay resultado.
+      </div>
+      <div class="d-grid gap-2 mb-4">
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          [disabled]="sincronizandoPago()"
+          (click)="consultarResultadoPago()">
+          @if (sincronizandoPago()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Consultando...
+          } @else {
+            <ion-icon name="refresh-outline" class="me-2"></ion-icon>
+            Consultar resultado del pago
+          }
+        </button>
+      </div>
+    } @else if (ultimoEstado()?.estado === 'ERROR_PAGO') {
+      <div class="alert alert-danger" role="alert">
+        <ion-icon name="close-circle-outline" class="me-2"></ion-icon>
+        <strong>El pago no se aplicó</strong>
+        <br>{{ ultimoEstado()?.descripcion }}
+        <br>Puede generar una nueva orden para este préstamo.
+      </div>
     } @else {
       <div class="alert alert-warning" role="alert">
         <ion-icon name="warning-outline" class="me-2"></ion-icon>

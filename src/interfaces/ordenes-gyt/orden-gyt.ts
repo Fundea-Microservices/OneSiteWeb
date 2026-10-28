@@ -5,7 +5,7 @@
 /**
  * Estado de una orden de pago GYT
  */
-export type EstadoOrdenGyt = 'CREADO' | 'REVISADO' | 'PENDIENTE' | 'AUTORIZADO' | 'PAGADO' | 'ELIMINADO';
+export type EstadoOrdenGyt = 'CREADO' | 'REVISADO' | 'PENDIENTE' | 'AUTORIZADO' | 'EN_COLA_PAGO' | 'PAGADO' | 'ERROR_PAGO' | 'ELIMINADO';
 
 /**
  * Cliente asociado a la orden
@@ -181,4 +181,19 @@ export interface ConsultarPorFechaGytDto {
   fechaInicio: string;
   fechaFin: string;
   etapa?: 'TODOS' | 'FINALIZADA' | 'ERROR' | 'CANCELADA';
+}
+
+/**
+ * Respuesta de POST /ordenes/gyt/sincronizar-pago
+ */
+export interface SincronizarPagoGytResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    numero: string;
+    estado: EstadoOrdenGyt;
+    actualizado: boolean;
+    descripcion?: string;
+  };
 }
