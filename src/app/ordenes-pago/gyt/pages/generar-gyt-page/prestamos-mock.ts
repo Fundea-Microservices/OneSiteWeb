@@ -31,10 +31,10 @@ interface PrestamoMock {
 
 const PRESTAMOS_MOCK: PrestamoMock[] = [
   { documento: '1879394380105', operacion: 452027, tipoDocumento: 'DPI', monto: 14112.25, cuenta: 1697,   subOperacion: 0, tipoOperacion: 0, agenciaId: 101, agencia: 'AGENCIA CHIMALTENANGO', nombres: 'MARILU FRANCO CATALAN', apellidos: 'SIN APELLIDO' },
-  { documento: '6543234590101', operacion: 457649, tipoDocumento: 'DPI', monto: 11459.8,  cuenta: 221606, subOperacion: 0, tipoOperacion: 0, agenciaId: 101, agencia: 'AGENCIA CHIMALTENANGO', nombres: 'JENNIFER ALEJANDRA RAMIREZ HERNANDEZ', apellidos: 'SIN APELLIDO' },
+  { documento: '6543234590101', operacion: 457649, tipoDocumento: 'DPI', monto: 11459.8,  cuenta: 221606, subOperacion: 0, tipoOperacion: 0, agenciaId: 101, agencia: 'AGENCIA CHIMALTENANGO', nombres: 'JENNIFER ALEJANDRA', apellidos: 'RAMIREZ HERNANDEZ' },
   { documento: '1885058572102', operacion: 456436, tipoDocumento: 'DPI', monto: 14419,    cuenta: 54977,  subOperacion: 0, tipoOperacion: 0, agenciaId: 602, agencia: 'AGENCIA JALAPA',        nombres: 'ERMERITO GOMEZ GUTIERREZ', apellidos: 'SIN APELLIDO' },
-  { documento: '1667940150201', operacion: 457654, tipoDocumento: 'DPI', monto: 7000,     cuenta: 221621, subOperacion: 0, tipoOperacion: 0, agenciaId: 501, agencia: 'AGENCIA TECPAN',        nombres: 'JAUREGUI DEL CID ESTEFANI ABIGAIL', apellidos: 'SIN APELLIDO' },
-  { documento: '2605652962214', operacion: 457641, tipoDocumento: 'DPI', monto: 3000,     cuenta: 51183,  subOperacion: 0, tipoOperacion: 0, agenciaId: 605, agencia: 'AGENCIA CHIQUIMULILLA', nombres: 'MARBIN ELIAS CRISTALES GONZALEZ', apellidos: 'SIN APELLIDO' },
+  { documento: '1667940150201', operacion: 457654, tipoDocumento: 'DPI', monto: 7000,     cuenta: 221621, subOperacion: 0, tipoOperacion: 0, agenciaId: 501, agencia: 'AGENCIA TECPAN',        nombres: 'ESTEFANI ABIGAIL', apellidos: 'JAUREGUI DEL CID' },
+  { documento: '2605652962214', operacion: 457641, tipoDocumento: 'DPI', monto: 3000,     cuenta: 51183,  subOperacion: 0, tipoOperacion: 0, agenciaId: 605, agencia: 'AGENCIA CHIQUIMULILLA', nombres: 'MARBIN ELIAS', apellidos: 'CRISTALES GONZALEZ' },
 ];
 
 /**
