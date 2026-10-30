@@ -68,7 +68,7 @@
             <tr>
               <th class="text-center" style="width: 4%;"></th>
               <th class="text-center" style="width: 8%;">Cód</th>
-              <th style="width: 32%;">Enunciado</th>
+              <th class="text-center" style="width: 32%;">Enunciado</th>
               <th class="text-center" style="width: 14%;">Tipo Control</th>
               <th class="text-center" style="width: 12%;">Catálogo</th>
               <th class="text-center" style="width: 8%;">Calculada</th>
@@ -85,7 +85,7 @@
                 <td class="text-center text-muted" style="cursor: grab;">
                   <ion-icon name="reorder-two-outline"></ion-icon>
                 </td>
-                <td class="text-center fw-semibold text-primary font-monospace">
+                <td class="fw-semibold text-primary font-monospace">
                   {{ item.codigoPregunta }}
                 </td>
                 <td class="text-break">
@@ -102,7 +102,7 @@
                 <td class="text-center">
                   <span class="badge text-bg-light border">{{ etiquetaTipo(item.tipoPregunta) }}</span>
                 </td>
-                <td class="text-center small font-monospace"
+                <td class="small font-monospace"
                   [class.text-muted]="!item.catalogoRespuestasId">
                   {{ nombreCatalogo(item.catalogoRespuestasId) }}
                 </td>
@@ -196,6 +196,7 @@
             [pregunta]="preguntaEdit()"
             [scoringId]="id"
             [catalogos]="catalogos()"
+            [preguntas]="preguntaList()"
             [nuevo]="nuevo()"
             [formKey]="formKey()"
             (save)="guardar($event)"

@@ -51,24 +51,54 @@ export class EvaluacionScoringService extends HttpService {
     }
   }
 
+  /**
+   * Bandeja filtrada.
+   *
+   * Los filtros vacíos no se mandan: el backend interpreta "ausente" como "sin
+   * filtro", y enviar cadena vacía buscaría literalmente ''.
+   *
+   * No lleva usuario de sesión: el orden "primero lo mío" lo resuelve el
+   * gateway con el usuario del token.
+   */
   async getEvaluaciones({
+    evaluacionId,
     numeroSolicitud,
     scoringId,
     estadoEvaluacion,
+    cliente,
+    region,
+    agencia,
+    usuario,
+    fechaDesde,
+    fechaHasta,
     pagina = 1,
     limite = 10,
   }: {
+    evaluacionId?: number;
     numeroSolicitud?: number;
     scoringId?: number;
     estadoEvaluacion?: string;
+    cliente?: string;
+    region?: string;
+    agencia?: string;
+    usuario?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
     pagina?: number;
     limite?: number;
   } = {}) {
     try {
       const params: any = { pagina, limite };
+      if (evaluacionId) params['evaluacionId'] = evaluacionId;
       if (numeroSolicitud) params['numeroSolicitud'] = numeroSolicitud;
       if (scoringId) params['scoringId'] = scoringId;
       if (estadoEvaluacion) params['estadoEvaluacion'] = estadoEvaluacion;
+      if (cliente?.trim()) params['cliente'] = cliente.trim();
+      if (region?.trim()) params['region'] = region.trim();
+      if (agencia?.trim()) params['agencia'] = agencia.trim();
+      if (usuario?.trim()) params['usuario'] = usuario.trim();
+      if (fechaDesde) params['fechaDesde'] = fechaDesde;
+      if (fechaHasta) params['fechaHasta'] = fechaHasta;
 
       const resp = await firstValueFrom(
         this.get<PaginadoScoring<IEvaluacionCredito>>(this.base, params),

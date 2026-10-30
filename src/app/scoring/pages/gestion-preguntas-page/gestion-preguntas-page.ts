@@ -102,7 +102,7 @@ export default class GestionPreguntasPage implements OnInit, AfterViewInit {
     this.formKey.set(Date.now());
     this.preguntaEdit.set(esNuevo ? null : (pregunta ?? null));
     this.modal.set({
-      titulo: esNuevo ? 'Nueva Pregunta' : 'Configurar Pregunta Dinámica',
+      titulo: esNuevo ? 'Nueva Pregunta' : 'Configurar Pregunta',
     });
     this.modalInstance.show();
   }

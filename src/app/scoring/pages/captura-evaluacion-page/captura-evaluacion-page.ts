@@ -11,6 +11,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { EvaluacionScoringService } from '../../../../services/scoring/evaluacion.service';
 import { ModeloScoringService } from '../../../../services/scoring/modelo-scoring.service';
+import { CatalogoVariableService } from '../../../../services/scoring/catalogo-variable.service';
 import {
   ICuestionario,
   IEvaluacionCredito,
@@ -18,6 +19,7 @@ import {
   IPreguntaCuestionario,
   IRespuestaCaptura,
   ISolicitudBantotal,
+  IOpcionExterna,
 } from '../../../../interfaces/scoring/scoring';
 
 /**
@@ -37,6 +39,7 @@ import {
 export default class CapturaEvaluacionPage implements OnInit {
   private evaluacionService = inject(EvaluacionScoringService);
   private modeloService = inject(ModeloScoringService);
+  private catalogoService = inject(CatalogoVariableService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -163,9 +166,12 @@ export default class CapturaEvaluacionPage implements OnInit {
   }
 
   private async cargarCuestionario(scoringId: number) {
-    this.cuestionario.set(
-      await this.evaluacionService.getCuestionario(scoringId),
-    );
+    const cuestionario = await this.evaluacionService.getCuestionario(scoringId);
+    this.cuestionario.set(cuestionario);
+
+    // Las preguntas alimentadas por API piden sus opciones al core una vez,
+    // al abrir: volver a consultar en cada cambio sería una petición por tecla.
+    if (cuestionario) await this.cargarExternas(cuestionario.preguntas);
   }
 
   // ── Captura ───────────────────────────────────────────────────────────────
@@ -208,8 +214,159 @@ export default class CapturaEvaluacionPage implements OnInit {
       // texto, y así queda legible sin volver a consultar el catálogo.
       valorIngresado: opcion?.descripcionOpcion ?? null,
     });
+
+    /* Cambiar el padre invalida al hijo: la agencia elegida puede no
+       pertenecer a la región nueva. Dejarla sería guardar una combinación
+       imposible, y el asesor no tendría cómo notarlo. */
+    for (const hija of this.hijasDe(pregunta.preguntaId)) {
+      mapa.set(hija.preguntaId, {
+        preguntaId: hija.preguntaId,
+        opcionId: null,
+        valorIngresado: null,
+      });
+    }
+
     this.respuestas.set(mapa);
     this.programarSimulacion();
+  }
+
+  /**
+   * Guarda lo elegido en una pregunta alimentada por el API.
+   *
+   * Se persisten el código y el nombre: el código es lo único estable si el
+   * core renombra la agencia, y el nombre es lo que el expediente muestra.
+   * `opcionId` queda en null porque esa opción no existe localmente.
+   */
+  setOpcionExterna(pregunta: IPreguntaCuestionario, codigo: string) {
+    const mapa = new Map(this.respuestas());
+    const opcion = this.externasDe(pregunta).find((o) => o.codigo === codigo);
+
+    mapa.set(pregunta.preguntaId, {
+      preguntaId: pregunta.preguntaId,
+      opcionId: null,
+      codigoExterno: codigo || null,
+      valorIngresado: opcion?.nombre ?? null,
+    });
+
+    // Mismo motivo que en setOpcion: lo elegido abajo puede no pertenecer.
+    for (const hija of this.hijasDe(pregunta.preguntaId)) {
+      mapa.set(hija.preguntaId, {
+        preguntaId: hija.preguntaId,
+        opcionId: null,
+        codigoExterno: null,
+        valorIngresado: null,
+      });
+    }
+
+    this.respuestas.set(mapa);
+    this.programarSimulacion();
+  }
+
+  codigoExternoDe(preguntaId: number): string {
+    return this.respuestas().get(preguntaId)?.codigoExterno ?? '';
+  }
+
+  // ── Catálogos traídos del API ─────────────────────────────────────────────
+
+  /**
+   * Opciones que el API devolvió, por grupo.
+   *
+   * Se piden una vez al abrir el cuestionario y quedan en memoria: Región y
+   * Agencia vienen en la misma llamada, y volver a consultar en cada cambio
+   * del formulario sería una petición por tecla.
+   */
+  private externas = signal<Map<string, IOpcionExterna[]>>(new Map());
+
+  private async cargarExternas(preguntas: readonly IPreguntaCuestionario[]) {
+    const grupos = [
+      ...new Set(
+        preguntas
+          .map((p) => p.grupoExterno?.trim().toLowerCase())
+          .filter((g): g is string => !!g),
+      ),
+    ];
+
+    if (grupos.length === 0) return;
+
+    const mapa = new Map<string, IOpcionExterna[]>();
+
+    for (const grupo of grupos) {
+      /* Región ya trajo las agencias anidadas, así que para Agencia no queda
+         nada que pedir. Sin esto eran dos llamadas por el mismo árbol. */
+      if (mapa.has(grupo)) continue;
+
+      const opciones = await this.catalogoService.getCatalogoExterno(grupo);
+      // Una sola llamada trae el árbol completo: las agencias vienen dentro
+      // de la respuesta de región, así que se indexan todas por su grupo.
+      for (const opcion of opciones) {
+        const clave = opcion.grupo.toLowerCase();
+        mapa.set(clave, [...(mapa.get(clave) ?? []), opcion]);
+      }
+    }
+
+    this.externas.set(mapa);
+  }
+
+  /** Las opciones del API que corresponden a esta pregunta, ya filtradas. */
+  externasDe(pregunta: IPreguntaCuestionario): IOpcionExterna[] {
+    const grupo = pregunta.grupoExterno?.trim().toLowerCase();
+    if (!grupo) return [];
+
+    const todas = (this.externas().get(grupo) ?? []).filter((o) => o.activo);
+
+    if (!pregunta.preguntaPadreId) return todas;
+
+    const codigoPadre = this.codigoExternoDe(pregunta.preguntaPadreId);
+    if (!codigoPadre) return [];
+
+    return todas.filter((o) => o.codigoPadre === codigoPadre);
+  }
+
+  // ── Cascada padre-hijo ────────────────────────────────────────────────────
+
+  /** Las preguntas que dependen de esta. */
+  private hijasDe(preguntaId: number): IPreguntaCuestionario[] {
+    return (this.cuestionario()?.preguntas ?? []).filter(
+      (pregunta) => pregunta.preguntaPadreId === preguntaId,
+    );
+  }
+
+  /**
+   * Las opciones que el desplegable debe ofrecer.
+   *
+   * Sin pregunta padre, todas. Con padre, solo las que cuelgan de la opción
+   * que se eligió arriba: las agencias de la región seleccionada.
+   */
+  opcionesDe(pregunta: IPreguntaCuestionario) {
+    if (!pregunta.preguntaPadreId) return pregunta.opciones;
+
+    const opcionPadre = this.opcionDe(pregunta.preguntaPadreId);
+    if (!opcionPadre) return [];
+
+    return pregunta.opciones.filter(
+      (opcion) => opcion.opcionPadreId === opcionPadre,
+    );
+  }
+
+  /** Una pregunta con padre sin responder no se puede contestar todavía. */
+  esperaPadre(pregunta: IPreguntaCuestionario): boolean {
+    if (!pregunta.preguntaPadreId) return false;
+
+    /* El padre puede ser de catálogo local (guarda opcionId) o alimentado por
+       API (guarda codigoExterno). Mirar solo uno dejaba la hija bloqueada para
+       siempre cuando el padre era del otro tipo. */
+    return (
+      !this.opcionDe(pregunta.preguntaPadreId) &&
+      !this.codigoExternoDe(pregunta.preguntaPadreId)
+    );
+  }
+
+  /** Enunciado del padre, para decirle al asesor qué le falta. */
+  enunciadoPadre(pregunta: IPreguntaCuestionario): string {
+    const padre = (this.cuestionario()?.preguntas ?? []).find(
+      (p) => p.preguntaId === pregunta.preguntaPadreId,
+    );
+    return padre?.enunciado ?? 'la pregunta anterior';
   }
 
   setCasilla(pregunta: IPreguntaCuestionario, marcada: boolean) {
