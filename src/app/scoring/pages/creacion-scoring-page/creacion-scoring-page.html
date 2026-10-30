@@ -54,8 +54,8 @@
           <tr>
             <th class="text-center" style="width: 3%;"></th>
             <th class="text-center" style="width: 8%;">Cód.</th>
-            <th style="width: 17%;">Nombre Scoring</th>
-            <th style="width: 19%;">Descripción</th>
+            <th class="text-center" style="width: 17%;">Nombre Scoring</th>
+            <th class="text-center" style="width: 19%;">Descripción</th>
             <th class="text-center" style="width: 8%;">Datos<br />Bantotal</th>
             <th class="text-center" style="width: 8%;">Captura<br />de Datos</th>
             <th class="text-center" style="width: 11%;">Vigencia</th>
@@ -73,7 +73,7 @@
               <td class="text-center text-muted" style="cursor: grab;" title="Arrastrar para reordenar">
                 <ion-icon name="reorder-two-outline"></ion-icon>
               </td>
-              <td class="text-center fw-semibold text-primary">{{ item.codigoInterno }}</td>
+              <td class="fw-semibold text-primary">{{ item.codigoInterno }}</td>
               <td class="text-break fw-semibold">{{ item.nombreScoring }}</td>
               <td class="text-break">
                 <div class="small">{{ item.descripcion }}</div>
@@ -107,7 +107,7 @@
                 }
               </td>
               <td class="text-center small">{{ item.fechaVigencia | slice:0:10 }}</td>
-              <td class="text-center">{{ item.version }}</td>
+              <td class="text-end num-tabular">{{ item.version }}</td>
               <td class="text-center">
                 @if (item.estado === 'Activo') {
                   <span class="badge text-bg-success">ACTIVO</span>
@@ -277,8 +277,8 @@
           <b>{{ modeloAccion()?.codigoInterno }}</b> (actual: v{{ modeloAccion()?.version }}),
           clonando sus catálogos, opciones, preguntas y rangos.
         </p>
-        <div class="alert alert-info py-2 small mb-0">
-          La versión nueva <strong>nace inactiva</strong> para que se revise antes
+        <div class="alert alert-warning py-2 small mb-0">
+          Cuidado la versión nueva <strong>nace inactiva</strong> para que se revise antes
           de recibir evaluaciones. Las evaluaciones ya emitidas siguen apuntando a
           la versión con la que se calcularon, así que sus dictámenes no cambian.
         </div>

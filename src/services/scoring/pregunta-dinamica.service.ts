@@ -148,11 +148,14 @@ export class PreguntaDinamicaService extends HttpService {
     const { preguntaId, catalogoRespuestas, ordenDespliegue, ...resto } =
       pregunta;
 
+    /* Van en null, no en undefined: el backend lee undefined como "no lo
+       tocó" y conserva el valor guardado, así que con undefined no había
+       forma de quitarle el catálogo a una pregunta que pasa al API. */
     return {
       ...resto,
-      catalogoRespuestasId: resto.catalogoRespuestasId || undefined,
-      formula: resto.respuestaCalculada ? resto.formula : undefined,
-      observacionesPregunta: resto.observacionesPregunta || undefined,
+      catalogoRespuestasId: resto.catalogoRespuestasId || null,
+      formula: resto.respuestaCalculada ? resto.formula : null,
+      observacionesPregunta: resto.observacionesPregunta || null,
     };
   }
 }

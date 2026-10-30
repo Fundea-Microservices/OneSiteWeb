@@ -43,31 +43,22 @@ export class UpsertPreguntaDinamicaComponent {
   pregunta = input<IPreguntaDinamica | null>(null);
   scoringId = input.required<number>();
   catalogos = input<ICatalogoVariable[]>([]);
+  /** Las demás preguntas del scoring, para elegir de cuál depende esta. */
+  preguntas = input<IPreguntaDinamica[]>([]);
   nuevo = input<boolean>(true);
   formKey = input<number>(0);
 
   @Output() save = new EventEmitter<IPreguntaDinamica>();
   @Output() cancel = new EventEmitter<void>();
 
-  /**
-   * Con sus controles desde el inicio. El componente se crea dentro de un
-   * `@if` y los `effect()` corren después del primer render: con un formulario
-   * vacío, los `formControlName` no encontrarían control y Angular abortaría el
-   * componente, dejando el modal en blanco.
-   *
-   * El effect vuelve a construirlo con los datos reales y engancha las
-   * suscripciones; aquí solo se arma la estructura.
-   */
+
   form = signal<FormGroup>(this.construirForm(null));
   readonly tiposPregunta = TIPOS_PREGUNTA;
 
-  /**
-   * Igual que en el modal del modelo: el valor de un FormControl no es señal,
-   * así que estas dos se alimentan desde valueChanges para que la plantilla
-   * reaccione al cambiar tipo o "respuesta calculada".
-   */
   private tipoActual = signal<TipoPregunta | null>(null);
   private esCalculada = signal(false);
+  /** La pregunta toma sus opciones del API, no de un catálogo local. */
+  usaApiExterna = signal(false);
 
   private subs: Subscription[] = [];
 
@@ -76,16 +67,30 @@ export class UpsertPreguntaDinamicaComponent {
   formulaMensaje = signal('');
   formulaReferencias = signal<string[]>([]);
 
-  requiereCatalogo = computed(() => {
+  /** El tipo admite opciones, vengan de un catálogo local o del API. */
+  esDeSeleccion = computed(() => {
     const tipo = this.tipoActual();
     return tipo ? TIPOS_PREGUNTA_SELECCION.includes(tipo) : false;
   });
+
+  requiereCatalogo = computed(
+    () => this.esDeSeleccion() && !this.usaApiExterna(),
+  );
 
   respuestaCalculada = computed(() => this.esCalculada());
 
   /** Solo catálogos activos: uno inactivo no despliega opciones al evaluar. */
   catalogosActivos = computed(() =>
     this.catalogos().filter((catalogo) => catalogo.estado === 'Activo'),
+  );
+
+  posiblesPadres = computed(() =>
+    this.preguntas().filter(
+      (otra) =>
+        otra.preguntaId !== this.pregunta()?.preguntaId &&
+        (otra.tipoPregunta === 'Desplegable' ||
+          otra.tipoPregunta === 'BotonOpcion'),
+    ),
   );
 
   constructor() {
@@ -135,10 +140,12 @@ export class UpsertPreguntaDinamicaComponent {
         tipoPregunta: [pregunta?.tipoPregunta ?? 'Texto', [Validators.required]],
         catalogoRespuestasId: [pregunta?.catalogoRespuestasId ?? null],
         preguntaVisible: [pregunta?.preguntaVisible ?? true],
-      preguntaCalculada: [pregunta?.preguntaCalculada ?? false],
+        preguntaCalculada: [pregunta?.preguntaCalculada ?? false],
         aplicaScore: [pregunta?.aplicaScore ?? true],
         respuestaCalculada: [pregunta?.respuestaCalculada ?? false],
         requiereRTE: [pregunta?.requiereRTE ?? false],
+        preguntaPadreId: [pregunta?.preguntaPadreId ?? null],
+        grupoExterno: [pregunta?.grupoExterno ?? ''],
         formula: [pregunta?.formula ?? ''],
         peso: [pregunta?.peso ?? 0, [Validators.required]],
         constante: [pregunta?.constante ?? 0, [Validators.required]],
@@ -153,11 +160,6 @@ export class UpsertPreguntaDinamicaComponent {
     });
   }
 
-  /**
-   * Mantiene las señales al día y mueve los validadores condicionales:
-   * catálogo obligatorio en preguntas de selección (ERR-SCOR-004) y fórmula
-   * obligatoria en respuestas calculadas (ERR-SCOR-005).
-   */
   private sincronizar(): void {
     this.limpiarSubs();
 
@@ -166,23 +168,29 @@ export class UpsertPreguntaDinamicaComponent {
     const calculada = form.get('respuestaCalculada');
     const catalogo = form.get('catalogoRespuestasId');
     const formula = form.get('formula');
+    const grupo = form.get('grupoExterno');
 
-    if (!tipo || !calculada || !catalogo || !formula) return;
+    if (!tipo || !calculada || !catalogo || !formula || !grupo) return;
 
-    const aplicarTipo = (valor: unknown): void => {
-      const nuevoTipo = valor as TipoPregunta;
+  
+    const aplicarOrigenOpciones = (): void => {
+      const nuevoTipo = tipo.value as TipoPregunta;
       this.tipoActual.set(nuevoTipo);
 
-      if (TIPOS_PREGUNTA_SELECCION.includes(nuevoTipo)) {
+      const esSeleccion = TIPOS_PREGUNTA_SELECCION.includes(nuevoTipo);
+      const usaApi = !!String(grupo.value ?? '').trim();
+      this.usaApiExterna.set(usaApi);
+
+      if (esSeleccion && !usaApi) {
         catalogo.setValidators([Validators.required]);
       } else {
         catalogo.setValidators([]);
-        // Un tipo que no es de selección no debe arrastrar un catálogo viejo:
-        // quedaría guardado y confundiría al revisar la parametrización.
         catalogo.setValue(null, { emitEvent: false });
       }
       catalogo.updateValueAndValidity({ emitEvent: false });
     };
+
+    const aplicarTipo = (): void => aplicarOrigenOpciones();
 
     const aplicarCalculada = (valor: unknown): void => {
       const activa = valor === true || valor === 'true';
@@ -197,11 +205,12 @@ export class UpsertPreguntaDinamicaComponent {
       }
     };
 
-    aplicarTipo(tipo.value);
+    aplicarTipo();
     aplicarCalculada(calculada.value);
 
     this.subs.push(
       tipo.valueChanges.subscribe(aplicarTipo),
+      grupo.valueChanges.subscribe(aplicarOrigenOpciones),
       calculada.valueChanges.subscribe(aplicarCalculada),
       // Se valida contra el backend mientras se escribe, con respiro suficiente
       // para no disparar una petición por tecla.
@@ -267,6 +276,7 @@ export class UpsertPreguntaDinamicaComponent {
       coeficienteB: Number(valores.coeficienteB),
       catalogoRespuestasId: valores.catalogoRespuestasId || null,
       preguntaPadreId: valores.preguntaPadreId ?? null,
+      grupoExterno: valores.grupoExterno?.trim() || null,
       formula: valores.respuestaCalculada ? valores.formula : null,
       observacionesPregunta: valores.observacionesPregunta?.trim() || null,
       ordenDespliegue: valores.ordenDespliegue ?? undefined,

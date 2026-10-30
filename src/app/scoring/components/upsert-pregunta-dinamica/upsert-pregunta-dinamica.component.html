@@ -47,6 +47,9 @@
         <div class="col-12 col-md-6">
           <label class="form-label fw-semibold small">
             Catálogo de Respuestas @if (requiereCatalogo()) { (*) }
+            @if (usaApiExterna()) {
+              <span class="text-muted fw-normal">— las opciones vienen del catálogo externo</span>
+            }
           </label>
           <select class="form-select form-select-sm" formControlName="catalogoRespuestasId"
             [class.is-invalid]="campoInvalido('catalogoRespuestasId')"
@@ -67,6 +70,33 @@
           <!--@if (!requiereCatalogo()) {
             <div class="form-text">Solo aplica a botón de opción y lista desplegable.</div>
         }-->
+        </div>
+
+        <!-- Origen alternativo: en vez de un catálogo local, las opciones las
+             trae el API del core. Se deja "Ninguno" arriba y se escribe aquí
+             el grupo. -->
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Catálogo Externo</label>
+          <input type="text" class="form-control form-control-sm font-monospace"
+            formControlName="grupoExterno" placeholder="region" />
+          
+        </div>
+
+        <!-- Cascada padre-hijo: Agencia depende de Región. Las opciones de
+             esta pregunta se filtran por la que se responda en la padre. -->
+        <div class="col-12">
+          <label class="form-label fw-semibold small">Pregunta Padre</label>
+          <!-- Según el TIPO, no según el catálogo: una pregunta alimentada por
+               API también encadena (Agencia depende de Región). -->
+          <select class="form-select form-select-sm" formControlName="preguntaPadreId"
+            [attr.disabled]="esDeSeleccion() ? null : ''">
+            <option [ngValue]="null">Ninguna — es independiente</option>
+            @for (otra of posiblesPadres(); track otra.preguntaId) {
+              <option [ngValue]="otra.preguntaId">
+                {{ otra.codigoPregunta }} · {{ otra.enunciado }}
+              </option>
+            }
+          </select>
         </div>
 
         <div class="col-6 col-md-3">

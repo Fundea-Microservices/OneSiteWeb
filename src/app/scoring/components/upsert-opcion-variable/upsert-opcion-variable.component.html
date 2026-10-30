@@ -6,7 +6,6 @@
       <span class="badge rounded-pill text-bg-primary">1</span>
       <div>
         <div class="fw-semibold">Datos de la Opción</div>
-        <div class="text-muted small">Codificación y parámetros matemáticos</div>
       </div>
     </div>
     <div class="card-body">
@@ -32,15 +31,6 @@
           }
         </div>
 
-        <div class="col-12">
-          <div class="alert alert-info py-2 small mb-0">
-            Cuando una pregunta de selección se responde con esta opción, el motor
-            toma de aquí los coeficientes. El aporte al punteo es
-            <span class="font-monospace">peso × (a + b · x)</span>.
-            Se admiten valores negativos: un factor de riesgo puede restar.
-          </div>
-        </div>
-
         <div class="col-6 col-md-4">
           <label class="form-label fw-semibold small">Peso (*)</label>
           <input type="number" step="0.0001" class="form-control form-control-sm text-end"
@@ -57,7 +47,6 @@
           <label class="form-label fw-semibold small">Valor de Referencia (*)</label>
           <input type="number" step="0.0001" class="form-control form-control-sm text-end"
             formControlName="valorReferencia" />
-          <div class="form-text">Es el valor de x que representa a esta opción.</div>
         </div>
 
         <div class="col-6 col-md-4">
@@ -85,6 +74,49 @@
             <option value="Inactivo">Inactivo</option>
           </select>
         </div>
+
+        <!-- Cascada: esta opción solo se ofrece cuando arriba se eligió la
+             opción de la que cuelga. El catálogo dice de cuál. -->
+        @if (catalogoPadre(); as padre) {
+          <div class="col-12">
+            <label class="form-label fw-semibold small">
+              Opción padre (*)
+              <span class="text-muted fw-normal">{{ padre.descripcionCatalogo }}</span>
+            </label>
+            <select class="form-select form-select-sm" formControlName="opcionPadreId"
+              [class.is-invalid]="campoInvalido('opcionPadreId')">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (opcionPadre of opcionesPadre(); track opcionPadre.opcionId) {
+                <option [ngValue]="opcionPadre.opcionId">
+                  {{ opcionPadre.descripcionOpcion }}
+                  <span class="font-monospace">({{ opcionPadre.codigoOpcion }})</span>
+                </option>
+              }
+            </select>
+            @if (campoInvalido('opcionPadreId')) {
+              <div class="invalid-feedback">
+                Obligatoria: sin padre, esta opción no aparece en la captura.
+              </div>
+            }
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch"
+                id="chkPorDefecto" formControlName="porDefecto" />
+              <label class="form-check-label small fw-semibold" for="chkPorDefecto">
+                Por defecto
+              </label>
+            </div>
+          </div>
+        } @else {
+          <div class="col-12">
+            <div class="form-text">
+              Este catálogo no depende de ninguno, así que sus opciones se
+              muestran siempre. La dependencia se declara en el catálogo.
+            </div>
+          </div>
+        }
 
       </div>
     </div>

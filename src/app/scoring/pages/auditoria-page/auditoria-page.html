@@ -21,14 +21,104 @@
         <label class="form-label fw-semibold small mb-1">Solicitud Bantotal</label>
         <input type="number" class="form-control form-control-sm"
           placeholder="10928374"
+          [value]="numeroSolicitud()"
           (input)="numeroSolicitud.set(txtSolicitud.value)"
-          (keyup.enter)="fetchData()" #txtSolicitud />
+          (keyup.enter)="aplicarFiltros()" #txtSolicitud />
       </div>
       <div class="col-12 col-md-3 d-flex align-items-end">
-        <button type="button" class="btn btn-dark btn-sm w-100" (click)="fetchData()">
+        <button type="button" class="btn btn-dark btn-sm w-100" (click)="aplicarFiltros()">
           <ion-icon name="search-outline"></ion-icon> Consultar Auditoría
         </button>
       </div>
+    </div>
+
+    <!-- Mismos filtros que la bandeja de Evaluación, con estado propio:
+         filtrar acá no cambia lo que el asesor tenga puesto allá. -->
+    <div class="card mb-3">
+      <div class="card-body py-3">
+        <div class="row g-2 align-items-end">
+
+          <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold small mb-1">N.° Evaluación</label>
+            <input type="number" class="form-control form-control-sm"
+              placeholder="42"
+              [value]="borrador().evaluacionId"
+              (input)="editar('evaluacionId', txtEval.value)"
+              (keyup.enter)="aplicarFiltros()" #txtEval />
+          </div>
+
+          <div class="col-6 col-md-4">
+            <label class="form-label fw-semibold small mb-1">Cliente</label>
+            <input type="text" class="form-control form-control-sm"
+              placeholder="Nombre, DPI o cuenta"
+              [value]="borrador().cliente"
+              (input)="editar('cliente', txtCliente.value)"
+              (keyup.enter)="aplicarFiltros()" #txtCliente />
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label fw-semibold small mb-1">Región</label>
+            <select class="form-select form-select-sm"
+              (change)="cambiarRegion(selRegion.value)" #selRegion>
+              <option value="" [selected]="!borrador().region">Todas</option>
+              @for (region of regiones(); track region.codigo) {
+                <option [value]="region.codigo"
+                  [selected]="region.codigo === borrador().region">
+                  {{ region.nombre }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label fw-semibold small mb-1">Agencia</label>
+            <select class="form-select form-select-sm"
+              (change)="editar('agencia', selAgencia.value)" #selAgencia>
+              <option value="" [selected]="!borrador().agencia">Todas</option>
+              @for (agencia of agencias(); track agencia.codigo) {
+                <option [value]="agencia.codigo"
+                  [selected]="agencia.codigo === borrador().agencia">
+                  {{ agencia.nombre }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label fw-semibold small mb-1">Usuario</label>
+            <input type="text" class="form-control form-control-sm"
+              placeholder="Quien capturó o procesó"
+              [value]="borrador().usuario"
+              (input)="editar('usuario', txtUsuario.value)"
+              (keyup.enter)="aplicarFiltros()" #txtUsuario />
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold small mb-1">Desde</label>
+            <input type="date" class="form-control form-control-sm"
+              [value]="borrador().desde"
+              (change)="editar('desde', txtDesde.value)" #txtDesde />
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold small mb-1">Hasta</label>
+            <input type="date" class="form-control form-control-sm"
+              [value]="borrador().hasta"
+              (change)="editar('hasta', txtHasta.value)" #txtHasta />
+          </div>
+
+          <div class="col-12 col-md-5 d-grid d-md-flex gap-2">
+            <button type="button" class="btn btn-primary btn-sm flex-fill"
+              [disabled]="isLoading()" (click)="aplicarFiltros()">
+              <ion-icon name="funnel-outline"></ion-icon> Aplicar filtros
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill"
+              [disabled]="isLoading()" (click)="limpiarFiltros()">
+              <ion-icon name="close-outline"></ion-icon> Limpiar
+            </button>
+          </div>
+
+        </div>
     </div>
 
     @if (isLoading()) {
@@ -38,13 +128,14 @@
     }
 
     <div class="table-responsive d-none d-md-block">
-      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle"
+      >
         <thead>
           <tr>
             <th class="text-center" style="width: 9%;">ID Eval.</th>
             <th class="text-center" style="width: 14%;">DPI</th>
             <th class="text-center" style="width: 12%;">Cuenta</th>
-            <th style="width: 23%;">Cliente</th>
+            <th class="text-center" style="width: 23%;">Cliente</th>
             <th class="text-center" style="width: 11%;">Operación</th>
             <th class="text-center" style="width: 12%;">Estado</th>
             <th class="text-center" style="width: 12%;">Resultado</th>
@@ -54,24 +145,30 @@
         <tbody>
           @for (item of evaluacionList(); track item.evaluacionId) {
             <tr>
-              <td class="text-center fw-semibold text-primary">{{ item.evaluacionId }}</td>
-              <td class="text-center font-monospace small">{{ item.dpi }}</td>
-              <td class="text-center font-monospace small">{{ item.cuenta }}</td>
+              <td class="text-end num-tabular fw-semibold text-primary">{{ item.evaluacionId }}</td>
+              <td class="text-end num-tabular font-monospace small">{{ item.dpi }}</td>
+              <td class="text-end num-tabular font-monospace small">{{ item.cuenta }}</td>
               <td class="text-break">
                 {{ item.nombreCliente }}
                 <div class="text-muted small">Solicitud {{ item.numeroSolicitud }}</div>
               </td>
-              <td class="text-center">{{ item.numeroOperacion || '—' }}</td>
+              <td class="text-end num-tabular">{{ item.numeroOperacion || '—' }}</td>
               <td class="text-center">
                 @if (item.estadoEvaluacion === 'Solicitud') {
-                  <span class="badge text-bg-warning">SOLICITUD</span>
+                  <span class="small text-nowrap badge text-bg-light border">
+                  Solicitud
+                  </span>
                 } @else {
-                  <span class="badge text-bg-success">PROCESADO</span>
+                  <span class="small text-nowrap badge text-bg-light border">
+                  Procesado
+                  </span>
                 }
               </td>
               <td class="text-center">
                 @if (item.estadoEvaluacion === 'Procesado') {
-                  <span class="badge" [class]="claseSemaforo(item.resultadoSemaforo)">
+                  <span class="small text-nowrap">
+                    <ion-icon name="ellipse" [class]="clasePunto(item)"
+                      [style]="estiloPunto(item)"></ion-icon>
                     {{ item.resultadoSemaforo }}
                   </span>
                 } @else {
@@ -110,11 +207,15 @@
                 <div class="text-muted small">Solicitud {{ item.numeroSolicitud }}</div>
               </div>
               @if (item.estadoEvaluacion === 'Procesado') {
-                <span class="badge" [class]="claseSemaforo(item.resultadoSemaforo)">
+                <span class="small text-nowrap">
+                  <ion-icon name="ellipse" [class]="clasePunto(item)"
+                    [style]="estiloPunto(item)"></ion-icon>
                   {{ item.resultadoSemaforo }}
                 </span>
               } @else {
-                <span class="badge text-bg-warning">SOLICITUD</span>
+                <span class="small text-nowrap">
+                  Solicitud
+                </span>
               }
             </div>
             <button class="btn btn-sm btn-outline-primary w-100 mt-2"
@@ -157,18 +258,13 @@
 
         @if (expediente(); as exp) {
 
-          <!--@if (!exp.cuadra) {
-            <div class="alert alert-danger py-2 small">
-              <ion-icon name="warning-outline"></ion-icon>
-              <strong>La suma de los aportes no coincide con el punteo almacenado.</strong>
-              Las filas del desglose fueron alteradas fuera del motor de cálculo.
-              Este expediente no debe usarse como respaldo del dictamen.
-            </div>
-          }-->
-
           <!-- Ficha general -->
-          <div class="card mb-3">
-            <div class="card-header py-2 fw-semibold">Ficha General del Cliente y Solicitud</div>
+          <div class="card mb-3"
+          [class]="claseMarco(exp)" [style]="estiloMarco(exp)"
+          >
+            <div class="card-header py-2 fw-semibold"
+            [class]="claseMarco(exp)" [style]="estiloMarco(exp)"
+            >Ficha General del Cliente y Solicitud</div>
             <div class="card-body">
               <div class="row g-3">
                 <div class="col-12 col-md-4">
@@ -197,7 +293,7 @@
                 </div>
                 <div class="col-6 col-md-4">
                   <div class="text-muted small text-uppercase">Producto</div>
-                  <div>{{ exp.evaluacion.productoCredito }}</div>
+                  <div>{{ exp.evaluacion.productoCredito || "—" }}</div>
                 </div>
                 <div class="col-6 col-md-4">
                   <div class="text-muted small text-uppercase">Agencia / Región</div>
@@ -223,11 +319,11 @@
           </div>
 
           <!-- Modelo usado -->
-          <div class="alert alert-info py-2 small">
-            Calculado con <strong>{{ exp.scoring.nombreScoring }}</strong>
+          <div class="alert py-2 small">
+            <!--Calculado con <strong>{{ exp.scoring.nombreScoring }}</strong>
             (<span class="font-monospace">{{ exp.scoring.codigoInterno }}</span>),
             <strong>versión {{ exp.scoring.version }}</strong>
-            <!--@if (exp.scoring.tipoScoring) { · {{ exp.scoring.tipoScoring }} }
+            @if (exp.scoring.tipoScoring) { · {{ exp.scoring.tipoScoring }} }
             <div class="mt-1">
               Los coeficientes de abajo son los que estaban vigentes en esa
               versión al momento de procesar. Reparametrizar el modelo después no
@@ -236,12 +332,15 @@
           </div>
 
           <!-- Desglose -->
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered table-striped align-middle">
+          <div class="table-responsive "
+            [class]="claseBorde(exp)" [style]="estiloBorde(exp)"
+          >
+            <table class="table table-sm table-bordered table-striped align-middle"
+              [class]="claseTabla(exp)" [style]="estiloTabla(exp)">
               <thead>
                 <tr>
                   <th class="text-center" style="width: 4%;">#</th>
-                  <th style="width: 22%;">Factor</th>
+                  <th class="text-center" style="width: 22%;">Factor</th>
                   <th class="text-center" style="width: 7%;">RTE</th>
                   <th class="text-center" style="width: 9%;">Peso</th>
                   <th class="text-center" style="width: 9%;">Coef A</th>
@@ -249,13 +348,13 @@
                   <th class="text-center" style="width: 11%;">Valor x</th>
                   <th class="text-center" style="width: 11%;">Result. bx</th>
                   <th class="text-center" style="width: 11%;">Result. a+bx</th>
-                  <th class="text-center" style="width: 10%;">Aporte</th>
+                  <!--<th class="text-center" style="width: 10%;">Aporte</th>-->
                 </tr>
               </thead>
               <tbody>
                 @for (fila of exp.desglose; track fila.desgloseId) {
                   <tr>
-                    <td class="text-center">{{ fila.secuencia }}</td>
+                    <td class="text-end num-tabular">{{ fila.secuencia }}</td>
                     <td class="text-break">
                       {{ fila.factor }}
                       @if (fila.formulaAplicada) {
@@ -274,13 +373,13 @@
                         <span class="text-muted small" title="Salió de la parametrización">—</span>
                       }
                     </td>
-                    <td class="text-end">{{ fila.peso }}</td>
-                    <td class="text-end">{{ fila.coeficienteA }}</td>
-                    <td class="text-end">{{ fila.coeficienteB }}</td>
-                    <td class="text-end">{{ fila.valorX }}</td>
-                    <td class="text-end">{{ fila.resultadoBX }}</td>
-                    <td class="text-end">{{ fila.resultadoABX }}</td>
-                    <td class="text-end fw-semibold">{{ fila.aportePonderado }}</td>
+                    <td class="text-end num-tabular">{{ fila.peso }}</td>
+                    <td class="text-end num-tabular">{{ fila.coeficienteA }}</td>
+                    <td class="text-end num-tabular">{{ fila.coeficienteB }}</td>
+                    <td class="text-end num-tabular">{{ fila.valorX }}</td>
+                    <td class="text-end num-tabular">{{ fila.resultadoBX }}</td>
+                    <td class="text-end num-tabular">{{ fila.resultadoABX }}</td>
+                    <!--<td class="text-end num-tabular fw-semibold">{{ fila.aportePonderado }}</td>-->
                   </tr>
                 } @empty {
                   <tr>
@@ -291,18 +390,19 @@
                 }
               </tbody>
               <tfoot>
-                <tr class="table-secondary">
-                  <td colspan="9" class="text-end fw-semibold">Punteo Total</td>
+                <!-- El pie también toma el color: es la fila que cierra el
+                     cálculo, y dejarla gris la separaba del dictamen.
+                <tr [class]="clasePie(exp)" [style]="estiloPie(exp)">
+                  <td colspan="8" class="text-end fw-semibold">Punteo Total</td>
                   <td class="text-end fw-semibold">{{ exp.punteoTotal }}</td>
-                </tr>
+                </tr> -->
               </tfoot>
             </table>
           </div>
 
           <!-- Dictamen -->
-          <div class="card border-2" [class.border-success]="exp.resultadoSemaforo === 'Verde'"
-            [class.border-warning]="exp.resultadoSemaforo === 'Amarillo'"
-            [class.border-danger]="exp.resultadoSemaforo === 'Rojo'">
+          <div class="card border-2"
+            [class]="claseMarco(exp)" [style]="estiloMarco(exp)">
             <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
               <div>
                 <div class="text-muted small text-uppercase">Punteo Total Obtenido</div>
@@ -329,7 +429,9 @@
 
               <div class="text-end">
                 <div class="text-muted small text-uppercase">Resultado Semáforo</div>
-                <span class="badge fs-5" [class]="claseSemaforo(exp.resultadoSemaforo)">
+                <span class="fs-5 fw-semibold d-inline-flex align-items-center gap-2">
+                  <ion-icon name="ellipse" [class]="clasePunto(exp)"
+                    [style]="estiloPunto(exp)"></ion-icon>
                   {{ exp.resultadoSemaforo }}
                 </span>
               </div>

@@ -6,6 +6,7 @@ import { HttpService } from '../HttpService';
 import {
   ICatalogoVariable,
   IOpcionVariable,
+  IOpcionExterna,
   RespuestaScoring,
 } from '../../interfaces/scoring/scoring';
 
@@ -189,6 +190,27 @@ export class CatalogoVariableService extends HttpService {
       return resp.body?.success ? resp.body : null;
     } catch (error: any) {
       return this.error(error, 'Error al reordenar opciones');
+    }
+  }
+
+  /**
+   * Opciones de un grupo del catálogo del core ('region', 'agencia').
+   *
+   * Las usa el formulario de captura para las preguntas alimentadas por API,
+   * que no tienen catálogo local.
+   */
+  async getCatalogoExterno(grupo: string) {
+    try {
+      const resp = await firstValueFrom(
+        this.get<IOpcionExterna[]>(`${this.base}/externo/${grupo}`),
+      );
+      return resp.body ?? [];
+    } catch (error: any) {
+      this.toastr.error(
+        error?.error?.message || '',
+        `No se pudo cargar el catálogo "${grupo}"`,
+      );
+      return [];
     }
   }
 }

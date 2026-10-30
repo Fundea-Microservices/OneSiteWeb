@@ -31,6 +31,23 @@
           }
         </div>
 
+        <!-- La dependencia se declara aquí, no opción por opción: así el
+             modal de opción solo ofrece las del catálogo correcto. -->
+        <div class="col-12">
+          <label class="form-label fw-semibold small">
+            Catálogo padre
+          </label>
+          <select class="form-select form-select-sm" formControlName="catalogoPadreId">
+            <option [ngValue]="null">— Sin padre —</option>
+            @for (padre of posiblesPadres(); track padre.catalogoId) {
+              <option [ngValue]="padre.catalogoId">
+                {{ padre.descripcionCatalogo }}
+                @if (padre.codigoExterno) { ({{ padre.codigoExterno }}) }
+              </option>
+            }
+          </select>          
+        </div>
+
         <div class="col-6">
           <label class="form-label fw-semibold small">Orden</label>
           <input type="number" class="form-control form-control-sm"

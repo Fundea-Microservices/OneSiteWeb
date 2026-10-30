@@ -130,6 +130,7 @@ export default class CreacionScoringPage implements OnInit, AfterViewInit {
     }
   }
 
+
   // ── Cambio de estado (borrado lógico) ─────────────────────────────────────
 
   openEstadoModal(modelo: IModeloScoring) {

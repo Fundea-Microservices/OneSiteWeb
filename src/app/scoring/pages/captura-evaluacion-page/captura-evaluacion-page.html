@@ -28,7 +28,7 @@
     <div class="card-header d-flex align-items-center gap-2 py-2">
       <span class="badge rounded-pill text-bg-primary">1</span>
       <div>
-        <div class="fw-semibold">Datos del Cliente y Crédito (Solo Lectura — Core Bantotal)</div>
+        <div class="fw-semibold">Datos del Cliente y Crédito</div>
         <!--<div class="text-muted small">
           Información sincronizada del core al momento de la captura. Se conserva
           tal cual para que el expediente refleje lo que se tuvo a la vista.
@@ -62,7 +62,7 @@
           </div>
           <div class="col-12 col-md-4">
             <div class="text-muted small text-uppercase">Producto</div>
-            <div>{{ datos.productoCredito }}</div>
+            <div>{{ datos.productoCredito || "—" }}</div>
           </div>
           <div class="col-6 col-md-4">
             <div class="text-muted small text-uppercase">Región</div>
@@ -76,12 +76,18 @@
             <div class="text-muted small text-uppercase">Estado Actual</div>
             @if (evaluacion(); as evaluacion) {
               @if (evaluacion.estadoEvaluacion === 'Solicitud') {
-                <span class="badge text-bg-warning">SOLICITUD</span>
+                <span class="small text-nowrap">
+                  Solicitud
+                </span>
               } @else {
-                <span class="badge text-bg-success">PROCESADO</span>
+                <span class="small text-nowrap">
+                  Procesado
+                </span>
               }
             } @else {
-              <span class="badge text-bg-light border">SIN GUARDAR</span>
+              <span class="small text-nowrap text-muted">
+                  Sin guardar
+              </span>
             }
           </div>
           @if (datos.direccion) {
@@ -100,7 +106,7 @@
     <div class="card-header d-flex align-items-center gap-2 py-2">
       <span class="badge rounded-pill text-bg-primary">2</span>
       <div>
-        <div class="fw-semibold">Cuestionario Dinámico de Evaluación</div>
+        <div class="fw-semibold">Evaluación Detalle</div>
         <!--<div class="text-muted small">Parámetros financieros y captura de variables predictivas</div>-->
       </div>
     </div>
@@ -115,7 +121,7 @@
       }
 
       <div class="mb-3">
-        <label class="form-label fw-semibold small">Seleccionar Tipo de Scoring Aplicable (*)</label>
+        <label class="form-label fw-semibold small">Seleccionar Tipo de Scoring *</label>
         <select class="form-select form-select-sm"
           [class.is-invalid]="!scoringId()"
           [attr.disabled]="esEdicion() ? '' : null"
@@ -177,29 +183,65 @@
                     </div>
                   }
                   @case ('Desplegable') {
-                    <select class="form-select form-select-sm"
-                      [disabled]="soloLectura()"
-                      (change)="setOpcion(pregunta, sel.value)" #sel>
-                      <option value="">Seleccione...</option>
-                      @for (opcion of pregunta.opciones; track opcion.opcionId) {
-                        <option [value]="opcion.opcionId"
-                          [selected]="opcion.opcionId === opcionDe(pregunta.preguntaId)">
-                          {{ opcion.descripcionOpcion }}
-                        </option>
-                      }
-                    </select>
+                    <!-- Cascada: deshabilitado hasta que el padre tenga
+                         respuesta, y solo con las opciones que le cuelgan. -->
+                    @if (pregunta.grupoExterno) {
+                      <!-- Opciones traídas del API del core, no de un catálogo
+                           local. Se guarda el código y el nombre. -->
+                      <select class="form-select form-select-sm"
+                        [disabled]="soloLectura() || esperaPadre(pregunta)"
+                        (change)="setOpcionExterna(pregunta, selApi.value)" #selApi>
+                        @if (esperaPadre(pregunta)) {
+                          <option value="">Elija {{ enunciadoPadre(pregunta) }} primero</option>
+                        } @else {
+                          <option value="">Seleccione...</option>
+                          @for (opcion of externasDe(pregunta); track opcion.codigo) {
+                            <option [value]="opcion.codigo"
+                              [selected]="opcion.codigo === codigoExternoDe(pregunta.preguntaId)">
+                              {{ opcion.nombre }}
+                            </option>
+                          }
+                        }
+                      </select>
+                    } @else {
+                      <select class="form-select form-select-sm"
+                        [disabled]="soloLectura() || esperaPadre(pregunta)"
+                        (change)="setOpcion(pregunta, sel.value)" #sel>
+                        @if (esperaPadre(pregunta)) {
+                          <option value="">Elija {{ enunciadoPadre(pregunta) }} primero</option>
+                        } @else {
+                          <option value="">Seleccione...</option>
+                          @for (opcion of opcionesDe(pregunta); track opcion.opcionId) {
+                            <option [value]="opcion.opcionId"
+                              [selected]="opcion.opcionId === opcionDe(pregunta.preguntaId)">
+                              {{ opcion.descripcionOpcion }}
+                            </option>
+                          }
+                        }
+                      </select>
+                    }
                   }
                   @case ('BotonOpcion') {
-                    @for (opcion of pregunta.opciones; track opcion.opcionId) {
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio"
-                          [name]="'p' + pregunta.preguntaId"
-                          [value]="opcion.opcionId"
-                          [checked]="opcion.opcionId === opcionDe(pregunta.preguntaId)"
-                          [disabled]="soloLectura()"
-                          (change)="setOpcion(pregunta, opcion.opcionId + '')" />
-                        <label class="form-check-label small">{{ opcion.descripcionOpcion }}</label>
+                    @if (esperaPadre(pregunta)) {
+                      <div class="text-muted small fst-italic">
+                        Elija {{ enunciadoPadre(pregunta) }} primero.
                       </div>
+                    } @else {
+                      @for (opcion of opcionesDe(pregunta); track opcion.opcionId) {
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio"
+                            [name]="'p' + pregunta.preguntaId"
+                            [value]="opcion.opcionId"
+                            [checked]="opcion.opcionId === opcionDe(pregunta.preguntaId)"
+                            [disabled]="soloLectura()"
+                            (change)="setOpcion(pregunta, opcion.opcionId + '')" />
+                          <label class="form-check-label small">{{ opcion.descripcionOpcion }}</label>
+                        </div>
+                      } @empty {
+                        <div class="text-muted small fst-italic">
+                          No hay opciones para {{ enunciadoPadre(pregunta) }}.
+                        </div>
+                      }
                     }
                   }
                   @case ('Entero') {
@@ -235,9 +277,7 @@
     </div>
   </div>
 
-  <!-- El punteo NO se muestra aquí: el dictamen se consulta en Auditoría.
-       La simulación se sigue llamando, porque es la que resuelve los campos
-       calculados de arriba; lo que se quitó es el panel, no el cálculo. -->
+  <!-- El punteo NO se muestra aquí: el dictamen se consulta en Auditoría. -->
 
   @if (isSimulando()) {
     <div class="text-muted small mb-3">

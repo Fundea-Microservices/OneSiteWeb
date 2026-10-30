@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   EventEmitter,
   inject,
@@ -33,6 +34,9 @@ export class UpsertCatalogoVariableComponent {
   nuevo = input<boolean>(true);
   formKey = input<number>(0);
 
+  /** Todos los del scoring: de ahí sale el catálogo padre. */
+  catalogos = input<ICatalogoVariable[]>([]);
+
   @Output() save = new EventEmitter<ICatalogoVariable>();
   @Output() cancel = new EventEmitter<void>();
 
@@ -45,6 +49,15 @@ export class UpsertCatalogoVariableComponent {
    * Angular abortaría el componente: el modal saldría en blanco.
    */
   form = signal<FormGroup>(this.construirForm(null));
+
+  /** Candidatos a padre: activos y distintos de este. */
+  posiblesPadres = computed(() =>
+    this.catalogos().filter(
+      (c) =>
+        c.estado === 'Activo' &&
+        c.catalogoId !== this.catalogo()?.catalogoId,
+    ),
+  );
 
   constructor() {
     effect(() => {
@@ -63,6 +76,7 @@ export class UpsertCatalogoVariableComponent {
         catalogo?.descripcionCatalogo ?? '',
         [Validators.required, Validators.maxLength(150)],
       ],
+      catalogoPadreId: [catalogo?.catalogoPadreId ?? null],
       ordenDespliegue: [catalogo?.ordenDespliegue ?? null],
       estado: [catalogo?.estado ?? 'Activo', [Validators.required]],
     });
@@ -85,6 +99,10 @@ export class UpsertCatalogoVariableComponent {
       // Vacío se manda como null: el código externo es opcional y la unicidad
       // en base es filtrada, así que varios catálogos pueden no tenerlo.
       codigoExterno: valores.codigoExterno?.trim() || null,
+      // null, no undefined: es lo que el backend lee como "quítale el padre".
+      catalogoPadreId: valores.catalogoPadreId
+        ? Number(valores.catalogoPadreId)
+        : null,
       ordenDespliegue: valores.ordenDespliegue ?? undefined,
     } as ICatalogoVariable);
   }

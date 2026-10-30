@@ -65,6 +65,20 @@ export interface ITipoScoring {
   estado: Estado;
 }
 
+/** Un procedimiento almacenado del módulo, con su script y su versión. */
+export interface IProcedimientoScoring {
+  procedimientoId?: number;
+  /** Nombre del objeto sin esquema: Score_MICROCREDITO_Punteo. */
+  nombre: string;
+  version: string;
+  descripcion?: string | null;
+  definicion: string;
+  estado: Estado;
+  /** Null mientras el script no se haya aplicado contra la base. */
+  fechaAplicacion?: string | null;
+  usuarioAplica?: string | null;
+}
+
 export interface IRangoDictamen {
   rangoId?: number;
   scoringId?: number;
@@ -117,6 +131,8 @@ export interface ICatalogoVariable {
   descripcionCatalogo: string;
   estado: Estado;
   ordenDespliegue?: number;
+  /** Catálogo del que depende: SUBACTIVIDAD cuelga de ACTIVIDAD. */
+  catalogoPadreId?: number | null;
   opciones?: IOpcionVariable[];
 }
 
@@ -133,6 +149,8 @@ export interface IOpcionVariable {
   observacionesVar?: string | null;
   /** Cascada: la opción de Municipio apunta a la de Departamento. */
   opcionPadreId?: number | null;
+  /** La sugerida del grupo. No preselecciona nada en la captura. */
+  porDefecto?: boolean;
   estado: Estado;
   ordenDespliegue?: number;
 }
@@ -173,6 +191,11 @@ export interface IPreguntaDinamica {
    * de otras preguntas antes de derivar x y los coeficientes.
    */
   requiereRTE?: boolean;
+  /**
+   * Grupo del API de catálogos del core del que esta pregunta toma sus
+   * opciones ('region', 'agencia'). Excluyente con catalogoRespuestasId.
+   */
+  grupoExterno?: string | null;
   aplicaScore: boolean;
   observacionesPregunta?: string | null;
   /** Dependencia padre-hijo: Municipio depende de Departamento. */
@@ -204,7 +227,7 @@ export interface ISolicitudBantotal {
   region: string | null;
   agencia: string | null;
   montoCredito: number;
-  productoCredito: string;
+  productoCredito: string | null;
 }
 
 export interface IRespuestaCaptura {
@@ -212,6 +235,11 @@ export interface IRespuestaCaptura {
   /** Obligatorio en preguntas de selección. */
   opcionId?: number | null;
   valorIngresado?: string | null;
+  /**
+   * `valorCore` de lo elegido, en las preguntas alimentadas por API. Esas
+   * opciones no existen localmente, así que `opcionId` va en null.
+   */
+  codigoExterno?: string | null;
 }
 
 /** Pregunta tal como la entrega el endpoint de cuestionario, lista de renderizar. */
@@ -224,10 +252,20 @@ export interface IPreguntaCuestionario {
   formula: string | null;
   aplicaScore: boolean;
   ordenDespliegue: number;
+  /**
+   * Cascada padre-hijo: Agencia depende de Región. Mientras el padre no tenga
+   * respuesta, esta pregunta no se puede contestar, y sus opciones se filtran
+   * por la que se haya elegido.
+   */
+  preguntaPadreId?: number | null;
+  /** Si viene, las opciones se piden al API y el arreglo de abajo va vacío. */
+  grupoExterno?: string | null;
   opciones: {
     opcionId: number;
     codigoOpcion: string;
     descripcionOpcion: string;
+    /** La opción del padre a la que pertenece. NULL = no depende de ninguna. */
+    opcionPadreId?: number | null;
   }[];
 }
 
@@ -253,12 +291,19 @@ export interface IEvaluacionCredito {
   region?: string | null;
   agencia?: string | null;
   montoCredito: number;
-  productoCredito: string;
+  productoCredito: string | null;
   fechaConsultaBantotal?: string | null;
   origenDatos: OrigenDatos;
   estadoEvaluacion: EstadoEvaluacion;
   punteoTotal?: number | null;
   resultadoSemaforo: Semaforo;
+  /**
+   * La paleta del dictamen en hexadecimal, tal como la devolvió el
+   * procedimiento de punteo del modelo. En null cuando el modelo no tiene
+   * procedimiento: ahí manda el nombre del semáforo.
+   */
+  colorSemaforo?: string | null;
+  colorDoc?: string | null;
   usuarioCreacion?: string | null;
   fechaCreacion?: string;
   usuarioProcesa?: string | null;
@@ -342,7 +387,7 @@ export interface IExpediente {
     region: string | null;
     agencia: string | null;
     montoCredito: number;
-    productoCredito: string;
+    productoCredito: string | null;
     estadoEvaluacion: EstadoEvaluacion;
     origenDatos: OrigenDatos;
     fechaProcesamiento: string | null;
@@ -359,6 +404,9 @@ export interface IExpediente {
   desglose: IDesgloseAuditoria[];
   punteoTotal: number | null;
   resultadoSemaforo: Semaforo;
+  /** Ver IEvaluacionCredito.colorSemaforo. */
+  colorSemaforo: string | null;
+  colorDoc: string | null;
   /**
    * z = Σ(a + b·x) sobre las preguntas que aportan. Es el insumo de la
    * sigmoide, y la invariante que el expediente verifica.
@@ -382,4 +430,21 @@ export interface ISimulacion {
   valoresCalculados: Record<string, number>;
   /** preguntaId -> Valor(x), bx y a+bx, el mismo desglose que se guardará. */
   detalleCalculo: Record<string, IDetalleCalculo>;
+}
+
+/**
+ * Una opción traída del API de catálogos del core.
+ *
+ * No existe en la base: la pregunta que la usa guarda el código y el nombre en
+ * la respuesta, porque el código es lo único estable si el core renombra.
+ */
+export interface IOpcionExterna {
+  grupo: string;
+  /** valorCore: el código de negocio. */
+  codigo: string;
+  nombre: string;
+  /** El código del padre, para la cascada. null = es raíz. */
+  codigoPadre: string | null;
+  activo: boolean;
+  orden: number;
 }
