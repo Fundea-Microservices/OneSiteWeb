@@ -146,36 +146,22 @@
           </div>
         </div>
 
-        <div class="col-12">
-          @if (ejecutaProcedimiento()) {
-            <div class="alert alert-warning py-2 small mb-0">
-              Este tipo delega el cálculo en un procedimiento almacenado, así que
-              <strong>Proceso Cálculo de Punteo es obligatorio</strong>.
-              <span class="badge text-bg-warning me-1">Ejecuta SP</span>
-            </div>
-          } @else {
-            <div class="alert alert-secondary py-2 small mb-0">
-              El punteo se calcula por regla directa en el aplicativo. Los procedimientos son opcionales.
-              <span class="badge text-bg-secondary me-1">Cálculo Directo</span>
-            </div>
-          }
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-semibold small">
+            Proceso Cálculo de Variables
+          </label>
+          <input type="text" class="form-control form-control-sm font-monospace"
+            formControlName="procesoVariables"
+            placeholder="scoring.Score_MICROCREDITO_Variables" />
         </div>
 
         <div class="col-12 col-md-6">
           <label class="form-label fw-semibold small">
-            Proceso Cálculo de Variables @if (!ejecutaProcedimiento()) { <span class="text-muted">(Opcional)</span> }
+            Proceso Cálculo de Punteo (*)
           </label>
           <input type="text" class="form-control form-control-sm font-monospace"
-            formControlName="procesoVariables" placeholder="proc_calc_vars_micro" />
-        </div>
-
-        <div class="col-12 col-md-6">
-          <label class="form-label fw-semibold small">
-            Proceso Cálculo de Punteo
-            @if (ejecutaProcedimiento()) { (*) } @else { <span class="text-muted">(Opcional)</span> }
-          </label>
-          <input type="text" class="form-control form-control-sm font-monospace"
-            formControlName="procesoPunteo" placeholder="proc_calc_punteo_micro"
+            formControlName="procesoPunteo"
+            placeholder="scoring.Score_MICROCREDITO_Punteo"
             [class.is-invalid]="campoInvalido('procesoPunteo')" />
           @if (campoInvalido('procesoPunteo')) {
             <div class="invalid-feedback">
@@ -188,13 +174,13 @@
     </div>
   </div>
 
-  <!-- Sección 3: Rangos del Dictamen -->
+  <!-- Sección 3: Rangos del Dictamen 
   <div class="card mb-3">
     <div class="card-header d-flex align-items-center gap-2 py-2">
       <span class="badge rounded-pill text-bg-primary">3</span>
       <div>
         <div class="fw-semibold">Rangos del Dictamen</div>
-        <!-- <div class="text-muted small">En qué tramo de punteo cae cada color del semáforo</div>-->
+        
       </div>
     </div>
     <div class="card-body">
@@ -236,7 +222,8 @@
             }
           </tbody>
         </table>
-      </div>
+      </div> 
+    
 
       @if (errorRangos()) {
         <div class="alert alert-danger py-2 small mt-3 mb-0">
@@ -246,7 +233,7 @@
       }
 
     </div>
-  </div>
+  </div>-->
 
   <div class="d-flex justify-content-end gap-2">
     <button type="button" class="btn btn-secondary btn-sm" (click)="onCancel()">Cancelar</button>

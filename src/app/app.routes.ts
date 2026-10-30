@@ -451,6 +451,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./scoring/pages/captura-evaluacion-page/captura-evaluacion-page'),
                     },
                     {
+                        path: 'procedimientos',
+                        loadComponent: () => import('./scoring/pages/procedimientos-scoring-page/procedimientos-scoring-page'),
+                    },
+                    {
                         path: 'auditoria',
                         loadComponent: () => import('./scoring/pages/auditoria-page/auditoria-page'),
                     },

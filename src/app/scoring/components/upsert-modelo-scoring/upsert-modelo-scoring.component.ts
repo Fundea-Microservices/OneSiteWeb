@@ -51,6 +51,7 @@ export class UpsertModeloScoringComponent {
   @Output() save = new EventEmitter<IModeloScoring>();
   @Output() cancel = new EventEmitter<void>();
 
+
   form = signal<FormGroup>(this.fb.group({}));
 
   /**
@@ -96,10 +97,27 @@ export class UpsertModeloScoringComponent {
     );
   });
 
+
   constructor() {
     effect(() => {
       const _ = this.formKey();
       this.initForm(this.modelo(), this.nuevo());
+    });
+
+    // El tipo manda: con procedimientos, el de punteo es obligatorio; sin
+    // ellos, los dos campos se vacían porque la pantalla ya no los muestra.
+    effect(() => {
+      const ejecuta = this.ejecutaProcedimiento();
+      const punteo = this.form().get('procesoPunteo');
+      const variables = this.form().get('procesoVariables');
+      if (!punteo || !variables) return;
+
+      punteo.setValidators(
+        ejecuta
+          ? [Validators.required, Validators.maxLength(128)]
+          : [Validators.maxLength(128)],
+      );
+      punteo.updateValueAndValidity({ emitEvent: false });
     });
 
     inject(DestroyRef).onDestroy(() => {
@@ -194,33 +212,28 @@ export class UpsertModeloScoringComponent {
     this.tipoSub?.unsubscribe();
 
     const control = this.form().get('idTipoScoring');
-    const punteo = this.form().get('procesoPunteo');
-    if (!control || !punteo) return;
+    if (!control) return;
 
     const aplicar = (valor: unknown): void => {
       const idTipo = valor === null || valor === '' ? null : Number(valor);
       this.tipoSeleccionado.set(idTipo);
-
-      const requiere =
-        this.tipos().find((t) => t.idTipoScoring === idTipo)
-          ?.ejecutaProcedimiento ?? false;
-
-      punteo.setValidators(
-        requiere
-          ? [Validators.required, Validators.maxLength(128)]
-          : [Validators.maxLength(128)],
-      );
-      punteo.updateValueAndValidity({ emitEvent: false });
     };
 
     aplicar(control.value);
     this.tipoSub = control.valueChanges.subscribe(aplicar);
   }
 
-  /** El input date exige AAAA-MM-DD; el backend devuelve ISO completo. */
+  /**
+   * El input date exige AAAA-MM-DD; el backend devuelve ISO completo.
+   * Sin fecha guardada arranca en hoy, en hora local, no en vacío.
+   */
   private aFechaInput(fecha?: string | null): string {
-    if (!fecha) return '';
-    return String(fecha).slice(0, 10);
+    if (fecha) return String(fecha).slice(0, 10);
+
+    const hoy = new Date();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${hoy.getFullYear()}-${mes}-${dia}`;
   }
 
   /**

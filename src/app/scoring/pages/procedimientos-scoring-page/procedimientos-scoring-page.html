@@ -1,0 +1,205 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item">Módulo de Scoring Crediticio</li>
+    <li class="breadcrumb-item active" aria-current="page">Procedimientos</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span class="fw-semibold">Procedimientos de Scoring</span>
+    <button type="button" class="btn btn-primary btn-sm" (click)="openNuevo()">
+      <ion-icon name="add-outline"></ion-icon> Nuevo Procedimiento
+    </button>
+  </div>
+
+  <div class="card-body">
+
+    <div class="row g-2 mb-3">
+      <div class="col-12 col-md-9">
+        <label class="form-label fw-semibold small mb-1">Buscar por nombre</label>
+        <input type="text" class="form-control form-control-sm"
+          placeholder="Score_MICROCREDITO"
+          [value]="busqueda()"
+          (input)="busqueda.set(txtBuscar.value)"
+          (keyup.enter)="buscar()" #txtBuscar />
+      </div>
+      <div class="col-12 col-md-3 d-flex align-items-end">
+        <button type="button" class="btn btn-dark btn-sm w-100" (click)="buscar()">
+          <ion-icon name="search-outline"></ion-icon> Buscar
+        </button>
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+      </div>
+    }
+
+    <div class="table-responsive">
+      <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 34%;">Nombre</th>
+            <th class="text-center" style="width: 10%;">Versión</th>
+            <th class="text-center" style="width: 26%;">Descripción</th>
+            <th class="text-center" style="width: 10%;">Estado</th>
+            <th class="text-center" style="width: 12%;">Aplicado</th>
+            <th class="text-center" style="width: 8%;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of lista(); track item.procedimientoId) {
+            <tr>
+              <td class="font-monospace small text-break">
+                scoring.{{ item.nombre }}
+              </td>
+              <td class="font-monospace small">{{ item.version }}</td>
+              <td class="text-break small">{{ item.descripcion || '—' }}</td>
+              <td class="text-center">
+                @if (item.estado === 'Activo') {
+                  <span class="small text-nowrap">
+                  Activo
+                  </span>
+                } @else {
+                  <span class="small text-nowrap text-muted">
+                  Inactivo
+                  </span>
+                }
+              </td>
+              <td class="small">
+                @if (item.fechaAplicacion) {
+                  {{ item.fechaAplicacion | date: 'dd/MM/yyyy' }}
+                  <div class="text-muted">{{ item.usuarioAplica }}</div>
+                } @else {
+                  <span class="text-muted text-nowrap">
+                    <ion-icon name="ellipse-outline"></ion-icon> Sin aplicar
+                  </span>
+                }
+              </td>
+              <td class="text-center text-nowrap">
+                <button class="btn btn-sm btn-success mx-1" title="Editar"
+                  (click)="openEditar(item)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                @if (item.estado === 'Activo') {
+                  <button class="btn btn-sm btn-warning mx-1"
+                    title="Aplicar en la base de datos"
+                    (click)="openAplicar(item)">
+                    <ion-icon name="play-outline"></ion-icon>
+                  </button>
+                }
+                <button class="btn btn-sm btn-outline-danger mx-1"
+                  [title]="item.estado === 'Activo' ? 'Inactivar' : 'Activar'"
+                  (click)="openEstado(item)">
+                  <ion-icon name="power-outline"></ion-icon>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr>
+                <td colspan="6" class="text-center text-muted py-3">
+                  No hay procedimientos registrados
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination [paginationObj]="pagination()" (changePage)="changePage($event)" />
+
+  </div>
+</div>
+
+<!-- Alta y edición -->
+<div #upsertModal class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ nuevo() ? 'Crear Procedimiento' : 'Editar Procedimiento' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <app-upsert-procedimiento-scoring
+          [procedimiento]="procedimientoEdit()"
+          [nuevo]="nuevo()"
+          [formKey]="formKey()"
+          (save)="guardar($event)"
+          (cancel)="closeModal()" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Aplicar: es lo único que ejecuta el script contra la base -->
+<div #aplicarModal class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Aplicar a la base</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        @if (accion(); as item) {
+          <p class="mb-2">
+            Se ejecutará <span class="font-monospace">CREATE OR ALTER PROCEDURE</span>
+            sobre <strong class="font-monospace">scoring.{{ item.nombre }}</strong>,
+            reemplazando la definición vigente.
+          </p>
+          <p class="text-muted small mb-0">
+            Versión {{ item.version }}. Queda registrado en la bitácora con el
+            script completo.
+          </p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-warning btn-sm"
+          [disabled]="isAplicando()" (click)="confirmarAplicar()">
+          @if (isAplicando()) {
+            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+          }
+          Aplicar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Activar / inactivar -->
+<div #estadoModal class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cambiar estado</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        @if (accion(); as item) {
+          <p class="mb-0">
+            {{ item.estado === 'Activo' ? 'Inactivar' : 'Activar' }}
+            <strong class="font-monospace">scoring.{{ item.nombre }}</strong>
+            versión {{ item.version }}.
+          </p>
+        }
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger btn-sm" (click)="confirmarEstado()">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

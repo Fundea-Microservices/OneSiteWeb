@@ -78,6 +78,23 @@ export class ModeloScoringService extends HttpService {
     }
   }
 
+  /**
+   * El check del modal. Alcanza a todos los modelos de ese tipo, porque
+   * TipoScoring es un catálogo compartido.
+   */
+  async updateTipo(idTipoScoring: number, ejecutaProcedimiento: boolean) {
+    try {
+      const resp = await firstValueFrom(
+        this.patch<ITipoScoring>(`${this.base}/tipos/${idTipoScoring}`, {
+          ejecutaProcedimiento,
+        }),
+      );
+      return this.exito(resp.body as any);
+    } catch (error: any) {
+      return this.error(error, 'Error al actualizar el tipo de scoring');
+    }
+  }
+
   async getModeloById(scoringId: number) {
     try {
       const resp = await firstValueFrom(
