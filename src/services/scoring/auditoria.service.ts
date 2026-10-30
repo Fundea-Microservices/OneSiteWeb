@@ -18,18 +18,40 @@ export class AuditoriaScoringService extends HttpService {
     super(http);
   }
 
+  /** Los filtros vacíos no se mandan: ausente es "sin filtro". */
   async consultar({
     numeroSolicitud,
+    evaluacionId,
+    cliente,
+    region,
+    agencia,
+    usuario,
+    fechaDesde,
+    fechaHasta,
     pagina = 1,
     limite = 10,
   }: {
     numeroSolicitud?: number;
+    evaluacionId?: number;
+    cliente?: string;
+    region?: string;
+    agencia?: string;
+    usuario?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
     pagina?: number;
     limite?: number;
   } = {}) {
     try {
       const params: any = { pagina, limite };
       if (numeroSolicitud) params['numeroSolicitud'] = numeroSolicitud;
+      if (evaluacionId) params['evaluacionId'] = evaluacionId;
+      if (cliente?.trim()) params['cliente'] = cliente.trim();
+      if (region?.trim()) params['region'] = region.trim();
+      if (agencia?.trim()) params['agencia'] = agencia.trim();
+      if (usuario?.trim()) params['usuario'] = usuario.trim();
+      if (fechaDesde) params['fechaDesde'] = fechaDesde;
+      if (fechaHasta) params['fechaHasta'] = fechaHasta;
 
       const resp = await firstValueFrom(
         this.get<PaginadoScoring<IEvaluacionCredito>>(this.base, params),
