@@ -174,3 +174,57 @@ textarea:not(:disabled) {
   color: #fff;
   background-color: #e67700;
 }
+
+/* Naranja del semáforo: Bootstrap no lo trae entre sus colores de tema y este
+   dictamen sí lo necesita. Se completan las tres piezas que las otras tres
+   variantes ya tienen (insignia, borde y fondo tenue) para que el cuarto color
+   no quede a medias. */
+.border-orange {
+  border-color: #e67700 !important;
+}
+
+.bg-orange-subtle {
+  background-color: #fff3e0;
+}
+
+/* Para el punto del semáforo, que toma su color del texto. */
+.text-orange {
+  color: #e67700;
+}
+
+/* Franjas y líneas de la tabla del desglose, teñidas con el color del
+   dictamen.
+
+   Bootstrap pinta las franjas de `table-striped` en gris con
+   `--bs-table-striped-bg`, y la cuadrícula de `table-bordered` con
+   `--bs-table-border-color`. Redefinir esas dos variables sobre la tabla tiñe
+   ambas sin tocar el marcado de cada celda.
+
+   Las opacidades son bajas a propósito: la tabla son doce filas de números con
+   quince decimales, y un fondo saturado los vuelve difíciles de leer. El color
+   acompaña al dictamen, no compite con el dato. */
+.tabla-semaforo-verde {
+  --bs-table-striped-bg: rgba(25, 135, 84, 0.07);
+  --bs-table-border-color: rgba(25, 135, 84, 0.3);
+}
+
+.tabla-semaforo-amarillo {
+  --bs-table-striped-bg: rgba(255, 193, 7, 0.14);
+  --bs-table-border-color: rgba(255, 193, 7, 0.45);
+}
+
+.tabla-semaforo-naranja {
+  --bs-table-striped-bg: rgba(230, 119, 0, 0.1);
+  --bs-table-border-color: rgba(230, 119, 0, 0.35);
+}
+
+.tabla-semaforo-rojo {
+  --bs-table-striped-bg: rgba(220, 53, 69, 0.08);
+  --bs-table-border-color: rgba(220, 53, 69, 0.3);
+}
+
+/* Pie de la tabla en naranja. Bootstrap trae table-success, table-warning y
+   table-danger, pero no un equivalente para el cuarto color. */
+.tabla-pie-naranja > * {
+  --bs-table-bg-type: rgba(230, 119, 0, 0.25);
+}
