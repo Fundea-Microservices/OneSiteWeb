@@ -326,6 +326,35 @@ export class CatalogosBantotalService extends HttpService {
   }
 
   /**
+   * Nombre de cada agencia por su código (valorCore = identificador de la sucursal en Bantotal).
+   * Toma el grupo 'agencia' de localStorage; si no está, lo pide a la API.
+   */
+  mapaAgencias(): Promise<Map<string, string>> {
+    return this.mapaCatalogo('agencia');
+  }
+
+  /** Nombre de cada región por su código (valorCore), igual que mapaAgencias */
+  mapaRegiones(): Promise<Map<string, string>> {
+    return this.mapaCatalogo('region');
+  }
+
+  private async mapaCatalogo(grupo: string): Promise<Map<string, string>> {
+    let catalogos: { valorCore: string | number; nombre: string }[] | undefined =
+      this.obtenerTodosLocal()?.[grupo];
+
+    if (!catalogos?.length) {
+      try {
+        const result: any = await firstValueFrom(this.listarCatalogos({ grupo, all: true }));
+        catalogos = result?.data?.data?.catalogos ?? result?.data?.catalogos ?? [];
+      } catch {
+        catalogos = [];
+      }
+    }
+
+    return new Map((catalogos ?? []).map(c => [String(c.valorCore), c.nombre]));
+  }
+
+  /**
    * Obtiene todos los catálogos almacenados en localStorage.
    * @returns Un objeto con todos los grupos de catálogos, o null.
    */

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, i
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DesembolsoService } from '../../../../../services/aliado/desembolso.service';
+import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import { EstadoValidacion, IDesembolsoReferido, ILoteDesembolso } from '../../../../../interfaces/aliado/desembolso';
 import { PaginationAllComponent } from '../../../../shared/components/pagination-all/pagination-all';
 import { claseEstadoLote, nombrePeriodo } from '../../../utils/desembolso.utils';
@@ -17,6 +18,7 @@ import { claseEstadoLote, nombrePeriodo } from '../../../utils/desembolso.utils'
 })
 export class VerLoteModal {
   private desembolsoService = inject(DesembolsoService);
+  private catalogosService = inject(CatalogosBantotalService);
 
   lote = input.required<ILoteDesembolso>();
   cerrar = output<void>();
@@ -25,6 +27,7 @@ export class VerLoteModal {
 
   isLoading = signal(false);
   registros = signal<IDesembolsoReferido[]>([]);
+  agencias = signal<Map<string, string>>(new Map());
 
   busqueda = signal('');
   filtroValidacion = signal<EstadoValidacion | ''>('');
@@ -41,7 +44,7 @@ export class VerLoteModal {
       if (filtro === 'VALIDO' && r.validado !== true) return false;
       if (filtro === 'NO_VALIDO' && r.validado !== false) return false;
       if (!texto) return true;
-      return [r.dpi, this.nombreCliente(r), r.nombreEmpresa, r.username, r.cuenta, r.operacion]
+      return [r.dpi, this.nombreCliente(r), r.nombreEmpresa, r.username, r.cuenta, r.operacion, this.nombreAgencia(r.sucursal)]
         .some(v => (v ?? '').toString().toLowerCase().includes(texto));
     });
   });
@@ -58,7 +61,14 @@ export class VerLoteModal {
   }));
 
   ngOnInit() {
+    this.catalogosService.mapaAgencias().then(agencias => this.agencias.set(agencias));
     this.cargar();
+  }
+
+  /** Nombre de la agencia según el catálogo; si no está, el código */
+  nombreAgencia(sucursal: number | null): string {
+    if (sucursal === null || sucursal === undefined) return '—';
+    return this.agencias().get(String(sucursal)) ?? String(sucursal);
   }
 
   async cargar() {

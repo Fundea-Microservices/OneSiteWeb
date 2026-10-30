@@ -3,7 +3,6 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DesembolsoService } from '../../../../services/aliado/desembolso.service';
-import { AuthService } from '../../../../services/auth.service';
 import { ESTADOS_APROBACION_PAGO, EstadoLote, ILoteDesembolso } from '../../../../interfaces/aliado/desembolso';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 import { ResolverLoteModal } from '../../components/desembolso/resolver-lote-modal/resolver-lote-modal';
@@ -11,7 +10,6 @@ import { VerLoteModal } from '../../components/desembolso/ver-lote-modal/ver-lot
 import { ComisionesLoteModal } from '../../components/desembolso/comisiones-lote-modal/comisiones-lote-modal';
 import {
   claseEstadoLote,
-  mismoUsuario,
   nombrePeriodo,
   puedePagar,
   puedeRechazar,
@@ -31,17 +29,12 @@ import {
 })
 export default class AprobacionLotesPage {
   private desembolsoService = inject(DesembolsoService);
-  private authService = inject(AuthService);
 
   readonly estados = ESTADOS_APROBACION_PAGO;
   readonly rangos = rangosRapidos();
   readonly nombrePeriodo = nombrePeriodo;
   readonly claseEstado = claseEstadoLote;
   readonly puedePagar = puedePagar;
-
-  get usuarioId(): string {
-    return this.authService.getUserStorage()?.userId;
-  }
 
   // Filtros
   fechaDesde = signal('');
@@ -123,13 +116,9 @@ export default class AprobacionLotesPage {
 
   // ─── Acciones ──────────────────────────────────────────────────────────────
 
-  /** En esta vista solo se rechazan lotes PROCESADO, y lo hace alguien distinto a quien validó */
+  /** En esta vista solo se rechazan lotes PROCESADO */
   puedeRechazar(lote: ILoteDesembolso) {
-    return lote.estado === 'PROCESADO' && puedeRechazar(lote, this.usuarioId);
-  }
-
-  esperaOtroUsuario(lote: ILoteDesembolso) {
-    return lote.estado === 'PROCESADO' && mismoUsuario(lote.usuarioIdProceso, this.usuarioId);
+    return lote.estado === 'PROCESADO' && puedeRechazar(lote);
   }
 
   onLoteRechazado() {

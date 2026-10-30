@@ -121,7 +121,7 @@
                             <th class="text-center" scope="col">Cliente</th>
                             <th class="text-center" scope="col">Teléfono</th>
                             <th class="text-center" scope="col">Cuenta / Operación</th>
-                            <th class="text-center" scope="col">Sucursal</th>
+                            <th class="text-center" scope="col">Agencia</th>
                             <th class="text-center" scope="col">Ciclo</th>
                             <th class="text-center" scope="col">Monto otorgado</th>
                             <th class="text-center" scope="col">Fecha vigencia</th>
@@ -158,7 +158,7 @@
                                 <span class="block">{{ r.cuenta }}</span>
                                 <span class="text-gray-500">{{ r.operacion }}</span>
                             </td>
-                            <td class="text-center">{{ r.sucursal }}</td>
+                            <td>{{ nombreAgencia(r.sucursal) }}</td>
                             <td class="text-center">{{ r.ciclo ?? '—' }}</td>
                             <td class="text-end whitespace-nowrap">{{ r.montoOtorgado | currency:'GTQ':'symbol':'1.2-2' }}</td>
                             <td class="text-center whitespace-nowrap">{{ r.fechaVigencia | date:'dd/MM/yyyy':'UTC' }}</td>

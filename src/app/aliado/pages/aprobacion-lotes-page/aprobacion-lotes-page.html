@@ -12,13 +12,13 @@
 
         <!-- RANGOS RÁPIDOS -->
         <div class="flex flex-wrap gap-2 mb-3">
-            @for (rango of rangos; track rango.label) {
+            <!-- @for (rango of rangos; track rango.label) {
             <button type="button" (click)="aplicarRango(rango)"
                 class="px-3 py-1.5 rounded-full border text-sm font-medium transition-colors"
                 [class]="rangoActivo(rango) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'">
                 {{ rango.label }}
             </button>
-            }
+            } -->
         </div>
 
         <!-- FILTROS -->
@@ -132,9 +132,6 @@
                                     <ion-icon name="cash-outline"></ion-icon>
                                 </button> -->
                                 }
-                                @if (esperaOtroUsuario(item)) {
-                                <span class="block text-[0.75em] text-gray-500 mt-1">Pendiente de aprobación por otro usuario</span>
-                                }
                             </td>
                         </tr>
                         }
@@ -211,9 +208,6 @@
                     </button> -->
                     }
                 </div>
-                @if (esperaOtroUsuario(item)) {
-                <p class="text-xs text-gray-500 mt-2">Pendiente de aprobación por otro usuario</p>
-                }
             </div>
             }
             <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />

@@ -1,0 +1,242 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/aliado']">Gestión Integral de Referidos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Seguimiento de Pagos</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header">Seguimiento de Pagos</div>
+    <div class="card-body">
+
+        <!-- FILTROS -->
+        <form class="flex flex-col md:flex-row flex-wrap items-end gap-3 md:gap-4 mb-2" (ngSubmit)="buscar()">
+            <div class="flex-1 min-w-37.5 w-full">
+                <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Fecha desde</label>
+                <input type="date" name="fechaDesde" [ngModel]="fechaDesde()" (ngModelChange)="fechaDesde.set($event)"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
+            </div>
+            <div class="flex-1 min-w-37.5 w-full">
+                <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Fecha hasta</label>
+                <input type="date" name="fechaHasta" [ngModel]="fechaHasta()" (ngModelChange)="fechaHasta.set($event)"
+                    [min]="fechaDesde()"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
+            </div>
+            <div class="flex-1 min-w-37.5 w-full">
+                <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Región</label>
+                <select name="region" [ngModel]="regionFiltro()" (ngModelChange)="onRegion($event)"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5">
+                    <option value="">Todas las regiones</option>
+                    @for (region of regionesDisponibles(); track region) {
+                    <option [value]="region">{{ region }}</option>
+                    }
+                </select>
+            </div>
+            <div class="flex-1 min-w-37.5 w-full">
+                <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Agencia</label>
+                <select name="agencia" [ngModel]="agenciaFiltro()" (ngModelChange)="onAgencia($event)"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5">
+                    <option value="">Todas las agencias</option>
+                    @for (agencia of agenciasDisponibles(); track agencia) {
+                    <option [value]="agencia">{{ agencia }}</option>
+                    }
+                </select>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto">
+                <button type="submit"
+                    class="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors text-sm font-medium">
+                    Buscar
+                </button>
+                <button type="button" (click)="limpiarFiltros()"
+                    class="flex-1 md:flex-none border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-2 rounded transition-colors text-sm font-medium">
+                    Limpiar
+                </button>
+            </div>
+        </form>
+        <p class="text-xs text-gray-500 mb-4">
+            Mostrando <span class="font-semibold">{{ filasFiltradas().length }}</span> registro(s) encontrados
+        </p>
+
+        <h6 class="font-semibold text-gray-700 mb-2">Seguimiento de pago de comisiones por empresa</h6>
+
+        <!-- VERSIÓN DESKTOP (TABLA) -->
+        <div class="hidden md:block">
+            <div class="overflow-x-auto">
+                <table class="table table-striped table-sm table-bordered table-hover w-full align-middle">
+                    <thead>
+                        <tr>
+                            <th class="text-center" scope="col">Fecha</th>
+                            <th class="text-center" scope="col">Lote</th>
+                            <th class="text-center" scope="col">Región</th>
+                            <th class="text-center" scope="col">Agencia</th>
+                            <th class="text-center" scope="col">Empresa</th>
+                            <th class="text-center" scope="col">Casos Válidos</th>
+                            <th class="text-center" scope="col">Categoría</th>
+                            <th class="text-center" scope="col">Comisión por caso</th>
+                            <th class="text-center" scope="col">Total de Comisión</th>
+                            <th class="text-center" scope="col">Estado</th>
+                            <th class="text-center" scope="col">Acc.</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-[0.85em]">
+                        @if (isLoading()) {
+                        <tr>
+                            <td colspan="11" class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <span class="ms-2">Buscando registros...</span>
+                            </td>
+                        </tr>
+                        } @else if (filasPagina().length === 0) {
+                        <tr>
+                            <td colspan="11" class="text-center py-4 text-gray-500">No se encontraron registros</td>
+                        </tr>
+                        } @else {
+                        @for (f of filasPagina(); track f.lote.id + f.idEmpresa) {
+                        @let conteoEmpresa = conteo(f);
+                        <tr>
+                            <td class="text-center whitespace-nowrap">{{ f.lote.fechaInicio | date:'dd/MM/yyyy':'UTC' }}</td>
+                            <td class="whitespace-nowrap">
+                                <span class="font-semibold">{{ f.lote.lote }}</span>
+                                <span class="text-gray-600"> ({{ nombrePeriodo(f.lote.periodo) }})</span>
+                            </td>
+                            <td class="whitespace-nowrap">{{ f.region }}</td>
+                            <td>{{ f.agencia }}</td>
+                            <td class="font-medium">{{ f.nombreEmpresa || '—' }}</td>
+                            <td class="text-center text-green-700 font-medium">{{ f.casosValidos }}</td>
+                            <td class="text-center">
+                                @if (f.categoria) {
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded" [class]="claseCategoria(f.categoria)">
+                                    Cat {{ f.categoria }}
+                                </span>
+                                } @else {
+                                —
+                                }
+                            </td>
+                            <td class="text-end whitespace-nowrap">
+                                {{ f.categoria ? (f.comisionPorCaso | currency:'GTQ':'symbol-narrow':'1.2-2') : '—' }}
+                            </td>
+                            <td class="text-end whitespace-nowrap font-semibold text-blue-700">
+                                {{ f.totalComision | currency:'GTQ':'symbol-narrow':'1.2-2' }}
+                            </td>
+                            <td class="text-center">
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded border" [class]="claseEstado(f.lote.estado)">
+                                    {{ f.lote.estado }}
+                                </span>
+                            </td>
+                            <td class="text-center whitespace-nowrap">
+                                <button type="button" class="btn btn-sm me-1 position-relative" [title]="tituloNotificaciones(f)"
+                                    [class]="pendientes(f) ? 'btn-outline-danger' : 'btn-outline-secondary'"
+                                    (click)="filaNotificaciones.set(f)">
+                                    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                                    @if (conteoEmpresa && conteoEmpresa.abiertas > 0) {
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-purple-600 text-[0.7em]">
+                                        {{ conteoEmpresa.abiertas }}
+                                    </span>
+                                    }
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning" title="Clientes de la empresa en el lote"
+                                    (click)="filaClientes.set(f)">
+                                    <ion-icon name="list-outline"></ion-icon>
+                                </button>
+                            </td>
+                        </tr>
+                        }
+                        }
+                    </tbody>
+                    @if (!isLoading() && filasFiltradas().length > 0) {
+                    <tfoot class="text-[0.85em]">
+                        <tr class="font-semibold bg-gray-50">
+                            <td colspan="5" class="text-end">TOTAL</td>
+                            <td class="text-center">{{ totales().casosValidos }}</td>
+                            <td colspan="2"></td>
+                            <td class="text-end whitespace-nowrap">{{ totales().totalComision | currency:'GTQ':'symbol-narrow':'1.2-2' }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                    }
+                </table>
+            </div>
+
+            <app-pagination-all [paginationObj]="paginationView()" (changePage)="onChangePage($event)" />
+        </div>
+
+        <!-- VERSIÓN MÓVIL (CARDS) -->
+        <div class="md:hidden space-y-4">
+            @if (isLoading()) {
+            <div class="text-center py-8">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2 text-gray-600">Buscando registros...</p>
+            </div>
+            } @else if (filasPagina().length === 0) {
+            <div class="text-center py-8 text-gray-500">No se encontraron registros</div>
+            } @else {
+            @for (f of filasPagina(); track f.lote.id + f.idEmpresa) {
+            @let conteoEmpresa = conteo(f);
+            <div class="bg-white border border-gray-300 rounded-lg shadow-sm p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">{{ f.nombreEmpresa || '—' }}</h3>
+                        <p class="text-sm text-gray-600">{{ f.lote.lote }} · {{ nombrePeriodo(f.lote.periodo) }}</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded border" [class]="claseEstado(f.lote.estado)">
+                        {{ f.lote.estado }}
+                    </span>
+                </div>
+
+                <div class="space-y-2 text-sm text-gray-700 mb-4">
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Región / Agencia:</span>
+                        <span class="text-end">{{ f.region }} · {{ f.agencia }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Casos válidos:</span>
+                        <span>{{ f.casosValidos }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Categoría:</span>
+                        <span>{{ f.categoria ? 'Cat ' + f.categoria + ' · ' + (f.comisionPorCaso | currency:'GTQ':'symbol-narrow':'1.2-2') + ' / caso' : '—' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium text-gray-600">Total comisión:</span>
+                        <span class="font-semibold">{{ f.totalComision | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+                    <button type="button" (click)="filaNotificaciones.set(f)"
+                        class="flex-1 border py-2 px-3 rounded text-sm font-medium"
+                        [class]="pendientes(f) ? 'border-red-300 text-red-700 hover:bg-red-50' : 'border-gray-300 text-gray-700 hover:bg-gray-100'">
+                        Notificaciones
+                        @if (conteoEmpresa && conteoEmpresa.abiertas > 0) {
+                        <span class="ms-1 px-1.5 rounded-full bg-purple-600 text-white text-xs">{{ conteoEmpresa.abiertas }}</span>
+                        }
+                    </button>
+                    <button type="button" (click)="filaClientes.set(f)"
+                        class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-2 px-3 rounded text-sm font-medium">
+                        Clientes
+                    </button>
+                </div>
+            </div>
+            }
+            <app-pagination-all [paginationObj]="paginationView()" (changePage)="onChangePage($event)" />
+            }
+        </div>
+    </div>
+</div>
+
+<!-- MODAL NOTIFICACIONES DE LA EMPRESA EN EL LOTE -->
+@if (filaNotificaciones(); as f) {
+<app-notificaciones-lote-modal [loteId]="f.lote.id" [idEmpresa]="f.idEmpresa"
+    (actualizado)="actualizarNotificaciones(f.lote.id)" (cerrar)="filaNotificaciones.set(null)" />
+}
+
+<!-- MODAL CLIENTES DE LA EMPRESA EN EL LOTE -->
+@if (filaClientes(); as f) {
+<app-clientes-empresa-modal [loteId]="f.lote.id" [empresaId]="f.idEmpresa" [nombreEmpresa]="f.nombreEmpresa"
+    (cerrar)="filaClientes.set(null)" />
+}

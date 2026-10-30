@@ -132,9 +132,6 @@
                                     <ion-icon name="close-circle-outline"></ion-icon>
                                 </button>
                                 }
-                                @if (esperaOtroUsuario(item)) {
-                                <span class="block text-[0.75em] text-gray-500 mt-1">Pendiente de aprobación por otro usuario</span>
-                                }
                             </td>
                         </tr>
                         }
@@ -213,9 +210,6 @@
                     </button>
                     }
                 </div>
-                @if (esperaOtroUsuario(item)) {
-                <p class="text-xs text-gray-500 mt-2">Pendiente de aprobación por otro usuario</p>
-                }
             </div>
             }
             <app-pagination-all [paginationObj]="pagination()" (changePage)="onChangePage($event)" />

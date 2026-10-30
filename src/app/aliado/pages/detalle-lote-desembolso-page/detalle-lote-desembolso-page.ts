@@ -3,18 +3,18 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DesembolsoService } from '../../../../services/aliado/desembolso.service';
-import { AuthService } from '../../../../services/auth.service';
+import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
 import {
   EstadoValidacion,
   IDesembolsoReferido,
   ILoteDesembolso,
+  MOTIVOS_NO_APLICA,
   ValidacionDesembolso,
 } from '../../../../interfaces/aliado/desembolso';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 import { AccionResolucion, ResolverLoteModal } from '../../components/desembolso/resolver-lote-modal/resolver-lote-modal';
 import {
   claseEstadoLote,
-  mismoUsuario,
   nombrePeriodo,
   puedeAprobar,
   puedeRechazar,
@@ -36,10 +36,10 @@ interface RegistroValidacion extends IDesembolsoReferido {
 })
 export default class DetalleLoteDesembolsoPage {
   private desembolsoService = inject(DesembolsoService);
-  private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private catalogosService = inject(CatalogosBantotalService);
 
-  readonly maxComentario = 500;
+  readonly motivosNoAplica = MOTIVOS_NO_APLICA;
   readonly claseEstado = claseEstadoLote;
 
   private loteId = '';
@@ -48,6 +48,7 @@ export default class DetalleLoteDesembolsoPage {
   isSaving = signal(false);
   lote = signal<ILoteDesembolso | null>(null);
   registros = signal<RegistroValidacion[]>([]);
+  agencias = signal<Map<string, string>>(new Map());
 
   // Filtros y paginación del lado del front
   busqueda = signal('');
@@ -56,10 +57,6 @@ export default class DetalleLoteDesembolsoPage {
 
   // Aprobar / rechazar
   accionResolver = signal<AccionResolucion | null>(null);
-
-  get usuarioId(): string {
-    return this.authService.getUserStorage()?.userId;
-  }
 
   periodoLabel = computed(() => nombrePeriodo(this.lote()?.periodo));
   editable = computed(() => !!this.lote() && puedeValidar(this.lote()!));
@@ -91,17 +88,12 @@ export default class DetalleLoteDesembolsoPage {
   /** Mientras haya cambios sin guardar no se permite aprobar/rechazar */
   puedeAprobar = computed(() => {
     const lote = this.lote();
-    return !!lote && puedeAprobar(lote, this.usuarioId) && this.cambios().length === 0;
+    return !!lote && puedeAprobar(lote) && this.cambios().length === 0;
   });
 
   puedeRechazar = computed(() => {
     const lote = this.lote();
-    return !!lote && puedeRechazar(lote, this.usuarioId) && this.cambios().length === 0;
-  });
-
-  esperaOtroUsuario = computed(() => {
-    const lote = this.lote();
-    return lote?.estado === 'PROCESADO' && mismoUsuario(lote.usuarioIdProceso, this.usuarioId);
+    return !!lote && puedeRechazar(lote) && this.cambios().length === 0;
   });
 
   registrosFiltrados = computed(() => {
@@ -113,7 +105,7 @@ export default class DetalleLoteDesembolsoPage {
       if (filtro === 'VALIDO' && r.validadoEdit !== true) return false;
       if (filtro === 'NO_VALIDO' && r.validadoEdit !== false) return false;
       if (!texto) return true;
-      return [r.dpi, this.nombreCliente(r), r.nombreEmpresa, r.username, r.cuenta, r.operacion]
+      return [r.dpi, this.nombreCliente(r), r.nombreEmpresa, r.username, r.cuenta, r.operacion, this.nombreAgencia(r.sucursal)]
         .some(v => (v ?? '').toString().toLowerCase().includes(texto));
     });
   });
@@ -131,6 +123,7 @@ export default class DetalleLoteDesembolsoPage {
 
   ngOnInit() {
     this.loteId = this.route.snapshot.paramMap.get('loteId') ?? '';
+    this.catalogosService.mapaAgencias().then(agencias => this.agencias.set(agencias));
     this.cargar();
   }
 
@@ -167,6 +160,12 @@ export default class DetalleLoteDesembolsoPage {
     return [r.primerNombre, r.segundoNombre, r.primerApellido, r.segundoApellido].filter(Boolean).join(' ');
   }
 
+  /** Nombre de la agencia según el catálogo; si no está, el código */
+  nombreAgencia(sucursal: number | null): string {
+    if (sucursal === null || sucursal === undefined) return '—';
+    return this.agencias().get(String(sucursal)) ?? String(sucursal);
+  }
+
   tieneCambios(r: RegistroValidacion): boolean {
     return r.validadoEdit !== r.validado || r.comentarioEdit.trim() !== (r.comentarioValidado ?? '').trim();
   }
@@ -175,8 +174,18 @@ export default class DetalleLoteDesembolsoPage {
     return r.validadoEdit === false && !r.comentarioEdit.trim();
   }
 
+  /** Comentario guardado antes de usar el catálogo de motivos: se muestra como opción extra para no perderlo */
+  motivoFueraDeCatalogo(r: RegistroValidacion): boolean {
+    return !!r.comentarioEdit && !this.motivosNoAplica.includes(r.comentarioEdit);
+  }
+
+  /** "Aplica" no lleva comentario; "No aplica" exige elegir un motivo del catálogo */
   setValidado(id: string, validado: boolean) {
-    this.actualizarRegistro(id, { validadoEdit: validado });
+    this.registros.update(lista => lista.map(r => {
+      if (r.id !== id) return r;
+      const comentarioEdit = validado || !this.motivosNoAplica.includes(r.comentarioEdit) ? '' : r.comentarioEdit;
+      return { ...r, validadoEdit: validado, comentarioEdit };
+    }));
   }
 
   setComentario(id: string, comentario: string) {
@@ -185,7 +194,7 @@ export default class DetalleLoteDesembolsoPage {
 
   marcarPendientesComoAplica() {
     this.registros.update(lista =>
-      lista.map(r => (r.validadoEdit === null ? { ...r, validadoEdit: true } : r))
+      lista.map(r => (r.validadoEdit === null ? { ...r, validadoEdit: true, comentarioEdit: '' } : r))
     );
   }
 

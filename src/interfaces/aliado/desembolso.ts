@@ -117,10 +117,22 @@ export interface ListarDesembolsosQuery {
   busqueda?: string;
 }
 
+/** Motivos para marcar un registro del lote como "No aplica"; se guardan como texto en comentarioValidado */
+export const MOTIVOS_NO_APLICA = [
+  'Duplicado',
+  'No es cliente',
+  'Crédito cancelado antes de periodo de vigencia',
+  'DPI no coincide con titular en Bantotal',
+  'Referido registrado fuera del plazo contractual ( > 30 días)',
+  'Mora temprana registrada en primera cuota de desembolso',
+  'Negocio afiliado inactivo o suspendido en eManager',
+  'Monto desembolsado menor al umbral mínimo ( < Q 3,000.00)',
+];
+
 export interface ValidacionDesembolso {
   id: string;
   validado: boolean;
-  comentarioValidado?: string;  // obligatorio si validado === false (máx. 500)
+  comentarioValidado?: string;  // motivo, obligatorio si validado === false (máx. 500)
 }
 
 export interface ProcesarLoteRequest {
