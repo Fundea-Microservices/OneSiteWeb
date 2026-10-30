@@ -78,8 +78,8 @@
           <thead>
             <tr>
               <th class="text-center" style="width: 4%;"></th>
-              <th style="width: 7%;">Código<br /> Externo</th>
-              <th style="width: 40%;">Descripción del Catálogo</th>
+              <th class="text-center" style="width: 7%;">Código<br /> Externo</th>
+              <th class="text-center" style="width: 40%;">Descripción del Catálogo</th>
               <th class="text-center" style="width: 8%;">Orden</th>
               <th class="text-center" style="width: 11%;">Estado</th>
               <th class="text-center" style="width: 15%;">Acciones</th>
@@ -96,7 +96,7 @@
                 </td>
                 <td class="font-monospace text-primary">{{ item.codigoExterno || '—' }}</td>
                 <td class="text-break">{{ item.descripcionCatalogo }}</td>
-                <td class="text-center">{{ item.ordenDespliegue }}</td>
+                <td class="text-end num-tabular">{{ item.ordenDespliegue }}</td>
                 <td class="text-center">
                   @if (item.estado === 'Activo') {
                     <span class="badge text-bg-success">ACTIVO</span>
@@ -194,6 +194,7 @@
             [catalogo]="catalogoEdit()"
             [scoringId]="id"
             [nombreScoring]="nombreScoringSeleccionado()"
+            [catalogos]="catalogosPadre()"
             [nuevo]="nuevoCatalogo()"
             [formKey]="formKeyCatalogo()"
             (save)="guardarCatalogo($event)"
@@ -212,6 +213,11 @@
         <h5 class="modal-title">
           <ion-icon name="list-outline" class="me-1"></ion-icon>
           Opciones de: {{ catalogoSeleccionado()?.descripcionCatalogo }}
+          @if (catalogoPadre(); as padre) {
+            <span class="text-muted small ms-1">
+              depende de {{ padre.descripcionCatalogo }}
+            </span>
+          }
           <!--<span class="text-muted small ms-1 font-monospace">
             {{ catalogoSeleccionado()?.codigoExterno }}
           </span>-->
@@ -222,7 +228,25 @@
 
         @if (modoOpcion() === 'lista') {
 
-          <div class="d-flex justify-content-end mb-2">
+          <div class="d-flex justify-content-between align-items-end mb-2 gap-2">
+            @if (catalogoPadre(); as padre) {
+              <div>
+                <label class="form-label fw-semibold small mb-1">
+                  {{ padre.descripcionCatalogo }}
+                </label>
+                <select class="form-select form-select-sm"
+                  [value]="filtroPadre()"
+                  (change)="filtroPadre.set(+selPadre.value)" #selPadre>
+                  <option [value]="0">Todas</option>
+                  @for (op of padre.opciones ?? []; track op.opcionId) {
+                    <option [value]="op.opcionId">{{ op.descripcionOpcion }}</option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div></div>
+            }
+
             <button class="btn btn-primary btn-sm" (click)="openOpcionForm(true)">
               <ion-icon name="add-outline"></ion-icon> Agregar Opción
             </button>
@@ -239,8 +263,11 @@
               <thead>
                 <tr>
                   <th class="text-center" style="width: 4%;"></th>
-                  <th style="width: 12%;">Código</th>
-                  <th style="width: 22%;">Descripción</th>
+                  <th class="text-center" style="width: 12%;">Código</th>
+                  <th class="text-center" style="width: 18%;">Descripción</th>
+                  @if (catalogoPadre()) {
+                    <th class="text-center" style="width: 12%;">Padre</th>
+                  }
                   <th class="text-center" style="width: 9%;">Peso</th>
                   <th class="text-center" style="width: 9%;">Const.</th>
                   <th class="text-center" style="width: 10%;">Val. Ref.</th>
@@ -251,7 +278,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (opcion of opcionList(); track opcion.opcionId; let i = $index) {
+                @for (opcion of opcionesVisibles(); track opcion.opcionId; let i = $index) {
                   <tr draggable="true"
                     (dragstart)="onDragStartOpcion(i)"
                     (dragover)="onDragOver($event)"
@@ -260,12 +287,20 @@
                       <ion-icon name="reorder-two-outline"></ion-icon>
                     </td>
                     <td class="font-monospace">{{ opcion.codigoOpcion }}</td>
-                    <td class="text-break">{{ opcion.descripcionOpcion }}</td>
-                    <td class="text-end">{{ opcion.peso }}</td>
-                    <td class="text-end">{{ opcion.constante }}</td>
-                    <td class="text-end">{{ opcion.valorReferencia }}</td>
-                    <td class="text-end">{{ opcion.coeficienteA }}</td>
-                    <td class="text-end">{{ opcion.coeficienteB }}</td>
+                    <td class="text-break">
+                      {{ opcion.descripcionOpcion }}
+                      @if (opcion.porDefecto) {
+                        <span class="text-muted small ms-1">· por defecto</span>
+                      }
+                    </td>
+                    @if (catalogoPadre()) {
+                      <td class="text-break">{{ nombrePadreDe(opcion) }}</td>
+                    }
+                    <td class="text-end num-tabular">{{ opcion.peso }}</td>
+                    <td class="text-end num-tabular">{{ opcion.constante }}</td>
+                    <td class="text-end num-tabular">{{ opcion.valorReferencia }}</td>
+                    <td class="text-end num-tabular">{{ opcion.coeficienteA }}</td>
+                    <td class="text-end num-tabular">{{ opcion.coeficienteB }}</td>
                     <td class="text-center">
                       @if (opcion.estado === 'Activo') {
                         <span class="badge text-bg-success">ACT.</span>
@@ -289,7 +324,7 @@
                 } @empty {
                   @if (!isLoadingOpciones()) {
                     <tr>
-                      <td colspan="10" class="text-center text-muted py-3">
+                      <td colspan="11" class="text-center text-muted py-3">
                         Este catálogo aún no tiene opciones
                       </td>
                     </tr>
@@ -309,6 +344,7 @@
             <app-upsert-opcion-variable
               [opcion]="opcionEdit()"
               [catalogoId]="catId"
+              [catalogos]="catalogosPadre()"
               [nuevo]="nuevaOpcion()"
               [formKey]="formKeyOpcion()"
               (save)="guardarOpcion($event)"

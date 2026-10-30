@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   EventEmitter,
   inject,
@@ -15,7 +16,10 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { IOpcionVariable } from '../../../../interfaces/scoring/scoring';
+import {
+  ICatalogoVariable,
+  IOpcionVariable,
+} from '../../../../interfaces/scoring/scoring';
 
 /**
  * Modal 2 de la Pantalla 2: una opción del catálogo con sus coeficientes.
@@ -37,6 +41,9 @@ export class UpsertOpcionVariableComponent {
   nuevo = input<boolean>(true);
   formKey = input<number>(0);
 
+  /** Catálogos del scoring: de ahí salen las opciones padre candidatas. */
+  catalogos = input<ICatalogoVariable[]>([]);
+
   @Output() save = new EventEmitter<IOpcionVariable>();
   @Output() cancel = new EventEmitter<void>();
 
@@ -47,10 +54,42 @@ export class UpsertOpcionVariableComponent {
    */
   form = signal<FormGroup>(this.construirForm(null));
 
+  /** El catálogo al que pertenece esta opción. */
+  private catalogoActual = computed(() =>
+    this.catalogos().find((c) => c.catalogoId === this.catalogoId()),
+  );
+
+  /** De qué catálogo depende el actual. undefined = es independiente. */
+  catalogoPadre = computed(() => {
+    const padreId = this.catalogoActual()?.catalogoPadreId;
+    if (!padreId) return undefined;
+    return this.catalogos().find((c) => c.catalogoId === padreId);
+  });
+
+  /** Solo las opciones de ese catálogo: la cascada ya no cruza a dedo. */
+  opcionesPadre = computed(() =>
+    (this.catalogoPadre()?.opciones ?? []).filter((o) => o.estado === 'Activo'),
+  );
+
   constructor() {
     effect(() => {
       const _ = this.formKey();
       this.form.set(this.construirForm(this.opcion()));
+    });
+
+    /* Sin padre, una opción de catálogo dependiente desaparece de la
+       captura sin aviso. Por eso aquí es obligatorio. */
+    effect(() => {
+      const dependiente = !!this.catalogoPadre();
+      const control = this.form().get('opcionPadreId');
+      if (!control) return;
+
+      control.setValidators(dependiente ? [Validators.required] : []);
+      control.updateValueAndValidity({ emitEvent: false });
+
+      if (!dependiente && control.value !== null) {
+        control.setValue(null, { emitEvent: false });
+      }
     });
   }
 
@@ -74,6 +113,8 @@ export class UpsertOpcionVariableComponent {
           [Validators.maxLength(500)],
         ],
       ordenDespliegue: [opcion?.ordenDespliegue ?? null],
+      opcionPadreId: [opcion?.opcionPadreId ?? null],
+      porDefecto: [opcion?.porDefecto ?? false],
       estado: [opcion?.estado ?? 'Activo', [Validators.required]],
     });
   }
@@ -99,6 +140,9 @@ export class UpsertOpcionVariableComponent {
       coeficienteB: Number(valores.coeficienteB),
       observacionesVar: valores.observacionesVar?.trim() || null,
       ordenDespliegue: valores.ordenDespliegue ?? undefined,
+      opcionPadreId: valores.opcionPadreId
+        ? Number(valores.opcionPadreId)
+        : null,
     } as IOpcionVariable);
   }
 

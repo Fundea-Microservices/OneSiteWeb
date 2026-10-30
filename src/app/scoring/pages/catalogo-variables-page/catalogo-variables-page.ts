@@ -55,6 +55,10 @@ export default class CatalogoVariablesPage implements OnInit, AfterViewInit {
   // ── Tabla 1: catálogos ────────────────────────────────────────────────────
 
   catalogoList = signal<ICatalogoVariable[]>([]);
+
+  /** Sin filtrar por búsqueda: alimenta el select de Opción Padre, que
+      ofrece las opciones de los otros catálogos del scoring. */
+  catalogosPadre = signal<ICatalogoVariable[]>([]);
   catalogoEdit = signal<ICatalogoVariable | null>(null);
   nuevoCatalogo = signal(true);
   formKeyCatalogo = signal(Date.now());
@@ -66,6 +70,36 @@ export default class CatalogoVariablesPage implements OnInit, AfterViewInit {
 
   catalogoSeleccionado = signal<ICatalogoVariable | null>(null);
   opcionList = signal<IOpcionVariable[]>([]);
+
+  /** Filtro de la tabla por la opción del catálogo padre. 0 = todas. */
+  filtroPadre = signal<number>(0);
+
+  /** El catálogo del que depende el que se está viendo. */
+  catalogoPadre = computed(() => {
+    const padreId = this.catalogoSeleccionado()?.catalogoPadreId;
+    if (!padreId) return undefined;
+    return this.catalogosPadre().find((c) => c.catalogoId === padreId);
+  });
+
+  /** Nombre de cada opción padre, para la columna Padre. */
+  nombresPadre = computed(() => {
+    const mapa = new Map<number, string>();
+    for (const opcion of this.catalogoPadre()?.opciones ?? []) {
+      if (opcion.opcionId) mapa.set(opcion.opcionId, opcion.descripcionOpcion);
+    }
+    return mapa;
+  });
+
+  opcionesVisibles = computed(() => {
+    const padre = this.filtroPadre();
+    const todas = this.opcionList();
+    return padre ? todas.filter((o) => o.opcionPadreId === padre) : todas;
+  });
+
+  nombrePadreDe(opcion: IOpcionVariable): string {
+    if (!opcion.opcionPadreId) return '—';
+    return this.nombresPadre().get(opcion.opcionPadreId) ?? '—';
+  }
   opcionEdit = signal<IOpcionVariable | null>(null);
   nuevaOpcion = signal(true);
   formKeyOpcion = signal(Date.now());
@@ -117,11 +151,18 @@ export default class CatalogoVariablesPage implements OnInit, AfterViewInit {
 
     this.isLoading.set(true);
     try {
-      this.catalogoList.set(
-        await this.catalogoService.getCatalogos({
-          scoringId,
-          busqueda: this.buscador(),
-        }),
+      const lista = await this.catalogoService.getCatalogos({
+        scoringId,
+        busqueda: this.buscador(),
+      });
+      this.catalogoList.set(lista);
+
+      // Con búsqueda activa la lista no sirve de padres: faltarían los
+      // catálogos que el filtro dejó fuera.
+      this.catalogosPadre.set(
+        this.buscador().trim()
+          ? await this.catalogoService.getCatalogos({ scoringId })
+          : lista,
       );
     } finally {
       this.isLoading.set(false);
