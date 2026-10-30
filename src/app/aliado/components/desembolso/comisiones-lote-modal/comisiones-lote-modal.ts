@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, inject, input, output, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
 import { DesembolsoService } from '../../../../../services/aliado/desembolso.service';
-import { AuthService } from '../../../../../services/auth.service';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import {
   CategoriaComision,
@@ -10,7 +9,7 @@ import {
   ILoteDesembolso,
   IResumenComisiones,
 } from '../../../../../interfaces/aliado/desembolso';
-import { claseEstadoLote, mismoUsuario, nombrePeriodo, puedeAprobar, puedePagar, puedeRechazar } from '../../../utils/desembolso.utils';
+import { claseEstadoLote, nombreAgenciaEmpresa, nombrePeriodo, puedeAprobar, puedePagar, puedeRechazar } from '../../../utils/desembolso.utils';
 import { AccionResolucion, ResolverLoteModal } from '../resolver-lote-modal/resolver-lote-modal';
 import { ClientesEmpresaModal } from '../clientes-empresa-modal/clientes-empresa-modal';
 
@@ -34,7 +33,6 @@ const ESTILO_CATEGORIA: Record<CategoriaComision, { badge: string; monto: string
 })
 export class ComisionesLoteModal {
   private desembolsoService = inject(DesembolsoService);
-  private authService = inject(AuthService);
   private catalogosService = inject(CatalogosBantotalService);
 
   loteId = input.required<string>();
@@ -48,6 +46,7 @@ export class ComisionesLoteModal {
   isLoading = signal(false);
   resumen = signal<IResumenComisiones | null>(null);
   regiones = signal<Map<string, string>>(new Map());
+  agencias = signal<Map<string, string>>(new Map());
 
   accionResolver = signal<AccionResolucion | null>(null);
   empresaVer = signal<IComisionEmpresa | null>(null);
@@ -55,25 +54,16 @@ export class ComisionesLoteModal {
   /** Secciones del acordeón que el usuario colapsó (todas abiertas al inicio) */
   seccionesCerradas = signal<Set<Seccion>>(new Set());
 
-  get usuarioId(): string {
-    return this.authService.getUserStorage()?.userId;
-  }
-
   lote = computed(() => this.resumen()?.lote ?? null);
   periodoLabel = computed(() => nombrePeriodo(this.lote()?.periodo));
 
-  puedeAprobar = computed(() => !!this.lote() && puedeAprobar(this.lote()!, this.usuarioId));
-  puedeRechazar = computed(() => !!this.lote() && puedeRechazar(this.lote()!, this.usuarioId));
+  puedeAprobar = computed(() => !!this.lote() && puedeAprobar(this.lote()!));
+  puedeRechazar = computed(() => !!this.lote() && puedeRechazar(this.lote()!));
   puedePagar = computed(() => !!this.lote() && puedePagar(this.lote()!));
-
-  /** El lote está PROCESADO y lo validó el usuario logueado: debe resolverlo otra persona */
-  esperaOtroUsuario = computed(() => {
-    const lote = this.lote();
-    return lote?.estado === 'PROCESADO' && mismoUsuario(lote.usuarioIdProceso, this.usuarioId);
-  });
 
   ngOnInit() {
     this.cargarRegiones();
+    this.catalogosService.mapaAgencias().then(agencias => this.agencias.set(agencias));
     this.cargar();
   }
 
@@ -98,6 +88,10 @@ export class ComisionesLoteModal {
   nombreRegion(regionId: number | null): string {
     if (regionId === null) return '—';
     return this.regiones().get(String(regionId)) ?? String(regionId);
+  }
+
+  nombreAgencia(e: IComisionEmpresa): string {
+    return nombreAgenciaEmpresa(e.agenciaNombre, e.agenciaId, this.agencias());
   }
 
   /** "1 a 4 Casos" · "≥ 10 Casos" */

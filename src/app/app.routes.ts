@@ -573,6 +573,10 @@ export const routes: Routes = [
                 path: 'pago-comision',
                 loadComponent: () => import('./aliado/pages/pago-comision-page/pago-comision-page'),
             },
+            {
+                path: 'seguimiento-pagos',
+                loadComponent: () => import('./aliado/pages/seguimiento-pagos-page/seguimiento-pagos-page'),
+            },
         ]
     },
     // {

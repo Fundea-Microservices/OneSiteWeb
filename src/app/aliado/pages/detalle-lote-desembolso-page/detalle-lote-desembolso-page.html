@@ -90,12 +90,6 @@
         </div>
         }
 
-        @if (esperaOtroUsuario()) {
-        <div class="mt-3 p-2 rounded border bg-yellow-50 border-yellow-200 text-yellow-800 text-sm">
-            Usted validó este lote; la aprobación o rechazo debe realizarla otro usuario.
-        </div>
-        }
-
         <!-- CONTADORES -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
             <div class="rounded-lg border border-gray-200 p-3 text-center">
@@ -163,13 +157,13 @@
                         <th class="text-center" scope="col">Cliente</th>
                         <th class="text-center" scope="col">Teléfono</th>
                         <th class="text-center" scope="col">Cuenta / Operación</th>
-                        <th class="text-center" scope="col">Sucursal</th>
+                        <th class="text-center" scope="col">Agencia</th>
                         <th class="text-center" scope="col">Ciclo</th>
                         <th class="text-center" scope="col">Monto otorgado</th>
                         <th class="text-center" scope="col">Fecha vigencia</th>
                         <th class="text-center" scope="col">Fecha referenciación</th>
                         <th class="text-center" scope="col">Aplica</th>
-                        <th class="text-center min-w-60" scope="col">Comentario</th>
+                        <th class="text-center min-w-60" scope="col">Motivo (No aplica)</th>
                     </tr>
                 </thead>
                 <tbody class="text-[0.85em]">
@@ -200,7 +194,7 @@
                             <span class="block">{{ r.cuenta }}</span>
                             <span class="text-gray-500">{{ r.operacion }}</span>
                         </td>
-                        <td class="text-center">{{ r.sucursal }}</td>
+                        <td>{{ nombreAgencia(r.sucursal) }}</td>
                         <td class="text-center">{{ r.ciclo ?? '—' }}</td>
                         <td class="text-end whitespace-nowrap">{{ r.montoOtorgado | currency:'GTQ':'symbol':'1.2-2' }}</td>
                         <td class="text-center whitespace-nowrap">{{ r.fechaVigencia | date:'dd/MM/yyyy':'UTC' }}</td>
@@ -229,12 +223,20 @@
                         </td>
                         <td>
                             @if (editable()) {
-                            <input type="text" [value]="r.comentarioEdit" #txtComentario
-                                (input)="setComentario(r.id, txtComentario.value)" [attr.maxlength]="maxComentario"
+                            @if (r.validadoEdit === false) {
+                            <select [ngModel]="r.comentarioEdit" (ngModelChange)="setComentario(r.id, $event)"
                                 [disabled]="isSaving()"
-                                [placeholder]="r.validadoEdit === false ? 'Comentario obligatorio' : 'Comentario (opcional)'"
                                 class="w-full px-2 py-1 border rounded text-xs focus:outline-none focus:ring-2"
-                                [class]="requiereComentario(r) ? 'border-red-500 bg-red-50 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'" />
+                                [class]="requiereComentario(r) ? 'border-red-500 bg-red-50 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'">
+                                <option value="" disabled>Seleccione el motivo</option>
+                                @for (motivo of motivosNoAplica; track motivo) {
+                                <option [value]="motivo">{{ motivo }}</option>
+                                }
+                                @if (motivoFueraDeCatalogo(r)) {
+                                <option [value]="r.comentarioEdit">{{ r.comentarioEdit }}</option>
+                                }
+                            </select>
+                            }
                             } @else {
                             {{ r.comentarioValidado || '' }}
                             }
@@ -255,7 +257,7 @@
                 <p class="text-yellow-700">Faltan {{ contadores().pendientes }} registro(s) por validar.</p>
                 }
                 @if (sinComentario() > 0) {
-                <p class="text-red-600">{{ sinComentario() }} registro(s) marcados como "No aplica" sin comentario.</p>
+                <p class="text-red-600">{{ sinComentario() }} registro(s) marcados como "No aplica" sin motivo.</p>
                 }
                 @if (cambios().length > 0) {
                 <p class="text-gray-600">{{ cambios().length }} registro(s) con cambios sin guardar.</p>

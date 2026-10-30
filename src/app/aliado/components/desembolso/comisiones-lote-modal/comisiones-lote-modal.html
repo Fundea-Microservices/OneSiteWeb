@@ -139,7 +139,7 @@
                                 @for (e of r.empresas; track e.idEmpresa) {
                                 <tr>
                                     <td class="whitespace-nowrap">{{ nombreRegion(e.regionId) }}</td>
-                                    <td>{{ e.agenciaNombre || '—' }}</td>
+                                    <td>{{ nombreAgencia(e) }}</td>
                                     <td class="font-medium">{{ e.nombreEmpresa || '—' }}</td>
                                     <td class="text-center">{{ e.casosValidos }}</td>
                                     <td class="text-center">
@@ -268,12 +268,6 @@
                 </div>
                 }
             </section>
-
-            @if (esperaOtroUsuario()) {
-            <div class="p-2 rounded border bg-yellow-50 border-yellow-200 text-yellow-800 text-sm">
-                Usted validó este lote; la aprobación o rechazo debe realizarla otro usuario.
-            </div>
-            }
             }
         </div>
 
@@ -286,24 +280,22 @@
             </button>
             @if (lote()?.estado === 'PROCESADO') {
             <button type="button" [disabled]="!puedeRechazar() || isLoading()"
-                [title]="esperaOtroUsuario() ? 'Debe rechazarlo un usuario distinto al que validó' : ''"
                 class="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 (click)="accionResolver.set('rechazar')">
                 Rechazar
             </button>
             <button type="button" [disabled]="!puedeAprobar() || isLoading()"
-                [title]="esperaOtroUsuario() ? 'Debe aprobarlo un usuario distinto al que validó' : ''"
                 class="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 (click)="accionResolver.set('aprobar')">
                 Aprobar Comisiones
             </button>
             }
             @if (puedePagar()) {
-            <button type="button" [disabled]="isLoading()"
+            <!-- <button type="button" [disabled]="isLoading()"
                 class="px-4 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 (click)="accionResolver.set('pagar')">
                 Marcar como Pagado
-            </button>
+            </button> -->
             }
         </div>
 

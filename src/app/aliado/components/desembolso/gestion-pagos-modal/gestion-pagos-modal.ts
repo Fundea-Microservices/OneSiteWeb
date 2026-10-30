@@ -4,7 +4,7 @@ import { DesembolsoService } from '../../../../../services/aliado/desembolso.ser
 import { NotificacionLoteService } from '../../../../../services/aliado/notificacion-lote.service';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import { IConteoNotificaciones, IPagoEmpresa, IPagosLote } from '../../../../../interfaces/aliado/desembolso';
-import { claseEstadoLote, nombrePeriodo, puedePagar } from '../../../utils/desembolso.utils';
+import { claseEstadoLote, nombreAgenciaEmpresa, nombrePeriodo, puedePagar } from '../../../utils/desembolso.utils';
 import { ClientesEmpresaModal } from '../clientes-empresa-modal/clientes-empresa-modal';
 import { NotificacionesLoteModal } from '../notificaciones-lote-modal/notificaciones-lote-modal';
 import { RegistrarPagoModal } from '../registrar-pago-modal/registrar-pago-modal';
@@ -41,7 +41,10 @@ export class GestionPagosModal {
   pagos = signal<IPagosLote | null>(null);
   /** Región por empresa (clave en mayúsculas): el estado de pagos no la incluye, viene del resumen de comisiones */
   regionEmpresa = signal<Map<string, number | null>>(new Map());
+  /** Código de agencia por empresa (clave en mayúsculas), también del resumen de comisiones */
+  agenciaEmpresa = signal<Map<string, number | null>>(new Map());
   regiones = signal<Map<string, string>>(new Map());
+  agencias = signal<Map<string, string>>(new Map());
   /** Conteos de notificaciones por empresa (clave en mayúsculas) */
   notificaciones = signal<Map<string, IConteoNotificaciones>>(new Map());
 
@@ -79,6 +82,7 @@ export class GestionPagosModal {
 
   ngOnInit() {
     this.cargarRegiones();
+    this.catalogosService.mapaAgencias().then(agencias => this.agencias.set(agencias));
     this.cargar();
     this.cargarRegionEmpresas();
     this.cargarNotificaciones();
@@ -93,9 +97,9 @@ export class GestionPagosModal {
 
   private async cargarRegionEmpresas() {
     const resp = await this.desembolsoService.obtenerComisiones(this.loteId());
-    this.regionEmpresa.set(new Map(
-      (resp?.data?.empresas ?? []).map(e => [e.idEmpresa.toUpperCase(), e.regionId])
-    ));
+    const empresas = resp?.data?.empresas ?? [];
+    this.regionEmpresa.set(new Map(empresas.map(e => [e.idEmpresa.toUpperCase(), e.regionId])));
+    this.agenciaEmpresa.set(new Map(empresas.map(e => [e.idEmpresa.toUpperCase(), e.agenciaId])));
   }
 
   async cargarNotificaciones() {
@@ -120,6 +124,10 @@ export class GestionPagosModal {
     const regionId = this.regionEmpresa().get(e.idEmpresa.toUpperCase());
     if (regionId === null || regionId === undefined) return '—';
     return this.regiones().get(String(regionId)) ?? String(regionId);
+  }
+
+  nombreAgencia(e: IPagoEmpresa): string {
+    return nombreAgenciaEmpresa(e.agenciaNombre, this.agenciaEmpresa().get(e.idEmpresa.toUpperCase()), this.agencias());
   }
 
   conteoNotificaciones(e: IPagoEmpresa): IConteoNotificaciones | null {

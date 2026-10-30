@@ -110,7 +110,7 @@
                                 @let conteo = conteoNotificaciones(e);
                                 <tr>
                                     <td class="whitespace-nowrap">{{ nombreRegion(e) }}</td>
-                                    <td>{{ e.agenciaNombre || '—' }}</td>
+                                    <td>{{ nombreAgencia(e) }}</td>
                                     <td class="font-medium">{{ e.nombreEmpresa || '—' }}</td>
                                     <td class="min-w-60">
                                         @if (!e.requiereTransferencia) {

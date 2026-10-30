@@ -1,4 +1,4 @@
-import { EstadoLote, ILoteDesembolso } from '../../../interfaces/aliado/desembolso';
+import { CategoriaComision, EstadoLote, ILoteDesembolso } from '../../../interfaces/aliado/desembolso';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -103,6 +103,30 @@ export function claseEstadoLote(estado: EstadoLote): string {
   }
 }
 
+/** Clases Tailwind del badge de la categoría de comisión */
+export function claseCategoriaComision(categoria: CategoriaComision | null): string {
+  switch (categoria) {
+    case 'A': return 'bg-blue-100 text-blue-800';
+    case 'B': return 'bg-amber-100 text-amber-800';
+    case 'C': return 'bg-green-100 text-green-800';
+    default: return 'bg-gray-100 text-gray-600';
+  }
+}
+
+/**
+ * Nombre de la agencia de una empresa en mayúsculas. Si la solicitud no guardó el nombre,
+ * se busca su código en el catálogo de agencias (ver CatalogosBantotalService.mapaAgencias)
+ */
+export function nombreAgenciaEmpresa(
+  agenciaNombre: string | null | undefined,
+  agenciaId: number | null | undefined,
+  agencias: Map<string, string>,
+): string {
+  const nombre = agenciaNombre?.trim()
+    || (agenciaId !== null && agenciaId !== undefined ? agencias.get(String(agenciaId)) : undefined);
+  return nombre ? nombre.toUpperCase() : '—';
+}
+
 /** Los GUID de SQL Server pueden venir en mayúsculas o minúsculas */
 export function mismoUsuario(a: string | null | undefined, b: string | null | undefined): boolean {
   return !!a && !!b && a.toLowerCase() === b.toLowerCase();
@@ -112,15 +136,14 @@ export function puedeValidar(lote: ILoteDesembolso): boolean {
   return lote.estado === 'SOLICITADO' || lote.estado === 'PROCESADO';
 }
 
-/** Aprobar solo desde PROCESADO y por un usuario distinto al que validó */
-export function puedeAprobar(lote: ILoteDesembolso, usuarioId: string): boolean {
-  return lote.estado === 'PROCESADO' && !mismoUsuario(lote.usuarioIdProceso, usuarioId);
+/** Aprobar solo desde PROCESADO; cualquier usuario puede hacerlo, incluso quien generó o validó el lote */
+export function puedeAprobar(lote: ILoteDesembolso): boolean {
+  return lote.estado === 'PROCESADO';
 }
 
-/** Rechazar desde SOLICITADO o PROCESADO; si está PROCESADO, por un usuario distinto al que validó */
-export function puedeRechazar(lote: ILoteDesembolso, usuarioId: string): boolean {
-  if (lote.estado === 'SOLICITADO') return true;
-  return lote.estado === 'PROCESADO' && !mismoUsuario(lote.usuarioIdProceso, usuarioId);
+/** Rechazar desde SOLICITADO o PROCESADO; cualquier usuario puede hacerlo */
+export function puedeRechazar(lote: ILoteDesembolso): boolean {
+  return lote.estado === 'SOLICITADO' || lote.estado === 'PROCESADO';
 }
 
 /** Solo un lote APROBADO puede marcarse como pagado */

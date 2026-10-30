@@ -3,7 +3,6 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { DesembolsoService } from '../../../../services/aliado/desembolso.service';
-import { AuthService } from '../../../../services/auth.service';
 import { ESTADOS_LOTE, EstadoLote, ILoteDesembolso } from '../../../../interfaces/aliado/desembolso';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
 import { AccionResolucion, ResolverLoteModal } from '../../components/desembolso/resolver-lote-modal/resolver-lote-modal';
@@ -11,7 +10,6 @@ import { VerLoteModal } from '../../components/desembolso/ver-lote-modal/ver-lot
 import {
   claseEstadoLote,
   mesesCerrados,
-  mismoUsuario,
   nombrePeriodo,
   puedeAprobar,
   puedeRechazar,
@@ -27,17 +25,12 @@ import {
 })
 export default class LotesDesembolsoPage {
   private desembolsoService = inject(DesembolsoService);
-  private authService = inject(AuthService);
   private router = inject(Router);
 
   readonly estados = ESTADOS_LOTE;
   readonly mesesDisponibles = mesesCerrados(12);
   readonly nombrePeriodo = nombrePeriodo;
   readonly claseEstado = claseEstadoLote;
-
-  get usuarioId(): string {
-    return this.authService.getUserStorage()?.userId;
-  }
 
   // Filtros
   fechaDesde = signal('');
@@ -143,16 +136,11 @@ export default class LotesDesembolsoPage {
   }
 
   puedeAprobar(lote: ILoteDesembolso) {
-    return puedeAprobar(lote, this.usuarioId);
+    return puedeAprobar(lote);
   }
 
   puedeRechazar(lote: ILoteDesembolso) {
-    return puedeRechazar(lote, this.usuarioId);
-  }
-
-  /** El lote está PROCESADO y lo validó el usuario logueado: debe resolverlo otra persona */
-  esperaOtroUsuario(lote: ILoteDesembolso) {
-    return lote.estado === 'PROCESADO' && mismoUsuario(lote.usuarioIdProceso, this.usuarioId);
+    return puedeRechazar(lote);
   }
 
   abrirResolver(lote: ILoteDesembolso, accion: AccionResolucion) {
