@@ -127,10 +127,10 @@
                                 </button>
                                 }
                                 @if (puedePagar(item)) {
-                                <button type="button" class="btn btn-sm text-white bg-purple-600 hover:bg-purple-700" title="Marcar como Pagado"
+                                <!-- <button type="button" class="btn btn-sm text-white bg-purple-600 hover:bg-purple-700" title="Marcar como Pagado"
                                     (click)="lotePagar.set(item)">
                                     <ion-icon name="cash-outline"></ion-icon>
-                                </button>
+                                </button> -->
                                 }
                                 @if (esperaOtroUsuario(item)) {
                                 <span class="block text-[0.75em] text-gray-500 mt-1">Pendiente de aprobación por otro usuario</span>
@@ -205,10 +205,10 @@
                     </button>
                     }
                     @if (puedePagar(item)) {
-                    <button type="button" (click)="lotePagar.set(item)"
+                    <!-- <button type="button" (click)="lotePagar.set(item)"
                         class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-3 rounded text-sm font-medium">
                         Marcar como Pagado
-                    </button>
+                    </button> -->
                     }
                 </div>
                 @if (esperaOtroUsuario(item)) {
