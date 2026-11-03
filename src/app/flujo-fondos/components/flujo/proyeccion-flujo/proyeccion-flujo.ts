@@ -52,12 +52,12 @@ export class ProyeccionFlujoComponent {
   /** Tooltip de la celda: en qué mes del ciclo cae y qué porcentaje aplica. */
   detalleMes(mes: IMesProyeccion | undefined, tipo: 'INGRESO' | 'EGRESO'): string {
     if (!mes || this.proyeccion().agrupado) return '';
-    if (mes.mesCiclo === null || mes.mesCiclo === undefined) return 'Antes de la siembra';
+    if (mes.mesCiclo === null || mes.mesCiclo === undefined) return 'Fuera del ciclo';
     const porcentaje = tipo === 'INGRESO' ? mes.porcentajeIngreso : mes.porcentajeEgreso;
     return `Mes ${mes.mesCiclo} del ciclo · ${porcentaje ?? 0} %`;
   }
 
-  antesDeSiembra(mes: IMesProyeccion | undefined): boolean {
+  fueraDelCiclo(mes: IMesProyeccion | undefined): boolean {
     return !this.proyeccion().agrupado && !!mes && (mes.mesCiclo === null || mes.mesCiclo === undefined);
   }
 }

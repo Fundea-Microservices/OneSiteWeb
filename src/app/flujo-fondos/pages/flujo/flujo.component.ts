@@ -29,7 +29,7 @@ import {
   MAX_ESTACIONALES,
   MAX_LINEAS_FLUJO,
   MAX_OTROS_PRESTAMOS,
-  MAX_PLAZO_MESES,
+  PLAZO_FLUJO_MESES,
 } from '../../../../interfaces/flujo-fondos';
 import { ActividadEconomicaService } from '../../../../services/flujo-fondos/actividad-economica.service';
 import { CatalogoService } from '../../../../services/flujo-fondos/catalogo.service';
@@ -37,6 +37,7 @@ import { FalloConsulta, FlujoFondosService } from '../../../../services/flujo-fo
 import { ActividadesEstacionalesComponent } from '../../components/flujo/actividades-estacionales/actividades-estacionales';
 import { OtrosPrestamosComponent } from '../../components/flujo/otros-prestamos/otros-prestamos';
 import { ProyeccionFlujoComponent } from '../../components/flujo/proyeccion-flujo/proyeccion-flujo';
+import { ResumenActividadesComponent } from '../../components/flujo/resumen-actividades/resumen-actividades';
 import { formatoFecha, formatoPeriodo, maxDecimales, mesActual, montoCiclo } from '../../utils/flujo';
 
 const SIMULAR_DEBOUNCE_MS = 600;
@@ -58,7 +59,7 @@ interface LineaValor {
  */
 @Component({
   selector: 'app-flujo',
-  imports: [RouterLink, DecimalPipe, LowerCasePipe, NgTemplateOutlet, ReactiveFormsModule, ProyeccionFlujoComponent, OtrosPrestamosComponent, ActividadesEstacionalesComponent],
+  imports: [RouterLink, DecimalPipe, LowerCasePipe, NgTemplateOutlet, ReactiveFormsModule, ProyeccionFlujoComponent, OtrosPrestamosComponent, ActividadesEstacionalesComponent, ResumenActividadesComponent],
   templateUrl: './flujo.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,8 +77,8 @@ export default class FlujoComponent implements OnInit {
 
   private otrosPrestamosRef = viewChild(OtrosPrestamosComponent);
   private estacionalesRef = viewChild(ActividadesEstacionalesComponent);
+  private resumenRef = viewChild(ResumenActividadesComponent);
 
-  readonly maxPlazo = MAX_PLAZO_MESES;
   readonly maxLineas = MAX_LINEAS_FLUJO;
   readonly maxPrestamos = MAX_OTROS_PRESTAMOS;
   readonly maxEstacionales = MAX_ESTACIONALES;
@@ -116,7 +117,7 @@ export default class FlujoComponent implements OnInit {
   // Solo las actividades estacionales completas (las vacías o a medias no se envían)
   estacionales = signal<IEstacionalInput[]>([]);
 
-  agrupar = signal(false);
+  agrupar = signal(true);
   simulacion = signal<ISimulacionFlujo | null>(null);
   simulando = signal(false);
   errorSimulacion = signal<string | null>(null);
@@ -164,7 +165,8 @@ export default class FlujoComponent implements OnInit {
   private crearFormulario() {
     return this.fb.group({
       fechaInicio: [mesActual(), [Validators.required, Validators.pattern(/^\d{4}-\d{2}$/)]],
-      plazoMeses: [12 as number | null, [Validators.required, Validators.min(1), Validators.max(MAX_PLAZO_MESES), Validators.pattern(/^\d+$/)]],
+      // Deshabilitado: se muestra y se envía (getRawValue), pero no se edita
+      plazoMeses: [{ value: PLAZO_FLUJO_MESES, disabled: true }],
       lineas: this.fb.array<FormGroup>([], [Validators.minLength(1), Validators.maxLength(MAX_LINEAS_FLUJO)]),
     });
   }
@@ -182,7 +184,7 @@ export default class FlujoComponent implements OnInit {
     if (this.lineas.length >= MAX_LINEAS_FLUJO) return;
     const linea = this.crearLinea();
     // Nombre sugerido: el asesor lo cambia por "Terreno 1", "Siembra de agosto", etc.
-    linea.controls['nombre'].setValue(`Línea ${this.lineas.length + 1}`, { emitEvent: false });
+    linea.controls['nombre'].setValue(`Actividad ${this.lineas.length + 1}`, { emitEvent: false });
     this.lineas.push(linea);
   }
 
@@ -298,16 +300,16 @@ export default class FlujoComponent implements OnInit {
 
   private reiniciarCaptura() {
     this.lineas.clear({ emitEvent: false });
-    this.form.reset({ fechaInicio: mesActual(), plazoMeses: 12 }, { emitEvent: false });
+    this.form.reset({ fechaInicio: mesActual(), plazoMeses: PLAZO_FLUJO_MESES }, { emitEvent: false });
     this.lineasValor.set([]);
-    this.horizonte.set({ fechaInicio: mesActual(), plazoMeses: 12 });
+    this.horizonte.set({ fechaInicio: mesActual(), plazoMeses: PLAZO_FLUJO_MESES });
     this.otrosPrestamos.set([]);
     this.estacionales.set([]);
     this.secuenciaSimulacion++;
     this.simulacion.set(null);
     this.errorSimulacion.set(null);
     this.simulando.set(false);
-    this.agrupar.set(false);
+    this.agrupar.set(true);
   }
 
   abrirFlujo(id: string) {
@@ -428,6 +430,18 @@ export default class FlujoComponent implements OnInit {
     if (resultado.existente) {
       this.flujoActivo.set(resultado.existente);
     }
+  }
+
+  // ── Resumen ──────────────────────────────────────────────────────────────
+
+  /** El endpoint del resumen necesita el id: mientras se captura, primero hay que guardar. */
+  verResumen() {
+    const id = this.flujoId();
+    if (!id) {
+      this.toastr.warning('Guarde el flujo para ver el resumen de actividades.', 'Flujo sin guardar');
+      return;
+    }
+    this.resumenRef()?.abrir(id);
   }
 
   // ── Detalle ──────────────────────────────────────────────────────────────

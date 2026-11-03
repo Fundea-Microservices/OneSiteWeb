@@ -4,6 +4,7 @@ import { HttpService } from '../HttpService';
 import { firstValueFrom } from 'rxjs';
 import { MisSucursalesData, MisSucursalesResponse, TodasSucursalesResponse } from '../../interfaces/api-bantotal/sucursales';
 import { IOpcionSelect } from '../../interfaces/catalogo';
+import { CatalogosBantotalService } from './catalogos.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ export class SucursalesBantotalService extends HttpService {
     todasLasSucursales: '/api-bantotal/sucursales'
   };
 
-  constructor(http: HttpClient) {
+  constructor(http: HttpClient, private catalogosService: CatalogosBantotalService) {
     super(http);
   }
 
@@ -56,23 +57,30 @@ export class SucursalesBantotalService extends HttpService {
 
   /**
    * Regiones de Bantotal como opciones de select: value = id como texto (lo que guardan
-   * las actividades económicas). Se piden una vez; si fallan, se reintenta en la siguiente llamada.
+   * las actividades económicas). Se piden una vez; si fallan, se usa el catálogo de regiones
+   * de localStorage y se reintenta en la siguiente llamada.
    */
   getRegionesSelect(): Promise<IOpcionSelect[]> {
     this.regionesSelect ??= this.getTodasLasSucursales().then(data => {
       if (!data) {
         this.regionesSelect = null;
-        return [];
+        const locales = this.catalogosService.obtenerLocal('region') ?? [];
+        return locales.map(r => this.opcionRegion(r.valorCore, r.nombre));
       }
-      return data.regiones.map(r => ({
-        value: String(r.id),
-        label: r.descripcion,
-        padre: null,
-        porDefecto: false,
-        activo: true,
-      }));
+      return data.regiones.map(r => this.opcionRegion(r.id, r.descripcion));
     });
     return this.regionesSelect;
+  }
+
+  // El valorCore del catálogo es el mismo id de la región en Bantotal
+  private opcionRegion(id: string | number, nombre: string): IOpcionSelect {
+    return {
+      value: String(id),
+      label: nombre,
+      padre: null,
+      porDefecto: false,
+      activo: true,
+    };
   }
 
   async getMisSucursales(usuario?: string): Promise<MisSucursalesResponse | null> {

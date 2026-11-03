@@ -42,6 +42,14 @@ export function formatoFecha(fecha: string | null | undefined): string {
   return `${dia}/${mes}/${anio}`;
 }
 
+const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+/** '2026-08-10' -> 'Agosto' */
+export function nombreMes(fecha: string | null | undefined): string {
+  if (!fecha) return '';
+  return MESES[Number(fecha.split('-')[1]) - 1] ?? '';
+}
+
 /** Primer día del mes actual en formato YYYY-MM (valor de un <input type="month">). */
 export function mesActual(): string {
   const hoy = new Date();

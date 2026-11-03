@@ -5,12 +5,14 @@ export type EstadoFlujo = 'CREADO' | 'RECHAZADO' | 'CORREGIDO' | 'ACEPTADO' | 'A
 export const ESTADOS_FLUJO: EstadoFlujo[] = ['CREADO', 'RECHAZADO', 'CORREGIDO', 'ACEPTADO', 'ANULADO'];
 
 /** Límites del contrato (deben coincidir con ProyeccionFlujoDto, OtroPrestamoDto y EstacionalDto del gateway). */
-export const MAX_PLAZO_MESES = 36;
 export const MAX_LINEAS_FLUJO = 50;
 export const MAX_OTROS_PRESTAMOS = 20;
 export const MAX_TASA_INTERES_ANUAL = 999.9999;
 export const MAX_ESTACIONALES = 20;
 export const MAX_TRANSACCIONES_ESTACIONAL = 100;
+
+/** Plazo de todo flujo nuevo: por ahora no se elige (el gateway acepta de 1 a 36). */
+export const PLAZO_FLUJO_MESES = 24;
 
 export type TipoTransaccion = 'INGRESO' | 'EGRESO';
 
@@ -201,7 +203,7 @@ export interface IFilaEstacionalProyeccion {
 export interface IMesProyeccion {
     numeroMes: number;
     periodo: string;             // YYYY-MM-01
-    mesCiclo?: number | null;    // null antes de la siembra; no viene si está agrupado
+    mesCiclo?: number | null;    // null fuera del ciclo; no viene si está agrupado
     porcentajeIngreso?: number;
     porcentajeEgreso?: number;
     ingreso: number;
@@ -268,6 +270,50 @@ export interface ISimulacionFlujo {
     proyeccion: IProyeccionFlujo;
 }
 
+// ---------- Resumen de actividades ----------
+export interface IMontoAnioResumen {
+    anio: number;
+    ingreso: number;
+    egreso: number;
+    neto: number;                // ingreso − egreso
+}
+
+/** Año del resumen: 12 meses seguidos desde el mes de inicio, no el año calendario. */
+export interface IAnioResumen {
+    anio: number;
+    desde: string;               // YYYY-MM-01 del primer mes
+    hasta: string;               // YYYY-MM-01 del último mes
+    mesesProyectados: number;    // 0 .. 12: menos de 12 si el plazo no cubre todo el año
+}
+
+/** Una fila por actividad: suma las siembras con el mismo nombre y unidad. */
+export interface IFilaResumen {
+    codigosActividad: string[];
+    nombreActividad: string;
+    actividad: string;           // nombre de la opción de ACTI
+    subActividad: string;        // nombre de la opción de SUB-ACT
+    unidadGiro: string;          // nombre de la opción de UNI-GIR
+    ciclo: number;               // el más largo de las siembras
+    fechaSiembra: string;        // la más antigua de las siembras
+    cantidad: number;            // suma de las siembras
+    lineas: number;
+    anios: IMontoAnioResumen[];
+    margenNeto: number;
+}
+
+export interface IResumenActividades {
+    id: string;
+    codigo: string;
+    fechaInicio: string;
+    plazoMeses: number;
+    anios: IAnioResumen[];
+    filas: IFilaResumen[];
+    totales: {
+        anios: IMontoAnioResumen[];
+        margenNeto: number;
+    };
+}
+
 // ---------- Bodies ----------
 export interface IProyeccionFlujoInput {
     fechaInicio: string;         // YYYY-MM-DD (se usa el día 1 de su mes)
@@ -293,6 +339,7 @@ export type ConsultaSolicitudResponse = ApiResponse<{
 export type SimulacionFlujoResponse = ApiResponse<ISimulacionFlujo>;
 export type CalendarioPrestamoResponse = ApiResponse<IOtroPrestamo>;
 export type FlujoDetalleResponse = ApiResponse<IFlujoDetalle>;
+export type ResumenActividadesResponse = ApiResponse<IResumenActividades>;
 export type FlujosResponse = ApiResponse<{ flujos: IFlujoEncabezado[]; metadata: Metadata }>;
 
 /** Flujo no anulado que ya existe para la solicitud (409 MS-FJF-42-01). */

@@ -15,9 +15,11 @@ import {
   IFlujoExistente,
   IOtroPrestamo,
   IOtroPrestamoInput,
+  IResumenActividades,
   ISimulacionFlujo,
   ISimularFlujoInput,
   ISolicitudCreditoBantotal,
+  ResumenActividadesResponse,
   SimulacionFlujoResponse,
 } from '../../interfaces/flujo-fondos';
 
@@ -186,6 +188,22 @@ export class FlujoFondosService extends HttpService {
     } catch (error: any) {
       console.log("🚀 ~ FlujoFondosService ~ getFlujoById ~ error:", error)
       this.toastr.error(error?.error?.message || '', 'Error al obtener flujo de fondos');
+      return null;
+    }
+  }
+
+  /** Resumen por año de las actividades. Solo existe para un flujo guardado: necesita su id. */
+  async getResumenActividades(id: string): Promise<IResumenActividades | null> {
+    try {
+      const resp = await firstValueFrom(this.get<ResumenActividadesResponse>(`${this.endpoint}/${id}/resumen-actividades`));
+      if (resp.body?.success) {
+        return resp.body.data;
+      }
+
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ FlujoFondosService ~ getResumenActividades ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error al obtener resumen de actividades');
       return null;
     }
   }

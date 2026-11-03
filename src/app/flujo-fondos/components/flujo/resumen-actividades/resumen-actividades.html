@@ -1,0 +1,101 @@
+<div #resumenModal class="modal fade" tabindex="-1" aria-labelledby="titleResumenActividades" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h1 class="modal-title fs-5 d-flex align-items-center gap-2" id="titleResumenActividades">
+          <ion-icon name="calculator-outline"></ion-icon>
+          <span>Sección I: <span class="text-warning">Actividades Económicas</span></span>
+        </h1>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        @if (cargando()) {
+        <div class="text-center py-3">
+          <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+          <span class="ms-2 text-muted small">Cargando...</span>
+        </div>
+        }
+
+        @if (resumen(); as r) {
+        <div class="table-responsive border rounded">
+          <table class="table table-sm table-bordered align-middle mb-0 text-[0.85em]">
+            <thead>
+              <tr>
+                <th scope="col" rowspan="2" class="encabezado min-w-80">Descripción de Actividad</th>
+                @for (a of r.anios; track a.anio) {
+                <th scope="colgroup" colspan="2" class="encabezado text-center">
+                  <div>AÑO {{ a.anio }}</div>
+                  <div class="fw-normal small text-nowrap">{{ formatoPeriodo(a.desde) }} – {{ formatoPeriodo(a.hasta) }}</div>
+                </th>
+                }
+                <th scope="col" rowspan="2" class="encabezado text-center">Margen Neto</th>
+              </tr>
+              <tr>
+                @for (a of r.anios; track a.anio) {
+                <th scope="col" class="encabezado encabezado-ingreso text-end">Ingresos</th>
+                <th scope="col" class="encabezado encabezado-egreso text-end">Egresos</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (fila of r.filas; track $index) {
+              <tr>
+                <td>
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="badge" [class]="claseActividad(fila.actividad)">{{ fila.actividad }}</span>
+                    <span class="fw-semibold">{{ fila.nombreActividad }}</span>
+                  </div>
+                  <div class="text-muted mt-1">
+                    {{ fila.subActividad }} ·
+                    {{ fila.cantidad | number:'1.0-2' }} {{ fila.unidadGiro }} ·
+                    {{ fila.ciclo }} {{ fila.ciclo === 1 ? 'Mes' : 'Meses' }} ·
+                    Inicio: {{ formatoFecha(fila.fechaSiembra) }} ({{ nombreMes(fila.fechaSiembra) }})
+                  </div>
+                </td>
+                @for (m of fila.anios; track m.anio) {
+                <td class="celda-ingreso text-end text-nowrap font-monospace text-success">Q {{ m.ingreso | number:'1.2-2' }}</td>
+                <td class="celda-egreso text-end text-nowrap font-monospace text-danger">Q {{ m.egreso | number:'1.2-2' }}</td>
+                }
+                <td class="celda-margen text-end text-nowrap font-monospace text-primary">Q {{ fila.margenNeto | number:'1.2-2' }}</td>
+              </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row" class="celda-total">TOTALES CONSOLIDADOS</th>
+                @for (m of r.totales.anios; track m.anio) {
+                <td class="celda-total text-end text-nowrap font-monospace fw-semibold text-success">Q {{ m.ingreso | number:'1.2-2' }}</td>
+                <td class="celda-total text-end text-nowrap font-monospace fw-semibold text-danger">Q {{ m.egreso | number:'1.2-2' }}</td>
+                }
+                <td class="celda-margen text-end text-nowrap font-monospace fw-semibold text-primary">Q {{ r.totales.margenNeto | number:'1.2-2' }}</td>
+              </tr>
+              <tr>
+                <th scope="row" class="fw-semibold text-muted">Flujo Operativo Neto por Año (Ingresos - Egresos)</th>
+                @for (m of r.totales.anios; track m.anio) {
+                <td colspan="2" class="text-center text-nowrap font-monospace text-primary">Año {{ m.anio }}: Q {{ m.neto | number:'1.2-2' }}</td>
+                }
+                <td class="text-end text-nowrap">
+                  <div class="small text-muted">Total Acumulado</div>
+                  <div class="font-monospace text-primary">Q {{ r.totales.margenNeto | number:'1.2-2' }}</div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        @for (aviso of avisos(); track aviso) {
+        <div class="alert alert-warning py-2 small mt-3 mb-0" role="alert">{{ aviso }}</div>
+        }
+        } @else if (!cargando()) {
+        <div class="text-center text-muted small py-3">No se pudo cargar el resumen. Cierre esta ventana e intente de nuevo.</div>
+        }
+      </div>
+      <div class="modal-footer justify-content-between">
+        <span class="small text-muted">
+          @if (resumen(); as r) { {{ r.filas.length }} actividad(es) proyectada(s) }
+        </span>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar Resumen</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -12,11 +12,11 @@
         <summary class="cursor-pointer">¿Cómo se calcula?</summary>
         <ul class="mt-2 mb-0">
             <li>La proyección empieza el día 1 del mes de inicio y dura el plazo indicado.</li>
-            <li>El mes de la fecha de siembra es el <strong>mes 1 del ciclo</strong>. Al terminar el ciclo vuelve a empezar.</li>
+            <li>El mes de la fecha de siembra es el <strong>mes 1 del ciclo</strong>. Cada actividad aplica un solo ciclo: no se repite.</li>
             <li>La siembra puede ser anterior al inicio (por ejemplo, un cultivo ya en curso).</li>
             <li>Ingreso del ciclo = cantidad × cantidad estimada × precio U. Egreso del ciclo = cantidad × cantidad estimada × costo U.</li>
-            <li>Cada mes del ciclo aplica su porcentaje de la distribución de la actividad. Los meses antes de la siembra van en 0 (en gris).</li>
-            <li>Una misma actividad puede ir en varias líneas, por ejemplo dos terrenos con fechas distintas.</li>
+            <li>Cada mes del ciclo aplica su porcentaje de la distribución de la actividad. Los meses antes de la siembra o después de terminar el ciclo van en 0 (en gris).</li>
+            <li>Una misma actividad se puede agregar varias veces, por ejemplo dos terrenos con fechas distintas o un segundo ciclo.</li>
             <li>Las cuotas de los préstamos en otras instituciones se proyectan desde la fecha del siguiente pago; las que caen fuera del horizonte no se cuentan.</li>
             <li>Las actividades estacionales entran en el mes de cada transacción; las que caen fuera del horizonte no se proyectan.</li>
             <li>Neto = ingreso − egreso + ingreso estacional − egreso estacional − pago de préstamos. El acumulado se calcula sobre ese neto.</li>
@@ -26,11 +26,19 @@
 
 <ng-template #agrupacion>
     <div class="form-check form-switch mb-0">
-        <input class="form-check-input" type="checkbox" role="switch" id="chkAgrupar" [checked]="agrupar()"
-            (change)="cambiarAgrupacion(chkAgrupar.checked)" #chkAgrupar>
-        <label class="form-check-label small" for="chkAgrupar">Agrupar por actividad</label>
+        <input class="form-check-input" type="checkbox" role="switch" id="chkDesagrupar" [checked]="!agrupar()"
+            (change)="cambiarAgrupacion(!chkDesagrupar.checked)" #chkDesagrupar>
+        <label class="form-check-label small" for="chkDesagrupar">Desagrupar actividades</label>
     </div>
 </ng-template>
+
+<ng-template #botonResumen>
+    <button type="button" class="btn btn-outline-success btn-sm" (click)="verResumen()">
+        <ion-icon name="eye-outline"></ion-icon> Ver Resumen
+    </button>
+</ng-template>
+
+<app-resumen-actividades />
 
 @if (flujoId()) {
 <!-- ═══════════════════════ Detalle ═══════════════════════ -->
@@ -65,20 +73,23 @@
             <div class="col-md-2"><div class="text-muted">Monto del crédito</div><div>Q {{ f.montoCredito | number:'1.2-2' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Agencia</div><div>{{ f.agencia || '—' }}</div></div>
             <div class="col-md-2"><div class="text-muted">Región</div><div>{{ f.region || '—' }}</div></div>
-            <div class="col-md-2"><div class="text-muted">Horizonte</div><div>{{ formatoPeriodo(f.fechaInicio) }} · {{ f.plazoMeses }} meses</div></div>
+            <!-- <div class="col-md-2"><div class="text-muted">Horizonte</div><div>{{ formatoPeriodo(f.fechaInicio) }} · {{ f.plazoMeses }} meses</div></div> -->
         </div>
     </div>
 </div>
 
 <div class="card mb-3">
-    <div class="card-header">Líneas</div>
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Sección I: Actividades económicas y ciclos productivos</span>
+        <ng-container [ngTemplateOutlet]="botonResumen" />
+    </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-striped table-sm table-bordered mb-0">
                 <thead>
                     <tr>
                         <th class="text-center">#</th>
-                        <th class="text-center">Nombre</th>
+                        <th class="text-center">ID</th>
                         <th class="text-center">Actividad</th>
                         <th class="text-center">Siembra</th>
                         <th class="text-center">Cantidad</th>
@@ -92,8 +103,8 @@
                     @for (l of f.lineas; track l.id ?? $index; let i = $index) {
                     <tr>
                         <th scope="row">{{ i + 1 }}</th>
-                        <td>{{ l.nombre }}</td>
-                        <td><code>{{ l.codigoActividad }}</code> {{ l.nombreActividad }}</td>
+                        <td>{{ l.codigoActividad }}</td>
+                        <td>{{ l.nombreActividad }}</td>
                         <td class="text-center text-nowrap">{{ formatoFecha(l.fechaSiembra) }}</td>
                         <td class="text-end text-nowrap">{{ l.cantidad | number:'1.0-2' }} {{ unidad(l.unidadGiro) }}</td>
                         <td class="text-center text-nowrap">{{ l.ciclo }} {{ l.ciclo === 1 ? 'mes' : 'meses' }}</td>
@@ -109,14 +120,14 @@
 </div>
 
 <div class="card mb-3">
-    <div class="card-header">Actividades estacionales</div>
+    <div class="card-header">Sección II: Actividades económicas estacionales</div>
     <div class="card-body">
         <app-actividades-estacionales [estacionales]="f.estacionales" />
     </div>
 </div>
 
 <div class="card mb-3">
-    <div class="card-header">Préstamos en otras instituciones</div>
+    <div class="card-header">Sección III: Préstamos en otras instituciones</div>
     <div class="card-body">
         <app-otros-prestamos [prestamos]="f.otrosPrestamos" />
     </div>
@@ -225,26 +236,25 @@
                     }
                 </div>
                 <div class="col-md-2">
-                    <label for="txtPlazo" class="form-label small mb-1">Plazo (meses)</label>
-                    <input type="number" min="1" [max]="maxPlazo" step="1" class="form-control form-control-sm" id="txtPlazo"
-                        formControlName="plazoMeses" [class.is-invalid]="invalido(form.controls.plazoMeses)">
-                    @if (invalido(form.controls.plazoMeses)) {
-                    <div class="text-danger small">Entero de 1 a {{ maxPlazo }}</div>
-                    }
+                    <!-- <label for="txtPlazo" class="form-label small mb-1">Plazo (meses)</label> -->
+                    <input type="hidden" class="form-control form-control-sm" id="txtPlazo" formControlName="plazoMeses">
                 </div>
-                @if (rangoHorizonte()) {
+                <!-- @if (rangoHorizonte()) {
                 <div class="col-md-4 small text-muted pt-md-4">{{ rangoHorizonte() }}</div>
-                }
+                } -->
             </div>
         </div>
     </div>
 
     <div class="card mb-3">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span>Líneas <span class="text-muted small">({{ lineas.length }} de {{ maxLineas }})</span></span>
-            <button type="button" class="btn btn-primary btn-sm" (click)="agregarLinea()" [disabled]="lineas.length >= maxLineas">
-                Agregar línea
-            </button>
+            <span>Actividades <span class="text-muted small">({{ lineas.length }} de {{ maxLineas }})</span></span>
+            <div class="d-flex flex-wrap gap-2">
+                <ng-container [ngTemplateOutlet]="botonResumen" />
+                <button type="button" class="btn btn-primary btn-sm" (click)="agregarLinea()" [disabled]="lineas.length >= maxLineas">
+                    Agregar actividad
+                </button>
+            </div>
         </div>
         <div class="card-body">
             @if (cargandoActividades()) {
@@ -407,10 +417,10 @@
                 <app-proyeccion-flujo [proyeccion]="sim.proyeccion" />
             </div>
             @if (form.invalid) {
-            <div class="small text-muted mt-2">Complete las líneas para actualizar la vista previa.</div>
+            <div class="small text-muted mt-2">Complete las actividades para actualizar la vista previa.</div>
             }
             } @else if (!simulando()) {
-            <div class="text-center text-muted small py-3">Complete el horizonte y al menos una línea para ver la proyección.</div>
+            <div class="text-center text-muted small py-3">Complete el horizonte y al menos una actividad para ver la proyección.</div>
             }
         </div>
     </div>

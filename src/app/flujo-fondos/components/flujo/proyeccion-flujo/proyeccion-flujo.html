@@ -5,7 +5,7 @@
     <thead class="table-light">
       <tr>
         <th scope="col" class="col-fija col-fija-encabezado min-w-50">
-          {{ p.agrupado ? 'Actividad' : 'Línea' }}
+          Actividad
         </th>
         <th scope="col" class="text-center">Concepto</th>
         @for (col of columnas(); track col.numeroMes) {
@@ -24,7 +24,7 @@
         <td rowspan="2" class="col-fija align-middle">
           @if (p.agrupado) {
           <div class="fw-semibold">{{ fila.nombreActividad }}</div>
-          <div class="text-muted"><code>{{ fila.codigoActividad }}</code> · {{ fila.lineas }} {{ fila.lineas === 1 ? 'línea' : 'líneas' }} · {{ fila.cantidad | number:'1.0-2' }}</div>
+          <div class="text-muted"><code>{{ fila.codigoActividad }}</code> · {{ fila.lineas }} {{ fila.lineas === 1 ? 'actividad' : 'actividades' }} · {{ fila.cantidad | number:'1.0-2' }}</div>
           } @else {
           <div class="fw-semibold">{{ fila.nombre }}</div>
           <div class="text-muted">
@@ -36,7 +36,7 @@
         <td class="text-success">Ingreso</td>
         @for (col of columnas(); track col.numeroMes; let j = $index) {
         @let mes = fila.meses[j];
-        <td class="text-end" [class.bg-body-tertiary]="antesDeSiembra(mes)" [attr.title]="detalleMes(mes, 'INGRESO') || null">
+        <td class="text-end" [class.bg-body-tertiary]="fueraDelCiclo(mes)" [attr.title]="detalleMes(mes, 'INGRESO') || null">
           @if (mes?.ingreso) { {{ mes.ingreso | number:'1.2-2' }} } @else { <span class="text-body-tertiary">–</span> }
         </td>
         }
@@ -46,7 +46,7 @@
         <td class="text-danger">Egreso</td>
         @for (col of columnas(); track col.numeroMes; let j = $index) {
         @let mes = fila.meses[j];
-        <td class="text-end" [class.bg-body-tertiary]="antesDeSiembra(mes)" [attr.title]="detalleMes(mes, 'EGRESO') || null">
+        <td class="text-end" [class.bg-body-tertiary]="fueraDelCiclo(mes)" [attr.title]="detalleMes(mes, 'EGRESO') || null">
           @if (mes?.egreso) { {{ mes.egreso | number:'1.2-2' }} } @else { <span class="text-body-tertiary">–</span> }
         </td>
         }
@@ -54,7 +54,7 @@
       </tr>
       } @empty {
       <tr>
-        <td [attr.colspan]="columnas().length + 3" class="text-center text-muted py-3">Sin líneas</td>
+        <td [attr.colspan]="columnas().length + 3" class="text-center text-muted py-3">Sin actividades</td>
       </tr>
       }
     </tbody>
