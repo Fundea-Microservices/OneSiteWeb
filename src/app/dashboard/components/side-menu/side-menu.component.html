@@ -8,9 +8,9 @@
 
 <!-- Side Menu -->
 <div id="menu" 
-    [class]="'bg-custom-sidebar min-h-screen z-30 text-slate-900 fixed left-0 h-screen overflow-y-scroll w-[250px] transition-transform duration-300 ease-in-out ' + 
+    [class]="'bg-custom-sidebar flex flex-col z-30 text-slate-900 fixed left-0 top-0 h-dvh overflow-hidden w-[250px] transition-transform duration-300 ease-in-out ' +
     (isMenuOpen() ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')">
-    <app-side-menu-header />
+    <app-side-menu-header class="block shrink-0" />
     <app-side-menu-list (submenuSelected)="closeMenu()" />
 </div>
 

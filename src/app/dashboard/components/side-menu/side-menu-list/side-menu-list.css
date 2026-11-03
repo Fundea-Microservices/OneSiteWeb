@@ -13,8 +13,39 @@
      texto activo       #FFFFFF   --ui-sidebar-texto-activo
    ============================================================================= */
 
+/* Ocupa el alto libre bajo la cabecera para que solo la lista se desplace */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+:host .menu-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-sidebar-separador) transparent;
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host .menu-scroll {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Menos sangría para que las etiquetas largas no ocupen dos líneas */
+:host .submenu-list {
+  padding-left: 0.75rem;
+}
+
+/* Acciones fijas al pie del menú */
+:host .menu-pie {
+  border-top: 1px solid var(--ui-sidebar-separador);
+}
+
 /* Opción de primer nivel (grupo desplegable) */
 :host .menu-toggle {
+  position: relative;
   color: var(--ui-sidebar-texto);
   border-radius: 0.5rem;
 }
@@ -47,7 +78,9 @@
   font-weight: 700;
 }
 
-:host .menu-link.is-active::before {
+/* La misma marca en el grupo cerrado indica dónde está la pantalla en curso. */
+:host .menu-link.is-active::before,
+:host .menu-toggle.contiene-activo::before {
   content: "";
   position: absolute;
   left: 0;
@@ -62,13 +95,6 @@
 :host .menu-toggle ion-icon,
 :host .menu-link ion-icon {
   color: currentColor;
-}
-
-/* Separador entre grupos de opciones */
-:host .separador-menu {
-  border: 0;
-  border-top: 1px solid var(--ui-sidebar-separador);
-  margin: 0.75rem 0.25rem;
 }
 
 /* Rótulo que agrupa opciones */

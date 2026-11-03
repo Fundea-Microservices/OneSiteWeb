@@ -38,8 +38,9 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
         children: [
             {
+                // Sin componente: el dashboard ya lo pinta la ruta padre.
                 path: 'fundea',
-                loadComponent: () => import('./dashboard/pages/dashboard-page/dashboard-page'),
+                children: [],
             },
             {
                 path: 'config',

@@ -3,25 +3,24 @@
 
   <img src="logos/OneSite_HF_fondo_blanco.svg" alt="Logo" width="160" />
 </div>
-<div class="flex flex-col items-center justify-center text-center border-b-1 mb-2 bg-custom-sidebar-header">
-  <div id="profile" class="mb-2">
+<div class="flex items-center gap-2 px-3 pb-2 border-b-1 mb-2 bg-custom-sidebar-header">
+  <div id="profile" class="shrink-0">
     <a routerLink="/config/user">
       <img
-        class="rounded-full w-14 h-14 max-w-14 object-cover"
+        class="rounded-full w-10 h-10 max-w-10 object-cover"
         [src]="conFoto() ? user().photoUrl || 'images/default-user.png' : 'images/default-user.png'"
         alt="Usuario"
       />
     </a>
   </div>
 
-  <span
-    class="font-bold text-sm truncate sm:whitespace-normal sm:break-words"
-    [style]="{ 'font-size': user().name1.length > 20 ? '0.75rem' : '' }"
-  >
-    {{ user().name1 || 'Usuario' }} {{ user().lastName1 || '' }}
-  </span>
+  <div class="min-w-0">
+    <span class="block font-bold text-sm truncate" [title]="(user().name1 || 'Usuario') + ' ' + (user().lastName1 || '')">
+      {{ user().name1 || 'Usuario' }} {{ user().lastName1 || '' }}
+    </span>
 
-  <p class="txt-secundario truncate">
-    {{ user().rol.name || 'Rol desconocido' }}
-  </p>
+    <p class="txt-secundario truncate mb-0">
+      {{ user().rol.name || 'Rol desconocido' }}
+    </p>
+  </div>
 </div>
