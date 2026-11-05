@@ -46,17 +46,13 @@
             [class.is-invalid]="hora() && !horaValida"
             id="hora"
             name="hora"
-            [min]="validarHoras ? horaMin : null"
-            [max]="validarHoras ? horaMax : null"
+            [min]="horaMin"
+            [max]="horaMax"
             [(ngModel)]="hora"
             [disabled]="isSaving()"
             required>
           <div class="form-text">
-            @if (validarHoras) {
-              Debe estar entre las {{ horaMin }} y las {{ horaMax }} horas (antes de iniciar labores).
-            } @else {
-              <span class="text-warning">Validación de horas desactivada (modo pruebas).</span>
-            }
+            Debe estar entre las {{ horaMin }} y las {{ horaMax }} horas (antes de iniciar labores).
           </div>
           @if (hora() && !horaValida) {
             <div class="invalid-feedback d-block">
