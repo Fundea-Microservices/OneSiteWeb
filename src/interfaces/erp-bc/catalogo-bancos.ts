@@ -52,7 +52,7 @@ export interface FiltrosBancos {
     limit?:         number;
     /** `true` devuelve todo, sin paginar. */
     todos?:         boolean;
-    /** Rubro contable de Dynamics, coincidencia exacta. Máx. 20. */
+    /** Pese al nombre, filtra por `bantotalRubro` (BANTOTAL_Rubro), coincidencia exacta. Máx. 20. */
     rubroContable?: string;
     /** Busca en el alias O el nombre del banco, coincidencia parcial (`%` y `_` son literales). Máx. 100. */
     alias?:         string;

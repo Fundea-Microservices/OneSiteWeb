@@ -33,7 +33,7 @@
 
       <div class="row g-2 align-items-start mb-3">
         <div class="col-sm-6 col-lg-3">
-          <label for="filtroRubro" class="form-label small mb-1">Rubro contable (Dynamics)</label>
+          <label for="filtroRubro" class="form-label small mb-1">Rubro (Bantotal)</label>
           <select id="filtroRubro" class="form-select form-select-sm" #selRubro
             (change)="onRubroChange(selRubro.value)">
             <option value="" [selected]="!filtroRubro()">Todos</option>
@@ -44,10 +44,14 @@
         </div>
 
         <div class="col-sm-6 col-lg-3">
-          <label for="filtroAlias" class="form-label small mb-1">Banco</label>
-          <input id="filtroAlias" type="text" class="form-control form-control-sm" maxlength="100"
-            placeholder="Contiene..." autocomplete="off" #txtAlias
-            [value]="filtroAlias()" (input)="onAliasInput(txtAlias.value)" (keydown.enter)="aplicarFiltros()">
+          <label for="filtroBanco" class="form-label small mb-1">Banco</label>
+          <select id="filtroBanco" class="form-select form-select-sm" #selBanco
+            (change)="onBancoChange(selBanco.value)">
+            <option value="" [selected]="!filtroBanco()">Todos</option>
+            @for (alias of opcionesBanco(); track alias) {
+              <option [value]="alias" [selected]="alias === filtroBanco()">{{ alias }}</option>
+            }
+          </select>
         </div>
 
         <div class="col-sm-6 col-lg-2">
@@ -96,7 +100,7 @@
             <tr>
               <th class="text-center" scope="col">Rubro</th>
               <th class="text-center" scope="col">Nombre</th>
-              <th class="text-center" scope="col">Alias</th>
+              <th class="text-center" scope="col">Banco</th>
               <th class="text-center" scope="col">Cuenta</th>
               <th class="text-center" scope="col">Suboperación</th>
               <th class="text-center" scope="col">Código</th>

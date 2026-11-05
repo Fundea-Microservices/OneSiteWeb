@@ -191,22 +191,23 @@ describe('CatalogoBancosPage', () => {
 
     afterEach(() => jest.useRealTimers());
 
-    it('arma las opciones de rubro con los valores distintos del catálogo completo', async () => {
+    it('arma las opciones con los rubros de Bantotal y alias distintos del catálogo completo', async () => {
       service['getBancos'].mockResolvedValue({
         data: {
           bancos: [
-            { ...banco, dynamicsRubroContable: '1102' },
-            { ...banco, dynamicsRubroContable: '1101' },
-            { ...banco, dynamicsRubroContable: '1102' },
+            { ...banco, bantotalRubro: '1102', bantotalAlias: 'GYT', bantotalNombre: 'G&T', dynamicsRubroContable: '9999' },
+            { ...banco, bantotalRubro: '1101', bantotalAlias: 'BRR', bantotalNombre: 'Banrural' },
+            { ...banco, bantotalRubro: '1102', bantotalAlias: 'BRR', bantotalNombre: 'Banrural Dólares' },
           ],
           metadata: {},
         },
       });
 
-      await page['cargarRubrosContables']();
+      await page['cargarOpcionesFiltros']();
 
       expect(service['getBancos']).toHaveBeenCalledWith({ todos: true });
-      expect(page.rubrosContables()).toEqual(['1101', '1102']);
+      expect(page.rubros()).toEqual(['1101', '1102']);
+      expect(page.aliasBanco()).toEqual(['BRR', 'GYT']);
     });
 
     it('el rubro consulta de inmediato y vuelve a la página 1', async () => {
@@ -217,35 +218,36 @@ describe('CatalogoBancosPage', () => {
       expect(ultimaConsulta()).toEqual({ page: 1, limit: 10, rubroContable: '1101', alias: '', cuenta: undefined });
     });
 
-    it('el alias espera a que se deje de escribir y se envía sin espacios', () => {
+    it('el banco consulta de inmediato con el alias elegido', () => {
       jest.useFakeTimers();
+      page.pagination.set({ page: 3, pageSize: 10, totalItems: 50 });
 
-      page.onAliasInput('ru');
-      page.onAliasInput(' rural ');
-      expect(service['getBancos']).not.toHaveBeenCalled();
-
-      jest.advanceTimersByTime(350);
+      page.onBancoChange('BRR');
 
       expect(service['getBancos']).toHaveBeenCalledTimes(1);
-      expect(ultimaConsulta()).toEqual(expect.objectContaining({ alias: 'rural', page: 1 }));
+      expect(ultimaConsulta()).toEqual(expect.objectContaining({ alias: 'BRR', page: 1 }));
     });
 
-    it('Enter aplica sin esperar el debounce', () => {
+    it('Enter en la cuenta aplica sin esperar el debounce', () => {
       jest.useFakeTimers();
 
-      page.onAliasInput('gyt');
+      page.onCuentaInput('10');
       page.aplicarFiltros();
       jest.advanceTimersByTime(350);
 
       expect(service['getBancos']).toHaveBeenCalledTimes(1);
     });
 
-    it('la cuenta se envía como número', () => {
+    it('la cuenta espera a que se deje de escribir y se envía como número', () => {
       jest.useFakeTimers();
 
+      page.onCuentaInput('1');
       page.onCuentaInput('10');
+      expect(service['getBancos']).not.toHaveBeenCalled();
+
       jest.advanceTimersByTime(350);
 
+      expect(service['getBancos']).toHaveBeenCalledTimes(1);
       expect(ultimaConsulta()).toEqual(expect.objectContaining({ cuenta: 10 }));
     });
 
@@ -260,9 +262,9 @@ describe('CatalogoBancosPage', () => {
     });
 
     it('no repite la consulta si los filtros no cambiaron', () => {
-      page.onAliasInput('rural');
+      page.onCuentaInput('10');
       page.aplicarFiltros();
-      page.onAliasInput('rural ');
+      page.onCuentaInput('10 ');
       page.aplicarFiltros();
 
       expect(service['getBancos']).toHaveBeenCalledTimes(1);
@@ -277,7 +279,7 @@ describe('CatalogoBancosPage', () => {
 
     it('limpiar quita los tres filtros y vuelve a la página 1', () => {
       page.onRubroChange('1101');
-      page.onAliasInput('rural');
+      page.onBancoChange('BRR');
       page.onCuentaInput('10');
       page.aplicarFiltros();
       page.pagination.update(p => ({ ...p, page: 3 }));
@@ -289,10 +291,10 @@ describe('CatalogoBancosPage', () => {
       expect(page.hayFiltrosEscritos()).toBe(false);
     });
 
-    it('limpiar cancela un alias pendiente del debounce', () => {
+    it('limpiar cancela una cuenta pendiente del debounce', () => {
       jest.useFakeTimers();
 
-      page.onAliasInput('rural');
+      page.onCuentaInput('10');
       page.limpiarFiltros();
       jest.advanceTimersByTime(350);
 

@@ -23,6 +23,14 @@ interface FiltrosListado {
 
 const SIN_FILTROS: FiltrosListado = { rubroContable: '', alias: '' };
 
+function distintosOrdenados(valores: string[]): string[] {
+  return [...new Set(valores)].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+}
+
+function conSeleccion(opciones: string[], seleccionado: string): string[] {
+  return seleccionado && !opciones.includes(seleccionado) ? [seleccionado, ...opciones] : opciones;
+}
+
 @Component({
   selector: 'app-catalogo-bancos-page',
   standalone: true,
@@ -57,21 +65,22 @@ export default class CatalogoBancosPage implements OnDestroy {
   private fetchSeq = 0;
 
   // Filtros tal como están en los controles
+  /** Rubro de Bantotal: el API lo recibe como `rubroContable`. */
   filtroRubro = signal('');
-  filtroAlias = signal('');
+  /** Alias del banco: el API lo recibe como `alias` y busca en alias o nombre. */
+  filtroBanco = signal('');
   filtroCuenta = signal('');
   /** Filtros con los que se consulta la lista: cambian solo al aplicarlos. */
   private filtrosAplicados = signal<FiltrosListado>(SIN_FILTROS);
   private debounceId: ReturnType<typeof setTimeout> | null = null;
 
-  rubrosContables = signal<string[]>([]);
+  /** Valores distintos de todo el catálogo para llenar los selects. */
+  rubros = signal<string[]>([]);
+  aliasBanco = signal<string[]>([]);
 
-  /** Incluye el rubro elegido aunque ya no esté en el catálogo, para no perder la selección. */
-  opcionesRubro = computed(() => {
-    const rubro = this.filtroRubro();
-    const rubros = this.rubrosContables();
-    return rubro && !rubros.includes(rubro) ? [rubro, ...rubros] : rubros;
-  });
+  // Incluyen el valor elegido aunque ya no esté en el catálogo, para no perder la selección.
+  opcionesRubro = computed(() => conSeleccion(this.rubros(), this.filtroRubro()));
+  opcionesBanco = computed(() => conSeleccion(this.aliasBanco(), this.filtroBanco()));
 
   /** Vacío también es válido: no se manda el parámetro. */
   cuentaValida = computed(() => {
@@ -85,7 +94,7 @@ export default class CatalogoBancosPage implements OnDestroy {
   });
 
   hayFiltrosEscritos = computed(() =>
-    !!(this.filtroRubro() || this.filtroAlias().trim() || this.filtroCuenta().trim())
+    !!(this.filtroRubro() || this.filtroBanco() || this.filtroCuenta().trim())
   );
 
   /** Banco cuyo estado se está cambiando desde el switch de la tabla. */
@@ -101,7 +110,7 @@ export default class CatalogoBancosPage implements OnDestroy {
 
   ngOnInit() {
     this.fetchData();
-    this.cargarRubrosContables();
+    this.cargarOpcionesFiltros();
   }
 
   ngAfterViewInit() {
@@ -185,22 +194,22 @@ export default class CatalogoBancosPage implements OnDestroy {
     this.fetchData();
   }
 
-  /** Un alta o edición puede agregar o quitar rubros contables del filtro. */
+  /** Un alta o edición puede agregar o quitar opciones de los selects de filtro. */
   private recargar() {
     this.fetchData();
-    this.cargarRubrosContables();
+    this.cargarOpcionesFiltros();
   }
 
   // ── Filtros ────────────────────────────────────────────────────────────────
 
-  /** Opciones del select: los rubros contables distintos de todo el catálogo. */
-  private async cargarRubrosContables() {
+  /** Opciones de los selects: rubros de Bantotal y alias de banco distintos de todo el catálogo. */
+  private async cargarOpcionesFiltros() {
     try {
-      const resp = await this.service.getBancos({ todos: true });
-      const rubros = new Set(resp.data.bancos.map(b => b.dynamicsRubroContable));
-      this.rubrosContables.set([...rubros].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })));
+      const { bancos } = (await this.service.getBancos({ todos: true })).data;
+      this.rubros.set(distintosOrdenados(bancos.map(b => b.bantotalRubro)));
+      this.aliasBanco.set(distintosOrdenados(bancos.map(b => b.bantotalAlias)));
     } catch {
-      // Sin opciones el select solo ofrece "Todos"; el listado ya informa el error.
+      // Sin opciones los selects solo ofrecen "Todos"; el listado ya informa el error.
     }
   }
 
@@ -209,9 +218,9 @@ export default class CatalogoBancosPage implements OnDestroy {
     this.aplicarFiltros();
   }
 
-  onAliasInput(valor: string) {
-    this.filtroAlias.set(valor);
-    this.programarFiltros();
+  onBancoChange(valor: string) {
+    this.filtroBanco.set(valor);
+    this.aplicarFiltros();
   }
 
   onCuentaInput(valor: string) {
@@ -219,7 +228,7 @@ export default class CatalogoBancosPage implements OnDestroy {
     this.programarFiltros();
   }
 
-  /** Alias y cuenta se escriben tecla a tecla: se consulta al dejar de escribir. */
+  /** La cuenta se escribe tecla a tecla: se consulta al dejar de escribir. */
   private programarFiltros() {
     this.cancelarDebounce();
     this.debounceId = setTimeout(() => this.aplicarFiltros(), DEBOUNCE_FILTROS_MS);
@@ -238,7 +247,7 @@ export default class CatalogoBancosPage implements OnDestroy {
     const cuenta = this.filtroCuenta().trim();
     const filtros: FiltrosListado = {
       rubroContable: this.filtroRubro(),
-      alias: this.filtroAlias().trim(),
+      alias: this.filtroBanco(),
       cuenta: cuenta ? Number(cuenta) : undefined,
     };
 
@@ -254,7 +263,7 @@ export default class CatalogoBancosPage implements OnDestroy {
 
   limpiarFiltros() {
     this.filtroRubro.set('');
-    this.filtroAlias.set('');
+    this.filtroBanco.set('');
     this.filtroCuenta.set('');
     this.aplicarFiltros();
   }
