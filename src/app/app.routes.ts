@@ -244,10 +244,10 @@ export const routes: Routes = [
                         path: 'aprobar-gyt',
                         loadComponent: () => import('./ordenes-pago/gyt/pages/aprobar-gyt-page/aprobar-gyt-page'),
                     },
-                    // {
-                    //     path: 'historial-gyt',
-                    //     loadComponent: () => import('./ordenes-pago/gyt/pages/historial-gyt-page/historial-gyt-page'),
-                    // },
+                    {
+                        path: 'historial-gyt',
+                        loadComponent: () => import('./ordenes-pago/gyt/pages/historial-gyt-page/historial-gyt-page'),
+                    },
                 ]
             },
             {

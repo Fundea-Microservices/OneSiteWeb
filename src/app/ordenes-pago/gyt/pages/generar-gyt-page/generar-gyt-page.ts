@@ -7,8 +7,6 @@ import { BuscarPrestamoPorDocumentoResponse } from '../../../../../interfaces/ap
 import { OrdenesGytService } from '../../../../../services/ordenes-gyt/ordenes-gyt.service';
 import { OrdenGytImpresionService } from '../../../../../services/ordenes-gyt/orden-gyt-impresion.service';
 import { OrdenGyt, CrearOrdenGytDto, CrearOrdenGytApiResponse } from '../../../../../interfaces/ordenes-gyt/orden-gyt';
-// ⚠️ MOCK TEMPORAL mientras Bantotal no está disponible (ver prestamos-mock.ts)
-import { USAR_MOCK_BANTOTAL, buscarPrestamoMock } from './prestamos-mock';
 
 interface Cliente {
   nombres: string;
@@ -174,19 +172,13 @@ export default class GenerarGytPage {
     
     try {
       // Buscar préstamo en API Bantotal
-      const params = {
-        documento: this.documentoCliente().trim(),
-        prestamo: this.numeroOperacion().trim(),
-        pais: 320,
-        tipoDoc: 1
-      };
-      // ⚠️ MOCK TEMPORAL: quitar la condición y dejar solo la llamada al servicio cuando Bantotal vuelva
-      const busqueda$ = USAR_MOCK_BANTOTAL
-        ? buscarPrestamoMock(params)
-        : this.prestamosService.buscarPrestamoPorDocumento(params);
-
       const prestamoData = await new Promise<BuscarPrestamoPorDocumentoResponse>((resolve, reject) => {
-        busqueda$.subscribe({
+        this.prestamosService.buscarPrestamoPorDocumento({
+          documento: this.documentoCliente().trim(),
+          prestamo: this.numeroOperacion().trim(),
+          pais: 320,
+          tipoDoc: 1
+        }).subscribe({
           next: resolve,
           error: reject
         });
