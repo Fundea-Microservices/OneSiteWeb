@@ -51,6 +51,7 @@ export class UpsertBancoComponent {
         bantotalSuboperacion: [banco?.bantotalSuboperacion ?? null, [Validators.required, enteroEnRango]],
         dynamicsCodigo: [banco?.dynamicsCodigo ?? '', [textoNoVacio, Validators.maxLength(10)]],
         dynamicsRubroContable: [banco?.dynamicsRubroContable ?? '', [textoNoVacio, Validators.maxLength(20)]],
+        activo: [banco?.activo ?? true],
       }));
     });
   }
@@ -77,6 +78,7 @@ export class UpsertBancoComponent {
       bantotalSuboperacion: valor.bantotalSuboperacion,
       dynamicsCodigo: valor.dynamicsCodigo.trim(),
       dynamicsRubroContable: valor.dynamicsRubroContable.trim(),
+      activo: !!valor.activo,
     };
 
     const banco = this.banco();

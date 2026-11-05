@@ -50,6 +50,29 @@ describe('CatalogoBancosService', () => {
     expect((await promesa).data.bancos).toEqual([]);
   });
 
+  it('envía los filtros sin espacios y omite los vacíos', async () => {
+    const promesa = service.getBancos({ page: 1, limit: 10, rubroContable: '', alias: '  rural ', cuenta: 0 });
+
+    const req = httpMock.expectOne(r => r.url.endsWith('/financiero-bc/catalogos/bancos'));
+    expect(req.request.params.keys().sort()).toEqual(['alias', 'cuenta', 'limit', 'page']);
+    expect(req.request.params.get('alias')).toBe('rural');
+    expect(req.request.params.get('cuenta')).toBe('0');
+    req.flush({ success: true, statusCode: 200, message: 'ok', data: { bancos: [], metadata: {} } });
+
+    await promesa;
+  });
+
+  it('pide el catálogo completo con todos=true', async () => {
+    const promesa = service.getBancos({ todos: true });
+
+    const req = httpMock.expectOne(r => r.url.endsWith('/financiero-bc/catalogos/bancos'));
+    expect(req.request.params.keys()).toEqual(['todos']);
+    expect(req.request.params.get('todos')).toBe('true');
+    req.flush({ success: true, statusCode: 200, message: 'ok', data: { bancos: [], metadata: {} } });
+
+    await promesa;
+  });
+
   it('actualiza por PATCH con solo los cambios', async () => {
     const promesa = service.actualizarBanco(7, { bantotalNombre: 'GTC' });
 

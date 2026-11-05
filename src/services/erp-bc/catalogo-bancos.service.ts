@@ -6,8 +6,8 @@ import {
   ActualizarBanco,
   Banco,
   CrearBanco,
+  FiltrosBancos,
   ListaBancos,
-  ListarBancosParams,
   RespuestaApi
 } from '../../interfaces/erp-bc/catalogo-bancos';
 
@@ -50,9 +50,20 @@ export class CatalogoBancosService extends HttpService {
     super(http);
   }
 
-  async getBancos(params: ListarBancosParams = {}): Promise<RespuestaApi<ListaBancos>> {
-    const resp = await firstValueFrom(this.get<RespuestaApi<ListaBancos>>(this.endpoint, params));
+  async getBancos(filtros: FiltrosBancos = {}): Promise<RespuestaApi<ListaBancos>> {
+    const resp = await firstValueFrom(this.get<RespuestaApi<ListaBancos>>(this.endpoint, this.armarParams(filtros)));
     return resp.body!;
+  }
+
+  /** Omite los filtros vacíos y quita los espacios de los extremos. */
+  private armarParams(filtros: FiltrosBancos) {
+    const params: { [clave: string]: string } = {};
+    Object.entries(filtros).forEach(([clave, valor]) => {
+      if (valor === undefined || valor === null) return;
+      const texto = String(valor).trim();
+      if (texto !== '') params[clave] = texto;
+    });
+    return params;
   }
 
   async getBanco(id: number): Promise<RespuestaApi<Banco>> {

@@ -31,14 +31,66 @@
         </div>
       }
 
+      <div class="row g-2 align-items-start mb-3">
+        <div class="col-sm-6 col-lg-3">
+          <label for="filtroRubro" class="form-label small mb-1">Rubro contable (Dynamics)</label>
+          <select id="filtroRubro" class="form-select form-select-sm" #selRubro
+            (change)="onRubroChange(selRubro.value)">
+            <option value="" [selected]="!filtroRubro()">Todos</option>
+            @for (rubro of opcionesRubro(); track rubro) {
+              <option [value]="rubro" [selected]="rubro === filtroRubro()">{{ rubro }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+          <label for="filtroAlias" class="form-label small mb-1">Banco</label>
+          <input id="filtroAlias" type="text" class="form-control form-control-sm" maxlength="100"
+            placeholder="Contiene..." autocomplete="off" #txtAlias
+            [value]="filtroAlias()" (input)="onAliasInput(txtAlias.value)" (keydown.enter)="aplicarFiltros()">
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+          <label for="filtroCuenta" class="form-label small mb-1">Cuenta</label>
+          <input id="filtroCuenta" type="text" inputmode="numeric" class="form-control form-control-sm"
+            autocomplete="off" #txtCuenta [class.is-invalid]="!cuentaValida()"
+            [value]="filtroCuenta()" (input)="onCuentaInput(txtCuenta.value)" (keydown.enter)="aplicarFiltros()">
+          @if (!cuentaValida()) {
+            <div class="invalid-feedback d-block">Debe ser un entero mayor o igual a 0</div>
+          }
+        </div>
+
+        <div class="col-sm-6 col-lg-auto">
+          <span class="form-label small mb-1 d-block invisible" aria-hidden="true">Acciones</span>
+          <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!hayFiltrosEscritos()"
+            (click)="limpiarFiltros()">
+            <ion-icon name="close-circle-outline" class="me-1"></ion-icon>
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+
+      <div class="relative">
+      <!-- Con resultados en pantalla, el spinner va encima para que se note la nueva búsqueda -->
+      @if (isLoading() && bancos().length) {
+        <div class="absolute inset-0 z-10 flex justify-center items-start pt-12 bg-white/60" role="status">
+          <span class="d-flex align-items-center gap-2 bg-white border rounded shadow-sm px-3 py-2 text-muted small">
+            <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
+            Cargando bancos...
+          </span>
+        </div>
+      }
+
       <div class="table-responsive">
-        <table class="table table-striped table-sm table-bordered table-hover align-middle">
+        <table class="table table-striped table-sm table-bordered table-hover align-middle"
+          [attr.aria-busy]="isLoading()">
           <thead>
             <tr>
               <th class="text-center align-middle" scope="col" rowspan="2">ID</th>
               <th class="text-center" scope="colgroup" colspan="5">Bantotal</th>
               <th class="text-center" scope="colgroup" colspan="2">Dynamics</th>
               <th class="text-center align-middle" scope="col" rowspan="2">Fecha de creación</th>
+              <th class="text-center align-middle" scope="col" rowspan="2">Activo</th>
               <th class="text-center align-middle" scope="col" rowspan="2">Acciones</th>
             </tr>
             <tr>
@@ -66,6 +118,17 @@
                   {{ item.fechaCreacion ? (item.fechaCreacion | date:'dd/MM/yyyy HH:mm') : '—' }}
                 </td>
                 <td class="text-center">
+                  <div class="form-check form-switch d-flex justify-content-center align-items-center gap-2 mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch" #swActivo
+                      id="switchActivo{{ item.catalogoBancoId }}" [checked]="item.activo"
+                      [attr.aria-label]="(item.activo ? 'Desactivar ' : 'Activar ') + item.bantotalNombre"
+                      [disabled]="cambiandoEstadoId() !== null" (change)="onSwitchActivo(item, swActivo)">
+                    @if (cambiandoEstadoId() === item.catalogoBancoId) {
+                      <span class="spinner-border spinner-border-sm text-muted" role="status"></span>
+                    }
+                  </div>
+                </td>
+                <td class="text-center">
                   <button type="button" class="btn btn-sm btn-success" title="Editar" aria-label="Editar"
                     [disabled]="abriendoId() !== null" (click)="abrirEditar(item)">
                     @if (abriendoId() === item.catalogoBancoId) {
@@ -79,19 +142,22 @@
             } @empty {
               @if (isLoading()) {
                 <tr>
-                  <td colspan="10" class="text-center text-muted py-3">
+                  <td colspan="11" class="text-center text-muted py-3">
                     <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                     Cargando bancos...
                   </td>
                 </tr>
               } @else if (!errorLista()) {
                 <tr>
-                  <td colspan="10" class="text-center text-muted py-3">No hay bancos registrados</td>
+                  <td colspan="11" class="text-center text-muted py-3">
+                    {{ hayFiltrosAplicados() ? 'Ningún banco cumple los filtros' : 'No hay bancos registrados' }}
+                  </td>
                 </tr>
               }
             }
           </tbody>
         </table>
+      </div>
       </div>
 
       <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
@@ -113,6 +179,36 @@
         <div class="modal-body">
           <app-upsert-banco [banco]="bancoEdit()" [formKey]="formKey()" [guardando]="isSaving()"
             (crear)="crearBanco($event)" (actualizar)="actualizarBanco($event)" (cancelar)="cerrarModal()" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmación para desactivar un banco desde el switch de la tabla -->
+  <div #desactivarBancoModal class="modal fade" id="desactivarBancoModal" tabindex="-1" data-bs-backdrop="static"
+    data-bs-keyboard="false" aria-labelledby="titleDesactivarBancoModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5 text-warning" id="titleDesactivarBancoModal">Desactivar banco</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"
+            [disabled]="cambiandoEstadoId() !== null"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Deseas desactivar el banco "{{ bancoPorDesactivar()?.bantotalNombre }}"
+            (<code>{{ bancoPorDesactivar()?.bantotalAlias }}</code>)?</p>
+          <p class="small text-muted mb-0">El banco no se borra y puede reactivarse desde el switch "Activo".</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+            [disabled]="cambiandoEstadoId() !== null">Cancelar</button>
+          <button type="button" class="btn btn-warning" [disabled]="cambiandoEstadoId() !== null"
+            (click)="confirmarDesactivar()">
+            @if (cambiandoEstadoId() !== null) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            }
+            Desactivar
+          </button>
         </div>
       </div>
     </div>

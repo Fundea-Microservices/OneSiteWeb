@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, OnDestroy, signal, ViewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
@@ -12,6 +12,17 @@ import { UpsertBancoComponent } from '../../components/upsert-banco/upsert-banco
 const MSG_ACCESO_DENEGADO = 'No tienes acceso al catálogo de bancos.';
 const MSG_SIN_RESPUESTA = 'No se pudo completar la operación. Intenta de nuevo.';
 
+const DEBOUNCE_FILTROS_MS = 350;
+const ENTERO_MAX = 2147483647;
+
+interface FiltrosListado {
+  rubroContable: string;
+  alias: string;
+  cuenta?: number;
+}
+
+const SIN_FILTROS: FiltrosListado = { rubroContable: '', alias: '' };
+
 @Component({
   selector: 'app-catalogo-bancos-page',
   standalone: true,
@@ -20,7 +31,7 @@ const MSG_SIN_RESPUESTA = 'No se pudo completar la operación. Intenta de nuevo.
   templateUrl: './catalogo-bancos-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class CatalogoBancosPage {
+export default class CatalogoBancosPage implements OnDestroy {
 
   private service = inject(CatalogoBancosService);
   private authService = inject(AuthService);
@@ -45,15 +56,99 @@ export default class CatalogoBancosPage {
   /** Descarta respuestas de una consulta anterior a la última solicitada. */
   private fetchSeq = 0;
 
+  // Filtros tal como están en los controles
+  filtroRubro = signal('');
+  filtroAlias = signal('');
+  filtroCuenta = signal('');
+  /** Filtros con los que se consulta la lista: cambian solo al aplicarlos. */
+  private filtrosAplicados = signal<FiltrosListado>(SIN_FILTROS);
+  private debounceId: ReturnType<typeof setTimeout> | null = null;
+
+  rubrosContables = signal<string[]>([]);
+
+  /** Incluye el rubro elegido aunque ya no esté en el catálogo, para no perder la selección. */
+  opcionesRubro = computed(() => {
+    const rubro = this.filtroRubro();
+    const rubros = this.rubrosContables();
+    return rubro && !rubros.includes(rubro) ? [rubro, ...rubros] : rubros;
+  });
+
+  /** Vacío también es válido: no se manda el parámetro. */
+  cuentaValida = computed(() => {
+    const cuenta = this.filtroCuenta().trim();
+    return !cuenta || (/^\d+$/.test(cuenta) && Number(cuenta) <= ENTERO_MAX);
+  });
+
+  hayFiltrosAplicados = computed(() => {
+    const f = this.filtrosAplicados();
+    return !!(f.rubroContable || f.alias || f.cuenta !== undefined);
+  });
+
+  hayFiltrosEscritos = computed(() =>
+    !!(this.filtroRubro() || this.filtroAlias().trim() || this.filtroCuenta().trim())
+  );
+
+  /** Banco cuyo estado se está cambiando desde el switch de la tabla. */
+  cambiandoEstadoId = signal<number | null>(null);
+  /** Banco que espera confirmación para desactivarse. */
+  bancoPorDesactivar = signal<Banco | null>(null);
+
   @ViewChild('upsertBancoModal') modalElementRef!: ElementRef;
   private modalUpsert!: Modal;
 
+  @ViewChild('desactivarBancoModal') modalDesactivarElementRef!: ElementRef;
+  private modalDesactivar!: Modal;
+
   ngOnInit() {
     this.fetchData();
+    this.cargarRubrosContables();
   }
 
   ngAfterViewInit() {
     this.modalUpsert = new Modal(this.modalElementRef.nativeElement);
+    this.modalDesactivar = new Modal(this.modalDesactivarElementRef.nativeElement);
+  }
+
+  // ── Activar / desactivar ───────────────────────────────────────────────────
+
+  /**
+   * El switch no cambia hasta que el API responde: se devuelve a su valor y se
+   * actualiza la fila con el resultado. Desactivar pide confirmación; activar no.
+   */
+  onSwitchActivo(banco: Banco, switchEl: HTMLInputElement) {
+    switchEl.checked = banco.activo;
+    if (this.cambiandoEstadoId() !== null) return;
+
+    if (banco.activo) {
+      this.bancoPorDesactivar.set(banco);
+      this.modalDesactivar.show();
+    } else {
+      this.cambiarEstado(banco, true);
+    }
+  }
+
+  async confirmarDesactivar() {
+    const banco = this.bancoPorDesactivar();
+    if (!banco) return;
+    await this.cambiarEstado(banco, false);
+    this.modalDesactivar.hide();
+  }
+
+  private async cambiarEstado(banco: Banco, activo: boolean) {
+    if (this.cambiandoEstadoId() !== null) return;
+    this.cambiandoEstadoId.set(banco.catalogoBancoId);
+
+    try {
+      const resp = await this.service.actualizarBanco(banco.catalogoBancoId, { activo });
+      this.bancos.update(lista =>
+        lista.map(b => b.catalogoBancoId === banco.catalogoBancoId ? { ...b, activo } : b)
+      );
+      this.toastr.success(resp.message, 'Catálogo de bancos');
+    } catch (error) {
+      this.manejarErrorGuardado(error);
+    } finally {
+      this.cambiandoEstadoId.set(null);
+    }
   }
 
   // ── Listado ────────────────────────────────────────────────────────────────
@@ -65,7 +160,7 @@ export default class CatalogoBancosPage {
 
     try {
       const { page, pageSize } = this.pagination();
-      const resp = await this.service.getBancos({ page, limit: pageSize });
+      const resp = await this.service.getBancos({ page, limit: pageSize, ...this.filtrosAplicados() });
       if (seq !== this.fetchSeq) return;
 
       const { bancos, metadata } = resp.data;
@@ -90,11 +185,82 @@ export default class CatalogoBancosPage {
     this.fetchData();
   }
 
-  /** El listado se ordena por id ascendente: un banco nuevo queda en la última página. */
-  private irAUltimaPagina() {
-    const { totalItems, pageSize } = this.pagination();
-    this.pagination.update(p => ({ ...p, page: Math.ceil((totalItems + 1) / pageSize) }));
+  /** Un alta o edición puede agregar o quitar rubros contables del filtro. */
+  private recargar() {
     this.fetchData();
+    this.cargarRubrosContables();
+  }
+
+  // ── Filtros ────────────────────────────────────────────────────────────────
+
+  /** Opciones del select: los rubros contables distintos de todo el catálogo. */
+  private async cargarRubrosContables() {
+    try {
+      const resp = await this.service.getBancos({ todos: true });
+      const rubros = new Set(resp.data.bancos.map(b => b.dynamicsRubroContable));
+      this.rubrosContables.set([...rubros].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })));
+    } catch {
+      // Sin opciones el select solo ofrece "Todos"; el listado ya informa el error.
+    }
+  }
+
+  onRubroChange(valor: string) {
+    this.filtroRubro.set(valor);
+    this.aplicarFiltros();
+  }
+
+  onAliasInput(valor: string) {
+    this.filtroAlias.set(valor);
+    this.programarFiltros();
+  }
+
+  onCuentaInput(valor: string) {
+    this.filtroCuenta.set(valor);
+    this.programarFiltros();
+  }
+
+  /** Alias y cuenta se escriben tecla a tecla: se consulta al dejar de escribir. */
+  private programarFiltros() {
+    this.cancelarDebounce();
+    this.debounceId = setTimeout(() => this.aplicarFiltros(), DEBOUNCE_FILTROS_MS);
+  }
+
+  private cancelarDebounce() {
+    if (this.debounceId !== null) clearTimeout(this.debounceId);
+    this.debounceId = null;
+  }
+
+  /** Consulta con los filtros de los controles, siempre desde la página 1. */
+  aplicarFiltros() {
+    this.cancelarDebounce();
+    if (!this.cuentaValida()) return;
+
+    const cuenta = this.filtroCuenta().trim();
+    const filtros: FiltrosListado = {
+      rubroContable: this.filtroRubro(),
+      alias: this.filtroAlias().trim(),
+      cuenta: cuenta ? Number(cuenta) : undefined,
+    };
+
+    const actuales = this.filtrosAplicados();
+    if (filtros.rubroContable === actuales.rubroContable
+      && filtros.alias === actuales.alias
+      && filtros.cuenta === actuales.cuenta) return;
+
+    this.filtrosAplicados.set(filtros);
+    this.pagination.update(p => ({ ...p, page: 1 }));
+    this.fetchData();
+  }
+
+  limpiarFiltros() {
+    this.filtroRubro.set('');
+    this.filtroAlias.set('');
+    this.filtroCuenta.set('');
+    this.aplicarFiltros();
+  }
+
+  ngOnDestroy() {
+    this.cancelarDebounce();
   }
 
   // ── Modal ──────────────────────────────────────────────────────────────────
@@ -143,9 +309,9 @@ export default class CatalogoBancosPage {
       const resp = await this.service.crearBanco(datos);
       this.toastr.success(resp.message, 'Catálogo de bancos');
       this.cerrarModal();
-      this.irAUltimaPagina();
+      this.recargar();
     } catch (error) {
-      this.manejarErrorGuardado(error, () => this.irAUltimaPagina());
+      this.manejarErrorGuardado(error);
     } finally {
       this.isSaving.set(false);
     }
@@ -166,9 +332,9 @@ export default class CatalogoBancosPage {
       const resp = await this.service.actualizarBanco(this.bancoEdit()!.catalogoBancoId, cambios);
       this.toastr.success(resp.message, 'Catálogo de bancos');
       this.cerrarModal();
-      this.fetchData();
+      this.recargar();
     } catch (error) {
-      this.manejarErrorGuardado(error, () => this.fetchData());
+      this.manejarErrorGuardado(error);
     } finally {
       this.isSaving.set(false);
     }
@@ -178,7 +344,7 @@ export default class CatalogoBancosPage {
    * Fuera de los casos con trato propio, el modal sigue abierto y conserva lo
    * capturado para que el usuario corrija o reintente.
    */
-  private manejarErrorGuardado(error: unknown, recargar: () => void) {
+  private manejarErrorGuardado(error: unknown) {
     const err = interpretarErrorBanco(error);
 
     // El cambio sí se guardó: reintentar produciría un duplicado.
@@ -188,7 +354,7 @@ export default class CatalogoBancosPage {
         'Catálogo de bancos'
       );
       this.cerrarModal();
-      recargar();
+      this.recargar();
       return;
     }
 

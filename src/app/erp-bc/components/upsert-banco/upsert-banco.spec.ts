@@ -17,6 +17,7 @@ describe('UpsertBancoComponent', () => {
     bantotalSuboperacion: 0,
     dynamicsCodigo: 'BAN01',
     dynamicsRubroContable: '1101',
+    activo: true,
     fechaCreacion: '2026-11-05T17:22:37.000Z',
   };
 
@@ -91,5 +92,20 @@ describe('UpsertBancoComponent', () => {
     component.onSubmit();
 
     expect(actualizado).toEqual({});
+  });
+
+  it('un banco nuevo arranca activo', async () => {
+    await iniciar(null);
+
+    expect(component.form().get('activo')?.value).toBe(true);
+  });
+
+  it('al editar, desactivar envía solo activo', async () => {
+    await iniciar(banco);
+    component.form().patchValue({ activo: false });
+
+    component.onSubmit();
+
+    expect(actualizado).toEqual({ activo: false });
   });
 });
