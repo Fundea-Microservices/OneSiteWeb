@@ -8,10 +8,6 @@ import { JOB_CARGA_ASIENTOS_KEY } from '../../../../interfaces/erp-bc/partidas-c
 const HORA_MIN = '00:00';
 const HORA_MAX = '07:00';
 
-// ⚠️ SOLO PRUEBAS: poner en false para permitir cualquier hora sin restricción.
-// Debe estar en true en producción para forzar la ventana 00:00 - 07:00.
-const VALIDAR_HORAS = false;
-
 @Component({
   selector: 'app-configurar-carga-asientos-contables-page',
   standalone: true,
@@ -27,7 +23,6 @@ export default class ConfigurarCargaAsientosContablesPage {
 
   readonly horaMin = HORA_MIN;
   readonly horaMax = HORA_MAX;
-  readonly validarHoras = VALIDAR_HORAS;
 
   config = signal<IConfiguracion | null>(null);
 
@@ -72,7 +67,6 @@ export default class ConfigurarCargaAsientosContablesPage {
   get horaValida(): boolean {
     const h = this.hora();
     if (!h) return false;
-    if (!this.validarHoras) return true; // pruebas: cualquier hora es válida
     return h >= this.horaMin && h <= this.horaMax;
   }
 
