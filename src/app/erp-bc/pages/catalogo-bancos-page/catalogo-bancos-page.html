@@ -1,0 +1,120 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+    <li class="breadcrumb-item">ERP BC</li>
+    <li class="breadcrumb-item active" aria-current="page">Catálogo de Bancos</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span>Catálogo de Bancos</span>
+    @if (!accesoDenegado()) {
+      <button type="button" class="btn btn-primary btn-sm" (click)="abrirCrear()">Crear nuevo banco</button>
+    }
+  </div>
+
+  <div class="card-body">
+    @if (accesoDenegado()) {
+      <div class="alert alert-danger mb-0" role="alert">
+        <ion-icon name="lock-closed-outline" class="me-2"></ion-icon>
+        {{ msgAccesoDenegado }}
+      </div>
+    } @else {
+      @if (errorLista()) {
+        <div class="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-2" role="alert">
+          <span>
+            <ion-icon name="alert-circle-outline" class="me-2"></ion-icon>
+            {{ errorLista() }}
+          </span>
+          <button type="button" class="btn btn-outline-danger btn-sm" (click)="fetchData()">Reintentar</button>
+        </div>
+      }
+
+      <div class="table-responsive">
+        <table class="table table-striped table-sm table-bordered table-hover align-middle">
+          <thead>
+            <tr>
+              <th class="text-center align-middle" scope="col" rowspan="2">ID</th>
+              <th class="text-center" scope="colgroup" colspan="5">Bantotal</th>
+              <th class="text-center" scope="colgroup" colspan="2">Dynamics</th>
+              <th class="text-center align-middle" scope="col" rowspan="2">Fecha de creación</th>
+              <th class="text-center align-middle" scope="col" rowspan="2">Acciones</th>
+            </tr>
+            <tr>
+              <th class="text-center" scope="col">Rubro</th>
+              <th class="text-center" scope="col">Nombre</th>
+              <th class="text-center" scope="col">Alias</th>
+              <th class="text-center" scope="col">Cuenta</th>
+              <th class="text-center" scope="col">Suboperación</th>
+              <th class="text-center" scope="col">Código</th>
+              <th class="text-center" scope="col">Rubro contable</th>
+            </tr>
+          </thead>
+          <tbody class="text-[0.85em]">
+            @for (item of bancos(); track item.catalogoBancoId) {
+              <tr>
+                <th class="text-center" scope="row">{{ item.catalogoBancoId }}</th>
+                <td class="text-center">{{ item.bantotalRubro }}</td>
+                <td>{{ item.bantotalNombre }}</td>
+                <td class="text-center">{{ item.bantotalAlias }}</td>
+                <td class="text-center">{{ item.bantotalCuenta }}</td>
+                <td class="text-center">{{ item.bantotalSuboperacion }}</td>
+                <td class="text-center"><code>{{ item.dynamicsCodigo }}</code></td>
+                <td class="text-center">{{ item.dynamicsRubroContable }}</td>
+                <td class="text-center text-nowrap">
+                  {{ item.fechaCreacion ? (item.fechaCreacion | date:'dd/MM/yyyy HH:mm') : '—' }}
+                </td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-sm btn-success" title="Editar" aria-label="Editar"
+                    [disabled]="abriendoId() !== null" (click)="abrirEditar(item)">
+                    @if (abriendoId() === item.catalogoBancoId) {
+                      <span class="spinner-border spinner-border-sm" role="status"></span>
+                    } @else {
+                      <ion-icon name="create-outline"></ion-icon>
+                    }
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              @if (isLoading()) {
+                <tr>
+                  <td colspan="10" class="text-center text-muted py-3">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Cargando bancos...
+                  </td>
+                </tr>
+              } @else if (!errorLista()) {
+                <tr>
+                  <td colspan="10" class="text-center text-muted py-3">No hay bancos registrados</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pagination [paginationObj]="pagination()" (changePage)="onChangePage($event)" />
+    }
+  </div>
+
+  <!-- Modal crear / editar banco. Bloqueado para no cerrarlo con un guardado en curso. -->
+  <div #upsertBancoModal class="modal fade" id="upsertBancoModal" tabindex="-1" data-bs-backdrop="static"
+    data-bs-keyboard="false" aria-labelledby="titleUpsertBancoModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="titleUpsertBancoModal">
+            {{ bancoEdit() ? 'Actualizar banco' : 'Crear banco' }}
+          </h1>
+          <button type="button" class="btn-close" aria-label="Cerrar" [disabled]="isSaving()"
+            (click)="cerrarModal()"></button>
+        </div>
+        <div class="modal-body">
+          <app-upsert-banco [banco]="bancoEdit()" [formKey]="formKey()" [guardando]="isSaving()"
+            (crear)="crearBanco($event)" (actualizar)="actualizarBanco($event)" (cancelar)="cerrarModal()" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -291,6 +291,10 @@ export const routes: Routes = [
                         path: 'ejecutar-carga-asientos-contables',
                         loadComponent: () => import('./erp-bc/pages/ejecutar-carga-asientos-contables-page/ejecutar-carga-asientos-contables-page'),
                     },
+                    {
+                        path: 'catalogo-bancos',
+                        loadComponent: () => import('./erp-bc/pages/catalogo-bancos-page/catalogo-bancos-page'),
+                    },
                 ]
             },
 

@@ -1,0 +1,103 @@
+<form [formGroup]="form()" (ngSubmit)="onSubmit()">
+  <h2 class="fs-6 fw-semibold mb-2">Bantotal</h2>
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label" for="bantotalRubro">Rubro *</label>
+      <input type="text" class="form-control form-control-sm" id="bantotalRubro" formControlName="bantotalRubro" />
+      @if (hasError('bantotalRubro', 'required')) {
+        <div class="text-danger small">El rubro es requerido</div>
+      }
+      @if (hasError('bantotalRubro', 'maxlength')) {
+        <div class="text-danger small">Máximo 20 caracteres</div>
+      }
+    </div>
+
+    <div class="col-md-8 mb-3">
+      <label class="form-label" for="bantotalNombre">Nombre *</label>
+      <input type="text" class="form-control form-control-sm" id="bantotalNombre" formControlName="bantotalNombre" />
+      @if (hasError('bantotalNombre', 'required')) {
+        <div class="text-danger small">El nombre es requerido</div>
+      }
+      @if (hasError('bantotalNombre', 'maxlength')) {
+        <div class="text-danger small">Máximo 100 caracteres</div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label" for="bantotalAlias">Alias *</label>
+      <input type="text" class="form-control form-control-sm" id="bantotalAlias" formControlName="bantotalAlias" />
+      @if (hasError('bantotalAlias', 'required')) {
+        <div class="text-danger small">El alias es requerido</div>
+      }
+      @if (hasError('bantotalAlias', 'maxlength')) {
+        <div class="text-danger small">Máximo 50 caracteres</div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label" for="bantotalCuenta">Cuenta *</label>
+      <input type="number" class="form-control form-control-sm" id="bantotalCuenta" formControlName="bantotalCuenta"
+        min="0" [max]="enteroMax" step="1" />
+      @if (hasError('bantotalCuenta', 'required')) {
+        <div class="text-danger small">La cuenta es requerida</div>
+      }
+      @if (hasError('bantotalCuenta', 'entero')) {
+        <div class="text-danger small">Debe ser un entero de 0 a {{ enteroMax }}</div>
+      }
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <label class="form-label" for="bantotalSuboperacion">Suboperación *</label>
+      <input type="number" class="form-control form-control-sm" id="bantotalSuboperacion"
+        formControlName="bantotalSuboperacion" min="0" [max]="enteroMax" step="1" />
+      @if (hasError('bantotalSuboperacion', 'required')) {
+        <div class="text-danger small">La suboperación es requerida</div>
+      }
+      @if (hasError('bantotalSuboperacion', 'entero')) {
+        <div class="text-danger small">Debe ser un entero de 0 a {{ enteroMax }}</div>
+      }
+    </div>
+
+    <div class="col-12 mb-3">
+      <div class="form-text mt-0">La combinación de rubro, cuenta y suboperación no se puede repetir.</div>
+    </div>
+  </div>
+
+  <h2 class="fs-6 fw-semibold mb-2">Dynamics</h2>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label" for="dynamicsCodigo">Código *</label>
+      <input type="text" class="form-control form-control-sm" id="dynamicsCodigo" formControlName="dynamicsCodigo" />
+      @if (hasError('dynamicsCodigo', 'required')) {
+        <div class="text-danger small">El código es requerido</div>
+      }
+      @if (hasError('dynamicsCodigo', 'maxlength')) {
+        <div class="text-danger small">Máximo 10 caracteres</div>
+      }
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <label class="form-label" for="dynamicsRubroContable">Rubro contable *</label>
+      <input type="text" class="form-control form-control-sm" id="dynamicsRubroContable"
+        formControlName="dynamicsRubroContable" />
+      @if (hasError('dynamicsRubroContable', 'required')) {
+        <div class="text-danger small">El rubro contable es requerido</div>
+      }
+      @if (hasError('dynamicsRubroContable', 'maxlength')) {
+        <div class="text-danger small">Máximo 20 caracteres</div>
+      }
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-secondary" [disabled]="guardando()" (click)="cancelar.emit()">Cancelar</button>
+    <button type="submit" class="btn btn-primary" [disabled]="guardando()">
+      @if (guardando()) {
+        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        Guardando...
+      } @else {
+        {{ btnText }}
+      }
+    </button>
+  </div>
+</form>
