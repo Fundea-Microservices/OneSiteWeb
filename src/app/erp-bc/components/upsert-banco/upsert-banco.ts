@@ -49,7 +49,7 @@ export class UpsertBancoComponent {
         bantotalAlias: [banco?.bantotalAlias ?? '', [textoNoVacio, Validators.maxLength(50)]],
         bantotalCuenta: [banco?.bantotalCuenta ?? null, [Validators.required, enteroEnRango]],
         bantotalSuboperacion: [banco?.bantotalSuboperacion ?? null, [Validators.required, enteroEnRango]],
-        dynamicsCodigo: [banco?.dynamicsCodigo ?? '', [textoNoVacio, Validators.maxLength(10)]],
+        dynamicsCodigo: [banco?.dynamicsCodigo ?? '', [textoNoVacio, Validators.maxLength(20)]],
         dynamicsRubroContable: [banco?.dynamicsRubroContable ?? '', [textoNoVacio, Validators.maxLength(20)]],
         activo: [banco?.activo ?? true],
       }));

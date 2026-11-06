@@ -65,7 +65,7 @@ describe('UpsertBancoComponent', () => {
     ['bantotalCuenta', -1],
     ['bantotalCuenta', 1.5],
     ['bantotalSuboperacion', 2147483648],
-    ['dynamicsCodigo', 'x'.repeat(11)],
+    ['dynamicsCodigo', 'x'.repeat(21)],
     ['dynamicsRubroContable', 'x'.repeat(21)],
   ])('no envía si %s es %p', async (campo, valor) => {
     await iniciar(null);
