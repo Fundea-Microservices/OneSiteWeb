@@ -17,6 +17,7 @@ import { ToastrService } from 'ngx-toastr';
 import { CATALOGOS_ACTIVIDAD, IActividadEconomica } from '../../../../interfaces/actividad-economica';
 import {
   CLASE_ESTADO_FLUJO,
+  IEstacional,
   IFlujoDetalle,
   IFlujoEncabezado,
   IFlujoExistente,
@@ -55,7 +56,10 @@ interface LineaValor {
  * - /flujo-fondos/flujos/nuevo: se consulta la solicitud en Bantotal y, si no tiene un
  *   flujo activo, se capturan horizonte, líneas, actividades estacionales y préstamos en
  *   otras instituciones con vista previa (POST /simular).
- * - /flujo-fondos/flujos/:id: detalle de solo lectura con su proyección.
+ * - /flujo-fondos/flujos/:id: detalle del flujo. Mientras el back lo marque `editable`
+ *   (CREADO, RECHAZADO, CORREGIDO) se editan todos sus elementos con la misma captura y vista
+ *   previa de la creación, y se guarda con PUT /:id. ACEPTADO y ANULADO son de solo lectura.
+ *   Todavía no hay aprobación de flujos, así que en la práctica todos quedan editables.
  */
 @Component({
   selector: 'app-flujo',
@@ -95,16 +99,35 @@ export default class FlujoComponent implements OnInit {
   solicitud = signal<ISolicitudCreditoBantotal | null>(null);
   // El 409 al guardar solo trae { id, codigo, estado }
   flujoActivo = signal<IFlujoEncabezado | IFlujoExistente | null>(null);
-  puedeCapturar = computed(() => !!this.solicitud() && !this.flujoActivo());
+
+  /** Detalle de un flujo que todavía se puede editar. */
+  modoEdicion = computed(() => !!this.flujoId() && !!this.flujo()?.editable);
+  /** La captura está activa: flujo nuevo de una solicitud sin flujo, o flujo guardado editable. */
+  puedeCapturar = computed(() => this.flujoId() ? this.modoEdicion() : !!this.solicitud() && !this.flujoActivo());
 
   // ── Captura ──────────────────────────────────────────────────────────────
   actividades = signal<IActividadEconomica[]>([]);
   cargandoActividades = signal(false);
-  // Solo las de la región de la solicitud (la actividad guarda el id de región de Bantotal como texto)
+  // Al crear, la región viene de la solicitud en Bantotal; al editar, de la copia guardada en el flujo
+  regionId = computed(() => this.flujoId() ? this.flujo()?.regionId ?? null : this.solicitud()?.regionId ?? null);
+  regionNombre = computed(() => (this.flujoId() ? this.flujo()?.region : this.solicitud()?.region) || this.regionId());
+  // Solo las de la región (la actividad guarda el id de región de Bantotal como texto)
   actividadesRegion = computed(() => {
-    const regionId = this.solicitud()?.regionId;
-    if (regionId === null || regionId === undefined) return [];
+    const regionId = this.regionId();
+    if (regionId === null) return [];
     return this.actividades().filter(a => a.region === String(regionId));
+  });
+  /**
+   * Opciones del select de actividad: las de la región más las que ya usa el flujo guardado
+   * aunque no estén en la lista (si no, el select quedaría en blanco con un id válido).
+   */
+  opcionesActividad = computed(() => {
+    const region = this.actividadesRegion().map(a => ({ id: a.id, etiqueta: `${a.codigo} · ${a.nombre}` }));
+    const ids = new Set(region.map(o => o.id));
+    const guardadas = (this.flujoId() ? this.flujo()?.lineas ?? [] : [])
+      .filter(l => !ids.has(l.actividadEconomicaId) && ids.add(l.actividadEconomicaId))
+      .map(l => ({ id: l.actividadEconomicaId, etiqueta: `${l.codigoActividad} · ${l.nombreActividad}` }));
+    return [...region, ...guardadas];
   });
   private unidades = signal<Map<string, string>>(new Map());
   private medidas = signal<Map<string, string>>(new Map());
@@ -116,6 +139,8 @@ export default class FlujoComponent implements OnInit {
   otrosPrestamos = signal<IOtroPrestamo[]>([]);
   // Solo las actividades estacionales completas (las vacías o a medias no se envían)
   estacionales = signal<IEstacionalInput[]>([]);
+  // Con las que arranca la captura de estacionales al editar; una referencia nueva la vuelve a llenar
+  estacionalesIniciales = signal<IEstacional[] | null>(null);
 
   agrupar = signal(true);
   simulacion = signal<ISimulacionFlujo | null>(null);
@@ -149,7 +174,9 @@ export default class FlujoComponent implements OnInit {
       const id = params.get('id');
       this.flujoId.set(id);
       if (id) {
-        this.cargarFlujo();
+        this.flujo.set(null);
+        this.reiniciarCaptura();
+        this.cargarFlujo(true);
       }
     });
 
@@ -305,6 +332,7 @@ export default class FlujoComponent implements OnInit {
     this.horizonte.set({ fechaInicio: mesActual(), plazoMeses: PLAZO_FLUJO_MESES });
     this.otrosPrestamos.set([]);
     this.estacionales.set([]);
+    this.estacionalesIniciales.set(null);
     this.secuenciaSimulacion++;
     this.simulacion.set(null);
     this.errorSimulacion.set(null);
@@ -365,7 +393,8 @@ export default class FlujoComponent implements OnInit {
 
   cambiarAgrupacion(agrupar: boolean) {
     this.agrupar.set(agrupar);
-    if (this.flujoId()) {
+    // Al editar se muestra la vista previa de lo capturado, no lo guardado
+    if (this.flujoId() && !this.modoEdicion()) {
       this.cargarFlujo();
     } else {
       this.simular();
@@ -399,23 +428,30 @@ export default class FlujoComponent implements OnInit {
 
   // ── Guardar ──────────────────────────────────────────────────────────────
 
-  async guardar() {
-    const solicitud = this.solicitud();
+  /** Validaciones comunes al crear y al guardar cambios: avisa y devuelve false si algo falta. */
+  private capturaLista(): boolean {
     this.form.markAllAsTouched();
-    if (!solicitud || this.form.invalid || this.lineas.length === 0 || this.guardando()) return;
+    if (this.form.invalid || this.lineas.length === 0 || this.guardando()) return false;
 
     // Al guardar, las actividades estacionales vacías o a medias no se descartan sin avisar
     const errorEstacionales = this.estacionalesRef()?.validarParaGuardar();
     if (errorEstacionales) {
       this.toastr.warning(errorEstacionales, 'Actividades estacionales');
-      return;
+      return false;
     }
 
     // Un préstamo escrito pero no agregado se perdería sin avisar
     if (this.otrosPrestamosRef()?.capturaPendiente()) {
       this.toastr.warning('Agregue el préstamo a la tabla o limpie el formulario antes de guardar.', 'Préstamo sin agregar');
-      return;
+      return false;
     }
+
+    return true;
+  }
+
+  async guardar() {
+    const solicitud = this.solicitud();
+    if (!solicitud || !this.capturaLista()) return;
 
     this.guardando.set(true);
     const resultado = await this.flujoService.createFlujo({ numeroSolicitud: solicitud.numeroSolicitud, ...this.payload() });
@@ -446,7 +482,8 @@ export default class FlujoComponent implements OnInit {
 
   // ── Detalle ──────────────────────────────────────────────────────────────
 
-  async cargarFlujo() {
+  /** Con `poblar` y el flujo editable, la captura se llena con lo guardado. */
+  async cargarFlujo(poblar = false) {
     const id = this.flujoId();
     if (!id) return;
     this.cargandoFlujo.set(true);
@@ -454,6 +491,74 @@ export default class FlujoComponent implements OnInit {
     if (this.flujoId() === id) {
       this.flujo.set(flujo);
       this.cargandoFlujo.set(false);
+      if (poblar && flujo?.editable) {
+        this.poblarCaptura(flujo);
+      }
     }
+  }
+
+  /** Lleva el flujo guardado a la captura; su proyección sirve de vista previa mientras se recalcula. */
+  private poblarCaptura(f: IFlujoDetalle) {
+    this.lineas.clear({ emitEvent: false });
+    for (const l of f.lineas) {
+      const linea = this.crearLinea();
+      linea.setValue({
+        actividadEconomicaId: l.actividadEconomicaId,
+        nombre: l.nombre,
+        fechaSiembra: l.fechaSiembra.slice(0, 10),
+        cantidad: Number(l.cantidad),
+      }, { emitEvent: false });
+      this.lineas.push(linea, { emitEvent: false });
+    }
+    this.form.patchValue({ fechaInicio: f.fechaInicio.slice(0, 7), plazoMeses: f.plazoMeses }, { emitEvent: false });
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+
+    this.otrosPrestamosRef()?.limpiar();
+    this.otrosPrestamos.set(f.otrosPrestamos);
+    // El componente de estacionales se llena solo y avisa con (cambio)
+    this.estacionales.set([]);
+    this.estacionalesIniciales.set([...f.estacionales]);
+
+    this.secuenciaSimulacion++;
+    this.simulando.set(false);
+    this.errorSimulacion.set(null);
+    this.simulacion.set({
+      fechaInicio: f.fechaInicio,
+      plazoMeses: f.plazoMeses,
+      lineas: f.lineas,
+      otrosPrestamos: f.otrosPrestamos,
+      estacionales: f.estacionales,
+      proyeccion: f.proyeccion,
+    });
+
+    const v = this.form.getRawValue();
+    this.lineasValor.set(v.lineas as LineaValor[]);
+    this.horizonte.set({ fechaInicio: v.fechaInicio ?? '', plazoMeses: v.plazoMeses === null ? null : Number(v.plazoMeses) });
+  }
+
+  /** Vuelve a lo guardado. */
+  descartarCambios() {
+    const f = this.flujo();
+    if (f?.editable) {
+      this.poblarCaptura(f);
+    }
+  }
+
+  /** PUT /:id con todo lo capturado: líneas, horizonte, préstamos y actividades estacionales. */
+  async guardarCambios() {
+    const id = this.flujoId();
+    if (!id || !this.modoEdicion() || !this.capturaLista()) return;
+
+    this.guardando.set(true);
+    const flujo = await this.flujoService.updateFlujo(id, this.payload());
+    this.guardando.set(false);
+
+    if (!flujo || this.flujoId() !== id) return;
+    // Lo capturado ya es lo guardado: no se vuelve a poblar para no cerrar lo que el usuario tiene abierto,
+    // solo se toman los préstamos con sus ids nuevos y el estado (RECHAZADO pasa a CORREGIDO)
+    this.flujo.set(flujo);
+    this.otrosPrestamos.set(flujo.otrosPrestamos);
+    this.form.markAsPristine();
   }
 }

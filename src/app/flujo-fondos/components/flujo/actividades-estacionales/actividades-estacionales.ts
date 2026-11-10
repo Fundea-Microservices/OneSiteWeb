@@ -4,11 +4,13 @@ import {
   computed,
   CUSTOM_ELEMENTS_SCHEMA,
   DestroyRef,
+  effect,
   ElementRef,
   inject,
   input,
   output,
   signal,
+  untracked,
   ViewChild,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
@@ -55,6 +57,9 @@ const montoValido = (monto: unknown) => monto !== null && monto !== '' && !isNaN
  *
  * Mientras se captura, la alerta de "fuera del horizonte" se calcula aquí con el mismo
  * criterio del back. En un flujo guardado (`editable` en false) se usan las marcas del back.
+ *
+ * Al editar un flujo guardado, `iniciales` llena la captura con sus actividades. Cada vez
+ * que cambia la referencia del arreglo se vuelve a llenar (así se descartan los cambios).
  */
 @Component({
   selector: 'app-actividades-estacionales',
@@ -71,6 +76,8 @@ export class ActividadesEstacionalesComponent {
   editable = input(false);
   /** Horizonte de la captura: fechaInicio en YYYY-MM. */
   horizonte = input<{ fechaInicio: string; plazoMeses: number | null } | null>(null);
+  /** Actividades con las que arranca la captura al editar un flujo guardado. */
+  iniciales = input<IEstacional[] | null>(null);
 
   /** Actividades completas, listas para enviar a POST /simular. */
   cambio = output<IEstacionalInput[]>();
@@ -130,6 +137,33 @@ export class ActividadesEstacionalesComponent {
       sub.unsubscribe();
       this.modalInstance?.dispose();
     });
+
+    effect(() => {
+      const iniciales = this.iniciales();
+      if (!this.editable() || !iniciales) return;
+      untracked(() => this.cargar(iniciales));
+    });
+  }
+
+  /** Reemplaza la captura por las actividades de un flujo guardado y avisa una sola vez. */
+  private cargar(estacionales: IEstacional[]) {
+    this.actividades.clear({ emitEvent: false });
+    for (const e of estacionales) {
+      this.actividades.push(this.fb.group({
+        descripcion: [e.descripcion, [Validators.required, Validators.maxLength(150)]],
+        transacciones: this.fb.array<FormGroup>(e.transacciones.map(t => this.crearTransaccion({
+          concepto: t.concepto,
+          tipo: t.tipo,
+          fecha: t.fecha.slice(0, 10),
+          monto: t.monto,
+        }))),
+      }), { emitEvent: false });
+    }
+    this.nuevaDescripcion.set('');
+    this.errorNueva.set(null);
+    this.seleccionada.set(null);
+    this.valor.set(this.actividades.getRawValue() as ActividadValor[]);
+    this.cambio.emit(this.payload());
   }
 
   private totalesCaptura(transacciones: TransaccionValor[]) {

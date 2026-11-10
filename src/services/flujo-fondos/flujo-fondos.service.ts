@@ -13,6 +13,7 @@ import {
   IFlujoDetalle,
   IFlujoEncabezado,
   IFlujoExistente,
+  IFlujoUpdate,
   IOtroPrestamo,
   IOtroPrestamoInput,
   IResumenActividades,
@@ -173,6 +174,26 @@ export class FlujoFondosService extends HttpService {
       this.toastr.error(error?.error?.message || '', 'Error al crear flujo de fondos');
       const existente = error?.status === 409 && error?.error?.data?.id ? error.error.data as IFlujoExistente : null;
       return { ok: false, existente };
+    }
+  }
+
+  /**
+   * Reemplaza líneas, préstamos y actividades estacionales y recalcula la proyección.
+   * Un flujo RECHAZADO pasa a CORREGIDO; ACEPTADO y ANULADO no se editan (409 MS-FJF-45-02).
+   */
+  async updateFlujo(id: string, body: IFlujoUpdate): Promise<IFlujoDetalle | null> {
+    try {
+      const resp = await firstValueFrom(this.put<FlujoDetalleResponse>(`${this.endpoint}/${id}`, body));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Success');
+        return resp.body.data;
+      }
+
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ FlujoFondosService ~ updateFlujo ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error al actualizar flujo de fondos');
+      return null;
     }
   }
 

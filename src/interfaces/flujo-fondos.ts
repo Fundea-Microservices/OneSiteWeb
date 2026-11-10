@@ -331,6 +331,12 @@ export interface IFlujoCreate extends IProyeccionFlujoInput {
     numeroSolicitud: number;
 }
 
+/**
+ * PUT /:id: reemplaza las líneas y recalcula con los datos vigentes de las actividades.
+ * otrosPrestamos y estacionales: si no se envían se conservan; [] los elimina todos.
+ */
+export type IFlujoUpdate = IProyeccionFlujoInput;
+
 // ---------- Respuestas ----------
 export type ConsultaSolicitudResponse = ApiResponse<{
     solicitud: ISolicitudCreditoBantotal;
