@@ -118,7 +118,11 @@
             <p class="mb-2"><strong>Número Identificación:</strong> {{ cliente()!.numeroIdentificacion }}</p>
           </div>
           <div class="col-md-6">
-            <p class="mb-2"><strong>Teléfono:</strong> {{ cliente()!.telefono }}</p>
+            <p class="mb-2" [class.text-danger]="!telefonoValido()"><strong>Teléfono:</strong> {{ cliente()!.telefono }}
+              @if (!telefonoValido()) {
+                <ion-icon name="alert-circle-outline" class="ms-1"></ion-icon>
+              }
+            </p>
             <p class="mb-2"><strong>Correo:</strong> {{ cliente()!.correo }}</p>
             <p class="mb-2"><strong>Número Operación:</strong> {{ cliente()!.numeroOperacion }}</p>
             <p class="mb-2"><strong>Monto Préstamo:</strong> 
@@ -131,11 +135,17 @@
 
     <!-- Botón generar orden (se oculta al iniciar la orden para evitar duplicados; reaparece al buscar de nuevo) -->
     @if (!etapaActual()) {
+    @if (!telefonoValido()) {
+    <div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+      <ion-icon name="warning-outline" class="me-2 fs-4"></ion-icon>
+      <div>{{ mensajeTelefonoInvalido }}</div>
+    </div>
+    }
     <div class="d-grid gap-2 mb-4">
       <button
         class="btn btn-success btn-lg"
         (click)="procesarOrden()"
-        [disabled]="procesandoOrden()">
+        [disabled]="procesandoOrden() || !telefonoValido()">
         <ion-icon name="card-outline" class="me-2"></ion-icon>
         Generar Orden de Pago
       </button>

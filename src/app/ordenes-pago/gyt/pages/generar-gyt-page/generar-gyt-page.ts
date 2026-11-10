@@ -17,6 +17,7 @@ interface Cliente {
   correo: string;
   montoPrestamo: number;
   numeroOperacion: string;
+  
 }
 
 interface OrdenPago {
@@ -24,6 +25,41 @@ interface OrdenPago {
   estado: 'preparar' | 'revisar' | 'pagar' | 'completado';
   cliente: Cliente;
   fechaCreacion: Date;
+}
+
+const MENSAJE_TELEFONO_INVALIDO = 'El número de teléfono del cliente no es válido o no está actualizado';
+
+/** Números PBX conocidos que no deben aceptarse como teléfono del cliente */
+const TELEFONOS_PBX = new Set<string>(['24442222']);
+
+/**
+ * Normaliza un teléfono de Guatemala a 8 dígitos (quita espacios, guiones y prefijo +502).
+ * Retorna null si no se puede normalizar.
+ */
+function normalizarTelefonoGt(telefono: string | null | undefined): string | null {
+  if (!telefono) return null;
+  let digitos = telefono.replace(/\D/g, '');
+  if (digitos.length === 11 && digitos.startsWith('502')) {
+    digitos = digitos.slice(3);
+  }
+  return digitos.length === 8 ? digitos : null;
+}
+
+/**
+ * Valida que sea un teléfono de Guatemala válido:
+ * - 8 dígitos (opcionalmente con prefijo +502)
+ * - Inicia con 2, 3, 4, 5, 6 o 7 (fijos y celulares)
+ * - No es un número de relleno (todos iguales o secuencial, ej. 12345678, 55555555)
+ * - No es un PBX conocido
+ */
+function esTelefonoGtValido(telefono: string | null | undefined): boolean {
+  const numero = normalizarTelefonoGt(telefono);
+  if (!numero) return false;
+  if (!/^[2-7]\d{7}$/.test(numero)) return false;
+  if (/^(\d)\1{7}$/.test(numero)) return false;
+  if ('0123456789'.includes(numero) || '9876543210'.includes(numero)) return false;
+  if (TELEFONOS_PBX.has(numero)) return false;
+  return true;
 }
 
 @Component({
@@ -52,6 +88,9 @@ export default class GenerarGytPage {
   etapaActual = signal<'crear' | 'revisar' | 'autorizar' | 'completado' | null>(null);
   etapaError  = signal(false);
   mensajeError = signal('');
+
+  readonly mensajeTelefonoInvalido = MENSAJE_TELEFONO_INVALIDO;
+  telefonoValido = computed(() => esTelefonoGtValido(this.cliente()?.telefono));
 
   etapaLabel = computed(() => {
     switch (this.etapaActual()) {
@@ -184,8 +223,6 @@ export default class GenerarGytPage {
         });
       });
       
-      console.log("🚀 ~ GenerarGytPage ~ buscarCliente ~ prestamoData:", prestamoData);
-      
       // Guardar datos completos del préstamo
       this.prestamoInfo.set(prestamoData);
       
@@ -209,8 +246,8 @@ export default class GenerarGytPage {
         apellidos: `${persona.primerApellido} ${persona.segundoApellido || ''}`.trim(),
         tipoIdentificacion: persona.tipoDocumento,
         numeroIdentificacion: persona.numeroDocumento,
-        telefono: 'N/A', // No viene en la respuesta de préstamo
-        correo: 'N/A', // No viene en la respuesta de préstamo
+        telefono: persona.telefono, // No viene en la respuesta de préstamo
+        correo: persona.correo, // No viene en la respuesta de préstamo
         montoPrestamo: prestamo.detalles[0].Valor, // Usar el valor del primer detalle
         numeroOperacion: prestamo.idOperacionFmt // Usar el ID formateado del préstamo
       };
@@ -228,7 +265,11 @@ export default class GenerarGytPage {
         `Préstamo: ${prestamo.idOperacionFmt} - Monto: Q${montoDesembolso.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `Cliente: ${nombreCompleto}`
       );
-      
+
+      if (!this.telefonoValido()) {
+        this.toastr.error(MENSAJE_TELEFONO_INVALIDO, 'Teléfono inválido');
+      }
+
     } catch (error: any) {
       console.error('Error al buscar préstamo:', error);
       
@@ -290,6 +331,12 @@ export default class GenerarGytPage {
       return;
     }
 
+    if (!this.telefonoValido()) {
+      this.procesandoOrden.set(false);
+      this.toastr.error(MENSAJE_TELEFONO_INVALIDO, 'Teléfono inválido');
+      return;
+    }
+
     this.procesandoOrden.set(true);
     this.etapaActual.set('crear');
     this.etapaError.set(false);
@@ -308,7 +355,7 @@ export default class GenerarGytPage {
       tipoDocumentoCliente: clienteData.tipoIdentificacion,
       monto: clienteData.montoPrestamo,
       descripcion: 'ORDEN GENERADA DESDE ONESITE',
-      telefono: clienteData.telefono === 'N/A' ? '24442222' : clienteData.telefono,
+      telefono: normalizarTelefonoGt(clienteData.telefono)!,
       correo: clienteData.correo === 'N/A' ? 'sincorreo@gmail.com' : clienteData.correo,
       canalCobro: '6',
       cuentaDebito: '00000000018',

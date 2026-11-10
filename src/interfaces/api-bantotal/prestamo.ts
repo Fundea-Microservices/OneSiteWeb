@@ -26,6 +26,8 @@ export interface PersonaPrestamo {
   tipoDocumento: string;
   numeroDocumento: string;
   pais: number;
+  correo: string;
+  telefono: string;
 }
 
 /**
