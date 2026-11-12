@@ -1,0 +1,13 @@
+<div class="card-header seccion-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    [class.colapsada]="!abierta()" (click)="onClicEncabezado($event)">
+    <button type="button" class="seccion-toggle btn p-0 border-0 text-start d-flex align-items-center gap-2"
+        [attr.aria-expanded]="abierta()" [attr.aria-controls]="cuerpoId"
+        [title]="abierta() ? 'Minimizar sección' : 'Maximizar sección'" (click)="alternar()">
+        <ion-icon name="chevron-down-outline" class="seccion-chevron" aria-hidden="true"></ion-icon>
+        <span><ng-content select="[titulo]" /></span>
+    </button>
+    <ng-content select="[acciones]" />
+</div>
+<div class="card-body" [id]="cuerpoId" [hidden]="!abierta()">
+    <ng-content />
+</div>

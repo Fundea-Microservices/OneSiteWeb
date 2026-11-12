@@ -8,6 +8,7 @@ import {
   OnInit,
   signal,
   viewChild,
+  viewChildren,
 } from '@angular/core';
 import { DecimalPipe, LowerCasePipe, NgTemplateOutlet } from '@angular/common';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -40,6 +41,7 @@ import { OtrosPrestamosComponent } from '../../components/flujo/otros-prestamos/
 import { ProyeccionFlujoComponent } from '../../components/flujo/proyeccion-flujo/proyeccion-flujo';
 import { ResumenActividadesComponent } from '../../components/flujo/resumen-actividades/resumen-actividades';
 import { formatoFecha, formatoPeriodo, maxDecimales, mesActual, montoCiclo } from '../../utils/flujo';
+import { SeccionComponent } from '../../../shared/components/seccion/seccion';
 
 const SIMULAR_DEBOUNCE_MS = 600;
 
@@ -63,7 +65,7 @@ interface LineaValor {
  */
 @Component({
   selector: 'app-flujo',
-  imports: [RouterLink, DecimalPipe, LowerCasePipe, NgTemplateOutlet, ReactiveFormsModule, ProyeccionFlujoComponent, OtrosPrestamosComponent, ActividadesEstacionalesComponent, ResumenActividadesComponent],
+  imports: [RouterLink, DecimalPipe, LowerCasePipe, NgTemplateOutlet, ReactiveFormsModule, ProyeccionFlujoComponent, OtrosPrestamosComponent, ActividadesEstacionalesComponent, ResumenActividadesComponent, SeccionComponent],
   templateUrl: './flujo.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -82,6 +84,7 @@ export default class FlujoComponent implements OnInit {
   private otrosPrestamosRef = viewChild(OtrosPrestamosComponent);
   private estacionalesRef = viewChild(ActividadesEstacionalesComponent);
   private resumenRef = viewChild(ResumenActividadesComponent);
+  private secciones = viewChildren(SeccionComponent);
 
   readonly maxLineas = MAX_LINEAS_FLUJO;
   readonly maxPrestamos = MAX_OTROS_PRESTAMOS;
@@ -245,17 +248,33 @@ export default class FlujoComponent implements OnInit {
 
   // ── Actividades ──────────────────────────────────────────────────────────
 
-  private async cargarCatalogos() {
+  /** Devuelve false si no se pudieron traer las actividades. */
+  private async cargarCatalogos(): Promise<boolean> {
     this.cargandoActividades.set(true);
-    const [resp, unidades, medidas] = await Promise.all([
-      this.actividadService.getActividades({ all: true }),
-      this.catalogoService.select(CATALOGOS_ACTIVIDAD.unidadGiro, null, true),
-      this.catalogoService.select(CATALOGOS_ACTIVIDAD.medidaProduccion, null, true),
-    ]);
-    this.actividades.set(resp?.data.actividades ?? []);
-    this.unidades.set(new Map((unidades?.opciones ?? []).map(o => [o.value.toUpperCase(), o.label])));
-    this.medidas.set(new Map((medidas?.opciones ?? []).map(o => [o.value.toUpperCase(), o.label])));
-    this.cargandoActividades.set(false);
+    try {
+      const [resp, unidades, medidas] = await Promise.all([
+        this.actividadService.getActividades({ all: true }),
+        this.catalogoService.select(CATALOGOS_ACTIVIDAD.unidadGiro, null, true),
+        this.catalogoService.select(CATALOGOS_ACTIVIDAD.medidaProduccion, null, true),
+      ]);
+      // Si falla una recarga, se conserva lo que ya estaba (el servicio ya mostró el error)
+      if (resp) this.actividades.set(resp.data.actividades ?? []);
+      if (unidades) this.unidades.set(new Map((unidades.opciones ?? []).map(o => [o.value.toUpperCase(), o.label])));
+      if (medidas) this.medidas.set(new Map((medidas.opciones ?? []).map(o => [o.value.toUpperCase(), o.label])));
+      return !!resp;
+    } finally {
+      this.cargandoActividades.set(false);
+    }
+  }
+
+  /** Botón "Actualizar": trae de nuevo las actividades por si se crearon o cambiaron mientras se captura. */
+  async actualizarActividades() {
+    if (this.cargandoActividades()) return;
+    const ok = await this.cargarCatalogos();
+    if (!ok) return;
+    this.toastr.success('Actividades económicas actualizadas.', 'Actividades');
+    // Los montos por ciclo dependen de la distribución de cada actividad
+    if (this.lineas.length) this.solicitarSimulacion();
   }
 
   actividad(id: string | null | undefined): IActividadEconomica | undefined {
@@ -430,8 +449,16 @@ export default class FlujoComponent implements OnInit {
 
   /** Validaciones comunes al crear y al guardar cambios: avisa y devuelve false si algo falta. */
   private capturaLista(): boolean {
+    if (this.guardando()) return false;
+    const lista = this.validarCaptura();
+    // Una sección minimizada escondería el error: se abren todas para que se vea
+    if (!lista) this.secciones().forEach(s => s.abrir());
+    return lista;
+  }
+
+  private validarCaptura(): boolean {
     this.form.markAllAsTouched();
-    if (this.form.invalid || this.lineas.length === 0 || this.guardando()) return false;
+    if (this.form.invalid || this.lineas.length === 0) return false;
 
     // Al guardar, las actividades estacionales vacías o a medias no se descartan sin avisar
     const errorEstacionales = this.estacionalesRef()?.validarParaGuardar();

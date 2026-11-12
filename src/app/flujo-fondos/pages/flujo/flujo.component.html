@@ -50,15 +50,12 @@
 }
 
 @if (flujo(); as f) {
-<div class="card mb-3">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span>
-            Flujo de fondos <code>{{ f.codigo }}</code>
-            <span class="badge ms-1" [class]="claseEstado[f.estado]">{{ f.estado }}</span>
-        </span>
-        <a class="btn btn-primary btn-sm" [routerLink]="['/flujo-fondos/flujos/nuevo']">Nuevo flujo</a>
-    </div>
-    <div class="card-body">
+<app-seccion>
+    <span titulo>
+        Flujo de fondos <code>{{ f.codigo }}</code>
+        <span class="badge ms-1" [class]="claseEstado[f.estado]">{{ f.estado }}</span>
+    </span>
+    <a acciones class="btn btn-primary btn-sm" [routerLink]="['/flujo-fondos/flujos/nuevo']">Nuevo flujo</a>
         <div class="row g-3 small">
             <div class="col-md-4"><div class="text-muted">Cliente</div><div class="fw-semibold">{{ f.nombreCliente }}</div></div>
             <div class="col-md-2"><div class="text-muted">Documento</div><div>{{ f.documento }}</div></div>
@@ -80,8 +77,7 @@
             Un flujo en estado {{ f.estado | lowercase }} ya no se puede editar.
         </div>
         }
-    </div>
-</div>
+</app-seccion>
 
 @if (f.editable) {
 <!-- Todavía no hay aprobación de flujos: mientras el back lo marque editable se edita todo -->
@@ -98,12 +94,9 @@
     </button>
 </div>
 } @else {
-<div class="card mb-3">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span>Sección I: Actividades económicas y ciclos productivos</span>
-        <ng-container [ngTemplateOutlet]="botonResumen" />
-    </div>
-    <div class="card-body">
+<app-seccion>
+    <span titulo>Sección I: Actividades económicas y ciclos productivos</span>
+    <div acciones><ng-container [ngTemplateOutlet]="botonResumen" /></div>
         <div class="table-responsive">
             <table class="table table-striped table-sm table-bordered mb-0">
                 <thead>
@@ -136,44 +129,34 @@
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
+</app-seccion>
 
-<div class="card mb-3">
-    <div class="card-header">Sección II: Actividades económicas estacionales</div>
-    <div class="card-body">
-        <app-actividades-estacionales [estacionales]="f.estacionales" />
-    </div>
-</div>
+<app-seccion>
+    <span titulo>Sección II: Actividades económicas estacionales</span>
+    <app-actividades-estacionales [estacionales]="f.estacionales" />
+</app-seccion>
 
-<div class="card mb-3">
-    <div class="card-header">Sección III: Préstamos en otras instituciones</div>
-    <div class="card-body">
-        <app-otros-prestamos [prestamos]="f.otrosPrestamos" />
-    </div>
-</div>
+<app-seccion>
+    <span titulo>Sección III: Préstamos en otras instituciones</span>
+    <app-otros-prestamos [prestamos]="f.otrosPrestamos" />
+</app-seccion>
 
-<div class="card mb-3">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span>
-            Proyección
-            @if (cargandoFlujo()) { <span class="spinner-border spinner-border-sm text-primary ms-2"></span> }
-        </span>
-        <ng-container [ngTemplateOutlet]="agrupacion" />
-    </div>
-    <div class="card-body">
-        <ng-container [ngTemplateOutlet]="ayudaCalculo" />
-        <app-proyeccion-flujo [proyeccion]="f.proyeccion" />
-    </div>
-</div>
+<app-seccion>
+    <span titulo>
+        Proyección
+        @if (cargandoFlujo()) { <span class="spinner-border spinner-border-sm text-primary ms-2"></span> }
+    </span>
+    <div acciones><ng-container [ngTemplateOutlet]="agrupacion" /></div>
+    <ng-container [ngTemplateOutlet]="ayudaCalculo" />
+    <app-proyeccion-flujo [proyeccion]="f.proyeccion" />
+</app-seccion>
 }
 }
 
 } @else {
 <!-- ═══════════════════════ Creación ═══════════════════════ -->
-<div class="card mb-3">
-    <div class="card-header">Nuevo flujo de fondos</div>
-    <div class="card-body">
+<app-seccion>
+    <span titulo>Nuevo flujo de fondos</span>
         <form (submit)="$event.preventDefault(); consultarSolicitud()" class="row g-2 align-items-end">
             <div class="col-auto">
                 <label for="txtSolicitud" class="form-label small mb-1">Número de solicitud</label>
@@ -238,8 +221,7 @@
             <button type="button" class="btn btn-primary btn-sm" (click)="abrirFlujo(fa.id)">Abrir flujo</button>
         </div>
         }
-    </div>
-</div>
+</app-seccion>
 
 @if (puedeCapturar()) {
 <ng-container [ngTemplateOutlet]="captura" />
@@ -261,16 +243,15 @@
 <ng-template #captura>
 <form [formGroup]="form" (ngSubmit)="flujoId() ? guardarCambios() : guardar()">
 
-    <div class="card mb-3">
-        <div class="card-header">Horizonte</div>
-        <div class="card-body">
+    <app-seccion>
+        <span titulo>Horizonte</span>
             <div class="row g-3 align-items-start">
                 <div class="col-md-3">
-                    <label for="txtFechaInicio" class="form-label small mb-1">Mes de inicio</label>
+                    <label for="txtFechaInicio" class="form-label small mb-1">Fecha de solicitud</label>
                     <input type="month" class="form-control form-control-sm" id="txtFechaInicio" formControlName="fechaInicio"
                         [class.is-invalid]="invalido(form.controls.fechaInicio)">
                     @if (hasError(form.controls.fechaInicio, 'required')) {
-                    <div class="text-danger small">Mes de inicio es requerido</div>
+                    <div class="text-danger small">Fecha de solicitud es requerida</div>
                     }
                 </div>
                 <div class="col-md-2">
@@ -281,20 +262,25 @@
                 <div class="col-md-4 small text-muted pt-md-4">{{ rangoHorizonte() }}</div>
                 } -->
             </div>
-        </div>
-    </div>
+    </app-seccion>
 
-    <div class="card mb-3">
-        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span>Actividades <span class="text-muted small">({{ lineas.length }} de {{ maxLineas }})</span></span>
-            <div class="d-flex flex-wrap gap-2">
+    <app-seccion>
+        <span titulo><b>SECCIÓN I: Actividades Económicas y Ciclos Productivos </b><span class="text-muted small">({{ lineas.length }} de {{ maxLineas }})</span></span>
+            <div acciones class="d-flex flex-wrap gap-2">
                 <ng-container [ngTemplateOutlet]="botonResumen" />
+                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="actualizarActividades()" [disabled]="cargandoActividades()"
+                    title="Volver a cargar las actividades económicas">
+                    @if (cargandoActividades()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                    } @else {
+                    <ion-icon name="refresh-outline"></ion-icon>
+                    }
+                    Actualizar
+                </button>
                 <button type="button" class="btn btn-primary btn-sm" (click)="agregarLinea()" [disabled]="lineas.length >= maxLineas">
                     Agregar actividad
                 </button>
             </div>
-        </div>
-        <div class="card-body">
             @if (cargandoActividades()) {
             <div class="small text-muted mb-2"><span class="spinner-border spinner-border-sm me-1"></span> Cargando actividades...</div>
             } @else if (regionId() === null) {
@@ -402,49 +388,34 @@
                     </tbody>
                 </table>
             </div>
-            <div class="small text-muted mt-2">
-                Solo se pueden usar actividades que tengan distribución. La cantidad va en la unidad de giro de la actividad (por ejemplo, cuerdas).
-            </div>
-        </div>
-    </div>
+    </app-seccion>
 </form>
 
 <!-- Fuera del <form> del flujo: estas secciones tienen sus propios controles y un Enter ahí no debe guardar el flujo -->
-<div class="card mb-3">
-    <div class="card-header">
-        Actividades estacionales <span class="text-muted small">({{ cantidadEstacionales() }} de {{ maxEstacionales }})</span>
+<app-seccion>
+    <span titulo>
+        <b>SECCIÓN II: Préstamos en Otras Instituciones </b><span class="text-muted small">({{ otrosPrestamos().length }} de {{ maxPrestamos }})</span>
+    </span>
+    <app-otros-prestamos [prestamos]="otrosPrestamos()" [editable]="true" (prestamosChange)="onOtrosPrestamosChange($event)" />
+</app-seccion>
+<app-seccion>
+    <span titulo>
+       <b>SECCIÓN III: Actividades Económicas Estacionales </b><span class="text-muted small">({{ cantidadEstacionales() }} de {{ maxEstacionales }})</span>
+    </span>
+    <app-actividades-estacionales [editable]="true" [horizonte]="horizonte()" [iniciales]="estacionalesIniciales()"
+        (cambio)="onEstacionalesChange($event)" />
+    <div class="small text-muted mt-2">
+        Ingresos y egresos del cliente por fuera de las actividades del catálogo (por ejemplo, venta de duraznos).
+        Las transacciones fuera del horizonte se guardan, pero no entran a la proyección.
     </div>
-    <div class="card-body">
-        <app-actividades-estacionales [editable]="true" [horizonte]="horizonte()" [iniciales]="estacionalesIniciales()"
-            (cambio)="onEstacionalesChange($event)" />
-        <div class="small text-muted mt-2">
-            Ingresos y egresos del cliente por fuera de las actividades del catálogo (por ejemplo, venta de duraznos).
-            Las transacciones fuera del horizonte se guardan, pero no entran a la proyección.
-        </div>
-    </div>
-</div>
+</app-seccion>
 
-<div class="card mb-3">
-    <div class="card-header">
-        Préstamos en otras instituciones <span class="text-muted small">({{ otrosPrestamos().length }} de {{ maxPrestamos }})</span>
-    </div>
-    <div class="card-body">
-        <app-otros-prestamos [prestamos]="otrosPrestamos()" [editable]="true" (prestamosChange)="onOtrosPrestamosChange($event)" />
-        <div class="small text-muted mt-2">
-            Las cuotas de cada préstamo entran al flujo como egresos y se restan del neto. El cálculo parte del saldo; el monto del préstamo es informativo.
-        </div>
-    </div>
-</div>
-
-    <div class="card mb-3">
-        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span>
-                Vista previa
+    <app-seccion>
+            <span titulo>
+                <b>Vista previa</b>
                 @if (simulando()) { <span class="spinner-border spinner-border-sm text-primary ms-2"></span> }
             </span>
-            <ng-container [ngTemplateOutlet]="agrupacion" />
-        </div>
-        <div class="card-body">
+            <div acciones><ng-container [ngTemplateOutlet]="agrupacion" /></div>
             <ng-container [ngTemplateOutlet]="ayudaCalculo" />
 
             @if (errorSimulacion()) {
@@ -461,6 +432,5 @@
             } @else if (!simulando()) {
             <div class="text-center text-muted small py-3">Complete el horizonte y al menos una actividad para ver la proyección.</div>
             }
-        </div>
-    </div>
+    </app-seccion>
 </ng-template>
