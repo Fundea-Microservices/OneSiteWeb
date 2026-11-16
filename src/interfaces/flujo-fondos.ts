@@ -347,6 +347,15 @@ export type CalendarioPrestamoResponse = ApiResponse<IOtroPrestamo>;
 export type FlujoDetalleResponse = ApiResponse<IFlujoDetalle>;
 export type ResumenActividadesResponse = ApiResponse<IResumenActividades>;
 export type FlujosResponse = ApiResponse<{ flujos: IFlujoEncabezado[]; metadata: Metadata }>;
+export type CambiarEstadoFlujoResponse = ApiResponse<IFlujoEncabezado>;
+
+/** POST /:id/estado. CORREGIDO no se elige: se llega editando un flujo rechazado. */
+export type EstadoAccionFlujo = Extract<EstadoFlujo, 'ACEPTADO' | 'RECHAZADO' | 'ANULADO'>;
+
+export interface ICambiarEstadoFlujo {
+    estado: EstadoAccionFlujo;
+    comentario?: string;         // máx. 500; obligatorio al rechazar o anular
+}
 
 /** Flujo no anulado que ya existe para la solicitud (409 MS-FJF-42-01). */
 export interface IFlujoExistente {

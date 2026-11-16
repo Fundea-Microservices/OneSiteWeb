@@ -330,6 +330,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./flujo-fondos/pages/flujo/flujo.component'),
                     },
                     {
+                        path: 'aprobacion',
+                        loadComponent: () => import('./flujo-fondos/pages/aprobacion-flujo/aprobacion-flujo.component'),
+                    },
+                    {
                         path: '**',
                         redirectTo: '',
                     }

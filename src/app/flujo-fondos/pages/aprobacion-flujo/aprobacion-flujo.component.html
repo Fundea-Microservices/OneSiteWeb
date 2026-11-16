@@ -1,0 +1,366 @@
+<nav class="my-2" style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a [routerLink]="['/fundea']">Inicio</a></li>
+        <li class="breadcrumb-item"><a [routerLink]="['/flujo-fondos']">Flujo de Fondos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Aprobación de flujo</li>
+    </ol>
+</nav>
+
+<app-resumen-actividades />
+
+<!-- ═══════════════════════ Encabezado y búsqueda ═══════════════════════ -->
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 pb-3 mb-3 border-bottom">
+    <div>
+        <div class="eyebrow">Flujo de fondos / Rol: Analista de crédito</div>
+        <h1 class="titulo-pagina mb-0">Aprobación de Flujo</h1>
+    </div>
+    <form class="d-flex gap-2" (submit)="$event.preventDefault(); revisar()">
+        <div class="input-group">
+            <span class="input-group-text bg-body"><ion-icon name="search-outline"></ion-icon></span>
+            <label for="txtSolicitudAprobacion" class="visually-hidden">Número de solicitud</label>
+            <input type="text" inputmode="numeric" class="form-control fw-semibold" id="txtSolicitudAprobacion"
+                placeholder="No. de solicitud" [value]="numeroSolicitud()" [disabled]="buscando()"
+                (input)="onNumeroSolicitud(txtSolicitud)" #txtSolicitud>
+        </div>
+        <button type="submit" class="btn btn-primary text-nowrap fw-semibold" [disabled]="!numeroSolicitud() || buscando()">
+            @if (buscando()) {
+            <span class="spinner-border spinner-border-sm me-1"></span> Buscando...
+            } @else {
+            Revisar Expediente
+            }
+        </button>
+    </form>
+</div>
+
+@if (mensajeBusqueda(); as mensaje) {
+<div class="alert alert-warning py-2 small" role="alert">{{ mensaje }}</div>
+}
+
+@if (buscando() && !flujo()) {
+<div class="text-center py-4">
+    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    <span class="ms-2 text-muted small">Cargando expediente...</span>
+</div>
+}
+
+@if (!flujo() && !buscando() && !mensajeBusqueda()) {
+<div class="text-center text-muted py-5">
+    <ion-icon name="document-text-outline" class="fs-1 mb-2"></ion-icon>
+    <div>Ingrese el número de solicitud para revisar su flujo de fondos.</div>
+</div>
+}
+
+@if (flujo(); as f) {
+@let d = dictamen()!;
+
+<!-- ═══════════════════════ Estado del dictamen ═══════════════════════ -->
+<div class="dictamen d-flex flex-wrap justify-content-between align-items-center gap-3 px-3 py-3 mb-3" [class]="'dictamen-' + d.tono">
+    <div class="d-flex align-items-center gap-3">
+        <span class="dictamen-icono"><ion-icon [attr.name]="d.icono"></ion-icon></span>
+        <span class="fw-semibold small text-uppercase text-body-secondary">Estado actual del dictamen:</span>
+        <span class="pildora" [class]="'pildora-' + d.tono">{{ d.etiqueta }}</span>
+    </div>
+    <div class="small font-monospace text-body-secondary">
+        Flujo <span class="fw-semibold">{{ f.codigo }}</span> · Solicitud Bantotal: #{{ f.numeroSolicitud }}
+    </div>
+</div>
+
+<!-- ═══════════════════════ Acciones ═══════════════════════ -->
+<div class="card mb-3">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary fw-semibold" disabled title="Próximamente">
+                <ion-icon name="notifications-outline" class="text-warning"></ion-icon> Notificaciones
+            </button>
+            <button type="button" class="btn btn-outline-primary fw-semibold" (click)="abrirPreliminar()">
+                <ion-icon name="document-text-outline"></ion-icon> Flujo Preliminar
+            </button>
+            <button type="button" class="btn btn-outline-secondary fw-semibold" disabled title="Próximamente">
+                <ion-icon name="download-outline" class="text-success"></ion-icon> Descargar Excel
+            </button>
+        </div>
+        <span [attr.title]="motivoNoAprobable() || null">
+            <button type="button" class="btn btn-success btn-aprobar shadow-sm" [disabled]="!puedeAprobar() || aprobando()"
+                (click)="abrirAprobacion()">
+                <ion-icon name="checkmark-circle-outline" class="me-1"></ion-icon>
+                {{ f.estado === 'ACEPTADO' ? 'Flujo aprobado' : 'Aprobar flujo' }}
+            </button>
+        </span>
+    </div>
+</div>
+
+@if (f.estado === 'ACEPTADO') {
+<div class="alert alert-success py-2 small" role="alert">
+    Este flujo fue aprobado y ya no se puede editar.
+</div>
+} @else if (motivoNoAprobable()) {
+<div class="alert alert-secondary py-2 small" role="alert">{{ motivoNoAprobable() }}</div>
+}
+
+<!-- ═══════════════════════ Datos del cliente ═══════════════════════ -->
+<div class="card expediente mb-3">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pb-2 mb-3 border-bottom">
+            <span class="fw-bold text-uppercase">
+                <span class="text-primary me-1">●</span> Datos del cliente y expediente
+            </span>
+            <span class="small text-muted">Datos de Bantotal al crear el flujo</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Número de solicitud</div>
+                <div class="dato-valor font-monospace text-primary">{{ f.numeroSolicitud }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Cuenta</div>
+                <div class="dato-valor font-monospace">{{ f.cuenta || '—' }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">DPI</div>
+                <div class="dato-valor font-monospace">{{ f.documento || '—' }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-3">
+                <div class="dato-etiqueta">Nombre del cliente</div>
+                <div class="dato-valor">{{ f.nombreCliente }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-3">
+                <div class="dato-etiqueta">Número de operación</div>
+                <div class="dato-valor font-monospace">{{ f.numeroOperacion ?? '—' }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Clasificación interna</div>
+                @if (f.clasificacion) {
+                <span class="badge rounded-pill text-bg-light border text-primary-emphasis">{{ f.clasificacion }}</span>
+                } @else {
+                <div class="dato-valor">—</div>
+                }
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Región</div>
+                <div class="dato-valor">{{ f.region || '—' }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Agencia</div>
+                <div class="dato-valor">{{ f.agencia || '—' }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Monto de la solicitud</div>
+                <div class="dato-valor font-monospace text-success">Q {{ f.montoCredito | number:'1.2-2' }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Número de evaluación</div>
+                <div class="dato-valor font-monospace text-primary">{{ f.evaluacion || '—' }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Fecha de evaluación</div>
+                <div class="dato-valor font-monospace">{{ f.fechaEvaluacion ? formatoFecha(f.fechaEvaluacion) : '—' }}</div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+                <div class="dato-etiqueta">Flujo creado</div>
+                <div class="dato-valor font-monospace">{{ f.created_at | date:'dd/MM/yyyy' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ Sección I ═══════════════════════ -->
+@if (indicadores(); as k) {
+<app-seccion>
+    <span titulo>
+        <b>Sección I: Indicadores del Flujo</b>
+        <span class="badge rounded-pill text-bg-light border text-primary ms-2">{{ f.plazoMeses }} meses proyectados</span>
+    </span>
+    <div class="row g-3">
+        <div class="col-sm-6 col-xl">
+            <div class="kpi kpi-primary">
+                <div class="kpi-titulo">Préstamo FUNDEA nuevo</div>
+                <div class="kpi-valor">Q {{ f.montoCredito | number:'1.2-2' }}</div>
+                <div class="kpi-nota">Monto solicitado evaluado</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl">
+            <div class="kpi">
+                <div class="kpi-titulo">Plan / Plazo</div>
+                <div class="kpi-valor">{{ f.plazoMeses }} Meses</div>
+                <div class="kpi-nota">{{ rangoHorizonte() }}</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl">
+            <div class="kpi kpi-success">
+                <div class="kpi-titulo">Ingresos proyectados</div>
+                <div class="kpi-valor">Q {{ k.ingresos | number:'1.2-2' }}</div>
+                <div class="kpi-nota">Actividades y estacionales en el plazo</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl">
+            <div class="kpi kpi-danger">
+                <div class="kpi-titulo">Egresos proyectados</div>
+                <div class="kpi-valor">Q {{ k.egresos | number:'1.2-2' }}</div>
+                <div class="kpi-nota">+ Q {{ k.deudas | number:'1.2-2' }} en cuotas de otras instituciones</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl">
+            <div class="kpi" [class.kpi-primary]="k.neto >= 0" [class.kpi-danger]="k.neto < 0">
+                <div class="kpi-titulo">Saldo final acumulado</div>
+                <div class="kpi-valor">Q {{ k.neto | number:'1.2-2' }}</div>
+                <div class="kpi-nota">Flujo neto al cierre del plazo</div>
+            </div>
+        </div>
+    </div>
+</app-seccion>
+}
+
+<!-- ═══════════════════════ Sección II ═══════════════════════ -->
+<app-seccion>
+    <span titulo>
+        <b>Sección II: Resumen de Actividades Económicas</b>
+        <span class="badge rounded-pill text-bg-light border text-primary ms-2">
+            {{ f.lineas.length }} {{ f.lineas.length === 1 ? 'Unidad Productiva' : 'Unidades Productivas' }}
+        </span>
+    </span>
+    <div acciones>
+        <button type="button" class="btn btn-outline-primary btn-sm fw-semibold" (click)="verResumen()">
+            <ion-icon name="eye-outline"></ion-icon> Ver Resumen
+        </button>
+    </div>
+    <div class="table-responsive border rounded">
+        <table class="table table-sm align-middle mb-0 tabla-oscura">
+            <thead>
+                <tr>
+                    <th class="ps-3">Descripción de Actividad / Subactividad</th>
+                    <th class="text-center">Ciclo</th>
+                    <th class="text-center">Fecha de siembra</th>
+                    <th>Unidades</th>
+                    <th class="text-end">Ingreso Estimado</th>
+                    <th class="text-end pe-3">Egreso Estimado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (l of f.lineas; track l.id ?? $index) {
+                @let tipo = tipoActividad(l);
+                @let montos = montosLinea(l);
+                <tr>
+                    <td class="ps-3 py-2">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            @if (tipo) { <span class="badge" [class]="claseTipo(tipo)">{{ tipo }}</span> }
+                            <span class="fw-semibold">{{ l.nombreActividad }}</span>
+                        </div>
+                        <div class="small text-muted">{{ l.nombre }} · <code>{{ l.codigoActividad }}</code></div>
+                    </td>
+                    <td class="text-center text-nowrap">
+                        <span class="badge text-bg-light border font-monospace">{{ l.ciclo }} {{ l.ciclo === 1 ? 'mes' : 'meses' }}</span>
+                    </td>
+                    <td class="text-center font-monospace text-nowrap">{{ formatoFecha(l.fechaSiembra) }}</td>
+                    <td class="text-nowrap">{{ l.cantidad | number:'1.0-2' }} {{ unidad(l.unidadGiro) }}</td>
+                    <td class="text-end font-monospace fw-semibold text-success text-nowrap">Q {{ montos.ingreso | number:'1.2-2' }}</td>
+                    <td class="text-end font-monospace fw-semibold text-danger text-nowrap pe-3">Q {{ montos.egreso | number:'1.2-2' }}</td>
+                </tr>
+                } @empty {
+                <tr><td colspan="6" class="text-center text-muted py-3">Sin actividades económicas</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="small text-muted mt-2">Ingreso y egreso de un ciclo completo de cada actividad.</div>
+</app-seccion>
+
+<!-- ═══════════════════════ Sección III ═══════════════════════ -->
+<app-seccion>
+    <span titulo>
+        <b>Sección III: Deudas en Otras Instituciones</b>
+        <span class="badge rounded-pill text-bg-light border text-primary ms-2">Obligaciones Externas</span>
+    </span>
+    <app-otros-prestamos [prestamos]="f.otrosPrestamos" />
+</app-seccion>
+
+<!-- ═══════════════════════ Sección IV ═══════════════════════ -->
+<app-seccion>
+    <span titulo>
+        <b>Sección IV: Actividades Estacionales</b>
+        <span class="badge rounded-pill text-bg-light border text-primary ms-2">
+            {{ f.estacionales.length }} {{ f.estacionales.length === 1 ? 'Actividad' : 'Actividades' }}
+        </span>
+    </span>
+    <app-actividades-estacionales [estacionales]="f.estacionales" />
+</app-seccion>
+}
+
+<!-- ═══════════════════════ Modal: Flujo preliminar ═══════════════════════ -->
+<div #preliminarModal class="modal fade" tabindex="-1" aria-labelledby="titlePreliminar" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-fullscreen-lg-down modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <div>
+                    <h1 class="modal-title fs-5 d-flex flex-wrap align-items-center gap-2" id="titlePreliminar">
+                        Matriz de Flujo de Fondos Proyectado
+                        @if (flujo(); as f) {
+                        <span>({{ f.plazoMeses }} Meses)</span>
+                        <span class="badge text-bg-success font-monospace">Solicitud {{ f.numeroSolicitud }}</span>
+                        }
+                    </h1>
+                    <div class="small text-white-50">Consolidación mensual de ingresos, egresos, actividades estacionales y servicio de deuda</div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (flujo(); as f) {
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <span class="small text-muted">{{ rangoHorizonte() }}</span>
+                    <div class="d-flex align-items-center gap-2">
+                        @if (cargandoProyeccion()) { <span class="spinner-border spinner-border-sm text-primary"></span> }
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="chkDesagruparPreliminar"
+                                [checked]="!agrupar()" [disabled]="cargandoProyeccion()"
+                                (change)="cambiarAgrupacion(!chkDesagrupar.checked)" #chkDesagrupar>
+                            <label class="form-check-label small" for="chkDesagruparPreliminar">Desagrupar actividades</label>
+                        </div>
+                    </div>
+                </div>
+                <div [class.opacity-50]="cargandoProyeccion()">
+                    <app-proyeccion-flujo [proyeccion]="f.proyeccion" />
+                </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary fw-semibold" data-bs-dismiss="modal">Cerrar Preliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════ Modal: Confirmar aprobación ═══════════════════════ -->
+<div #aprobarModal class="modal fade" tabindex="-1" aria-labelledby="titleAprobar" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="titleAprobar">Aprobar flujo de fondos</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" [disabled]="aprobando()"></button>
+            </div>
+            <div class="modal-body">
+                @if (flujo(); as f) {
+                <p class="mb-2">
+                    ¿Aprobar el flujo <code>{{ f.codigo }}</code> de la solicitud <strong>{{ f.numeroSolicitud }}</strong>
+                    ({{ f.nombreCliente }})?
+                </p>
+                <div class="alert alert-warning py-2 small">
+                    Una vez aprobado, el flujo ya no se podrá editar. Para cambiarlo habría que anularlo y crear uno nuevo.
+                </div>
+                }
+                <label for="txtComentarioAprobacion" class="form-label small mb-1">Comentario (opcional)</label>
+                <textarea class="form-control form-control-sm" id="txtComentarioAprobacion" rows="3" [maxLength]="maxComentario"
+                    [value]="comentario()" [disabled]="aprobando()" (input)="onComentario(txtComentario)" #txtComentario></textarea>
+                <div class="small text-muted text-end">{{ comentario().length }} / {{ maxComentario }}</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" [disabled]="aprobando()">Cancelar</button>
+                <button type="button" class="btn btn-success fw-semibold" [disabled]="aprobando()" (click)="aprobar()">
+                    @if (aprobando()) {
+                    <span class="spinner-border spinner-border-sm me-1"></span> Aprobando...
+                    } @else {
+                    <ion-icon name="checkmark-circle-outline"></ion-icon> Aprobar flujo
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

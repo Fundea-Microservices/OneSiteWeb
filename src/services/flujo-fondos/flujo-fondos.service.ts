@@ -5,6 +5,8 @@ import { ToastrService } from 'ngx-toastr';
 import { HttpService } from '../HttpService';
 import {
   CalendarioPrestamoResponse,
+  CambiarEstadoFlujoResponse,
+  ICambiarEstadoFlujo,
   ConsultaSolicitudResponse,
   EstadoFlujo,
   FlujoDetalleResponse,
@@ -193,6 +195,26 @@ export class FlujoFondosService extends HttpService {
     } catch (error: any) {
       console.log("🚀 ~ FlujoFondosService ~ updateFlujo ~ error:", error)
       this.toastr.error(error?.error?.message || '', 'Error al actualizar flujo de fondos');
+      return null;
+    }
+  }
+
+  /**
+   * Acepta, rechaza o anula el flujo (POST /:id/estado). Un flujo ACEPTADO ya no se edita
+   * y solo puede pasar a ANULADO. 409 (MS-FJF-46-02) si el estado actual no lo permite.
+   */
+  async cambiarEstado(id: string, body: ICambiarEstadoFlujo): Promise<IFlujoEncabezado | null> {
+    try {
+      const resp = await firstValueFrom(this.post<CambiarEstadoFlujoResponse>(`${this.endpoint}/${id}/estado`, body));
+      if (resp.body?.success) {
+        this.toastr.success(resp.body.message, 'Success');
+        return resp.body.data;
+      }
+
+      return null;
+    } catch (error: any) {
+      console.log("🚀 ~ FlujoFondosService ~ cambiarEstado ~ error:", error)
+      this.toastr.error(error?.error?.message || '', 'Error al cambiar estado del flujo de fondos');
       return null;
     }
   }

@@ -55,7 +55,14 @@
         Flujo de fondos <code>{{ f.codigo }}</code>
         <span class="badge ms-1" [class]="claseEstado[f.estado]">{{ f.estado }}</span>
     </span>
-    <a acciones class="btn btn-primary btn-sm" [routerLink]="['/flujo-fondos/flujos/nuevo']">Nuevo flujo</a>
+    <div acciones class="d-flex flex-wrap gap-2">
+        @if (f.estado !== 'ANULADO') {
+        <a class="btn btn-success btn-sm" [routerLink]="['/flujo-fondos/aprobacion']" [queryParams]="{ solicitud: f.numeroSolicitud }">
+            {{ f.estado === 'ACEPTADO' ? 'Ver aprobación' : 'Revisar / aprobar' }}
+        </a>
+        }
+        <a class="btn btn-primary btn-sm" [routerLink]="['/flujo-fondos/flujos/nuevo']">Nuevo flujo</a>
+    </div>
         <div class="row g-3 small">
             <div class="col-md-4"><div class="text-muted">Cliente</div><div class="fw-semibold">{{ f.nombreCliente }}</div></div>
             <div class="col-md-2"><div class="text-muted">Documento</div><div>{{ f.documento }}</div></div>
@@ -80,7 +87,7 @@
 </app-seccion>
 
 @if (f.editable) {
-<!-- Todavía no hay aprobación de flujos: mientras el back lo marque editable se edita todo -->
+<!-- Mientras el back lo marque editable (CREADO, RECHAZADO, CORREGIDO) se edita todo; ACEPTADO y ANULADO no -->
 <ng-container [ngTemplateOutlet]="captura" />
 
 <div class="d-flex justify-content-end gap-2 mb-4">
