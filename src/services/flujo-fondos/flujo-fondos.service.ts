@@ -18,10 +18,12 @@ import {
   IFlujoUpdate,
   IOtroPrestamo,
   IOtroPrestamoInput,
+  IParametrosFlujo,
   IResumenActividades,
   ISimulacionFlujo,
   ISimularFlujoInput,
   ISolicitudCreditoBantotal,
+  ParametrosFlujoResponse,
   ResumenActividadesResponse,
   SimulacionFlujoResponse,
 } from '../../interfaces/flujo-fondos';
@@ -248,6 +250,40 @@ export class FlujoFondosService extends HttpService {
       console.log("🚀 ~ FlujoFondosService ~ getResumenActividades ~ error:", error)
       this.toastr.error(error?.error?.message || '', 'Error al obtener resumen de actividades');
       return null;
+    }
+  }
+
+  /**
+   * Parámetros de ingreso y egreso calculados con los datos de Bantotal. La primera vez el
+   * back consulta Bantotal y los guarda (201); después solo lee lo guardado (200).
+   *
+   * Sin toast: la sección muestra el error con opción de reintentar. 400 trae en data.claves
+   * los parámetros que no se pudieron calcular; 502/503 son del core, no del flujo.
+   */
+  async getParametros(id: string): Promise<{ data: IParametrosFlujo } | { error: string }> {
+    try {
+      const resp = await firstValueFrom(this.get<ParametrosFlujoResponse>(`${this.endpoint}/${id}/parametros`));
+      if (resp.body?.success) {
+        return { data: resp.body.data };
+      }
+
+      return { error: resp.body?.message || 'No se pudieron obtener los datos de Bantotal.' };
+    } catch (error: any) {
+      console.log("🚀 ~ FlujoFondosService ~ getParametros ~ error:", error)
+      const status: number = error?.status ?? 0;
+      const mensaje: string = error?.error?.message || '';
+      const claves: string[] = Array.isArray(error?.error?.data?.claves) ? error.error.data.claves : [];
+
+      if (status === 400 && claves.length) {
+        return { error: `${mensaje || 'No se pudieron calcular los parámetros.'} (${claves.join(', ')})` };
+      }
+      if (status === 502) {
+        return { error: mensaje || 'No se pudo consultar el Core Bantotal. Contacte al administrador.' };
+      }
+      if (status === 0 || status === 503) {
+        return { error: mensaje || 'No se pudo conectar con Bantotal. Intente de nuevo en unos minutos.' };
+      }
+      return { error: mensaje || 'No se pudieron obtener los datos de Bantotal.' };
     }
   }
 }

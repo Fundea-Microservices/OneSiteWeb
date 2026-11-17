@@ -314,6 +314,48 @@ export interface IResumenActividades {
     };
 }
 
+// ---------- Parámetros Bantotal (GET /:id/parametros) ----------
+export type OrigenParametro = 'EVALUACION' | 'SERVICIO' | 'FORMULA' | 'SISTEMA';
+/** PRIMER_MES: una vez en el primer mes; MENSUAL: cada mes del horizonte; PLAN: cada cuota en el mes de su fecha. */
+export type TipoIngresoParametro = 'PRIMER_MES' | 'MENSUAL' | 'PLAN';
+
+export const CLAVE_PRESTAMO_NUEVO = 'PLAN_PAGOS_PRESTAMO_NUEVO';
+
+export interface ICuotaPlan {
+    fecha: string;               // YYYY-MM-DD
+    capital?: number;
+    interes?: number;
+    monto: number;               // total de la cuota, antes del factor
+}
+
+export interface IParametroFlujo {
+    id?: string;
+    clave: string;
+    nombre?: string;
+    esIngreso: boolean;
+    origen: OrigenParametro;
+    codigo?: number | null;
+    servicio?: string | null;
+    formula?: string | null;
+    tipoIngreso: TipoIngresoParametro;
+    factor: number;
+    orden?: number;
+    montoBantotal: number | null; // lo que devolvió Bantotal
+    montoBase: number;            // antes del factor
+    monto: number;                // montoBase × factor
+    planPagos: ICuotaPlan[] | null; // solo tipoIngreso PLAN
+}
+
+export interface IParametrosFlujo {
+    id: string;
+    codigo: string;
+    numeroSolicitud: number;
+    numeroOperacion: number | null;
+    evaluacion: string | null;
+    parametros: IParametroFlujo[];
+    serviciosRequeridos?: string[];
+}
+
 // ---------- Bodies ----------
 export interface IProyeccionFlujoInput {
     fechaInicio: string;         // YYYY-MM-DD (se usa el día 1 de su mes)
@@ -346,6 +388,7 @@ export type SimulacionFlujoResponse = ApiResponse<ISimulacionFlujo>;
 export type CalendarioPrestamoResponse = ApiResponse<IOtroPrestamo>;
 export type FlujoDetalleResponse = ApiResponse<IFlujoDetalle>;
 export type ResumenActividadesResponse = ApiResponse<IResumenActividades>;
+export type ParametrosFlujoResponse = ApiResponse<IParametrosFlujo>;
 export type FlujosResponse = ApiResponse<{ flujos: IFlujoEncabezado[]; metadata: Metadata }>;
 export type CambiarEstadoFlujoResponse = ApiResponse<IFlujoEncabezado>;
 

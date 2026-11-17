@@ -164,51 +164,73 @@
 </div>
 
 <!-- ═══════════════════════ Sección I ═══════════════════════ -->
-@if (indicadores(); as k) {
 <app-seccion>
     <span titulo>
-        <b>Sección I: Indicadores del Flujo</b>
-        <span class="badge rounded-pill text-bg-light border text-primary ms-2">{{ f.plazoMeses }} meses proyectados</span>
+        <b>Sección I: Datos Integrados Core Bantotal</b>
+        <span class="badge rounded-pill text-bg-light border text-primary ms-2">Bantotal Core</span>
+        <span class="d-block small text-muted fw-normal">Datos financieros obtenidos de Bantotal</span>
     </span>
+
+    @if (cargandoParametros()) {
+    <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span class="ms-2 text-muted small">Consultando datos de Bantotal...</span>
+    </div>
+    } @else if (errorParametros(); as error) {
+    <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 small mb-0" role="alert">
+        <span>{{ error }}</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold" (click)="cargarParametros(f.id)">
+            <ion-icon name="refresh-outline"></ion-icon> Reintentar
+        </button>
+    </div>
+    } @else if (datosBantotal(); as b) {
     <div class="row g-3">
+        <div class="col-sm-6 col-xl">
+            <div class="kpi" [class.kpi-danger]="b.saldoInicial < 0">
+                <div class="kpi-titulo">Saldo inicial caja</div>
+                <div class="kpi-valor">Q {{ b.saldoInicial | number:'1.2-2' }}</div>
+                <div class="kpi-nota">Disponibilidad en efectivo</div>
+            </div>
+        </div>
         <div class="col-sm-6 col-xl">
             <div class="kpi kpi-primary">
                 <div class="kpi-titulo">Préstamo FUNDEA nuevo</div>
-                <div class="kpi-valor">Q {{ f.montoCredito | number:'1.2-2' }}</div>
+                <div class="kpi-valor">
+                    @if (b.prestamo !== null) { Q {{ b.prestamo | number:'1.2-2' }} } @else { — }
+                </div>
                 <div class="kpi-nota">Monto solicitado evaluado</div>
             </div>
         </div>
         <div class="col-sm-6 col-xl">
             <div class="kpi">
                 <div class="kpi-titulo">Plan / Plazo</div>
-                <div class="kpi-valor">{{ f.plazoMeses }} Meses</div>
-                <div class="kpi-nota">{{ rangoHorizonte() }}</div>
+                <div class="kpi-valor">{{ b.cuotas }} {{ b.cuotas === 1 ? 'Cuota' : 'Cuotas' }}</div>
+                <div class="kpi-nota">
+                    @if (b.primeraCuota) {
+                    {{ formatoFecha(b.primeraCuota) }} – {{ formatoFecha(b.ultimaCuota) }}
+                    } @else {
+                    Sin plan de pagos
+                    }
+                </div>
             </div>
         </div>
         <div class="col-sm-6 col-xl">
             <div class="kpi kpi-success">
-                <div class="kpi-titulo">Ingresos proyectados</div>
-                <div class="kpi-valor">Q {{ k.ingresos | number:'1.2-2' }}</div>
-                <div class="kpi-nota">Actividades y estacionales en el plazo</div>
+                <div class="kpi-titulo">Ingresos activos/comercio</div>
+                <div class="kpi-valor">Q {{ b.ingresos | number:'1.2-2' }}</div>
+                <div class="kpi-nota">Ingresos recurrentes de la evaluación</div>
             </div>
         </div>
         <div class="col-sm-6 col-xl">
             <div class="kpi kpi-danger">
-                <div class="kpi-titulo">Egresos proyectados</div>
-                <div class="kpi-valor">Q {{ k.egresos | number:'1.2-2' }}</div>
-                <div class="kpi-nota">+ Q {{ k.deudas | number:'1.2-2' }} en cuotas de otras instituciones</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl">
-            <div class="kpi" [class.kpi-primary]="k.neto >= 0" [class.kpi-danger]="k.neto < 0">
-                <div class="kpi-titulo">Saldo final acumulado</div>
-                <div class="kpi-valor">Q {{ k.neto | number:'1.2-2' }}</div>
-                <div class="kpi-nota">Flujo neto al cierre del plazo</div>
+                <div class="kpi-titulo">Gastos operativos/familiares</div>
+                <div class="kpi-valor">Q {{ b.gastos | number:'1.2-2' }}</div>
+                <div class="kpi-nota">Costo de vida y manutención</div>
             </div>
         </div>
     </div>
+    }
 </app-seccion>
-}
 
 <!-- ═══════════════════════ Sección II ═══════════════════════ -->
 <app-seccion>

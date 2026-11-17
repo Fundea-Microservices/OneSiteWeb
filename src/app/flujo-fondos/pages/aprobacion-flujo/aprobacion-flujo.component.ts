@@ -14,7 +14,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { CATALOGOS_ACTIVIDAD } from '../../../../interfaces/actividad-economica';
-import { EstadoFlujo, IFlujoDetalle, ILineaFlujo } from '../../../../interfaces/flujo-fondos';
+import { CLAVE_PRESTAMO_NUEVO, EstadoFlujo, IFlujoDetalle, ILineaFlujo, IParametrosFlujo } from '../../../../interfaces/flujo-fondos';
 import { CatalogoService } from '../../../../services/flujo-fondos/catalogo.service';
 import { FlujoFondosService } from '../../../../services/flujo-fondos/flujo-fondos.service';
 import { ActividadesEstacionalesComponent } from '../../components/flujo/actividades-estacionales/actividades-estacionales';
@@ -166,15 +166,50 @@ export default class AprobacionFlujoComponent implements OnInit {
     return `${formatoPeriodo(inicio)} – ${formatoPeriodo(sumarMeses(inicio, f.plazoMeses - 1))}`;
   });
 
-  /** Tarjetas de la sección I: todo sale de los totales de la proyección guardada. */
-  indicadores = computed(() => {
-    const t = this.flujo()?.proyeccion.totales;
-    if (!t) return null;
+  // ── Sección I: parámetros de Bantotal ────────────────────────────────────
+  parametros = signal<IParametrosFlujo | null>(null);
+  cargandoParametros = signal(false);
+  errorParametros = signal<string | null>(null);
+
+  /**
+   * Tarjetas de la sección I, todas con el montoBase (antes del factor):
+   * - Préstamo nuevo y plan: el parámetro PLAN_PAGOS_PRESTAMO_NUEVO y sus cuotas.
+   * - Ingresos / gastos: suma de los MENSUAL según esIngreso.
+   * - Saldo inicial: los no MENSUAL (salvo el préstamo nuevo); ingresos suman, egresos restan.
+   */
+  datosBantotal = computed(() => {
+    const p = this.parametros()?.parametros;
+    if (!p) return null;
+
+    const prestamo = p.find(x => x.clave === CLAVE_PRESTAMO_NUEVO) ?? null;
+    const mensuales = p.filter(x => x.tipoIngreso === 'MENSUAL');
+    const otros = p.filter(x => x.tipoIngreso !== 'MENSUAL' && x.clave !== CLAVE_PRESTAMO_NUEVO);
+    const cuotas = prestamo?.planPagos ?? [];
+
+    // TODO: quitar logs de depuración del saldo inicial
+    console.groupCollapsed('🚀 ~ AprobacionFlujo ~ datosBantotal');
+    console.table(p.map(x => ({
+      clave: x.clave, origen: x.origen, servicio: x.servicio, tipoIngreso: x.tipoIngreso,
+      esIngreso: x.esIngreso, factor: x.factor, montoBantotal: x.montoBantotal, montoBase: x.montoBase, monto: x.monto,
+      cuotas: x.planPagos?.length ?? null,
+    })));
+    console.log('Préstamo nuevo (clave', CLAVE_PRESTAMO_NUEVO + '):', prestamo);
+    console.table(otros.map(x => ({
+      clave: x.clave, tipoIngreso: x.tipoIngreso, esIngreso: x.esIngreso, montoBase: x.montoBase,
+      aporte: x.esIngreso ? x.montoBase : -x.montoBase,
+    })));
+    console.log('Saldo inicial =', sumaMontos(otros.map(x => x.esIngreso ? x.montoBase : -x.montoBase)));
+    console.log('Respuesta completa:', this.parametros());
+    console.groupEnd();
+
     return {
-      ingresos: sumaMontos([t.totalIngreso, t.totalIngresoEstacional]),
-      egresos: sumaMontos([t.totalEgreso, t.totalEgresoEstacional]),
-      deudas: t.totalPagoPrestamos,
-      neto: t.neto,
+      saldoInicial: sumaMontos(otros.map(x => x.esIngreso ? x.montoBase : -x.montoBase)),
+      prestamo: prestamo?.montoBase ?? null,
+      cuotas: cuotas.length,
+      primeraCuota: cuotas[0]?.fecha ?? null,
+      ultimaCuota: cuotas[cuotas.length - 1]?.fecha ?? null,
+      ingresos: sumaMontos(mensuales.filter(x => x.esIngreso).map(x => x.montoBase)),
+      gastos: sumaMontos(mensuales.filter(x => !x.esIngreso).map(x => x.montoBase)),
     };
   });
 
@@ -232,6 +267,9 @@ export default class AprobacionFlujoComponent implements OnInit {
     this.secuencia++;
     this.flujo.set(null);
     this.tipos.set(new Map());
+    this.parametros.set(null);
+    this.errorParametros.set(null);
+    this.cargandoParametros.set(false);
     this.mensajeBusqueda.set(null);
     this.buscando.set(false);
   }
@@ -261,6 +299,9 @@ export default class AprobacionFlujoComponent implements OnInit {
       return;
     }
 
+    // Puede tardar (la primera vez consulta Bantotal) y fallar sin impedir la revisión
+    this.cargarParametros(activo.id);
+
     const [flujo, resumen] = await Promise.all([
       this.flujoService.getFlujoById(activo.id, this.agrupar()),
       this.flujoService.getResumenActividades(activo.id),
@@ -277,6 +318,22 @@ export default class AprobacionFlujoComponent implements OnInit {
     resumen?.filas.forEach(fila => fila.codigosActividad.forEach(codigo => tipos.set(codigo, fila.actividad)));
     this.tipos.set(tipos);
     this.flujo.set(flujo);
+  }
+
+  // ── Sección I ────────────────────────────────────────────────────────────
+
+  async cargarParametros(id: string) {
+    const secuencia = this.secuencia;
+    this.cargandoParametros.set(true);
+    this.errorParametros.set(null);
+    const resp = await this.flujoService.getParametros(id);
+    if (secuencia !== this.secuencia) return;
+    this.cargandoParametros.set(false);
+    if ('data' in resp) {
+      this.parametros.set(resp.data);
+    } else {
+      this.errorParametros.set(resp.error);
+    }
   }
 
   // ── Sección II ───────────────────────────────────────────────────────────
