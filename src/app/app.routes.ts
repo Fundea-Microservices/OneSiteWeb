@@ -331,6 +331,10 @@ export const routes: Routes = [
                     },
                     {
                         path: 'aprobacion',
+                        loadComponent: () => import('./flujo-fondos/pages/aprobaciones/aprobaciones.component'),
+                    },
+                    {
+                        path: 'aprobacion/revisar',
                         loadComponent: () => import('./flujo-fondos/pages/aprobacion-flujo/aprobacion-flujo.component'),
                     },
                     {

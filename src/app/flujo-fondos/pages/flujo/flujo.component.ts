@@ -61,7 +61,7 @@ interface LineaValor {
  * - /flujo-fondos/flujos/:id: detalle del flujo. Mientras el back lo marque `editable`
  *   (CREADO, RECHAZADO, CORREGIDO) se editan todos sus elementos con la misma captura y vista
  *   previa de la creación, y se guarda con PUT /:id. ACEPTADO y ANULADO son de solo lectura
- *   (se aprueban en /flujo-fondos/aprobacion; el back también rechaza el PUT con 409).
+ *   (se aprueban en /flujo-fondos/aprobacion/revisar; el back también rechaza el PUT con 409).
  */
 @Component({
   selector: 'app-flujo',
