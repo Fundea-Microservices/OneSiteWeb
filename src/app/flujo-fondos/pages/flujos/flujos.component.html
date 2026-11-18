@@ -81,12 +81,6 @@
                             <a class="btn btn-sm btn-primary mx-1" title="Ver" [routerLink]="['/flujo-fondos/flujos', item.id]">
                                 <ion-icon name="eye-outline"></ion-icon>
                             </a>
-                            @if (item.estado !== 'ANULADO') {
-                            <a class="btn btn-sm btn-success mx-1" title="Revisar / aprobar"
-                                [routerLink]="['/flujo-fondos/aprobacion']" [queryParams]="{ solicitud: item.numeroSolicitud }">
-                                <ion-icon name="checkmark-done-outline"></ion-icon>
-                            </a>
-                            }
                         </td>
                     </tr>
                     } @empty {
