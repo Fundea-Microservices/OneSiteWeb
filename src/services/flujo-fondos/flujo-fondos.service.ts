@@ -35,6 +35,8 @@ export interface FlujosFiltro {
   numeroSolicitud?: number;
   documento?: string;
   estado?: EstadoFlujo | '';
+  regionId?: number;           // ids de Bantotal
+  agenciaId?: number;
 }
 
 /**
@@ -76,9 +78,9 @@ export class FlujoFondosService extends HttpService {
   }
 
   /** Bandeja. `search` busca en código, nombre del cliente y documento. */
-  async getFlujos({ page = 1, limit = 10, search, numeroSolicitud, documento, estado }: FlujosFiltro = {}) {
+  async getFlujos({ page = 1, limit = 10, search, numeroSolicitud, documento, estado, regionId, agenciaId }: FlujosFiltro = {}) {
     try {
-      const params = this.buildParams({ page, limit, search, numeroSolicitud, documento, estado });
+      const params = this.buildParams({ page, limit, search, numeroSolicitud, documento, estado, regionId, agenciaId });
       const resp = await firstValueFrom(this.get<FlujosResponse>(this.endpoint, params));
       if (resp.body?.success) {
         return resp.body;

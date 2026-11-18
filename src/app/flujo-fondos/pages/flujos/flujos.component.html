@@ -36,6 +36,26 @@
                 </select>
             </div>
             <div class="col-auto">
+                <label for="selectRegion" class="visually-hidden">Región</label>
+                <select class="form-select form-select-sm" id="selectRegion" [disabled]="cargandoSucursales()"
+                    (change)="onRegionChange(selRegion.value)" #selRegion>
+                    <option value="" [selected]="regionFilter() === ''">Región: Todas</option>
+                    @for (region of regiones(); track region.id) {
+                    <option [value]="region.id" [selected]="regionFilter() === '' + region.id">{{ region.descripcion }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <label for="selectAgencia" class="visually-hidden">Agencia</label>
+                <select class="form-select form-select-sm" id="selectAgencia" [disabled]="cargandoSucursales()"
+                    (change)="onAgenciaChange(selAgencia.value)" #selAgencia>
+                    <option value="" [selected]="agenciaFilter() === ''">Agencia: Todas</option>
+                    @for (agencia of agenciasFiltradas(); track agencia.id) {
+                    <option [value]="agencia.id" [selected]="agenciaFilter() === '' + agencia.id">{{ agencia.descripcion }}</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
                 <button type="button" (click)="buscar()" class="btn btn-success btn-sm mb-3">
                     Buscar
                 </button>
@@ -58,6 +78,8 @@
                         <th class="text-center" scope="col">Solicitud</th>
                         <th class="text-center" scope="col">Cliente</th>
                         <th class="text-center" scope="col">Documento</th>
+                        <th class="text-center" scope="col">Región</th>
+                        <th class="text-center" scope="col">Agencia</th>
                         <th class="text-center" scope="col">Monto crédito</th>
                         <th class="text-center" scope="col">Horizonte</th>
                         <th class="text-center" scope="col">Estado</th>
@@ -73,6 +95,8 @@
                         <td class="text-center">{{ item.numeroSolicitud }}</td>
                         <td>{{ item.nombreCliente }}</td>
                         <td class="text-nowrap">{{ item.documento }}</td>
+                        <td>{{ item.region || '—' }}</td>
+                        <td>{{ item.agencia || '—' }}</td>
                         <td class="text-end text-nowrap">Q {{ item.montoCredito | number:'1.2-2' }}</td>
                         <td class="text-center text-nowrap">{{ formatoPeriodo(item.fechaInicio) }} · {{ item.plazoMeses }} meses</td>
                         <td class="text-center"><span class="badge" [class]="claseEstado[item.estado]">{{ item.estado }}</span></td>
@@ -86,7 +110,7 @@
                     } @empty {
                     @if (!isLoading()) {
                     <tr>
-                        <td colspan="10" class="text-center text-muted py-3">No hay flujos de fondos</td>
+                        <td colspan="12" class="text-center text-muted py-3">No hay flujos de fondos</td>
                     </tr>
                     }
                     }

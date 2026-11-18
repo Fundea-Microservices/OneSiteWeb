@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, inject, OnInit, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CLASE_ESTADO_FLUJO, EstadoFlujo, ESTADOS_FLUJO, IFlujoEncabezado } from '../../../../interfaces/flujo-fondos';
+import { Agencia, Region } from '../../../../interfaces/api-bantotal/sucursales';
 import { FlujoFondosService } from '../../../../services/flujo-fondos/flujo-fondos.service';
+import { SucursalesBantotalService } from '../../../../services/api-bantotal/sucursales.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
 import { formatoPeriodo } from '../../utils/flujo';
 
@@ -17,6 +19,7 @@ import { formatoPeriodo } from '../../utils/flujo';
 export default class FlujosComponent implements OnInit {
 
   flujoService = inject(FlujoFondosService);
+  private sucursalesService = inject(SucursalesBantotalService);
 
   readonly estados = ESTADOS_FLUJO;
   readonly claseEstado = CLASE_ESTADO_FLUJO;
@@ -34,9 +37,35 @@ export default class FlujosComponent implements OnInit {
   buscador = signal('');
   numeroSolicitud = signal('');
   estadoFilter = signal<EstadoFlujo | ''>('');
+  regionFilter = signal('');   // id de Bantotal como texto (valor del select)
+  agenciaFilter = signal('');
+
+  // Regiones y agencias de Bantotal: son los mismos ids que el flujo copia de la solicitud
+  regiones = signal<Region[]>([]);
+  agencias = signal<Agencia[]>([]);
+  cargandoSucursales = signal(false);
+
+  /** Agencias de la región elegida; sin región, todas. */
+  agenciasFiltradas = computed(() => {
+    const region = this.regionFilter();
+    const agencias = this.agencias();
+    return region ? agencias.filter(a => String(a.regionId) === region) : agencias;
+  });
 
   ngOnInit() {
     this.fetchData();
+    this.cargarSucursales();
+  }
+
+  private async cargarSucursales() {
+    this.cargandoSucursales.set(true);
+    const data = await this.sucursalesService.getTodasLasSucursales();
+    if (data) {
+      const porNombre = (a: { descripcion: string }, b: { descripcion: string }) => a.descripcion.localeCompare(b.descripcion);
+      this.regiones.set([...data.regiones].sort(porNombre));
+      this.agencias.set([...data.agencias].sort(porNombre));
+    }
+    this.cargandoSucursales.set(false);
   }
 
   async fetchData() {
@@ -49,6 +78,8 @@ export default class FlujosComponent implements OnInit {
       search: this.buscador().trim(),
       numeroSolicitud: Number.isInteger(numero) && numero > 0 ? numero : undefined,
       estado: this.estadoFilter(),
+      regionId: Number(this.regionFilter()) || undefined,
+      agenciaId: Number(this.agenciaFilter()) || undefined,
     });
     if (resp) {
       const { flujos, metadata } = resp.data;
@@ -76,6 +107,18 @@ export default class FlujosComponent implements OnInit {
 
   onEstadoChange(estado: string) {
     this.estadoFilter.set(estado as EstadoFlujo | '');
+    this.buscar();
+  }
+
+  /** Al cambiar de región se limpia la agencia: podría no pertenecer a la nueva región. */
+  onRegionChange(regionId: string) {
+    this.regionFilter.set(regionId);
+    this.agenciaFilter.set('');
+    this.buscar();
+  }
+
+  onAgenciaChange(agenciaId: string) {
+    this.agenciaFilter.set(agenciaId);
     this.buscar();
   }
 
