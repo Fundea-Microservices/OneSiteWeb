@@ -137,9 +137,9 @@
             <th class="text-center" style="width: 12%;">Cuenta</th>
             <th class="text-center" style="width: 23%;">Cliente</th>
             <th class="text-center" style="width: 11%;">Operación</th>
-            <th class="text-center" style="width: 12%;">Estado</th>
-            <th class="text-center" style="width: 12%;">Resultado</th>
-            <th class="text-center" style="width: 7%;">Acc.</th>
+            <th class="text-center" style="width: 8%;">Estado</th>
+            <th class="text-center" style="width: 8%;">Resultado</th>
+            <th class="text-center" style="width: 12%;">Acc.</th>
           </tr>
         </thead>
         <tbody>
@@ -153,7 +153,7 @@
                 <div class="text-muted small">Solicitud {{ item.numeroSolicitud }}</div>
               </td>
               <td class="text-end num-tabular">{{ item.numeroOperacion || '—' }}</td>
-              <td class="text-center">
+              <td >
                 @if (item.estadoEvaluacion === 'Solicitud') {
                   <span class="small text-nowrap badge text-bg-light border">
                   Solicitud
@@ -164,7 +164,7 @@
                   </span>
                 }
               </td>
-              <td class="text-center">
+              <td>
                 @if (item.estadoEvaluacion === 'Procesado') {
                   <span class="small text-nowrap">
                     <ion-icon name="ellipse" [class]="clasePunto(item)"
