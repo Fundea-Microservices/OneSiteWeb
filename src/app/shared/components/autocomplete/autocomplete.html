@@ -1,5 +1,6 @@
 <div class="position-relative">
   <input type="text" class="form-control form-control-sm autocomplete-input" [id]="inputId()"
+    [class.is-invalid]="invalido()"
     role="combobox" aria-autocomplete="list"
     [attr.aria-expanded]="abierto()"
     [attr.aria-controls]="listaId()"
@@ -29,8 +30,9 @@
 
   @if (abierto()) {
     <!-- mousedown con preventDefault: el input no pierde el foco antes de elegir -->
-    <div class="dropdown-menu show w-100 autocomplete-lista" role="listbox" [id]="listaId()"
-      (mousedown)="$event.preventDefault()" #lista>
+    <!-- w-100 lleva !important: con posición fija el ancho lo pone estiloLista -->
+    <div class="dropdown-menu show autocomplete-lista" [class.w-100]="!estiloLista()" role="listbox" [id]="listaId()"
+      [style]="estiloLista()" (mousedown)="$event.preventDefault()" #lista>
       @for (e of entradas(); track e.value; let i = $index) {
         <button type="button" class="dropdown-item small" role="option" tabindex="-1"
           [id]="opcionId(i)" [attr.data-index]="i"

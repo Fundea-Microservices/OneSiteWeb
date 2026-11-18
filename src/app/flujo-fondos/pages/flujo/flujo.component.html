@@ -302,7 +302,7 @@
                     <thead>
                         <tr>
                             <th class="text-center">#</th>
-                            <th class="text-center min-w-60">Actividad</th>
+                            <th class="text-center min-w-60">Actividad económica</th>
                             <th class="text-center min-w-45">Nombre</th>
                             <th class="text-center">Fecha de siembra</th>
                             <th class="text-center min-w-40">Cantidad</th>
@@ -318,13 +318,28 @@
                         <tr [formGroupName]="i">
                             <th scope="row" class="text-center">{{ i + 1 }}</th>
                             <td>
-                                <select class="form-select form-select-sm" formControlName="actividadEconomicaId"
-                                    [class.is-invalid]="invalido(linea.get('actividadEconomicaId'))">
-                                    <option [ngValue]="null">Seleccione...</option>
-                                    @for (a of opcionesActividad(); track a.id) {
-                                    <option [ngValue]="a.id">{{ a.etiqueta }}</option>
-                                    }
-                                </select>
+                                <!-- Actividad → Subactividad filtran el buscador; solo las de la región -->
+                                <div class="d-flex gap-1 mb-1">
+                                    <select class="form-select form-select-sm" title="Actividad" aria-label="Actividad"
+                                        (change)="onFiltroActividad(linea, selTipo.value || null)" #selTipo>
+                                        <option value="" [selected]="!valor?.filtroActividad">Actividad: Todas</option>
+                                        @for (t of filtrosActividad(); track t.value) {
+                                        <option [value]="t.value" [selected]="valor?.filtroActividad === t.value">{{ t.label }}</option>
+                                        }
+                                    </select>
+                                    <select class="form-select form-select-sm" title="Subactividad" aria-label="Subactividad"
+                                        (change)="onFiltroSubActividad(linea, selSub.value || null)" #selSub>
+                                        <option value="" [selected]="!valor?.filtroSubActividad">Subactividad: Todas</option>
+                                        @for (s of filtrosSubActividad(valor?.filtroActividad); track s.value) {
+                                        <option [value]="s.value" [selected]="valor?.filtroSubActividad === s.value">{{ s.label }}</option>
+                                        }
+                                    </select>
+                                </div>
+                                <app-autocomplete [options]="opcionesActividad(valor)" [value]="valor?.actividadEconomicaId ?? null"
+                                    placeholder="Buscar actividad por código o nombre..." [maxResultados]="maxResultadosActividad"
+                                    [ordenarPorRelevancia]="true" [posicionFija]="true" [loading]="cargandoActividades()"
+                                    [invalido]="invalido(linea.get('actividadEconomicaId'))"
+                                    (valueChange)="onActividadElegida(linea, $event)" />
                                 @if (act) {
                                 <div class="text-muted mt-1">
                                     Ciclo de {{ act.ciclo }} {{ act.ciclo === 1 ? 'mes' : 'meses' }} ·

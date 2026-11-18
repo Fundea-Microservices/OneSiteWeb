@@ -42,10 +42,17 @@ import { ProyeccionFlujoComponent } from '../../components/flujo/proyeccion-fluj
 import { ResumenActividadesComponent } from '../../components/flujo/resumen-actividades/resumen-actividades';
 import { formatoFecha, formatoPeriodo, maxDecimales, mesActual, montoCiclo } from '../../utils/flujo';
 import { SeccionComponent } from '../../../shared/components/seccion/seccion';
+import { AutocompleteComponent, AutocompleteOption } from '../../../shared/components/autocomplete/autocomplete';
 
 const SIMULAR_DEBOUNCE_MS = 600;
 
+/** Resultados que muestra el buscador de actividad de cada línea. */
+const MAX_RESULTADOS_ACTIVIDAD = 5;
+
 interface LineaValor {
+  // Solo filtran el buscador de actividad: no se envían al back
+  filtroActividad: string | null;      // código de opción de ACTI
+  filtroSubActividad: string | null;   // código de opción de SUB-ACT
   actividadEconomicaId: string | null;
   nombre: string;
   fechaSiembra: string;
@@ -65,7 +72,7 @@ interface LineaValor {
  */
 @Component({
   selector: 'app-flujo',
-  imports: [RouterLink, DecimalPipe, LowerCasePipe, NgTemplateOutlet, ReactiveFormsModule, ProyeccionFlujoComponent, OtrosPrestamosComponent, ActividadesEstacionalesComponent, ResumenActividadesComponent, SeccionComponent],
+  imports: [RouterLink, DecimalPipe, LowerCasePipe, NgTemplateOutlet, ReactiveFormsModule, ProyeccionFlujoComponent, OtrosPrestamosComponent, ActividadesEstacionalesComponent, ResumenActividadesComponent, SeccionComponent, AutocompleteComponent],
   templateUrl: './flujo.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -87,6 +94,7 @@ export default class FlujoComponent implements OnInit {
   private secciones = viewChildren(SeccionComponent);
 
   readonly maxLineas = MAX_LINEAS_FLUJO;
+  readonly maxResultadosActividad = MAX_RESULTADOS_ACTIVIDAD;
   readonly maxPrestamos = MAX_OTROS_PRESTAMOS;
   readonly maxEstacionales = MAX_ESTACIONALES;
   readonly claseEstado = CLASE_ESTADO_FLUJO;
@@ -120,20 +128,83 @@ export default class FlujoComponent implements OnInit {
     if (regionId === null) return [];
     return this.actividades().filter(a => a.region === String(regionId));
   });
-  /**
-   * Opciones del select de actividad: las de la región más las que ya usa el flujo guardado
-   * aunque no estén en la lista (si no, el select quedaría en blanco con un id válido).
-   */
-  opcionesActividad = computed(() => {
-    const region = this.actividadesRegion().map(a => ({ id: a.id, etiqueta: `${a.codigo} · ${a.nombre}` }));
-    const ids = new Set(region.map(o => o.id));
-    const guardadas = (this.flujoId() ? this.flujo()?.lineas ?? [] : [])
-      .filter(l => !ids.has(l.actividadEconomicaId) && ids.add(l.actividadEconomicaId))
-      .map(l => ({ id: l.actividadEconomicaId, etiqueta: `${l.codigoActividad} · ${l.nombreActividad}` }));
-    return [...region, ...guardadas];
-  });
   private unidades = signal<Map<string, string>>(new Map());
   private medidas = signal<Map<string, string>>(new Map());
+  private tiposActividad = signal<Map<string, string>>(new Map());
+  private subActividades = signal<Map<string, string>>(new Map());
+
+  /** Select "Actividad": solo los tipos (ACTI) que tienen actividades en la región. */
+  filtrosActividad = computed(() => this.opcionesUnicas(this.actividadesRegion().map(a => a.actividad), this.tiposActividad()));
+
+  /** Select "Subactividad" por tipo ('' = sin tipo elegido): solo las que tienen actividades en la región. */
+  private subActividadesPorTipo = computed(() => {
+    const porTipo = new Map<string, string[]>([['', []]]);
+    for (const a of this.actividadesRegion()) {
+      porTipo.get('')!.push(a.subActividad);
+      if (!porTipo.has(a.actividad)) porTipo.set(a.actividad, []);
+      porTipo.get(a.actividad)!.push(a.subActividad);
+    }
+    const subs = this.subActividades();
+    return new Map([...porTipo].map(([tipo, codigos]) => [tipo, this.opcionesUnicas(codigos, subs)]));
+  });
+
+  filtrosSubActividad(tipo: string | null | undefined) {
+    return this.subActividadesPorTipo().get(tipo ?? '') ?? [];
+  }
+
+  /** Lo que ya usa el flujo guardado aunque ya no esté entre las de la región. */
+  private actividadesGuardadas = computed<AutocompleteOption<string>[]>(() =>
+    (this.flujoId() ? this.flujo()?.lineas ?? [] : [])
+      .map(l => ({ value: l.actividadEconomicaId, label: `${l.codigoActividad} · ${l.nombreActividad}` })));
+
+  /**
+   * Opciones del buscador de una línea según sus filtros. Se cachean por filtro para que el
+   * autocomplete reciba el mismo arreglo en cada ciclo; la caché se rehace si cambian las actividades.
+   */
+  private cacheOpciones = computed(() => {
+    this.actividadesRegion();
+    this.subActividades();
+    this.actividadesGuardadas();
+    return new Map<string, AutocompleteOption<string>[]>();
+  });
+
+  opcionesActividad(linea: LineaValor | undefined): AutocompleteOption<string>[] {
+    const tipo = linea?.filtroActividad ?? null;
+    const sub = linea?.filtroSubActividad ?? null;
+    const seleccionada = linea?.actividadEconomicaId ?? null;
+    const cache = this.cacheOpciones();
+
+    const clave = `${tipo ?? ''}|${sub ?? ''}`;
+    let opciones = cache.get(clave);
+    if (!opciones) {
+      const subs = this.subActividades();
+      opciones = this.actividadesRegion()
+        .filter(a => (!tipo || a.actividad === tipo) && (!sub || a.subActividad === sub))
+        .map(a => ({ value: a.id, label: `${a.codigo} · ${a.nombre}`, detalle: subs.get(a.subActividad.toUpperCase()) ?? a.subActividad }));
+      cache.set(clave, opciones);
+    }
+
+    // La elegida tiene que estar en la lista para que el buscador muestre su nombre
+    if (!seleccionada || opciones.some(o => o.value === seleccionada)) return opciones;
+    const claveConElegida = `${clave}|${seleccionada}`;
+    let conElegida = cache.get(claveConElegida);
+    if (!conElegida) {
+      const actividad = this.actividad(seleccionada);
+      const elegida = actividad
+        ? { value: actividad.id, label: `${actividad.codigo} · ${actividad.nombre}` }
+        : this.actividadesGuardadas().find(o => o.value === seleccionada);
+      conElegida = elegida ? [...opciones, elegida] : opciones;
+      cache.set(claveConElegida, conElegida);
+    }
+    return conElegida;
+  }
+
+  /** Códigos sin repetir con su nombre de catálogo, ordenados por nombre. */
+  private opcionesUnicas(codigos: string[], nombres: Map<string, string>) {
+    return [...new Set(codigos.filter(Boolean))]
+      .map(codigo => ({ value: codigo, label: nombres.get(codigo.toUpperCase()) ?? codigo }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
 
   form = this.crearFormulario();
   lineasValor = signal<LineaValor[]>([]);
@@ -203,6 +274,8 @@ export default class FlujoComponent implements OnInit {
 
   private crearLinea(): FormGroup {
     return this.fb.group({
+      filtroActividad: [null as string | null],
+      filtroSubActividad: [null as string | null],
       actividadEconomicaId: [null as string | null, Validators.required],
       nombre: ['', [Validators.required, Validators.maxLength(150)]],
       fechaSiembra: ['', [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
@@ -231,6 +304,44 @@ export default class FlujoComponent implements OnInit {
     this.lineas.removeAt(i);
   }
 
+  /** Al cambiar el tipo se limpia la subactividad, y la actividad si ya no es de ese tipo. */
+  onFiltroActividad(linea: FormGroup, tipo: string | null) {
+    const actividad = this.actividad(linea.get('actividadEconomicaId')?.value);
+    this.aplicarFiltros(linea, tipo, null, !!tipo && !!actividad && actividad.actividad !== tipo);
+  }
+
+  /** Al cambiar la subactividad se limpia la actividad si ya no es de esa subactividad. */
+  onFiltroSubActividad(linea: FormGroup, sub: string | null) {
+    const actividad = this.actividad(linea.get('actividadEconomicaId')?.value);
+    // Elegir la subactividad sin tipo deja el tipo de esa subactividad
+    const tipo = linea.get('filtroActividad')?.value
+      ?? (sub ? this.actividadesRegion().find(a => a.subActividad === sub)?.actividad ?? null : null);
+    this.aplicarFiltros(linea, tipo, sub, !!sub && !!actividad && actividad.subActividad !== sub);
+  }
+
+  /**
+   * Los filtros no se envían: se guardan sin emitir para no lanzar otra simulación.
+   * Solo emite si hay que limpiar la actividad, porque eso sí cambia la captura.
+   */
+  private aplicarFiltros(linea: FormGroup, tipo: string | null, sub: string | null, limpiarActividad: boolean) {
+    linea.patchValue({ filtroActividad: tipo, filtroSubActividad: sub }, { emitEvent: false });
+    if (limpiarActividad) {
+      linea.get('actividadEconomicaId')?.setValue(null);
+    } else {
+      this.lineasValor.set(this.form.getRawValue().lineas as LineaValor[]);
+    }
+  }
+
+  /** Elegida en el buscador: los filtros toman su tipo y subactividad. */
+  onActividadElegida(linea: FormGroup, id: string | null) {
+    const actividad = this.actividad(id);
+    if (actividad) {
+      linea.patchValue({ filtroActividad: actividad.actividad, filtroSubActividad: actividad.subActividad }, { emitEvent: false });
+    }
+    linea.get('actividadEconomicaId')?.markAsTouched();
+    linea.get('actividadEconomicaId')?.setValue(id);
+  }
+
   private alCambiarFormulario() {
     const v = this.form.getRawValue();
     this.lineasValor.set(v.lineas as LineaValor[]);
@@ -252,15 +363,22 @@ export default class FlujoComponent implements OnInit {
   private async cargarCatalogos(): Promise<boolean> {
     this.cargandoActividades.set(true);
     try {
-      const [resp, unidades, medidas] = await Promise.all([
+      const [resp, unidades, medidas, tipos, subs] = await Promise.all([
         this.actividadService.getActividades({ all: true }),
         this.catalogoService.select(CATALOGOS_ACTIVIDAD.unidadGiro, null, true),
         this.catalogoService.select(CATALOGOS_ACTIVIDAD.medidaProduccion, null, true),
+        this.catalogoService.select(CATALOGOS_ACTIVIDAD.actividad, null, true),
+        this.catalogoService.select(CATALOGOS_ACTIVIDAD.subActividad, null, true),
       ]);
+      const aMapa = (opciones: { value: string; label: string }[] | undefined) =>
+        new Map((opciones ?? []).map(o => [o.value.toUpperCase(), o.label]));
       // Si falla una recarga, se conserva lo que ya estaba (el servicio ya mostró el error)
       if (resp) this.actividades.set(resp.data.actividades ?? []);
-      if (unidades) this.unidades.set(new Map((unidades.opciones ?? []).map(o => [o.value.toUpperCase(), o.label])));
-      if (medidas) this.medidas.set(new Map((medidas.opciones ?? []).map(o => [o.value.toUpperCase(), o.label])));
+      if (unidades) this.unidades.set(aMapa(unidades.opciones));
+      if (medidas) this.medidas.set(aMapa(medidas.opciones));
+      if (tipos) this.tiposActividad.set(aMapa(tipos.opciones));
+      if (subs) this.subActividades.set(aMapa(subs.opciones));
+      if (resp) this.completarFiltrosLineas();
       return !!resp;
     } finally {
       this.cargandoActividades.set(false);
@@ -275,6 +393,20 @@ export default class FlujoComponent implements OnInit {
     this.toastr.success('Actividades económicas actualizadas.', 'Actividades');
     // Los montos por ciclo dependen de la distribución de cada actividad
     if (this.lineas.length) this.solicitarSimulacion();
+  }
+
+  /**
+   * Las líneas que ya tienen actividad pero no filtros (flujo cargado antes que las actividades)
+   * toman el tipo y la subactividad de su actividad. Sin emitir: no cambia nada que se envíe.
+   */
+  private completarFiltrosLineas() {
+    for (const linea of this.lineas.controls) {
+      const { filtroActividad, actividadEconomicaId } = linea.getRawValue();
+      const actividad = this.actividad(actividadEconomicaId);
+      if (filtroActividad || !actividad) continue;
+      linea.patchValue({ filtroActividad: actividad.actividad, filtroSubActividad: actividad.subActividad }, { emitEvent: false });
+    }
+    this.lineasValor.set(this.form.getRawValue().lineas as LineaValor[]);
   }
 
   actividad(id: string | null | undefined): IActividadEconomica | undefined {
@@ -529,7 +661,10 @@ export default class FlujoComponent implements OnInit {
     this.lineas.clear({ emitEvent: false });
     for (const l of f.lineas) {
       const linea = this.crearLinea();
+      const actividad = this.actividad(l.actividadEconomicaId);
       linea.setValue({
+        filtroActividad: actividad?.actividad ?? null,
+        filtroSubActividad: actividad?.subActividad ?? null,
         actividadEconomicaId: l.actividadEconomicaId,
         nombre: l.nombre,
         fechaSiembra: l.fechaSiembra.slice(0, 10),
