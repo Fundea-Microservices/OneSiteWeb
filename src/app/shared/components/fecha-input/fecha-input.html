@@ -1,0 +1,15 @@
+<input
+  [id]="inputId()"
+  [value]="texto()"
+  (input)="onInput($event)"
+  [disabled]="disabled()"
+  type="text"
+  inputmode="numeric"
+  autocomplete="off"
+  maxlength="10"
+  placeholder="DD/MM/AAAA"
+  [class]="claseInput()"
+/>
+@if (invalida()) {
+  <p class="text-xs text-red-600 mt-1">Fecha inválida</p>
+}
