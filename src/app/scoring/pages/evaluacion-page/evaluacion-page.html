@@ -163,7 +163,7 @@
 
         <div class="form-text mt-2">
           <ion-icon name="person-outline"></ion-icon>
-          Las evaluaciones que usted capturó o procesó aparecen primero.
+          Las evaluaciones que usted procesó aparecen primero.
         </div>
       </div>
     </div>
@@ -185,7 +185,7 @@
             <th class="text-center" style="width: 9%;">Operación</th>
             <th class="text-center" style="width: 9%;">Origen</th>
             <th class="text-center" style="width: 10%;">Estado</th>
-            <th class="text-center" style="width: 13%;">Resultado</th>
+            <th class="text-center" style="width: 8%;">Resultado</th>
             <th class="text-center" style="width: 12%;">Acciones</th>
           </tr>
         </thead>
@@ -203,7 +203,7 @@
                 </div>-->
               </td>
               <td class="text-end num-tabular">{{ item.numeroOperacion || '—' }}</td>
-              <td class="text-center">
+              <td >
                 @if (item.origenDatos === 'Captura') {
                   <span class="badge text-bg-light border" title="Datos capturados por el asesor">
                     Manual
@@ -214,7 +214,7 @@
                   </span>
                 }
               </td>
-              <td class="text-center">
+              <td >
                 @if (item.estadoEvaluacion === 'Solicitud') {
                   <span class="small text-nowrap">
                     Solicitud
@@ -225,7 +225,7 @@
                   </span>
                 }
               </td>
-              <td class="text-center">
+              <td >
                 @if (item.estadoEvaluacion === 'Procesado') {
                   <span class="small text-nowrap">
                     <ion-icon name="ellipse" [class]="clasePunto(item)"
@@ -238,7 +238,7 @@
                   </span>
                 }
               </td>
-              <td class="text-center text-nowrap">
+              <td class="text-nowrap">
                 @if (item.estadoEvaluacion === 'Solicitud') {
                   <button class="btn btn-sm btn-success mx-1" title="Editar captura"
                     (click)="abrirCaptura(item)">

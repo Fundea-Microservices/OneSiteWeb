@@ -160,14 +160,6 @@
             <option [ngValue]="false">No</option>
             <option [ngValue]="true">Sí</option>
           </select>
-          @if (form().get('requiereRTE')?.value) {
-            <div class="form-text">
-              Valor(x) y coeficientes los devuelve el
-              <strong>Proceso Cálculo de Variables</strong> del scoring. Los
-              campos de abajo quedan como respaldo, por si el procedimiento no
-              atiende esta pregunta.
-            </div>
-          }
         </div>
 
         <div class="col-12 col-md-4">
