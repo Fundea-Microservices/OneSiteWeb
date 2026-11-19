@@ -302,8 +302,8 @@
                     <thead>
                         <tr>
                             <th class="text-center">#</th>
-                            <th class="text-center min-w-184">Actividad económica</th>
-                            <th class="text-center text-nowrap">No. de Siembra</th>
+                            <th class="text-center" style="min-width: 46rem">Actividad económica</th>
+                            <th class="text-center text-nowrap" style="width: 7rem">No. de Siembra</th>
                             <th class="text-center">Fecha de siembra</th>
                             <th class="text-center min-w-36">Cantidad</th>
                             <th class="text-center">Por ciclo</th>
@@ -319,22 +319,22 @@
                             <th scope="row" class="text-center">{{ i + 1 }}</th>
                             <td>
                                 <!-- Actividad → Subactividad filtran el buscador; solo las de la región -->
-                                <div class="d-flex gap-1">
-                                    <select class="form-select form-select-sm shrink-0 w-40" title="Actividad" aria-label="Actividad"
+                                <div class="d-flex align-items-start gap-1">
+                                    <select class="form-select form-select-sm" style="flex: 0 0 10rem; width: 10rem" title="Actividad" aria-label="Actividad"
                                         (change)="onFiltroActividad(linea, selTipo.value || null)" #selTipo>
                                         <option value="" [selected]="!valor?.filtroActividad">Actividad: Todas</option>
                                         @for (t of filtrosActividad(); track t.value) {
                                         <option [value]="t.value" [selected]="valor?.filtroActividad === t.value">{{ t.label }}</option>
                                         }
                                     </select>
-                                    <select class="form-select form-select-sm shrink-0 w-40" title="Subactividad" aria-label="Subactividad"
+                                    <select class="form-select form-select-sm" style="flex: 0 0 10rem; width: 10rem" title="Subactividad" aria-label="Subactividad"
                                         (change)="onFiltroSubActividad(linea, selSub.value || null)" #selSub>
                                         <option value="" [selected]="!valor?.filtroSubActividad">Subactividad: Todas</option>
                                         @for (s of filtrosSubActividad(valor?.filtroActividad); track s.value) {
                                         <option [value]="s.value" [selected]="valor?.filtroSubActividad === s.value">{{ s.label }}</option>
                                         }
                                     </select>
-                                    <div class="flex-grow-1 min-w-0">
+                                    <div style="flex: 1 1 auto; min-width: 0">
                                         <app-autocomplete [options]="opcionesActividad(valor)" [value]="valor?.actividadEconomicaId ?? null"
                                             placeholder="Buscar actividad por código o nombre..." [maxResultados]="maxResultadosActividad"
                                             [ordenarPorRelevancia]="true" [posicionFija]="true" [loading]="cargandoActividades()"
@@ -352,7 +352,7 @@
                                 <div class="text-danger small">Actividad es requerida</div>
                                 }
                             </td>
-                            <td class="w-28">
+                            <td>
                                 <input type="text" class="form-control form-control-sm text-center" formControlName="nombre" maxlength="150"
                                     placeholder="Ej. 1" title="No. de siembra" [class.is-invalid]="invalido(linea.get('nombre'))">
                                 @if (hasError(linea.get('nombre'), 'required')) {
