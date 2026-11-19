@@ -14,7 +14,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { CATALOGOS_ACTIVIDAD } from '../../../../interfaces/actividad-economica';
-import { CLAVE_PRESTAMO_NUEVO, EstadoFlujo, IFlujoDetalle, ILineaFlujo, IParametrosFlujo } from '../../../../interfaces/flujo-fondos';
+import { EstadoFlujo, ICategoriaParametro, IFlujoDetalle, ILineaFlujo, IParametroFlujo, IParametrosFlujo } from '../../../../interfaces/flujo-fondos';
 import { CatalogoService } from '../../../../services/flujo-fondos/catalogo.service';
 import { FlujoFondosService } from '../../../../services/flujo-fondos/flujo-fondos.service';
 import { ActividadesEstacionalesComponent } from '../../components/flujo/actividades-estacionales/actividades-estacionales';
@@ -25,6 +25,10 @@ import { SeccionComponent } from '../../../shared/components/seccion/seccion';
 import { formatoFecha, formatoPeriodo, montoCiclo, sumaMontos, sumarMeses } from '../../utils/flujo';
 
 const MAX_COMENTARIO = 500;
+
+/** categoria: null no debería llegar (la BD la exige), pero viene tipada como nullable. */
+const SIN_CATEGORIA = 'SIN_CATEGORIA';
+const COLOR_SIN_CATEGORIA = '#6C757D';
 
 type Tono = 'warning' | 'success' | 'danger' | 'secondary';
 
@@ -96,6 +100,14 @@ const ESTADO_DICTAMEN: Record<EstadoFlujo, { etiqueta: string; tono: Tono; icono
     .kpi-success .kpi-titulo, .kpi-success .kpi-valor, .kpi-success .kpi-nota { color: var(--bs-success-text-emphasis); }
     .kpi-danger { background: var(--bs-danger-bg-subtle); border-color: var(--bs-danger-border-subtle); }
     .kpi-danger .kpi-titulo, .kpi-danger .kpi-valor, .kpi-danger .kpi-nota { color: var(--bs-danger-text-emphasis); }
+
+    .kpi-categoria {
+      background: color-mix(in srgb, var(--cat) 7%, var(--bs-body-bg));
+      border-color: color-mix(in srgb, var(--cat) 35%, var(--bs-body-bg));
+      border-left: 4px solid var(--cat);
+    }
+    .kpi-categoria .kpi-titulo, .kpi-categoria .kpi-valor { color: var(--cat); }
+    .kpi-tipo { font-size: .65rem; font-weight: 700; text-transform: uppercase; border-radius: 999px; padding: .05rem .5rem; }
 
     .tabla-oscura thead th { background-color: var(--bs-dark); color: #FFFFFF; font-weight: 600; white-space: nowrap; }
     .etiqueta-cultivo { background-color: var(--bs-success-bg-subtle); border: 1px solid var(--bs-success-border-subtle); color: var(--bs-success-text-emphasis); }
@@ -172,45 +184,43 @@ export default class AprobacionFlujoComponent implements OnInit {
   errorParametros = signal<string | null>(null);
 
   /**
-   * Tarjetas de la sección I, todas con el montoBase (antes del factor):
-   * - Préstamo nuevo y plan: el parámetro PLAN_PAGOS_PRESTAMO_NUEVO y sus cuotas.
-   * - Ingresos / gastos: suma de los MENSUAL según esIngreso.
-   * - Saldo inicial: los no MENSUAL (salvo el préstamo nuevo); ingresos suman, egresos restan.
+   * Tarjetas de la sección I: una por categoría con la suma del montoBase (antes del factor)
+   * de sus parámetros con montoBase > 0.
+   * Si una categoría tiene ingresos y egresos, se parte en dos tarjetas (esIngreso manda, no la categoría).
+   * Orden: categoria.orden y, dentro de la misma categoría, primero el ingreso.
    */
-  datosBantotal = computed(() => {
+  tarjetasCategoria = computed(() => {
     const p = this.parametros()?.parametros;
     if (!p) return null;
 
-    const prestamo = p.find(x => x.clave === CLAVE_PRESTAMO_NUEVO) ?? null;
-    const mensuales = p.filter(x => x.tipoIngreso === 'MENSUAL');
-    const otros = p.filter(x => x.tipoIngreso !== 'MENSUAL' && x.clave !== CLAVE_PRESTAMO_NUEVO);
-    const cuotas = prestamo?.planPagos ?? [];
+    type Grupo = { cat: string; categoria: ICategoriaParametro | null; esIngreso: boolean; parametros: IParametroFlujo[] };
+    const grupos = new Map<string, Grupo>();
+    for (const x of p) {
+      if (!(x.montoBase > 0)) continue;
+      const cat = x.categoriaId ?? x.categoria?.id ?? SIN_CATEGORIA;
+      const key = `${cat}|${x.esIngreso ? 'I' : 'E'}`;
+      const grupo = grupos.get(key) ?? { cat, categoria: x.categoria ?? null, esIngreso: x.esIngreso, parametros: [] };
+      grupo.parametros.push(x);
+      grupos.set(key, grupo);
+    }
 
-    // TODO: quitar logs de depuración del saldo inicial
-    console.groupCollapsed('🚀 ~ AprobacionFlujo ~ datosBantotal');
-    console.table(p.map(x => ({
-      clave: x.clave, origen: x.origen, servicio: x.servicio, tipoIngreso: x.tipoIngreso,
-      esIngreso: x.esIngreso, factor: x.factor, montoBantotal: x.montoBantotal, montoBase: x.montoBase, monto: x.monto,
-      cuotas: x.planPagos?.length ?? null,
-    })));
-    console.log('Préstamo nuevo (clave', CLAVE_PRESTAMO_NUEVO + '):', prestamo);
-    console.table(otros.map(x => ({
-      clave: x.clave, tipoIngreso: x.tipoIngreso, esIngreso: x.esIngreso, montoBase: x.montoBase,
-      aporte: x.esIngreso ? x.montoBase : -x.montoBase,
-    })));
-    console.log('Saldo inicial =', sumaMontos(otros.map(x => x.esIngreso ? x.montoBase : -x.montoBase)));
-    console.log('Respuesta completa:', this.parametros());
-    console.groupEnd();
+    // Categorías con ingresos y egresos a la vez: sus dos tarjetas llevan la etiqueta del tipo
+    const conAmbos = new Set([...grupos.values()].filter(g => g.esIngreso && grupos.has(`${g.cat}|E`)).map(g => g.cat));
 
-    return {
-      saldoInicial: sumaMontos(otros.map(x => x.esIngreso ? x.montoBase : -x.montoBase)),
-      prestamo: prestamo?.montoBase ?? null,
-      cuotas: cuotas.length,
-      primeraCuota: cuotas[0]?.fecha ?? null,
-      ultimaCuota: cuotas[cuotas.length - 1]?.fecha ?? null,
-      ingresos: sumaMontos(mensuales.filter(x => x.esIngreso).map(x => x.montoBase)),
-      gastos: sumaMontos(mensuales.filter(x => !x.esIngreso).map(x => x.montoBase)),
-    };
+    return [...grupos.entries()]
+      .sort(([, a], [, b]) =>
+        (a.categoria?.orden ?? Number.MAX_SAFE_INTEGER) - (b.categoria?.orden ?? Number.MAX_SAFE_INTEGER)
+        || a.cat.localeCompare(b.cat)
+        || Number(b.esIngreso) - Number(a.esIngreso))
+      .map(([key, g]) => ({
+        key,
+        nombre: g.categoria?.nombre ?? 'Sin categoría',
+        color: g.categoria?.color || COLOR_SIN_CATEGORIA,
+        esIngreso: g.esIngreso,
+        dividida: conAmbos.has(g.cat),
+        total: sumaMontos(g.parametros.map(x => x.montoBase)),
+        detalle: g.parametros.map(x => x.nombre || x.clave).join(', '),
+      }));
   });
 
   constructor() {

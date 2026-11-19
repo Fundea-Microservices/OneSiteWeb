@@ -328,10 +328,21 @@ export interface ICuotaPlan {
     monto: number;               // total de la cuota, antes del factor
 }
 
+/** Categoría con la que se agrupa un parámetro; queda guardada con el flujo al calcularlo. */
+export interface ICategoriaParametro {
+    id: string;
+    codigo: string;              // identificador fijo, p. ej. SERVICIOS_BASICOS
+    nombre: string;
+    color: string;               // hex, p. ej. #2E7D32
+    orden: number;
+}
+
 export interface IParametroFlujo {
     id?: string;
     clave: string;
     nombre?: string;
+    categoriaId?: string | null;
+    categoria?: ICategoriaParametro | null;
     esIngreso: boolean;
     origen: OrigenParametro;
     codigo?: number | null;

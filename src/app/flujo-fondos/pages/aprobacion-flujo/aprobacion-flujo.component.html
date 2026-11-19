@@ -184,51 +184,26 @@
             <ion-icon name="refresh-outline"></ion-icon> Reintentar
         </button>
     </div>
-    } @else if (datosBantotal(); as b) {
+    } @else if (tarjetasCategoria(); as tarjetas) {
     <div class="row g-3">
-        <div class="col-sm-6 col-xl">
-            <div class="kpi" [class.kpi-danger]="b.saldoInicial < 0">
-                <div class="kpi-titulo">Saldo inicial caja</div>
-                <div class="kpi-valor">Q {{ b.saldoInicial | number:'1.2-2' }}</div>
-                <div class="kpi-nota">Disponibilidad en efectivo</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl">
-            <div class="kpi kpi-primary">
-                <div class="kpi-titulo">Préstamo FUNDEA nuevo</div>
-                <div class="kpi-valor">
-                    @if (b.prestamo !== null) { Q {{ b.prestamo | number:'1.2-2' }} } @else { — }
-                </div>
-                <div class="kpi-nota">Monto solicitado evaluado</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl">
-            <div class="kpi">
-                <div class="kpi-titulo">Plan / Plazo</div>
-                <div class="kpi-valor">{{ b.cuotas }} {{ b.cuotas === 1 ? 'Cuota' : 'Cuotas' }}</div>
-                <div class="kpi-nota">
-                    @if (b.primeraCuota) {
-                    {{ formatoFecha(b.primeraCuota) }} – {{ formatoFecha(b.ultimaCuota) }}
-                    } @else {
-                    Sin plan de pagos
+        @for (t of tarjetas; track t.key) {
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+            <div class="kpi kpi-categoria" [style.--cat]="t.color">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="kpi-titulo">{{ t.nombre }}</div>
+                    @if (t.dividida) {
+                    <span class="kpi-tipo" [class]="t.esIngreso ? 'text-bg-success' : 'text-bg-danger'">
+                        {{ t.esIngreso ? 'Ingresos' : 'Egresos' }}
+                    </span>
                     }
                 </div>
+                <div class="kpi-valor">Q {{ t.total | number:'1.2-2' }}</div>
+                <div class="kpi-nota">{{ t.detalle }}.</div>
             </div>
         </div>
-        <div class="col-sm-6 col-xl">
-            <div class="kpi kpi-success">
-                <div class="kpi-titulo">Ingresos activos/comercio</div>
-                <div class="kpi-valor">Q {{ b.ingresos | number:'1.2-2' }}</div>
-                <div class="kpi-nota">Ingresos recurrentes de la evaluación</div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-xl">
-            <div class="kpi kpi-danger">
-                <div class="kpi-titulo">Gastos operativos/familiares</div>
-                <div class="kpi-valor">Q {{ b.gastos | number:'1.2-2' }}</div>
-                <div class="kpi-nota">Costo de vida y manutención</div>
-            </div>
-        </div>
+        } @empty {
+        <div class="col-12 text-center text-muted small py-2">Bantotal no devolvió montos para este flujo.</div>
+        }
     </div>
     }
 </app-seccion>
