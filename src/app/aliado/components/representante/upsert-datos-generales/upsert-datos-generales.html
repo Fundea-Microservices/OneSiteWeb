@@ -153,14 +153,10 @@
       <label class="block text-sm font-medium text-gray-900 mb-1">
         Fec Nacimiento <span class="text-red-600">*</span>
       </label>
-      <div class="relative w-full">        
-        <input
-          [value]="toISODate(fechaNacimiento())"
-          (input)="fechaNacimiento.set(toDisplayDate($any($event.target).value))"
+      <div class="relative w-full">
+        <app-fecha-input
+          [(fecha)]="fechaNacimiento"
           [disabled]="camposBloqueados()"
-          type="date"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg pl-4 pr-3 h-12 w-full"
-          placeholder="Selecciona fecha"
         />
       </div>
     </div>
@@ -243,14 +239,10 @@
       <label class="block text-sm font-medium text-gray-900 mb-1">
         Fec Vencimiento DPI <span class="text-red-600">*</span>
       </label>
-      <div class="relative w-full">        
-        <input
-          [value]="toISODate(fechaVencimiento())"
-          (input)="fechaVencimiento.set(toDisplayDate($any($event.target).value))"
+      <div class="relative w-full">
+        <app-fecha-input
+          [(fecha)]="fechaVencimiento"
           [disabled]="camposBloqueados()"
-          type="date"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg pl-4 pr-3 h-12 w-full"
-          placeholder="Selecciona fecha"
         />
       </div>
     </div>

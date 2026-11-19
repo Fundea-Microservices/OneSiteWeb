@@ -5,10 +5,11 @@ import { CatalogosBantotalService } from '../../../../../services/api-bantotal/c
 import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos';
 import { RepresentanteService } from '../../../../../services/aliado/representante.service';
 import { Representante } from '../../../../../interfaces/aliado/representante';
+import { FechaInput } from '../../../../shared/components/fecha-input/fecha-input';
 
 @Component({
   selector: 'app-upsert-datos-generales',
-  imports: [CommonModule],
+  imports: [CommonModule, FechaInput],
   templateUrl: './upsert-datos-generales.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

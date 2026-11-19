@@ -4,10 +4,11 @@ import { initFlowbite } from 'flowbite';
 import { CatalogosBantotalService } from '../../../../../services/api-bantotal/catalogos.service';
 import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos';
 import { Representante } from '../../../../../interfaces/aliado/representante';
+import { FechaInput } from '../../../../shared/components/fecha-input/fecha-input';
 
 @Component({
   selector: 'app-upsert-actividad-laboral-financiera',
-  imports: [CommonModule],
+  imports: [CommonModule, FechaInput],
   templateUrl: './upsert-actividad-laboral-financiera.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
