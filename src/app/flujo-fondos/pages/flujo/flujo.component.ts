@@ -286,8 +286,8 @@ export default class FlujoComponent implements OnInit {
   agregarLinea() {
     if (this.lineas.length >= MAX_LINEAS_FLUJO) return;
     const linea = this.crearLinea();
-    // Nombre sugerido: el asesor lo cambia por "Terreno 1", "Siembra de agosto", etc.
-    linea.controls['nombre'].setValue(`Actividad ${this.lineas.length + 1}`, { emitEvent: false });
+    // No. de siembra sugerido (filas actuales + 1); el asesor lo puede cambiar
+    linea.controls['nombre'].setValue(`${this.lineas.length + 1}`, { emitEvent: false });
     this.lineas.push(linea);
   }
 
@@ -296,7 +296,7 @@ export default class FlujoComponent implements OnInit {
     if (this.lineas.length >= MAX_LINEAS_FLUJO) return;
     const linea = this.crearLinea();
     const original = this.lineas.at(i).getRawValue();
-    linea.setValue({ ...original, nombre: `${original.nombre} (copia)`.slice(0, 150) }, { emitEvent: false });
+    linea.setValue({ ...original, nombre: `${this.lineas.length + 1}` }, { emitEvent: false });
     this.lineas.insert(i + 1, linea);
   }
 
