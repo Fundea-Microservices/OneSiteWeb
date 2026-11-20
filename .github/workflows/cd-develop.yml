@@ -22,9 +22,9 @@ jobs:
     name: "Build y Despliegue Frontend a Servidor Develop"
     # Solo despliega si pasan los 3 jobs del escaneo: build, SAST y SCA
     needs: security-scan
-    # La etiqueta 'develop' asegura que el job corra solo en el runner 'desarrollotrans'.
+    # La etiqueta personalizada 'develop' asegura que el job corra solo en el runner 'desarrollotrans'.
     # Sin ella, el job también puede caer en 'Fundea_pro' (tiene las mismas etiquetas por defecto).
-    runs-on: [self-hosted, Linux, X64, desarrollotrans]
+    runs-on: [self-hosted, Linux, X64, develop]
 
     steps:
       - name: Checkout del Código Fuente
