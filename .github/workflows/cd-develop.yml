@@ -24,7 +24,7 @@ jobs:
     needs: security-scan
     # La etiqueta 'develop' asegura que el job corra solo en el runner 'desarrollotrans'.
     # Sin ella, el job también puede caer en 'Fundea_pro' (tiene las mismas etiquetas por defecto).
-    runs-on: [self-hosted, Linux, X64, develop]
+    runs-on: [self-hosted, Linux, X64, desarrollotrans]
 
     steps:
       - name: Checkout del Código Fuente
