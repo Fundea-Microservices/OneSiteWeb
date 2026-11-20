@@ -1,3 +1,11 @@
 code {
   font-size: 0.9em;
 }
+
+.horario {
+  max-width: 420px;
+}
+
+.horario input[type='time'] {
+  max-width: 160px;
+}

@@ -2,11 +2,24 @@
 
 export const JOB_CARGA_ASIENTOS_KEY = 'job_carga_asientos_contables';
 
+/** Días como se guardan en `horarios`. El orden es el de cron (0 = domingo). */
+export const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as const;
+
+export type DiaSemana = (typeof DIAS_SEMANA)[number];
+
 export interface JobCargaAsientosContables {
     activo:      string;
+    /**
+     * Hora "HH:MM" para todos los días. Formato anterior: el backend la usa
+     * sólo si no viene `horarios`. Se sigue guardando por compatibilidad.
+     */
     hora:        string;
+    /** Hora "HH:MM" de cada día. Vacío = ese día no se ejecuta. */
+    horarios?:   Partial<Record<DiaSemana, string>>;
+    /** Uno o varios correos separados por coma. */
     correo:      string;
     diaAnterior: string;
+    alcance?:    AlcanceCarga;
 }
 
 // ── Carga de partidas contables ──────────────────────────────────────────────

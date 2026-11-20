@@ -37,52 +37,35 @@
           </p>
         </div>
 
-        <!-- Hora -->
-        <div class="col-md-4">
-          <label for="hora" class="form-label">Hora de ejecución *</label>
+        <!-- Correo(s) -->
+        <div class="col-md-8">
+          <label for="correo" class="form-label">Correos de notificación *</label>
           <input
-            type="time"
+            type="text"
             class="form-control"
-            [class.is-invalid]="hora() && !horaValida"
-            id="hora"
-            name="hora"
-            [min]="horaMin"
-            [max]="horaMax"
-            [(ngModel)]="hora"
-            [disabled]="isSaving()"
-            required>
-          <div class="form-text">
-            Debe estar entre las {{ horaMin }} y las {{ horaMax }} horas (antes de iniciar labores).
-          </div>
-          @if (hora() && !horaValida) {
-            <div class="invalid-feedback d-block">
-              La hora debe estar entre {{ horaMin }} y {{ horaMax }}.
-            </div>
-          }
-        </div>
-
-        <!-- Correo -->
-        <div class="col-md-5">
-          <label for="correo" class="form-label">Correo de notificación *</label>
-          <input
-            type="email"
-            class="form-control"
-            [class.is-invalid]="correo() && !correoValido"
+            [class.is-invalid]="correo() && !correoValido()"
             id="correo"
             name="correo"
-            placeholder="correo@fundea.org.gt"
+            placeholder="correo1@fundea.org.gt, correo2@fundea.org.gt"
             [(ngModel)]="correo"
             [disabled]="isSaving()"
             required>
-          @if (correo() && !correoValido) {
+          <div class="form-text">
+            Puede ingresar varios correos separados por coma. El resumen de cada carga se envía a todos.
+          </div>
+          @if (correosInvalidos().length > 0) {
             <div class="invalid-feedback d-block">
-              Ingrese un correo electrónico válido.
+              Correo(s) no válido(s): {{ correosInvalidos().join(', ') }}
+            </div>
+          } @else if (correo() && correos().length === 0) {
+            <div class="invalid-feedback d-block">
+              Ingrese al menos un correo electrónico.
             </div>
           }
         </div>
 
         <!-- Activo -->
-        <div class="col-md-3 d-flex align-items-center">
+        <div class="col-md-4 d-flex align-items-center">
           <div class="form-check form-switch mt-md-4">
             <input
               class="form-check-input"
@@ -98,11 +81,85 @@
           </div>
         </div>
 
+        <!-- Horario por día -->
+        <div class="col-12">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <label class="form-label mb-0">Horario de ejecución *</label>
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              (click)="copiarHoraLunes()"
+              [disabled]="isSaving() || !horarios().lunes.hora">
+              <ion-icon name="copy-outline" class="me-1"></ion-icon>
+              Copiar hora del lunes a los demás días
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-1 horario">
+              <thead>
+                <tr>
+                  <th>Día</th>
+                  <th class="text-center">Ejecutar</th>
+                  <th>Hora</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of dias; track d.key) {
+                  <tr [class.text-muted]="!horarios()[d.key].ejecutar">
+                    <td>
+                      <label [for]="'ejecutar-' + d.key" class="mb-0">{{ d.label }}</label>
+                    </td>
+                    <td class="text-center">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        [id]="'ejecutar-' + d.key"
+                        [name]="'ejecutar-' + d.key"
+                        [ngModel]="horarios()[d.key].ejecutar"
+                        (ngModelChange)="setEjecutar(d.key, $event)"
+                        [disabled]="isSaving()">
+                    </td>
+                    <td>
+                      <input
+                        type="time"
+                        class="form-control form-control-sm"
+                        [class.is-invalid]="!diaValido(d.key)"
+                        [id]="'hora-' + d.key"
+                        [name]="'hora-' + d.key"
+                        [attr.aria-label]="'Hora de ejecución del ' + d.label"
+                        [min]="horaMin"
+                        [max]="horaMax"
+                        [ngModel]="horarios()[d.key].hora"
+                        (ngModelChange)="setHora(d.key, $event)"
+                        [disabled]="isSaving() || !horarios()[d.key].ejecutar">
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="form-text">
+            Cada hora debe estar entre las {{ horaMin }} y las {{ horaMax }} horas (antes de iniciar labores).
+            Los días sin marcar no ejecutan la carga.
+          </div>
+          @if (!algunDiaActivo()) {
+            <div class="invalid-feedback d-block">
+              Marque al menos un día de ejecución.
+            </div>
+          } @else if (!horariosValidos()) {
+            <div class="invalid-feedback d-block">
+              Revise las horas marcadas en rojo: deben estar entre {{ horaMin }} y {{ horaMax }}.
+            </div>
+          }
+        </div>
+
         <div class="col-12">
           <button
             type="submit"
             class="btn btn-primary"
-            [disabled]="!formularioValido || isSaving()">
+            [disabled]="!formularioValido() || isSaving()">
             @if (isSaving()) {
               <span class="spinner-border spinner-border-sm me-2" role="status"></span>
               Guardando...
