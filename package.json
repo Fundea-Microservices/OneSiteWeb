@@ -18,19 +18,21 @@
   "overrides": {
     "@xmldom/xmldom": "^0.9.12",
     "piscina": "^5.3.2",
+    "glob": "^14.0.6",
+    "minimatch": "^11.0.9",
     "@istanbuljs/load-nyc-config": {
       "js-yaml": "^4.1.1"
     }
   },
   "dependencies": {
-    "@angular/animations": "^20.3.33",
+    "@angular/animations": "^20.3.35",
     "@angular/cdk": "^20.2.14",
-    "@angular/common": "^20.3.33",
-    "@angular/compiler": "^20.3.33",
-    "@angular/core": "^20.3.33",
-    "@angular/forms": "^20.3.33",
-    "@angular/platform-browser": "^20.3.33",
-    "@angular/router": "^20.3.33",
+    "@angular/common": "^20.3.35",
+    "@angular/compiler": "^20.3.35",
+    "@angular/core": "^20.3.35",
+    "@angular/forms": "^20.3.35",
+    "@angular/platform-browser": "^20.3.35",
+    "@angular/router": "^20.3.35",
     "@popperjs/core": "^2.11.8",
     "@preline/overlay": "^3.2.3",
     "@tailwindcss/postcss": "^4.1.10",
@@ -52,9 +54,9 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@angular/build": "^20.3.37",
-    "@angular/cli": "^20.3.37",
-    "@angular/compiler-cli": "^20.3.33",
+    "@angular/build": "^20.3.43",
+    "@angular/cli": "^20.3.43",
+    "@angular/compiler-cli": "^20.3.35",
     "@playwright/test": "^1.63.0",
     "@types/bootstrap": "^5.2.10",
     "@types/jest": "^30.0.0",
