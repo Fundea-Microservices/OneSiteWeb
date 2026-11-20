@@ -70,8 +70,20 @@
 <div class="card mb-3">
     <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
         <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-secondary fw-semibold" disabled title="Próximamente">
-                <ion-icon name="notifications-outline" class="text-warning"></ion-icon> Notificaciones
+            @let p = pendientes();
+            <button type="button" class="btn fw-semibold position-relative" [title]="tituloNotificaciones()"
+                [class]="p && p.noLeidos > 0 ? 'btn-outline-danger' : 'btn-outline-secondary'"
+                (click)="abrirNotificaciones()">
+                <ion-icon name="notifications-outline" [class.text-warning]="!p || p.noLeidos === 0"></ion-icon> Notificaciones
+                @if (p && p.noLeidos > 0) {
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger badge-notificaciones">
+                    {{ p.noLeidos }}<span class="visually-hidden"> mensajes sin leer</span>
+                </span>
+                } @else if (p && p.abiertas > 0) {
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-warning badge-notificaciones">
+                    {{ p.abiertas }}<span class="visually-hidden"> conversaciones abiertas</span>
+                </span>
+                }
             </button>
             <button type="button" class="btn btn-outline-primary fw-semibold" (click)="abrirPreliminar()">
                 <ion-icon name="document-text-outline"></ion-icon> Flujo Preliminar
@@ -81,9 +93,13 @@
             </button>
         </div>
         <span [attr.title]="motivoNoAprobable() || null">
-            <button type="button" class="btn btn-success btn-aprobar shadow-sm" [disabled]="!puedeAprobar() || aprobando()"
-                (click)="abrirAprobacion()">
+            <button type="button" class="btn btn-success btn-aprobar shadow-sm"
+                [disabled]="!puedeAprobar() || aprobando() || revisandoPendientes()" (click)="abrirAprobacion()">
+                @if (revisandoPendientes()) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+                } @else {
                 <ion-icon name="checkmark-circle-outline" class="me-1"></ion-icon>
+                }
                 {{ f.estado === 'ACEPTADO' ? 'Flujo aprobado' : 'Aprobar flujo' }}
             </button>
         </span>
@@ -344,21 +360,59 @@
                     Una vez aprobado, el flujo ya no se podrá editar. Para cambiarlo habría que anularlo y crear uno nuevo.
                 </div>
                 }
+                @if (pendientes(); as p) {
+                @if (p.hayPendientes) {
+                <div class="alert alert-danger py-2 small" role="alert">
+                    <div class="fw-semibold d-flex align-items-center gap-1 mb-1">
+                        <ion-icon name="chatbubbles-outline"></ion-icon> Hay conversaciones sin cerrar
+                    </div>
+                    <div class="mb-1">
+                        Este flujo tiene {{ p.abiertas }} {{ p.abiertas === 1 ? 'conversación abierta' : 'conversaciones abiertas' }}:
+                    </div>
+                    <ul class="mb-2 ps-3">
+                        @for (c of p.conversacionesAbiertas; track c.id) {
+                        <li>
+                            <button type="button" class="btn btn-link btn-sm p-0 align-baseline text-start text-danger-emphasis"
+                                [disabled]="aprobando()" (click)="revisarConversaciones(c.id)">
+                                #{{ c.numero }} {{ c.asunto }}
+                            </button>
+                            <span class="text-body-secondary"> · {{ c.usuarioNombre }}</span>
+                        </li>
+                        }
+                    </ul>
+                    <div>Puede aprobarlo de todas formas o revisar las conversaciones antes.</div>
+                </div>
+                }
+                }
                 <label for="txtComentarioAprobacion" class="form-label small mb-1">Comentario (opcional)</label>
                 <textarea class="form-control form-control-sm" id="txtComentarioAprobacion" rows="3" [maxLength]="maxComentario"
                     [value]="comentario()" [disabled]="aprobando()" (input)="onComentario(txtComentario)" #txtComentario></textarea>
                 <div class="small text-muted text-end">{{ comentario().length }} / {{ maxComentario }}</div>
             </div>
             <div class="modal-footer">
+                @let hayPendientes = !!pendientes()?.hayPendientes;
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" [disabled]="aprobando()">Cancelar</button>
+                @if (hayPendientes) {
+                <button type="button" class="btn btn-outline-primary fw-semibold" [disabled]="aprobando()" (click)="revisarConversaciones()">
+                    <ion-icon name="chatbubbles-outline"></ion-icon> Revisar conversaciones
+                </button>
+                }
                 <button type="button" class="btn btn-success fw-semibold" [disabled]="aprobando()" (click)="aprobar()">
                     @if (aprobando()) {
                     <span class="spinner-border spinner-border-sm me-1"></span> Aprobando...
                     } @else {
-                    <ion-icon name="checkmark-circle-outline"></ion-icon> Aprobar flujo
+                    <ion-icon name="checkmark-circle-outline"></ion-icon> {{ hayPendientes ? 'Aprobar de todas formas' : 'Aprobar flujo' }}
                     }
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ═══════════════════════ Modal: Notificaciones ═══════════════════════ -->
+@if (notificacionesAbiertas()) {
+@if (flujo(); as f) {
+<app-notificaciones-flujo-modal [flujo]="f" [conversacionId]="conversacionInicial()"
+    (actualizado)="onNotificacionesActualizadas()" (cerrar)="cerrarNotificaciones()" />
+}
+}

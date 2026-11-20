@@ -76,7 +76,9 @@ export interface IFlujoEncabezado {
     fechaInicio: string;         // YYYY-MM-01
     plazoMeses: number;
     estado: EstadoFlujo;
-    usuarioId: string;
+    usuarioId: string;           // quién lo creó
+    /** Nombre de quien lo creó (auth-ms). Solo viene en el listado; null si no se pudo consultar. */
+    usuarioNombre?: string | null;
     created_at: string;
     updated_at: string | null;
 }
@@ -416,6 +418,109 @@ export interface IFlujoExistente {
     id: string;
     codigo: string;
     estado: EstadoFlujo;
+}
+
+// ---------- Conversaciones (botón "Notificaciones" del expediente) ----------
+/**
+ * Hilos de mensajes entre quien crea el flujo y quien lo aprueba. Cada mensaje se notifica
+ * por correo a la otra parte (el back decide a quién). El usuario se toma del token.
+ */
+export type EstadoConversacion = 'ABIERTA' | 'CERRADA';
+
+/** Límites del gateway (CreateConversacionDto / CreateMensajeDto). */
+export const MAX_ASUNTO_CONVERSACION = 150;
+export const MAX_MENSAJE_CONVERSACION = 2000;
+
+/** Último mensaje de una conversación (vista previa del listado). */
+export interface IUltimoMensajeConversacion {
+    usuarioNombre: string;
+    mensaje: string;             // recortado a 120 caracteres + "…"
+    created_at: string;
+}
+
+/** Encabezado de una conversación (listado, cerrar y reabrir). */
+export interface IConversacion {
+    id: string;
+    flujoFondosId: string;
+    numero: number;              // correlativo dentro del flujo: "#numero"
+    asunto: string;
+    estado: EstadoConversacion;
+    usuarioId: string;           // quién la abrió
+    usuarioNombre: string;
+    usuarioCierreId: string | null;
+    usuarioCierreNombre: string | null;
+    fechaCierre: string | null;
+    created_at: string;
+    updated_at: string | null;
+    // Calculados para el usuario actual
+    totalMensajes: number;
+    noLeidos: number;
+    ultimaActividad: string;
+    ultimoMensaje: IUltimoMensajeConversacion | null;
+}
+
+export interface IMensajeConversacion {
+    id: string;
+    conversacionId: string;
+    mensaje: string;             // texto plano: mostrar con pre-wrap, nunca como HTML
+    usuarioId: string;
+    usuarioNombre: string;
+    destinatarioId: string | null;     // null = no había a quién notificar
+    correoDestinatario: string | null;
+    correoEnviado: boolean;
+    fechaLectura: string | null;       // estado ANTERIOR a la consulta (GET marca como leído)
+    created_at: string;
+    propio: boolean;                   // lo escribió el usuario actual
+}
+
+/** Datos mínimos del flujo para el encabezado del panel. */
+export interface IFlujoReferencia {
+    id: string;
+    codigo: string;
+    numeroSolicitud: number;
+    nombreCliente: string;
+    estado: EstadoFlujo;
+}
+
+/** Conversación con sus mensajes, del más antiguo al más reciente (ver y crear). */
+export interface IConversacionDetalle extends IConversacion {
+    flujo: IFlujoReferencia;
+    mensajes: IMensajeConversacion[];
+}
+
+export interface IResumenConversaciones {
+    total: number;
+    abiertas: number;
+    cerradas: number;
+    noLeidos: number;
+    hayPendientes: boolean;      // abiertas > 0
+}
+
+export interface IListadoConversaciones {
+    resumen: IResumenConversaciones;
+    conversaciones: IConversacion[]; // ABIERTAS primero, luego por ultimaActividad desc
+}
+
+export interface IConversacionAbierta {
+    id: string;
+    numero: number;
+    asunto: string;
+    usuarioNombre: string;
+    created_at: string;
+}
+
+/** Badge del botón y aviso antes de aprobar. */
+export interface IPendientesConversaciones extends IResumenConversaciones {
+    conversacionesAbiertas: IConversacionAbierta[]; // ordenadas por número
+}
+
+export interface ICrearConversacion {
+    asunto: string;              // 1..150, no solo espacios
+    mensaje: string;             // 1..2000, no solo espacios
+}
+
+export interface ICrearMensajeConversacion {
+    mensaje: string;             // 1..2000, no solo espacios
 }
 
 export const CLASE_ESTADO_FLUJO: Record<EstadoFlujo, string> = {

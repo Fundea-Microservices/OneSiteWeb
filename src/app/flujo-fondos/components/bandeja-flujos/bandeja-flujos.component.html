@@ -77,6 +77,7 @@
                         <th class="text-center" scope="col">Monto crédito</th>
                         <th class="text-center" scope="col">Horizonte</th>
                         <th class="text-center" scope="col">Estado</th>
+                        <th class="text-center" scope="col">Creado por</th>
                         <th class="text-center" scope="col">Creado</th>
                         <th class="text-center" scope="col">Acciones</th>
                     </tr>
@@ -94,8 +95,28 @@
                         <td class="text-end text-nowrap">Q {{ item.montoCredito | number:'1.2-2' }}</td>
                         <td class="text-center text-nowrap">{{ formatoPeriodo(item.fechaInicio) }} · {{ item.plazoMeses }} meses</td>
                         <td class="text-center"><span class="badge" [class]="claseEstado[item.estado]">{{ item.estado }}</span></td>
+                        <td>{{ item.usuarioNombre || '—' }}</td>
                         <td class="text-center text-nowrap">{{ item.created_at | date:'dd/MM/yyyy' }}</td>
                         <td class="text-center text-nowrap">
+                            @let c = conteo(item);
+                            <!-- Anulado: solo si tiene conversaciones (se pueden consultar y cerrar) -->
+                            @if (item.estado !== 'ANULADO' || (c && c.total > 0)) {
+                            <button type="button" class="btn btn-sm mx-1 position-relative" [title]="tituloNotificaciones(item)"
+                                [attr.aria-label]="tituloNotificaciones(item)"
+                                [class]="c && c.noLeidos > 0 ? 'btn-outline-danger' : 'btn-outline-secondary'"
+                                (click)="flujoNotificaciones.set(item)">
+                                <ion-icon name="notifications-outline"></ion-icon>
+                                @if (c && c.noLeidos > 0) {
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger text-[0.7em]">
+                                    {{ c.noLeidos }}
+                                </span>
+                                } @else if (c && c.abiertas > 0) {
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-warning text-[0.7em]">
+                                    {{ c.abiertas }}
+                                </span>
+                                }
+                            </button>
+                            }
                             @if (modo() === 'gestion') {
                             <a class="btn btn-sm btn-primary mx-1" title="Ver" [routerLink]="['/flujo-fondos/flujos', item.id]">
                                 <ion-icon name="eye-outline"></ion-icon>
@@ -118,7 +139,7 @@
                     } @empty {
                     @if (!isLoading()) {
                     <tr>
-                        <td colspan="12" class="text-center text-muted py-3">No hay flujos de fondos</td>
+                        <td colspan="13" class="text-center text-muted py-3">No hay flujos de fondos</td>
                     </tr>
                     }
                     }
@@ -130,3 +151,9 @@
 
     </div>
 </div>
+
+<!-- MODAL NOTIFICACIONES DEL FLUJO -->
+@if (flujoNotificaciones(); as f) {
+<app-notificaciones-flujo-modal [flujo]="f" (actualizado)="actualizarNotificaciones(f)"
+    (cerrar)="flujoNotificaciones.set(null)" />
+}

@@ -42,6 +42,33 @@ export function formatoFecha(fecha: string | null | undefined): string {
   return `${dia}/${mes}/${anio}`;
 }
 
+/**
+ * '2026-11-20T10:15:00.000Z' -> '20/11/2026 10:15'. Las fechas de las conversaciones son la
+ * hora del servidor de BD (SYSDATETIME, igual que created_at): se muestra tal como viene,
+ * sin pasarla por la zona horaria del navegador.
+ */
+export function formatoFechaHora(fecha: string | null | undefined): string {
+  if (!fecha) return '';
+  return `${formatoFecha(fecha)} ${fecha.slice(11, 16)}`;
+}
+
+/** 'hace 5 min', 'hace 2 h', 'ayer 10:15' o '20/11/2026'. Misma hora de BD que formatoFechaHora. */
+export function haceCuanto(fecha: string | null | undefined, ahora = new Date()): string {
+  if (!fecha) return '';
+  // Sin la Z, el texto se interpreta como hora local: la misma que muestra formatoFechaHora
+  const momento = new Date(fecha.slice(0, 19));
+  const minutos = Math.floor((ahora.getTime() - momento.getTime()) / 60000);
+  if (isNaN(minutos)) return formatoFecha(fecha);
+  if (minutos < 1) return 'hace un momento';
+  if (minutos < 60) return `hace ${minutos} min`;
+
+  const dia = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const dias = Math.round((dia(ahora) - dia(momento)) / 86400000);
+  if (dias <= 0) return `hace ${Math.floor(minutos / 60)} h`;
+  if (dias === 1) return `ayer ${fecha.slice(11, 16)}`;
+  return formatoFecha(fecha);
+}
+
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
 /** '2026-08-10' -> 'Agosto' */

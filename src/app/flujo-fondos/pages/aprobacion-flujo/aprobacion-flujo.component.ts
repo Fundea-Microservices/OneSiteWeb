@@ -14,9 +14,19 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Modal } from 'bootstrap';
 import { CATALOGOS_ACTIVIDAD } from '../../../../interfaces/actividad-economica';
-import { EstadoFlujo, ICategoriaParametro, IFlujoDetalle, ILineaFlujo, IParametroFlujo, IParametrosFlujo } from '../../../../interfaces/flujo-fondos';
+import {
+  EstadoFlujo,
+  ICategoriaParametro,
+  IFlujoDetalle,
+  ILineaFlujo,
+  IParametroFlujo,
+  IParametrosFlujo,
+  IPendientesConversaciones,
+} from '../../../../interfaces/flujo-fondos';
 import { CatalogoService } from '../../../../services/flujo-fondos/catalogo.service';
+import { ConversacionFlujoService } from '../../../../services/flujo-fondos/conversacion.service';
 import { FlujoFondosService } from '../../../../services/flujo-fondos/flujo-fondos.service';
+import { NotificacionesFlujoModal } from '../../components/notificaciones-flujo-modal/notificaciones-flujo-modal';
 import { ActividadesEstacionalesComponent } from '../../components/flujo/actividades-estacionales/actividades-estacionales';
 import { OtrosPrestamosComponent } from '../../components/flujo/otros-prestamos/otros-prestamos';
 import { ProyeccionFlujoComponent } from '../../components/flujo/proyeccion-flujo/proyeccion-flujo';
@@ -60,6 +70,7 @@ const ESTADO_DICTAMEN: Record<EstadoFlujo, { etiqueta: string; tono: Tono; icono
     OtrosPrestamosComponent,
     ActividadesEstacionalesComponent,
     ResumenActividadesComponent,
+    NotificacionesFlujoModal,
   ],
   templateUrl: './aprobacion-flujo.component.html',
   styles: `
@@ -115,6 +126,7 @@ const ESTADO_DICTAMEN: Record<EstadoFlujo, { etiqueta: string; tono: Tono; icono
     .etiqueta-otra { background-color: var(--bs-secondary-bg-subtle); border: 1px solid var(--bs-secondary-border-subtle); color: var(--bs-secondary-text-emphasis); }
 
     .btn-aprobar { font-weight: 700; text-transform: uppercase; padding: .6rem 1.75rem; }
+    .badge-notificaciones { font-size: .7rem; }
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -125,6 +137,7 @@ export default class AprobacionFlujoComponent implements OnInit {
   private router = inject(Router);
   private flujoService = inject(FlujoFondosService);
   private catalogoService = inject(CatalogoService);
+  private conversacionService = inject(ConversacionFlujoService);
 
   private resumenRef = viewChild(ResumenActividadesComponent);
   private preliminarModalRef = viewChild.required<ElementRef>('preliminarModal');
@@ -153,6 +166,21 @@ export default class AprobacionFlujoComponent implements OnInit {
   // ── Aprobación ───────────────────────────────────────────────────────────
   comentario = signal('');
   aprobando = signal(false);
+  /** Se vuelven a consultar las conversaciones antes de mostrar la confirmación */
+  revisandoPendientes = signal(false);
+
+  // ── Notificaciones (conversaciones) ──────────────────────────────────────
+  /** null = no se pudo consultar (sin badge) */
+  pendientes = signal<IPendientesConversaciones | null>(null);
+  notificacionesAbiertas = signal(false);
+  /** Conversación que se abre directamente (desde el aviso antes de aprobar) */
+  conversacionInicial = signal<string | null>(null);
+
+  tituloNotificaciones = computed(() => {
+    const p = this.pendientes();
+    if (!p) return 'Notificaciones';
+    return `Notificaciones: ${p.abiertas} abiertas · ${p.cerradas} cerradas · ${p.noLeidos} sin leer`;
+  });
 
   dictamen = computed(() => {
     const f = this.flujo();
@@ -280,6 +308,8 @@ export default class AprobacionFlujoComponent implements OnInit {
     this.parametros.set(null);
     this.errorParametros.set(null);
     this.cargandoParametros.set(false);
+    this.pendientes.set(null);
+    this.notificacionesAbiertas.set(false);
     this.mensajeBusqueda.set(null);
     this.buscando.set(false);
   }
@@ -311,6 +341,7 @@ export default class AprobacionFlujoComponent implements OnInit {
 
     // Puede tardar (la primera vez consulta Bantotal) y fallar sin impedir la revisión
     this.cargarParametros(activo.id);
+    this.cargarPendientes(activo.id);
 
     const [flujo, resumen] = await Promise.all([
       this.flujoService.getFlujoById(activo.id, this.agrupar()),
@@ -395,10 +426,53 @@ export default class AprobacionFlujoComponent implements OnInit {
     if (flujo) this.flujo.set(flujo);
   }
 
+  // ── Notificaciones ───────────────────────────────────────────────────────
+
+  /** Badge del botón y aviso antes de aprobar. Si falla (404 MS-FJF-61-01), el botón queda sin badge. */
+  async cargarPendientes(id: string) {
+    const secuencia = this.secuencia;
+    const resp = await this.conversacionService.resumen(id);
+    if (secuencia !== this.secuencia) return;
+    this.pendientes.set(resp.ok ? resp.data : null);
+  }
+
+  abrirNotificaciones(conversacionId: string | null = null) {
+    if (!this.flujo()) return;
+    this.conversacionInicial.set(conversacionId);
+    this.notificacionesAbiertas.set(true);
+  }
+
+  cerrarNotificaciones() {
+    this.notificacionesAbiertas.set(false);
+    this.conversacionInicial.set(null);
+  }
+
+  onNotificacionesActualizadas() {
+    const f = this.flujo();
+    if (f) this.cargarPendientes(f.id);
+  }
+
+  /** Desde el aviso de la confirmación: se deja la aprobación y se revisan las conversaciones */
+  revisarConversaciones(conversacionId: string | null = null) {
+    this.aprobarModal?.hide();
+    this.abrirNotificaciones(conversacionId);
+  }
+
   // ── Aprobación ───────────────────────────────────────────────────────────
 
-  abrirAprobacion() {
-    if (!this.puedeAprobar()) return;
+  /**
+   * Antes de confirmar se consultan las conversaciones: si hay abiertas se avisa en la
+   * confirmación, sin bloquear (el back permite aprobar igual).
+   */
+  async abrirAprobacion() {
+    const f = this.flujo();
+    if (!f || !this.puedeAprobar() || this.revisandoPendientes()) return;
+
+    this.revisandoPendientes.set(true);
+    await this.cargarPendientes(f.id);
+    this.revisandoPendientes.set(false);
+    if (this.flujo() !== f) return;
+
     this.comentario.set('');
     this.aprobarModal ??= new Modal(this.aprobarModalRef().nativeElement);
     this.aprobarModal.show();

@@ -25,6 +25,7 @@ import {
   IEstacionalInput,
   ILineaFlujoInput,
   IOtroPrestamo,
+  IPendientesConversaciones,
   IProyeccionFlujoInput,
   ISimulacionFlujo,
   ISolicitudCreditoBantotal,
@@ -35,7 +36,9 @@ import {
 } from '../../../../interfaces/flujo-fondos';
 import { ActividadEconomicaService } from '../../../../services/flujo-fondos/actividad-economica.service';
 import { CatalogoService } from '../../../../services/flujo-fondos/catalogo.service';
+import { ConversacionFlujoService } from '../../../../services/flujo-fondos/conversacion.service';
 import { FalloConsulta, FlujoFondosService } from '../../../../services/flujo-fondos/flujo-fondos.service';
+import { NotificacionesFlujoModal } from '../../components/notificaciones-flujo-modal/notificaciones-flujo-modal';
 import { ActividadesEstacionalesComponent } from '../../components/flujo/actividades-estacionales/actividades-estacionales';
 import { OtrosPrestamosComponent } from '../../components/flujo/otros-prestamos/otros-prestamos';
 import { ProyeccionFlujoComponent } from '../../components/flujo/proyeccion-flujo/proyeccion-flujo';
@@ -72,7 +75,7 @@ interface LineaValor {
  */
 @Component({
   selector: 'app-flujo',
-  imports: [RouterLink, DecimalPipe, LowerCasePipe, NgTemplateOutlet, ReactiveFormsModule, ProyeccionFlujoComponent, OtrosPrestamosComponent, ActividadesEstacionalesComponent, ResumenActividadesComponent, SeccionComponent, AutocompleteComponent],
+  imports: [RouterLink, DecimalPipe, LowerCasePipe, NgTemplateOutlet, ReactiveFormsModule, ProyeccionFlujoComponent, OtrosPrestamosComponent, ActividadesEstacionalesComponent, ResumenActividadesComponent, SeccionComponent, AutocompleteComponent, NotificacionesFlujoModal],
   templateUrl: './flujo.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,6 +89,7 @@ export default class FlujoComponent implements OnInit {
   private flujoService = inject(FlujoFondosService);
   private actividadService = inject(ActividadEconomicaService);
   private catalogoService = inject(CatalogoService);
+  private conversacionService = inject(ConversacionFlujoService);
   private toastr = inject(ToastrService);
 
   private otrosPrestamosRef = viewChild(OtrosPrestamosComponent);
@@ -229,6 +233,17 @@ export default class FlujoComponent implements OnInit {
   flujo = signal<IFlujoDetalle | null>(null);
   cargandoFlujo = signal(false);
 
+  // ── Notificaciones (conversaciones con quien aprueba) ────────────────────
+  /** null = no se pudo consultar (sin badge) */
+  pendientes = signal<IPendientesConversaciones | null>(null);
+  notificacionesAbiertas = signal(false);
+
+  tituloNotificaciones = computed(() => {
+    const p = this.pendientes();
+    if (!p) return 'Notificaciones';
+    return `Notificaciones: ${p.abiertas} abiertas · ${p.cerradas} cerradas · ${p.noLeidos} sin leer`;
+  });
+
   /** Rango del horizonte para mostrarlo junto al plazo: 'Oct 2026 – Sep 2027'. */
   rangoHorizonte = computed(() => {
     const { fechaInicio, plazoMeses } = this.horizonte();
@@ -247,10 +262,13 @@ export default class FlujoComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       this.flujoId.set(id);
+      this.pendientes.set(null);
+      this.notificacionesAbiertas.set(false);
       if (id) {
         this.flujo.set(null);
         this.reiniciarCaptura();
         this.cargarFlujo(true);
+        this.cargarPendientes();
       }
     });
 
@@ -654,6 +672,16 @@ export default class FlujoComponent implements OnInit {
         this.poblarCaptura(flujo);
       }
     }
+  }
+
+  // ── Notificaciones ───────────────────────────────────────────────────────
+
+  /** Badge del botón. Si falla (404 MS-FJF-61-01), el botón queda sin badge. */
+  async cargarPendientes() {
+    const id = this.flujoId();
+    if (!id) return;
+    const resp = await this.conversacionService.resumen(id);
+    if (this.flujoId() === id) this.pendientes.set(resp.ok ? resp.data : null);
   }
 
   /** Lleva el flujo guardado a la captura; su proyección sirve de vista previa mientras se recalcula. */

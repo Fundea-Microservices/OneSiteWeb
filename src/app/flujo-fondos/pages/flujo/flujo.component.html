@@ -56,6 +56,21 @@
         <span class="badge ms-1" [class]="claseEstado[f.estado]">{{ f.estado }}</span>
     </span>
     <div acciones class="d-flex flex-wrap gap-2">
+        @let p = pendientes();
+        <button type="button" class="btn btn-sm fw-semibold position-relative me-1" [title]="tituloNotificaciones()"
+            [class]="p && p.noLeidos > 0 ? 'btn-outline-danger' : 'btn-outline-secondary'"
+            (click)="notificacionesAbiertas.set(true)">
+            <ion-icon name="notifications-outline" [class.text-warning]="!p || p.noLeidos === 0"></ion-icon> Notificaciones
+            @if (p && p.noLeidos > 0) {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger" style="font-size: .7rem">
+                {{ p.noLeidos }}<span class="visually-hidden"> mensajes sin leer</span>
+            </span>
+            } @else if (p && p.abiertas > 0) {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-warning" style="font-size: .7rem">
+                {{ p.abiertas }}<span class="visually-hidden"> conversaciones abiertas</span>
+            </span>
+            }
+        </button>
         <a class="btn btn-primary btn-sm" [routerLink]="['/flujo-fondos/flujos/nuevo']">Nuevo flujo</a>
     </div>
         <div class="row g-3 small">
@@ -453,3 +468,10 @@
             }
     </app-seccion>
 </ng-template>
+
+<!-- ═══════════════════════ Modal: Notificaciones ═══════════════════════ -->
+@if (notificacionesAbiertas()) {
+@if (flujo(); as f) {
+<app-notificaciones-flujo-modal [flujo]="f" (actualizado)="cargarPendientes()" (cerrar)="notificacionesAbiertas.set(false)" />
+}
+}

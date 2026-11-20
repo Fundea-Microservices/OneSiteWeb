@@ -1,0 +1,332 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" (click)="cerrar.emit()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()"
+        role="dialog" aria-modal="true" aria-labelledby="tituloNotificacionesFlujo">
+
+        <!-- CABECERA -->
+        <div class="flex items-start justify-between gap-2 px-6 py-4 border-b border-gray-200">
+            <div>
+                <h3 id="tituloNotificacionesFlujo" class="text-base font-semibold text-gray-800">Notificaciones del flujo</h3>
+                @let f = flujo();
+                <p class="text-sm text-gray-600 mb-0">
+                    Flujo <span class="font-mono font-semibold">{{ f.codigo }}</span>
+                    · Solicitud <span class="font-semibold">{{ f.numeroSolicitud }}</span>
+                    · {{ f.nombreCliente }}
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="button" class="text-gray-500 hover:text-gray-800 text-lg leading-none disabled:opacity-50"
+                    title="Actualizar" [disabled]="isLoading() || cargandoHilo()" (click)="refrescar()">
+                    <ion-icon name="refresh-outline"></ion-icon>
+                </button>
+                <button type="button" class="text-gray-500 hover:text-gray-800 text-xl leading-none" title="Cerrar"
+                    (click)="cerrar.emit()">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 overflow-y-auto bg-gray-50/50">
+
+            @if (anulado()) {
+            <div class="mb-4 p-3 rounded-lg border bg-gray-100 border-gray-300 text-gray-700 text-sm flex items-center gap-2">
+                <ion-icon name="ban-outline" class="text-lg shrink-0"></ion-icon>
+                El flujo está anulado: solo se pueden consultar y cerrar las conversaciones.
+            </div>
+            }
+
+            <!-- 1. CONVERSACIONES -->
+            <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4">
+                <button type="button" (click)="toggleSeccion('listado')" [attr.aria-expanded]="abierta('listado')"
+                    class="w-full flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 text-left transition-colors">
+                    <span class="flex flex-wrap items-center gap-2">
+                        <ion-icon name="chatbubbles-outline" class="text-xl text-blue-700 shrink-0"></ion-icon>
+                        <span class="font-semibold text-gray-800 me-1">1. Conversaciones</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-700">{{ resumen().total }}</span>
+                        @if (resumen().abiertas > 0) {
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded border bg-yellow-100 text-yellow-800 border-yellow-300">
+                            {{ resumen().abiertas }} {{ resumen().abiertas === 1 ? 'abierta' : 'abiertas' }}
+                        </span>
+                        }
+                        @if (resumen().noLeidos > 0) {
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded border bg-blue-100 text-blue-800 border-blue-300">
+                            {{ resumen().noLeidos }} sin leer
+                        </span>
+                        }
+                    </span>
+                    <ion-icon name="chevron-up-outline" class="text-lg text-gray-500 transition-transform duration-200"
+                        [class.rotate-180]="!abierta('listado')"></ion-icon>
+                </button>
+
+                @if (abierta('listado')) {
+                <div class="p-4 border-t border-gray-200">
+                    <!-- FILTRO -->
+                    <div class="flex justify-end mb-3">
+                        <select [ngModel]="estadoFiltro()" (ngModelChange)="estadoFiltro.set($event)" aria-label="Estado"
+                            class="sm:w-48 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 p-2">
+                            <option value="">Todos los estados</option>
+                            <option value="ABIERTA">Abiertas</option>
+                            <option value="CERRADA">Cerradas</option>
+                        </select>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="table table-sm table-bordered w-full align-middle mb-0">
+                            <thead>
+                                <tr class="text-[0.85em]">
+                                    <th class="text-center" scope="col">Última actividad</th>
+                                    <th class="text-center" scope="col">Conversación</th>
+                                    <th class="text-center" scope="col">Iniciada por</th>
+                                    <th class="text-center" scope="col">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-[0.85em]">
+                                @if (isLoading()) {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                        <span class="ms-2">Cargando conversaciones...</span>
+                                    </td>
+                                </tr>
+                                } @else {
+                                @for (c of filtradas(); track c.id) {
+                                <tr class="cursor-pointer hover:bg-slate-50" [class.bg-blue-50]="abiertaId() === c.id"
+                                    (click)="toggleConversacion(c)">
+                                    <td class="whitespace-nowrap" [title]="formatoFechaHora(c.ultimaActividad)">
+                                        {{ haceCuanto(c.ultimaActividad) }}
+                                    </td>
+                                    <td>
+                                        <div class="flex items-start gap-2">
+                                            <ion-icon name="chevron-forward-outline" class="mt-0.5 text-gray-400 shrink-0 transition-transform"
+                                                [class.rotate-90]="abiertaId() === c.id"></ion-icon>
+                                            <div class="min-w-0">
+                                                <span [class.font-semibold]="c.noLeidos > 0">
+                                                    <span class="text-gray-500">#{{ c.numero }}</span> {{ c.asunto }}
+                                                </span>
+                                                @if (c.ultimoMensaje; as u) {
+                                                <div class="text-gray-500 truncate max-w-[32rem]">
+                                                    <span class="font-medium">{{ u.usuarioNombre }}:</span> {{ u.mensaje }}
+                                                </div>
+                                                }
+                                                <div class="flex flex-wrap gap-1 mt-1">
+                                                    <span class="text-[0.85em] px-2 py-0.5 rounded border bg-gray-50 border-gray-200 text-gray-600">
+                                                        {{ c.totalMensajes }} {{ c.totalMensajes === 1 ? 'mensaje' : 'mensajes' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center whitespace-nowrap">{{ c.usuarioNombre }}</td>
+                                    <td class="text-center">
+                                        <span class="text-xs font-semibold px-2 py-0.5 rounded border"
+                                            [class]="c.estado === 'ABIERTA' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-700 border-gray-300'">
+                                            {{ c.estado === 'ABIERTA' ? 'Abierta' : 'Cerrada' }}
+                                        </span>
+                                        @if (c.noLeidos > 0) {
+                                        <span class="block text-[0.85em] text-blue-700 font-semibold mt-1">{{ c.noLeidos }} sin leer</span>
+                                        }
+                                    </td>
+                                </tr>
+
+                                <!-- CONVERSACIÓN -->
+                                @if (abiertaId() === c.id) {
+                                <tr>
+                                    <td colspan="4" class="bg-slate-50 p-3">
+                                        @if (cargandoHilo()) {
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <span class="ms-2">Cargando conversación...</span>
+                                        </div>
+                                        } @else if (hilo(); as h) {
+                                        <div class="bg-white rounded-lg border border-gray-200 p-3">
+
+                                            <!-- MENSAJES -->
+                                            <div #chat class="relative space-y-2 max-h-96 overflow-y-auto pe-1">
+                                                @for (m of h.mensajes; track m.id) {
+                                                <div class="flex" [class.justify-end]="m.propio" [attr.data-nuevo]="esNuevo(m) ? '' : null">
+                                                    <div class="max-w-[85%] rounded-lg border p-2"
+                                                        [class]="m.propio ? 'bg-blue-50 border-blue-200' : esNuevo(m) ? 'bg-amber-50 border-amber-300' : 'bg-gray-50 border-gray-200'">
+                                                        <div class="flex flex-wrap items-center gap-x-2 text-[0.85em] text-gray-500 mb-1"
+                                                            [class.justify-end]="m.propio">
+                                                            <span class="font-semibold text-gray-700">{{ m.propio ? 'Usted' : m.usuarioNombre }}</span>
+                                                            <span>· {{ formatoFechaHora(m.created_at) }}</span>
+                                                            @if (esNuevo(m)) {
+                                                            <span class="text-[0.9em] font-semibold px-1.5 rounded bg-amber-400 text-white">Nuevo</span>
+                                                            }
+                                                            @if (m.propio) {
+                                                            <ion-icon [attr.name]="m.correoEnviado ? 'mail-outline' : 'warning-outline'"
+                                                                [class]="m.correoEnviado ? 'text-green-700' : 'text-amber-600'"
+                                                                [title]="tituloCorreo(m)"></ion-icon>
+                                                            }
+                                                        </div>
+                                                        <p class="mb-0 whitespace-pre-wrap break-words text-gray-800">{{ m.mensaje }}</p>
+                                                    </div>
+                                                </div>
+                                                }
+                                            </div>
+
+                                            <!-- RESPONDER / CERRAR / REABRIR -->
+                                            @if (h.estado === 'CERRADA') {
+                                            <div class="flex flex-wrap items-center justify-between gap-2 mt-3">
+                                                <p class="mb-0 text-[0.9em] text-gray-500 flex items-center gap-1">
+                                                    <ion-icon name="lock-closed-outline"></ion-icon>
+                                                    Cerrada por {{ h.usuarioCierreNombre || '—' }} el {{ formatoFechaHora(h.fechaCierre) }}.
+                                                </p>
+                                                @if (!anulado()) {
+                                                <button type="button" [disabled]="procesando()"
+                                                    class="px-3 py-1.5 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 text-sm disabled:opacity-50 flex items-center gap-2"
+                                                    (click)="reabrir()">
+                                                    @if (procesando()) {
+                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                    } @else {
+                                                    <ion-icon name="lock-open-outline"></ion-icon>
+                                                    }
+                                                    Reabrir
+                                                </button>
+                                                }
+                                            </div>
+                                            } @else {
+                                            @if (!anulado()) {
+                                            <div class="mt-3">
+                                                <label for="txtRespuestaConversacion" class="block mb-1 text-[0.95em] font-medium text-gray-900">Responder</label>
+                                                <textarea id="txtRespuestaConversacion" rows="3" [attr.maxlength]="maxMensaje" [ngModel]="respuesta()"
+                                                    (ngModelChange)="respuesta.set($event)" [disabled]="procesando()"
+                                                    (keydown.control.enter)="responder()"
+                                                    placeholder="Escriba un mensaje (Ctrl + Enter para enviar)"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
+                                                <div class="text-end text-[0.85em] text-gray-500">{{ respuesta().length }} / {{ maxMensaje }}</div>
+                                            </div>
+                                            }
+
+                                            @if (confirmandoCierre()) {
+                                            <div class="flex flex-wrap items-center justify-end gap-2 mt-2 p-2 rounded border border-yellow-300 bg-yellow-50">
+                                                <span class="text-[0.95em] text-yellow-900 me-auto">
+                                                    ¿Dar por cerrada la conversación <b>#{{ h.numero }} {{ h.asunto }}</b>?
+                                                </span>
+                                                <button type="button" [disabled]="procesando()"
+                                                    class="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm disabled:opacity-50"
+                                                    (click)="confirmandoCierre.set(false)">
+                                                    Cancelar
+                                                </button>
+                                                <button type="button" [disabled]="procesando()"
+                                                    class="px-3 py-1.5 rounded bg-gray-700 hover:bg-gray-800 text-white text-sm disabled:opacity-50 flex items-center gap-2"
+                                                    (click)="cerrarConversacion()">
+                                                    @if (procesando()) {
+                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                    }
+                                                    Sí, cerrar
+                                                </button>
+                                            </div>
+                                            } @else {
+                                            <div class="flex flex-wrap justify-end gap-2 mt-2">
+                                                <button type="button" [disabled]="procesando()"
+                                                    class="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm disabled:opacity-50"
+                                                    (click)="confirmandoCierre.set(true)">
+                                                    Cerrar conversación
+                                                </button>
+                                                @if (!anulado()) {
+                                                <button type="button" [disabled]="!respuesta().trim() || procesando()"
+                                                    class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                    (click)="responder()">
+                                                    @if (procesando()) {
+                                                    <span class="spinner-border spinner-border-sm" role="status"></span> Enviando...
+                                                    } @else {
+                                                    <ion-icon name="send-outline"></ion-icon> Enviar
+                                                    }
+                                                </button>
+                                                }
+                                            </div>
+                                            }
+                                            }
+                                        </div>
+                                        } @else {
+                                        <div class="text-center py-3 text-gray-500">No se pudo obtener la conversación.</div>
+                                        }
+                                    </td>
+                                </tr>
+                                }
+                                } @empty {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-gray-500">
+                                        @if (conversaciones().length) {
+                                        No hay conversaciones con ese estado.
+                                        } @else if (anulado()) {
+                                        No hay conversaciones.
+                                        } @else {
+                                        No hay conversaciones. Use <b>Nueva conversación</b> para consultar algo sobre este flujo.
+                                        }
+                                    </td>
+                                </tr>
+                                }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                }
+            </section>
+
+            <!-- 2. NUEVA CONVERSACIÓN -->
+            @if (!anulado()) {
+            <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <button type="button" (click)="toggleSeccion('nueva')" [attr.aria-expanded]="abierta('nueva')"
+                    class="w-full flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 text-left transition-colors">
+                    <span class="flex items-center gap-3">
+                        <ion-icon name="send-outline" class="text-xl text-blue-700 shrink-0"></ion-icon>
+                        <span class="font-semibold text-gray-800">2. Nueva conversación</span>
+                    </span>
+                    <ion-icon name="chevron-up-outline" class="text-lg text-gray-500 transition-transform duration-200"
+                        [class.rotate-180]="!abierta('nueva')"></ion-icon>
+                </button>
+
+                @if (abierta('nueva')) {
+                <div class="p-4 border-t border-gray-200 space-y-3">
+                    <div>
+                        <label for="txtAsuntoConversacion" class="block mb-1 text-sm font-medium text-gray-900">Asunto <span class="text-red-600">*</span></label>
+                        <input id="txtAsuntoConversacion" type="text" [attr.maxlength]="maxAsunto" [ngModel]="asunto()" (ngModelChange)="asunto.set($event)"
+                            [disabled]="enviando()" placeholder="Ej. Precio del frijol"
+                            class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 p-2" />
+                        <div class="text-end text-xs text-gray-500">{{ asunto().length }} / {{ maxAsunto }}</div>
+                    </div>
+
+                    <div>
+                        <label for="txtMensajeConversacion" class="block mb-1 text-sm font-medium text-gray-900">Mensaje <span class="text-red-600">*</span></label>
+                        <textarea id="txtMensajeConversacion" rows="4" [attr.maxlength]="maxMensaje" [ngModel]="mensaje()" (ngModelChange)="mensaje.set($event)"
+                            [disabled]="enviando()" placeholder="Escriba el detalle de la consulta"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
+                        <div class="flex justify-between gap-2 text-xs text-gray-500">
+                            <span>Se notificará por correo a la otra parte del flujo.</span>
+                            <span>{{ mensaje().length }} / {{ maxMensaje }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="button" [disabled]="!formularioValido() || enviando()"
+                            class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            (click)="enviar()">
+                            @if (enviando()) {
+                            <span class="spinner-border spinner-border-sm" role="status"></span> Enviando...
+                            } @else {
+                            Enviar notificación
+                            }
+                        </button>
+                    </div>
+                </div>
+                }
+            </section>
+            }
+        </div>
+
+        <!-- PIE -->
+        <div class="flex justify-end px-6 py-3 border-t border-gray-200">
+            <button type="button"
+                class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm"
+                (click)="cerrar.emit()">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>

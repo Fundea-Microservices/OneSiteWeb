@@ -1,21 +1,31 @@
 import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, inject, input, OnInit, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { CLASE_ESTADO_FLUJO, EstadoFlujo, ESTADOS_FLUJO, IFlujoEncabezado } from '../../../../interfaces/flujo-fondos';
+import {
+  CLASE_ESTADO_FLUJO,
+  EstadoFlujo,
+  ESTADOS_FLUJO,
+  IFlujoEncabezado,
+  IResumenConversaciones,
+} from '../../../../interfaces/flujo-fondos';
 import { Agencia, Region } from '../../../../interfaces/api-bantotal/sucursales';
 import { FlujoFondosService } from '../../../../services/flujo-fondos/flujo-fondos.service';
+import { ConversacionFlujoService } from '../../../../services/flujo-fondos/conversacion.service';
 import { SucursalesBantotalService } from '../../../../services/api-bantotal/sucursales.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination';
+import { NotificacionesFlujoModal } from '../notificaciones-flujo-modal/notificaciones-flujo-modal';
 import { formatoPeriodo } from '../../utils/flujo';
 
 /**
  * Bandeja de flujos de fondos (GET /flujo-fondos/flujos, paginado) con sus filtros.
  * - gestion: la del asesor; "Ver" abre el flujo para editarlo y se puede crear uno nuevo.
  * - aprobacion: la del analista; "Aprobar" abre el expediente en /flujo-fondos/aprobacion/revisar.
+ * En los dos modos, cada fila muestra si el flujo tiene notificaciones (conversaciones)
+ * abiertas o sin leer y permite responderlas desde la tabla.
  */
 @Component({
   selector: 'app-bandeja-flujos',
-  imports: [RouterLink, DatePipe, DecimalPipe, PaginationComponent],
+  imports: [RouterLink, DatePipe, DecimalPipe, PaginationComponent, NotificacionesFlujoModal],
   templateUrl: './bandeja-flujos.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,9 +33,14 @@ import { formatoPeriodo } from '../../utils/flujo';
 export class BandejaFlujosComponent implements OnInit {
 
   private flujoService = inject(FlujoFondosService);
+  private conversacionService = inject(ConversacionFlujoService);
   private sucursalesService = inject(SucursalesBantotalService);
 
   modo = input<'gestion' | 'aprobacion'>('gestion');
+
+  /** Resumen de conversaciones por flujo de la página (para el botón de notificaciones) */
+  notificaciones = signal<Map<string, IResumenConversaciones>>(new Map());
+  flujoNotificaciones = signal<IFlujoEncabezado | null>(null);
 
   readonly estados = ESTADOS_FLUJO;
   readonly claseEstado = CLASE_ESTADO_FLUJO;
@@ -95,8 +110,41 @@ export class BandejaFlujosComponent implements OnInit {
         pageSize: metadata.limit,
         totalItems: metadata.total
       });
+      this.cargarNotificaciones(flujos);
     }
     this.isLoading.set(false);
+  }
+
+  // ── Notificaciones ───────────────────────────────────────────────────────
+
+  /** Un resumen por flujo de la página; si alguno falla, su botón queda sin contador */
+  private async cargarNotificaciones(flujos: IFlujoEncabezado[]) {
+    const resumenes = await Promise.all(flujos.map(f => this.conversacionService.resumen(f.id)));
+    // La página pudo cambiar mientras se consultaba
+    if (this.flujosList() !== flujos) return;
+    const conteos = new Map<string, IResumenConversaciones>();
+    flujos.forEach((f, i) => {
+      const r = resumenes[i];
+      if (r.ok) conteos.set(f.id, r.data);
+    });
+    this.notificaciones.set(conteos);
+  }
+
+  async actualizarNotificaciones(flujo: IFlujoEncabezado) {
+    const resp = await this.conversacionService.resumen(flujo.id);
+    if (!resp.ok) return;
+    this.notificaciones.update(actual => new Map(actual).set(flujo.id, resp.data));
+  }
+
+  conteo(flujo: IFlujoEncabezado): IResumenConversaciones | null {
+    return this.notificaciones().get(flujo.id) ?? null;
+  }
+
+  tituloNotificaciones(flujo: IFlujoEncabezado): string {
+    const c = this.conteo(flujo);
+    if (!c) return 'Notificaciones';
+    if (!c.total) return 'Notificaciones: sin conversaciones';
+    return `Notificaciones: ${c.abiertas} abiertas · ${c.cerradas} cerradas · ${c.noLeidos} sin leer`;
   }
 
   buscar() {
@@ -130,6 +178,7 @@ export class BandejaFlujosComponent implements OnInit {
 
   onChangePage(newPagination: IPagination) {
     this.flujosList.set([]);
+    this.notificaciones.set(new Map());
     this.pagination.set(newPagination);
     this.fetchData();
   }
