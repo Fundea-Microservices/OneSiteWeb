@@ -88,8 +88,13 @@
             <button type="button" class="btn btn-outline-primary fw-semibold" (click)="abrirPreliminar()">
                 <ion-icon name="document-text-outline"></ion-icon> Flujo Preliminar
             </button>
-            <button type="button" class="btn btn-outline-secondary fw-semibold" disabled title="Próximamente">
+            <button type="button" class="btn btn-outline-secondary fw-semibold" [disabled]="descargandoExcel()"
+                (click)="descargarExcel()">
+                @if (descargandoExcel()) {
+                <span class="spinner-border spinner-border-sm me-1"></span> Generando...
+                } @else {
                 <ion-icon name="download-outline" class="text-success"></ion-icon> Descargar Excel
+                }
             </button>
         </div>
         <span [attr.title]="motivoNoAprobable() || null">

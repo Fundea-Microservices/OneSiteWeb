@@ -39,6 +39,7 @@
     "bootstrap": "^5.3.6",
     "docx-preview": "^0.3.7",
     "docxtemplater": "^3.71.0",
+    "exceljs": "^4.4.0",
     "flowbite": "^4.0.1",
     "lucide-angular": "^0.548.0",
     "ngx-toastr": "^19.0.0",
