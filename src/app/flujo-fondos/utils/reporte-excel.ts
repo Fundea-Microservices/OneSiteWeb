@@ -396,6 +396,10 @@ export function llenarPlantillaFlujo(wb: Workbook, flujo: IFlujoDetalle, ahora =
 
   // ── Impresión y cálculo ──
   ws.pageSetup.printArea = `A1:${letra(colTotal)}${r - 1}`;
+  // exceljs escribe <pageSetUpPr> antes de <outlinePr> dentro de <sheetPr> (el esquema pide al revés):
+  // con "Ajustar a página" activo, Excel declara la hoja dañada y la deja vacía. Los valores de
+  // esquema de la plantilla son los de Excel por defecto, así que se quitan sin perder nada
+  if (ws.pageSetup.fitToPage) delete (ws.properties as { outlineProperties?: unknown }).outlineProperties;
   wb.calcProperties = { ...wb.calcProperties, fullCalcOnLoad: true };
 }
 
