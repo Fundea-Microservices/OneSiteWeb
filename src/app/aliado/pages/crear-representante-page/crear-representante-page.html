@@ -149,17 +149,20 @@
                     </svg>
                 </div>
 
-                <div class="overflow-hidden transition-all duration-500 ease-in-out"
-                    [style.max-height]="activeSection() === 'datos' ? '2000px' : '0px'"
+                <!-- grid 0fr/1fr: anima hasta la altura real del contenido (sin max-height fijo que corte en móvil) -->
+                <div class="grid transition-all duration-500 ease-in-out"
+                    [style.grid-template-rows]="activeSection() === 'datos' ? '1fr' : '0fr'"
                     [style.opacity]="activeSection() === 'datos' ? '1' : '0'">
-                    <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
-                        <app-upsert-datos-generales [(representante)]="representante"
-                            [camposBloqueados]="camposBloqueados()" [cuentaBT]="cuentaBT()"
-                            [clienteUId]="clienteUId()"
-                            [buscandoCliente]="buscandoCliente()"
-                            [llenadorManualHabilitado]="llenadorManualHabilitado()"
-                            (documentoSinFormatoChange)="buscarClientePorDocumento($event)">
-                        </app-upsert-datos-generales>
+                    <div class="min-h-0 overflow-hidden">
+                        <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+                            <app-upsert-datos-generales [(representante)]="representante"
+                                [camposBloqueados]="camposBloqueados()" [cuentaBT]="cuentaBT()"
+                                [clienteUId]="clienteUId()"
+                                [buscandoCliente]="buscandoCliente()"
+                                [llenadorManualHabilitado]="llenadorManualHabilitado()"
+                                (documentoSinFormatoChange)="buscarClientePorDocumento($event)">
+                            </app-upsert-datos-generales>
+                        </div>
                     </div>
                 </div>
                 <div class="my-2">
@@ -224,13 +227,14 @@
                     </svg>
                 </div>
 
-                <div class="overflow-hidden transition-all duration-500 ease-in-out"
-                    [style.max-height]="activeSection() === 'contacto' ? '2000px' : '0px'"
+                <div class="grid transition-all duration-500 ease-in-out"
+                    [style.grid-template-rows]="activeSection() === 'contacto' ? '1fr' : '0fr'"
                     [style.opacity]="activeSection() === 'contacto' ? '1' : '0'">
-                    <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
-
-                        <app-upsert-contacto [(representante)]="representante"
-                            [camposBloqueados]="camposBloqueados()"></app-upsert-contacto>
+                    <div class="min-h-0 overflow-hidden">
+                        <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+                            <app-upsert-contacto [(representante)]="representante"
+                                [camposBloqueados]="camposBloqueados()"></app-upsert-contacto>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -267,13 +271,14 @@
                     </svg>
                 </div>
 
-                <div class="overflow-hidden transition-all duration-500 ease-in-out"
-                    [style.max-height]="activeSection() === 'actividad' ? '2000px' : '0px'"
+                <div class="grid transition-all duration-500 ease-in-out"
+                    [style.grid-template-rows]="activeSection() === 'actividad' ? '1fr' : '0fr'"
                     [style.opacity]="activeSection() === 'actividad' ? '1' : '0'">
-                    <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
-                        <!-- Aquí va el formulario de direcciones -->
-                        <app-upsert-actividad-laboral-financiera [(representante)]="representante"
-                            [camposBloqueados]="camposBloqueados()"></app-upsert-actividad-laboral-financiera>
+                    <div class="min-h-0 overflow-hidden">
+                        <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+                            <app-upsert-actividad-laboral-financiera [(representante)]="representante"
+                                [camposBloqueados]="camposBloqueados()"></app-upsert-actividad-laboral-financiera>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -308,14 +313,16 @@
                     </svg>
                 </div>
 
-                <div class="overflow-hidden transition-all duration-500 ease-in-out"
-                    [style.max-height]="activeSection() === 'formulario' ? '3000px' : '0px'"
+                <div class="grid transition-all duration-500 ease-in-out"
+                    [style.grid-template-rows]="activeSection() === 'formulario' ? '1fr' : '0fr'"
                     [style.opacity]="activeSection() === 'formulario' ? '1' : '0'">
-                    <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
-                        <app-render-formulario
-                            encabezadoId="26EB556D-6C24-4FBE-B589-02FAB42518C7"
-                            (listado)="onListadoFormDinamico($event)"
-                            (mensaje)="mensajeFormDinamico.set($event)" />
+                    <div class="min-h-0 overflow-hidden">
+                        <div class="px-3 py-3 md:px-6 md:py-4 bg-gray-50 border-t border-gray-200">
+                            <app-render-formulario
+                                encabezadoId="26EB556D-6C24-4FBE-B589-02FAB42518C7"
+                                (listado)="onListadoFormDinamico($event)"
+                                (mensaje)="mensajeFormDinamico.set($event)" />
+                        </div>
                     </div>
                 </div>
             </div>

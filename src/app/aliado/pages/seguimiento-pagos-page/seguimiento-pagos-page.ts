@@ -7,6 +7,7 @@ import { NotificacionLoteService } from '../../../../services/aliado/notificacio
 import { CatalogosBantotalService } from '../../../../services/api-bantotal/catalogos.service';
 import { IComisionEmpresa, IConteoNotificaciones, ILoteDesembolso } from '../../../../interfaces/aliado/desembolso';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
+import { FechaInput } from '../../../shared/components/fecha-input/fecha-input';
 import { ClientesEmpresaModal } from '../../components/desembolso/clientes-empresa-modal/clientes-empresa-modal';
 import { NotificacionesLoteModal } from '../../components/desembolso/notificaciones-lote-modal/notificaciones-lote-modal';
 import {
@@ -32,7 +33,7 @@ const LIMITE_LOTES = 500;
  */
 @Component({
   selector: 'app-seguimiento-pagos-page',
-  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent, ClientesEmpresaModal, NotificacionesLoteModal],
+  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent, FechaInput, ClientesEmpresaModal, NotificacionesLoteModal],
   templateUrl: './seguimiento-pagos-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,

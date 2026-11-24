@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, signal, AfterViewInit, effect, viewChild, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { UpsertContacto } from '../../components/representante/upsert-contacto/upsert-contacto';
@@ -13,6 +13,7 @@ import { ClienteBantotalService } from '../../../../services/api-bantotal/client
 import { StorageService } from '../../../../services/storage.service';
 import { initFlowbite } from 'flowbite';
 import { FormRespuesta, RenderFormularioComponent } from '../../../configuracion/components/formulario/render-formulario/render-formulario.component';
+import { reducirImagen } from '../../../shared/utils/imagen.utils';
 
 
 @Component({
@@ -29,6 +30,8 @@ export default class CrearRepresentantePage implements AfterViewInit {
   private clienteService = inject(ClienteBantotalService);
   private storageService = inject(StorageService);
   private router = inject(Router);
+
+  private readonly MAX_BYTES_FOTO_DPI = 5 * 1024 * 1024;
 
   frontPreview: string | ArrayBuffer | null = null;
   backPreview: string | ArrayBuffer | null = null;
@@ -324,15 +327,33 @@ export default class CrearRepresentantePage implements AfterViewInit {
     }, 500); // Esperar 500ms antes de hacer la búsqueda
   }
 
-  onFrontImageSelected(event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
+  /**
+   * Reduce la foto (las de cámara de teléfono suelen pesar 5-15MB) y valida el tamaño final.
+   * Devuelve null si el archivo sigue siendo demasiado grande.
+   */
+  private async prepararFotoDpi(input: HTMLInputElement, procesando: WritableSignal<boolean>): Promise<File | null> {
+    const original = input.files?.[0];
+    if (!original) return null;
 
-    if (file.size > 5 * 1024 * 1024) {
-      this.toastr.error('El archivo no debe superar los 5MB.', 'Archivo demasiado grande');
-      (event.target as HTMLInputElement).value = '';
-      return;
+    procesando.set(true);
+    let file: File;
+    try {
+      file = await reducirImagen(original);
+    } finally {
+      procesando.set(false);
     }
+
+    if (file.size > this.MAX_BYTES_FOTO_DPI) {
+      this.toastr.error('El archivo no debe superar los 5MB.', 'Archivo demasiado grande');
+      input.value = '';
+      return null;
+    }
+    return file;
+  }
+
+  async onFrontImageSelected(event: Event) {
+    const file = await this.prepararFotoDpi(event.target as HTMLInputElement, this.validandoFront);
+    if (!file) return;
 
     // Guardar el archivo para enviar al servicio
     this.frontFile = file;
@@ -509,15 +530,9 @@ export default class CrearRepresentantePage implements AfterViewInit {
   }
 
 
-  onBackImageSelected(event: any) {
-    const file = event.target.files[0];
+  async onBackImageSelected(event: Event) {
+    const file = await this.prepararFotoDpi(event.target as HTMLInputElement, this.validandoBack);
     if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      this.toastr.error('El archivo no debe superar los 5MB.', 'Archivo demasiado grande');
-      (event.target as HTMLInputElement).value = '';
-      return;
-    }
 
     // Guardar el archivo para enviar al servicio
     this.backFile = file;

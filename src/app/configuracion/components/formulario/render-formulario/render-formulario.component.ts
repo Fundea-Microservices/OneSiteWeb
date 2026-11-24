@@ -18,6 +18,7 @@ import {
   FormSeccion,
   TipoPregunta,
 } from '../../../../../interfaces/configuracion';
+import { FechaInput } from '../../../../shared/components/fecha-input/fecha-input';
 
 export interface FormRespuesta {
   tipo: TipoPregunta;
@@ -28,7 +29,7 @@ export interface FormRespuesta {
 
 @Component({
   selector: 'app-render-formulario',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FechaInput],
   templateUrl: './render-formulario.component.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -161,6 +162,13 @@ export class RenderFormularioComponent implements OnInit {
       if (idx > -1) current.splice(idx, 1);
     }
     ctrl?.setValue(current.join(','));
+    ctrl?.markAsDirty();
+  }
+
+  /** Preguntas DATE: app-fecha-input emite YYYY-MM-DD (o '' si la fecha está incompleta/inválida). */
+  onFechaChange(preguntaId: string, valor: string) {
+    const ctrl = this.getControl(preguntaId);
+    ctrl?.setValue(valor);
     ctrl?.markAsDirty();
   }
 

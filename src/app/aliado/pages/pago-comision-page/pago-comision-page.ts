@@ -6,6 +6,7 @@ import { DesembolsoService } from '../../../../services/aliado/desembolso.servic
 import { NotificacionLoteService } from '../../../../services/aliado/notificacion-lote.service';
 import { ESTADOS_PAGO_COMISION, IConteoNotificaciones, ILoteDesembolso } from '../../../../interfaces/aliado/desembolso';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
+import { FechaInput } from '../../../shared/components/fecha-input/fecha-input';
 import { GestionPagosModal } from '../../components/desembolso/gestion-pagos-modal/gestion-pagos-modal';
 import { NotificacionesLoteModal } from '../../components/desembolso/notificaciones-lote-modal/notificaciones-lote-modal';
 import { VerLoteModal } from '../../components/desembolso/ver-lote-modal/ver-lote-modal';
@@ -14,7 +15,7 @@ import { claseEstadoLote, nombrePeriodo, RangoFechas, rangosRapidos } from '../.
 @Component({
   selector: 'app-pago-comision-page',
   imports: [
-    RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent,
+    RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent, FechaInput,
     GestionPagosModal, NotificacionesLoteModal, VerLoteModal,
   ],
   templateUrl: './pago-comision-page.html',

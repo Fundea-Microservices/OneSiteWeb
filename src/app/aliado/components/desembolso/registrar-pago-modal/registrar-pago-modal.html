@@ -144,12 +144,10 @@
                     <span class="text-xs px-2 py-0.5 rounded border bg-green-50 border-green-200 text-green-700">Hoy</span>
                     }
                 </div>
-                <input type="date" [max]="hoy" [ngModel]="fechaTransferencia()" (ngModelChange)="fechaTransferencia.set($event)"
+                <!-- app-fecha-input muestra el error si la fecha supera [max] y en ese caso emite '' -->
+                <app-fecha-input [(fecha)]="fechaTransferencia" formato="iso" [max]="hoy"
                     [disabled]="isSaving() || confirmando()"
-                    class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-600 focus:border-green-600 p-2.5" />
-                @if (fechaTransferencia() && !fechaValida()) {
-                <span class="text-xs text-red-600">La fecha de transferencia no puede ser posterior a hoy.</span>
-                }
+                    inputClass="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-600 focus:border-green-600 p-2.5" />
             </div>
 
             <div>

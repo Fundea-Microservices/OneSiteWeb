@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { DesembolsoService } from '../../../../services/aliado/desembolso.service';
 import { ESTADOS_LOTE, EstadoLote, ILoteDesembolso } from '../../../../interfaces/aliado/desembolso';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
+import { FechaInput } from '../../../shared/components/fecha-input/fecha-input';
 import { AccionResolucion, ResolverLoteModal } from '../../components/desembolso/resolver-lote-modal/resolver-lote-modal';
 import { VerLoteModal } from '../../components/desembolso/ver-lote-modal/ver-lote-modal';
 import {
@@ -18,7 +19,7 @@ import {
 
 @Component({
   selector: 'app-lotes-desembolso-page',
-  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent, ResolverLoteModal, VerLoteModal],
+  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent, FechaInput, ResolverLoteModal, VerLoteModal],
   templateUrl: './lotes-desembolso-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
