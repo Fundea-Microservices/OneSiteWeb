@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { DesembolsoService } from '../../../../services/aliado/desembolso.service';
 import { ESTADOS_APROBACION_PAGO, EstadoLote, ILoteDesembolso } from '../../../../interfaces/aliado/desembolso';
 import { PaginationAllComponent } from '../../../shared/components/pagination-all/pagination-all';
+import { FechaInput } from '../../../shared/components/fecha-input/fecha-input';
 import { ResolverLoteModal } from '../../components/desembolso/resolver-lote-modal/resolver-lote-modal';
 import { VerLoteModal } from '../../components/desembolso/ver-lote-modal/ver-lote-modal';
 import { ComisionesLoteModal } from '../../components/desembolso/comisiones-lote-modal/comisiones-lote-modal';
@@ -20,7 +21,7 @@ import {
 @Component({
   selector: 'app-aprobacion-lotes-page',
   imports: [
-    RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent,
+    RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent, FechaInput,
     ResolverLoteModal, VerLoteModal, ComisionesLoteModal,
   ],
   templateUrl: './aprobacion-lotes-page.html',

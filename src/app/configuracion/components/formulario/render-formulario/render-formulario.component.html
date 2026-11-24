@@ -86,11 +86,15 @@
             }
 
             @case ('DATE') {
-              <input type="date"
-                class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                [class.border-gray-300]="!hasError(pregunta.preguntaId!)"
-                [class.border-red-500]="hasError(pregunta.preguntaId!)"
-                [formControlName]="pregunta.preguntaId!" />
+              <app-fecha-input
+                formato="iso"
+                [inputId]="pregunta.preguntaId!"
+                [fecha]="getControl(pregunta.preguntaId!).value ?? ''"
+                (fechaChange)="onFechaChange(pregunta.preguntaId!, $event)"
+                (focusout)="getControl(pregunta.preguntaId!).markAsTouched()"
+                [disabled]="getControl(pregunta.preguntaId!).disabled"
+                [inputClass]="'w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 '
+                  + (hasError(pregunta.preguntaId!) ? 'border-red-500' : 'border-gray-300')" />
             }
 
             @case ('TIME') {

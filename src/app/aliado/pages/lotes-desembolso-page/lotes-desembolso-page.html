@@ -21,14 +21,13 @@
         <form class="flex flex-col md:flex-row flex-wrap items-end gap-3 md:gap-4 mb-4" (ngSubmit)="buscar()">
             <div class="flex-1 min-w-37.5 w-full">
                 <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Fecha desde</label>
-                <input type="date" name="fechaDesde" [ngModel]="fechaDesde()" (ngModelChange)="fechaDesde.set($event)"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
+                <app-fecha-input [(fecha)]="fechaDesde" formato="iso" [max]="fechaHasta()"
+                    inputClass="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
             </div>
             <div class="flex-1 min-w-37.5 w-full">
                 <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Fecha hasta</label>
-                <input type="date" name="fechaHasta" [ngModel]="fechaHasta()" (ngModelChange)="fechaHasta.set($event)"
-                    [min]="fechaDesde()"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
+                <app-fecha-input [(fecha)]="fechaHasta" formato="iso" [min]="fechaDesde()"
+                    inputClass="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 w-full p-2.5" />
             </div>
             <div class="flex-1 min-w-37.5 w-full">
                 <label class="block mb-2 text-xs md:text-sm font-medium text-gray-900">Lote</label>

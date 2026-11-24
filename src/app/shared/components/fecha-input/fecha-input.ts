@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, model, signal, untracked } from '@angular/core';
 
+type PartesFecha = { dia: number; mes: number; anio: number };
+
 /**
  * Campo de fecha basado en texto (DD/MM/AAAA) con máscara automática.
  * Reemplaza al input type="date" nativo, cuyo selector no funciona de forma
@@ -7,13 +9,16 @@ import { ChangeDetectionStrategy, Component, computed, effect, input, model, sig
  *
  * - `formato="dmy"`: el valor enlazado se maneja como DD/MM/YYYY
  * - `formato="iso"`: el valor enlazado se maneja como YYYY-MM-DD
+ * - `min` / `max`: límites opcionales (aceptan YYYY-MM-DD o DD/MM/YYYY).
  *
- * Mientras la fecha esté incompleta o sea inválida, el valor enlazado queda vacío ('').
+ * Mientras la fecha esté incompleta, sea inválida o esté fuera de los límites,
+ * el valor enlazado queda vacío ('').
  */
 @Component({
   selector: 'app-fecha-input',
   templateUrl: './fecha-input.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block' },
 })
 export class FechaInput {
   fecha = model<string>('');
@@ -21,16 +26,25 @@ export class FechaInput {
   disabled = input<boolean>(false);
   inputClass = input<string>('bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg pl-4 pr-3 h-12 w-full');
   inputId = input<string | undefined>(undefined);
+  min = input<string | null | undefined>(undefined);
+  max = input<string | null | undefined>(undefined);
 
   texto = signal<string>('');
   private ultimoEmitido: string | null = null;
 
-  invalida = computed(() => {
+  private limiteMin = computed(() => this.limite(this.min()));
+  private limiteMax = computed(() => this.limite(this.max()));
+
+  /** Mensaje de error visible: fecha inexistente o fuera de los límites */
+  mensajeError = computed(() => {
     const t = this.texto();
-    return t.length === 10 && !this.parsear(t);
+    if (t.length !== 10) return '';
+    const partes = this.parsear(t);
+    if (!partes) return 'Fecha inválida';
+    return this.errorRango(partes);
   });
 
-  claseInput = computed(() => this.inputClass() + (this.invalida() ? ' border-red-500! focus:ring-red-500' : ''));
+  claseInput = computed(() => this.inputClass() + (this.mensajeError() ? ' border-red-500! focus:ring-red-500' : ''));
 
   constructor() {
     // Sincroniza el valor externo → texto visible (carga inicial, datos de Bantotal/DPI, reinicios)
@@ -53,11 +67,31 @@ export class FechaInput {
     this.texto.set(enmascarado);
 
     const partes = this.parsear(enmascarado);
-    const nuevoValor = partes ? this.aValor(partes) : '';
+    const nuevoValor = partes && !this.errorRango(partes) ? this.aValor(partes) : '';
     if (nuevoValor !== this.fecha()) {
       this.ultimoEmitido = nuevoValor;
       this.fecha.set(nuevoValor);
     }
+  }
+
+  private errorRango(partes: PartesFecha): string {
+    const clave = this.clave(partes);
+    const min = this.limiteMin();
+    if (min && clave < min.clave) return `La fecha no puede ser anterior al ${min.texto}`;
+    const max = this.limiteMax();
+    if (max && clave > max.clave) return `La fecha no puede ser posterior al ${max.texto}`;
+    return '';
+  }
+
+  private limite(valor: string | null | undefined): { clave: number; texto: string } | null {
+    if (!valor) return null;
+    const texto = this.aTexto(valor);
+    const partes = this.parsear(texto);
+    return partes ? { clave: this.clave(partes), texto } : null;
+  }
+
+  private clave(p: PartesFecha): number {
+    return p.anio * 10000 + p.mes * 100 + p.dia;
   }
 
   /** Deja solo dígitos e inserta las barras: DD/MM/AAAA */
@@ -69,7 +103,7 @@ export class FechaInput {
   }
 
   /** Valida un texto DD/MM/AAAA y retorna sus partes si es una fecha real */
-  private parsear(texto: string): { dia: number; mes: number; anio: number } | null {
+  private parsear(texto: string): PartesFecha | null {
     const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(texto);
     if (!m) return null;
     const dia = +m[1];
@@ -81,7 +115,7 @@ export class FechaInput {
     return { dia, mes, anio };
   }
 
-  private aValor(p: { dia: number; mes: number; anio: number }): string {
+  private aValor(p: PartesFecha): string {
     const dd = String(p.dia).padStart(2, '0');
     const mm = String(p.mes).padStart(2, '0');
     const yyyy = String(p.anio);

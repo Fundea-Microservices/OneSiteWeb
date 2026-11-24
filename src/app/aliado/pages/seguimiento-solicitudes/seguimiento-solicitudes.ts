@@ -402,10 +402,25 @@ export default class SeguimientoSolicitudesComponent {
 		const path = this.solicitud()?.documentoCargado;
 		if (!path) return;
 
+		// La pestaña se abre ANTES del await: Safari (iOS) bloquea window.open si no ocurre
+		// directamente dentro del gesto del usuario, y lo hace sin mostrar ningún aviso.
+		const ventana = window.open('', '_blank');
 		const url = await this.storageService.downloadFileAsUrl(path);
-		if (url) {
-			window.open(url, '_blank');
+		if (!url) {
+			ventana?.close();
+			return;
 		}
+		if (ventana) {
+			ventana.location.href = url;
+		} else {
+			// El navegador bloqueó la pestaña: se intenta con un enlace temporal
+			const a = document.createElement('a');
+			a.href = url;
+			a.target = '_blank';
+			a.rel = 'noopener';
+			a.click();
+		}
+		setTimeout(() => URL.revokeObjectURL(url), 60_000);
 	}
 
 	getNombreCompleto(rep: any): string {

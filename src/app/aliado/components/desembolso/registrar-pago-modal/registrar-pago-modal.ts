@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { DesembolsoService } from '../../../../../services/aliado/desembolso.service';
 import { IPagoEmpresa, IPagosLote } from '../../../../../interfaces/aliado/desembolso';
 import { hoyGuatemala, mismoUsuario, nombrePeriodo } from '../../../utils/desembolso.utils';
+import { FechaInput } from '../../../../shared/components/fecha-input/fecha-input';
 
 /**
  * "Registrar Comprobante de Transferencia Bancaria" de una empresa del lote.
@@ -12,7 +13,7 @@ import { hoyGuatemala, mismoUsuario, nombrePeriodo } from '../../../utils/desemb
  */
 @Component({
   selector: 'app-registrar-pago-modal',
-  imports: [FormsModule, CurrencyPipe, DatePipe],
+  imports: [FormsModule, CurrencyPipe, DatePipe, FechaInput],
   templateUrl: './registrar-pago-modal.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,

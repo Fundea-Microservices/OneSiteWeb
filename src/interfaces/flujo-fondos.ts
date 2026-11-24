@@ -73,6 +73,8 @@ export interface IFlujoEncabezado {
     evaluacion: string | null;
     clasificacion: string | null;
     fechaEvaluacion: string | null;
+    /** Fecha de la solicitud en Bantotal. Todavía no la envía el back: el Excel muestra '—'. */
+    fechaSolicitud?: string | null;
     fechaInicio: string;         // YYYY-MM-01
     plazoMeses: number;
     estado: EstadoFlujo;

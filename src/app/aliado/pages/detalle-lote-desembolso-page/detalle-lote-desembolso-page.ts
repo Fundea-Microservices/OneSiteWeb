@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, computed, inject, signal } from '@angular/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DesembolsoService } from '../../../../services/aliado/desembolso.service';
@@ -29,7 +29,7 @@ interface RegistroValidacion extends IDesembolsoReferido {
 
 @Component({
   selector: 'app-detalle-lote-desembolso-page',
-  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, PaginationAllComponent, ResolverLoteModal],
+  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, NgTemplateOutlet, PaginationAllComponent, ResolverLoteModal],
   templateUrl: './detalle-lote-desembolso-page.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,

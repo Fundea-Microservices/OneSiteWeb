@@ -28,6 +28,25 @@
    Campos de formulario (manual: "Formularios, tablas y superficies")
    Campo deshabilitado: fondo #F3F4F6, texto #6A7282 y borde #D1D5DC.
    ============================================= */
+/* Safari en iOS hace zoom automático al enfocar campos con texto menor a 16px
+   (text-sm, form-control-sm, etc.) y no vuelve a alejarse. En pantallas
+   pequeñas se fuerza 16px para evitarlo. */
+@media (max-width: 767.98px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Altura máxima de los modales. En móvil, "vh" incluye el área que tapa la barra
+   del navegador y el pie del modal (botones) puede quedar oculto; "dvh" usa el
+   alto visible real. La primera línea es el respaldo para navegadores sin dvh. */
+@utility max-h-modal {
+  max-height: 90vh;
+  max-height: 90dvh;
+}
+
 input:disabled, select:disabled, textarea:disabled {
   background-color: var(--ui-campo-desactivado) !important;
   color: var(--ui-texto-tenue) !important;

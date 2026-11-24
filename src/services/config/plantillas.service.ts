@@ -84,9 +84,7 @@ export class PlantillasService extends HttpService {
    */
   async descargarPlantilla(codigo: string, nombreArchivo: string, mimeType?: string): Promise<boolean> {
     try {
-      const resp = await firstValueFrom(this.getBlob(this.urlPlantilla(codigo, '/descargar')));
-      const blob = resp.body;
-      if (!blob || blob.size === 0) throw new Error('Archivo vacío');
+      const blob = await this.obtenerArchivo(codigo);
 
       const tipo = [blob.type, mimeType].find(t => t?.includes('spreadsheetml') || t?.includes('ms-excel'));
       const extension = tipo?.includes('ms-excel') ? 'xls' : 'xlsx';
@@ -106,6 +104,27 @@ export class PlantillasService extends HttpService {
       this.toastr.error('La plantilla no está disponible para descarga', 'Error al descargar plantilla');
       return false;
     }
+  }
+
+  /**
+   * Archivo de una plantilla activa, sin descargarlo: para los módulos que la llenan con datos
+   * (p. ej. el Excel del flujo de fondos). Null si no existe, está inactiva o viene vacía;
+   * el aviso lo da quien la pide.
+   */
+  async getArchivoPlantilla(codigo: string): Promise<Blob | null> {
+    try {
+      return await this.obtenerArchivo(codigo);
+    } catch (error: any) {
+      console.error('🚀 ~ PlantillasService ~ getArchivoPlantilla ~ error:', error);
+      return null;
+    }
+  }
+
+  private async obtenerArchivo(codigo: string): Promise<Blob> {
+    const resp = await firstValueFrom(this.getBlob(this.urlPlantilla(codigo, '/descargar')));
+    const blob = resp.body;
+    if (!blob || blob.size === 0) throw new Error('Archivo vacío');
+    return blob;
   }
 
   // ─── ADMINISTRACIÓN (Admin) ────────────────────────────────────

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, inject, input, output, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DesembolsoService } from '../../../../../services/aliado/desembolso.service';
 import { NotificacionLoteService } from '../../../../../services/aliado/notificacion-lote.service';
@@ -26,7 +26,7 @@ type Seccion = 'listado' | 'nueva';
  */
 @Component({
   selector: 'app-notificaciones-lote-modal',
-  imports: [FormsModule, DatePipe, PaginationAllComponent],
+  imports: [FormsModule, DatePipe, NgTemplateOutlet, PaginationAllComponent],
   templateUrl: './notificaciones-lote-modal.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,

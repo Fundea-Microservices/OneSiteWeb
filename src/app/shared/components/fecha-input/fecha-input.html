@@ -10,6 +10,6 @@
   placeholder="DD/MM/AAAA"
   [class]="claseInput()"
 />
-@if (invalida()) {
-  <p class="text-xs text-red-600 mt-1">Fecha inválida</p>
+@if (mensajeError(); as mensaje) {
+  <p class="text-xs text-red-600 mt-1">{{ mensaje }}</p>
 }

@@ -61,6 +61,20 @@ export class UpsertContacto implements OnInit {
     this.cargarCatalogos();
   }
 
+  /**
+   * Teléfonos: el campo es type="tel" (teclado numérico en móvil) pero acepta cualquier
+   * carácter, así que se dejan solo los dígitos. Con type="number" el navegador devolvía ''
+   * si el usuario escribía guiones o espacios (p. ej. 5555-1234), sin ningún aviso.
+   */
+  soloDigitos(event: Event): string {
+    const el = event.target as HTMLInputElement;
+    const digitos = el.value.replace(/\D/g, '');
+    if (el.value !== digitos) {
+      el.value = digitos;
+    }
+    return digitos;
+  }
+
   constructor() {
     // Effect para sincronizar cambios del representante al componente
     effect(() => {

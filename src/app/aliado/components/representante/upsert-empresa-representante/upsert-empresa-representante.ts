@@ -18,10 +18,11 @@ import { CatalogoSimple } from '../../../../../interfaces/api-bantotal/catalogos
 import { FormRespuesta, RenderFormularioComponent } from '../../../../configuracion/components/formulario/render-formulario/render-formulario.component';
 import { FormulariosService } from '../../../../../services/config/formularios.service';
 import { ToastrService } from 'ngx-toastr';
+import { FechaInput } from '../../../../shared/components/fecha-input/fecha-input';
 
 @Component({
   selector: 'app-upsert-empresa-representante',
-  imports: [CommonModule, FormsModule, RenderFormularioComponent],
+  imports: [CommonModule, FormsModule, RenderFormularioComponent, FechaInput],
   templateUrl: './upsert-empresa-representante.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -319,7 +320,7 @@ export class UpsertEmpresaRepresentanteComponent implements OnInit {
     const depto = this.departamentos().find(d => d.valorCore === deptoCode);
     const muni = this.municipios().find(m => m.catalogoId === muniId);
 
-    const fechaStr = this.fechaInicioActividad(); // YYYY-MM-DD (formato nativo de type="date")
+    const fechaStr = this.fechaInicioActividad(); // YYYY-MM-DD (app-fecha-input con formato="iso")
     const fechaInicioIso = fechaStr ? new Date(fechaStr + 'T00:00:00').toISOString() : undefined;
 
     const empresaData: IEmpresaRepresentante = {
