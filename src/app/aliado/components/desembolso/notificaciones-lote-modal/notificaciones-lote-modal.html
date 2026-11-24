@@ -1,8 +1,111 @@
+<!-- Conversación de la notificación abierta: se usa en la tabla (escritorio) y en las tarjetas (móvil) -->
+<ng-template #conversacion>
+    @if (cargandoHilo()) {
+    <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <span class="ms-2">Cargando conversación...</span>
+    </div>
+    } @else if (hilo(); as h) {
+    <div class="bg-white rounded-lg border border-gray-200 p-3">
+        @if (h.cliente; as c) {
+        <div class="mb-3 p-2 rounded border bg-blue-50 border-blue-200 text-blue-900 text-[0.95em]">
+            <span class="font-medium">Cliente:</span> {{ c.nombre }}
+            · DPI {{ c.dpi || '—' }}
+            · Cuenta {{ c.cuenta || '—' }}
+            @if (c.validado === false && c.comentarioValidado) {
+            · <span class="text-red-700">No válido: {{ c.comentarioValidado }}</span>
+            }
+        </div>
+        }
+
+        <!-- MENSAJES -->
+        <div class="space-y-2">
+            @for (m of h.mensajes; track m.id) {
+            <div class="flex" [class.justify-end]="esMio(m)">
+                <div class="max-w-[85%] rounded-lg border p-2"
+                    [class]="esMio(m) ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'">
+                    <div class="flex flex-wrap items-center gap-x-2 text-[0.85em] text-gray-500 mb-1">
+                        <span class="font-semibold text-gray-700">{{ nombreRemitente(m) }}</span>
+                        <ion-icon name="arrow-forward-outline"></ion-icon>
+                        <span>{{ nombreDestinatario(m) }}</span>
+                        <span>· {{ m.fechaEnvio | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </div>
+                    <p class="mb-0 whitespace-pre-line text-gray-800">{{ m.mensaje }}</p>
+                    <div class="flex flex-wrap items-center gap-2 mt-1 text-[0.8em]">
+                        @if (m.respondida) {
+                        <span class="text-green-700">Respondido</span>
+                        } @else if (m.visualizada) {
+                        <span class="text-gray-500">Leído</span>
+                        }
+                        @if (m.estadoCorreo === 'ERROR') {
+                        <span class="text-red-700" [title]="m.errorCorreo ?? ''">Correo no enviado</span>
+                        @if (esMio(m)) {
+                        <button type="button" [disabled]="procesando()"
+                            class="text-blue-700 hover:underline disabled:opacity-50"
+                            (click)="reenviarCorreo(m); $event.stopPropagation()">
+                            Reintentar correo
+                        </button>
+                        }
+                        } @else if (m.estadoCorreo === 'PENDIENTE') {
+                        <span class="text-gray-500">Correo pendiente</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- RESPONDER / CERRAR -->
+        @if (h.estado === 'CERRADA') {
+        <p class="mt-3 mb-0 text-[0.9em] text-gray-500">
+            Conversación cerrada por {{ h.cerradoPor }} el {{ h.fechaCierre | date:'dd/MM/yyyy HH:mm' }}.
+        </p>
+        } @else {
+        @if (h.acciones.mensajeResponderId) {
+        <div class="mt-3">
+            <label class="block mb-1 text-[0.95em] font-medium text-gray-900">Mensaje de respuesta</label>
+            <textarea rows="3" [attr.maxlength]="maxMensaje" [ngModel]="respuesta()"
+                (ngModelChange)="respuesta.set($event)" [disabled]="procesando()"
+                placeholder="Escriba su respuesta"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
+            <div class="text-end text-[0.85em] text-gray-500">{{ respuesta().length }} / {{ maxMensaje }}</div>
+        </div>
+        } @else {
+        <p class="mt-3 mb-0 text-[0.9em] text-gray-500">No tiene mensajes pendientes de responder en esta conversación.</p>
+        }
+        <div class="flex flex-wrap justify-end gap-2 mt-2">
+            @if (h.acciones.puedeCerrar) {
+            <button type="button" [disabled]="procesando()"
+                class="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm disabled:opacity-50"
+                (click)="cerrarConversacion()">
+                Cerrar conversación
+            </button>
+            }
+            @if (h.acciones.mensajeResponderId) {
+            <button type="button" [disabled]="!respuesta().trim() || procesando()"
+                class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                (click)="responder()">
+                @if (procesando()) {
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                }
+                Responder
+            </button>
+            }
+        </div>
+        }
+    </div>
+    } @else {
+    <div class="text-center py-3 text-gray-500">No se pudo obtener la conversación.</div>
+    }
+</ng-template>
+
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" (click)="cerrar.emit()">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-modal flex flex-col" (click)="$event.stopPropagation()">
 
         <!-- CABECERA -->
-        <div class="flex items-start justify-between gap-2 px-6 py-4 border-b border-gray-200">
+        <div class="flex items-start justify-between gap-2 px-4 sm:px-6 py-4 border-b border-gray-200">
             <div>
                 <h3 class="text-base font-semibold text-gray-800">Historial de Notificaciones</h3>
                 @if (lote(); as l) {
@@ -17,7 +120,7 @@
             </button>
         </div>
 
-        <div class="px-6 py-4 overflow-y-auto bg-gray-50/50">
+        <div class="px-3 sm:px-6 py-4 overflow-y-auto overscroll-contain bg-gray-50/50">
 
             <!-- 1. LISTADO DE NOTIFICACIONES -->
             <section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4">
@@ -33,7 +136,7 @@
                 </button>
 
                 @if (abierta('listado')) {
-                <div class="p-4 border-t border-gray-200">
+                <div class="p-3 sm:p-4 border-t border-gray-200">
                     <!-- FILTROS -->
                     <div class="flex flex-col sm:flex-row gap-3 mb-3">
                         <select [ngModel]="empresaFiltro()" (ngModelChange)="empresaFiltro.set($event); filtrar()"
@@ -51,7 +154,8 @@
                         </select>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <!-- VERSIÓN ESCRITORIO (TABLA) -->
+                    <div class="hidden md:block overflow-x-auto">
                         <table class="table table-sm table-bordered w-full align-middle mb-0">
                             <thead>
                                 <tr class="text-[0.85em]">
@@ -117,105 +221,7 @@
                                 @if (abiertaId() === n.id) {
                                 <tr>
                                     <td colspan="4" class="bg-slate-50 p-3">
-                                        @if (cargandoHilo()) {
-                                        <div class="text-center py-3">
-                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                <span class="visually-hidden">Cargando...</span>
-                                            </div>
-                                            <span class="ms-2">Cargando conversación...</span>
-                                        </div>
-                                        } @else if (hilo(); as h) {
-                                        <div class="bg-white rounded-lg border border-gray-200 p-3">
-                                            @if (h.cliente; as c) {
-                                            <div class="mb-3 p-2 rounded border bg-blue-50 border-blue-200 text-blue-900 text-[0.95em]">
-                                                <span class="font-medium">Cliente:</span> {{ c.nombre }}
-                                                · DPI {{ c.dpi || '—' }}
-                                                · Cuenta {{ c.cuenta || '—' }}
-                                                @if (c.validado === false && c.comentarioValidado) {
-                                                · <span class="text-red-700">No válido: {{ c.comentarioValidado }}</span>
-                                                }
-                                            </div>
-                                            }
-
-                                            <!-- MENSAJES -->
-                                            <div class="space-y-2">
-                                                @for (m of h.mensajes; track m.id) {
-                                                <div class="flex" [class.justify-end]="esMio(m)">
-                                                    <div class="max-w-[85%] rounded-lg border p-2"
-                                                        [class]="esMio(m) ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'">
-                                                        <div class="flex flex-wrap items-center gap-x-2 text-[0.85em] text-gray-500 mb-1">
-                                                            <span class="font-semibold text-gray-700">{{ nombreRemitente(m) }}</span>
-                                                            <ion-icon name="arrow-forward-outline"></ion-icon>
-                                                            <span>{{ nombreDestinatario(m) }}</span>
-                                                            <span>· {{ m.fechaEnvio | date:'dd/MM/yyyy HH:mm' }}</span>
-                                                        </div>
-                                                        <p class="mb-0 whitespace-pre-line text-gray-800">{{ m.mensaje }}</p>
-                                                        <div class="flex flex-wrap items-center gap-2 mt-1 text-[0.8em]">
-                                                            @if (m.respondida) {
-                                                            <span class="text-green-700">Respondido</span>
-                                                            } @else if (m.visualizada) {
-                                                            <span class="text-gray-500">Leído</span>
-                                                            }
-                                                            @if (m.estadoCorreo === 'ERROR') {
-                                                            <span class="text-red-700" [title]="m.errorCorreo ?? ''">Correo no enviado</span>
-                                                            @if (esMio(m)) {
-                                                            <button type="button" [disabled]="procesando()"
-                                                                class="text-blue-700 hover:underline disabled:opacity-50"
-                                                                (click)="reenviarCorreo(m); $event.stopPropagation()">
-                                                                Reintentar correo
-                                                            </button>
-                                                            }
-                                                            } @else if (m.estadoCorreo === 'PENDIENTE') {
-                                                            <span class="text-gray-500">Correo pendiente</span>
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                }
-                                            </div>
-
-                                            <!-- RESPONDER / CERRAR -->
-                                            @if (h.estado === 'CERRADA') {
-                                            <p class="mt-3 mb-0 text-[0.9em] text-gray-500">
-                                                Conversación cerrada por {{ h.cerradoPor }} el {{ h.fechaCierre | date:'dd/MM/yyyy HH:mm' }}.
-                                            </p>
-                                            } @else {
-                                            @if (h.acciones.mensajeResponderId) {
-                                            <div class="mt-3">
-                                                <label class="block mb-1 text-[0.95em] font-medium text-gray-900">Mensaje de respuesta</label>
-                                                <textarea rows="3" [attr.maxlength]="maxMensaje" [ngModel]="respuesta()"
-                                                    (ngModelChange)="respuesta.set($event)" [disabled]="procesando()"
-                                                    placeholder="Escriba su respuesta"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
-                                                <div class="text-end text-[0.85em] text-gray-500">{{ respuesta().length }} / {{ maxMensaje }}</div>
-                                            </div>
-                                            } @else {
-                                            <p class="mt-3 mb-0 text-[0.9em] text-gray-500">No tiene mensajes pendientes de responder en esta conversación.</p>
-                                            }
-                                            <div class="flex flex-wrap justify-end gap-2 mt-2">
-                                                @if (h.acciones.puedeCerrar) {
-                                                <button type="button" [disabled]="procesando()"
-                                                    class="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm disabled:opacity-50"
-                                                    (click)="cerrarConversacion()">
-                                                    Cerrar conversación
-                                                </button>
-                                                }
-                                                @if (h.acciones.mensajeResponderId) {
-                                                <button type="button" [disabled]="!respuesta().trim() || procesando()"
-                                                    class="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                                    (click)="responder()">
-                                                    @if (procesando()) {
-                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                    }
-                                                    Responder
-                                                </button>
-                                                }
-                                            </div>
-                                            }
-                                        </div>
-                                        } @else {
-                                        <div class="text-center py-3 text-gray-500">No se pudo obtener la conversación.</div>
-                                        }
+                                        <ng-container *ngTemplateOutlet="conversacion" />
                                     </td>
                                 </tr>
                                 }
@@ -227,6 +233,63 @@
                                 }
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- VERSIÓN MÓVIL (TARJETAS): la conversación ocupa el ancho de la pantalla -->
+                    <div class="md:hidden space-y-2">
+                        @if (isLoading()) {
+                        <div class="text-center py-4 text-sm">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <span class="ms-2">Cargando notificaciones...</span>
+                        </div>
+                        } @else {
+                        @for (n of notificaciones(); track n.id) {
+                        <div class="rounded-lg border overflow-hidden"
+                            [class]="abiertaId() === n.id ? 'border-blue-300' : 'border-gray-200'">
+                            <button type="button" class="w-full text-left p-3 text-sm"
+                                [class]="abiertaId() === n.id ? 'bg-blue-50' : 'bg-white'"
+                                [attr.aria-expanded]="abiertaId() === n.id" (click)="toggleConversacion(n)">
+                                <div class="flex items-start justify-between gap-2">
+                                    <span class="min-w-0 break-words" [class.font-semibold]="n.sinLeer > 0">{{ n.asunto }}</span>
+                                    <span class="shrink-0 text-xs font-semibold px-2 py-0.5 rounded border"
+                                        [class]="n.estado === 'ABIERTA' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-700 border-gray-300'">
+                                        {{ n.estado === 'ABIERTA' ? 'Abierta' : 'Cerrada' }}
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-1 mt-2 text-xs">
+                                    <span class="px-2 py-0.5 rounded border bg-gray-50 border-gray-200 text-gray-700">
+                                        {{ n.nombreEmpresa || nombreEmpresa(n.idEmpresa) }}
+                                    </span>
+                                    @if (n.desembolsoId) {
+                                    <span class="px-2 py-0.5 rounded border bg-blue-50 border-blue-200 text-blue-700">Cliente puntual</span>
+                                    }
+                                    <span class="px-2 py-0.5 rounded border bg-gray-50 border-gray-200 text-gray-600">
+                                        {{ n.mensajes }} {{ n.mensajes === 1 ? 'mensaje' : 'mensajes' }}
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-x-2 mt-2 text-xs text-gray-500">
+                                    <span>{{ n.fechaUltimoMensaje | date:'dd/MM/yyyy HH:mm' }}</span>
+                                    <span>· {{ n.creadoPor }}</span>
+                                    @if (n.sinLeer > 0) {
+                                    <span class="text-blue-700">· {{ n.sinLeer }} sin leer</span>
+                                    }
+                                    @if (n.estado === 'ABIERTA' && n.porResponder > 0) {
+                                    <span class="text-red-700">· Por responder</span>
+                                    }
+                                </div>
+                            </button>
+                            @if (abiertaId() === n.id) {
+                            <div class="border-t border-gray-200 bg-slate-50 p-2 text-sm">
+                                <ng-container *ngTemplateOutlet="conversacion" />
+                            </div>
+                            }
+                        </div>
+                        } @empty {
+                        <div class="text-center py-4 text-sm text-gray-500">No hay notificaciones registradas</div>
+                        }
+                        }
                     </div>
 
                     @if (pagination().totalItems > pagination().pageSize) {
@@ -249,7 +312,7 @@
                 </button>
 
                 @if (abierta('nueva')) {
-                <div class="p-4 border-t border-gray-200 space-y-3">
+                <div class="p-3 sm:p-4 border-t border-gray-200 space-y-3">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label class="block mb-1 text-sm font-medium text-gray-900">Empresa <span class="text-red-600">*</span></label>
@@ -352,7 +415,7 @@
         </div>
 
         <!-- PIE -->
-        <div class="flex justify-end px-6 py-3 border-t border-gray-200">
+        <div class="flex justify-end px-4 sm:px-6 py-3 border-t border-gray-200">
             <button type="button"
                 class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm"
                 (click)="cerrar.emit()">

@@ -116,6 +116,53 @@
     </div>
 </div>
 
+<!-- Control "Aplica" (Sí/No) de un registro: se usa en la tabla y en las tarjetas móviles.
+     grande = true agranda los botones para tocarlos con el dedo. -->
+<ng-template #controlAplica let-r let-grande="grande">
+    @if (editable()) {
+    <div class="inline-flex rounded-md shadow-sm" role="group">
+        <button type="button" (click)="setValidado(r.id, true)" [disabled]="isSaving()"
+            [class]="(grande ? 'px-5 py-2 text-sm' : 'px-2.5 py-1 text-xs') + ' font-medium border rounded-s-md '
+                + (r.validadoEdit === true ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50')">
+            Sí
+        </button>
+        <button type="button" (click)="setValidado(r.id, false)" [disabled]="isSaving()"
+            [class]="(grande ? 'px-5 py-2 text-sm' : 'px-2.5 py-1 text-xs') + ' font-medium border border-s-0 rounded-e-md '
+                + (r.validadoEdit === false ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-red-50')">
+            No
+        </button>
+    </div>
+    } @else {
+    @switch (r.validadoEdit) {
+    @case (true) { <span class="text-xs font-semibold px-2 py-0.5 rounded bg-green-100 text-green-800">Aplica</span> }
+    @case (false) { <span class="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-800">No aplica</span> }
+    @default { <span class="text-xs font-semibold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800">Pendiente</span> }
+    }
+    }
+</ng-template>
+
+<!-- Motivo de "No aplica" de un registro: se usa en la tabla y en las tarjetas móviles -->
+<ng-template #controlMotivo let-r>
+    @if (editable()) {
+    @if (r.validadoEdit === false) {
+    <select [ngModel]="r.comentarioEdit" (ngModelChange)="setComentario(r.id, $event)"
+        [disabled]="isSaving()"
+        class="w-full px-2 py-1 border rounded text-xs focus:outline-none focus:ring-2"
+        [class]="requiereComentario(r) ? 'border-red-500 bg-red-50 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'">
+        <option value="" disabled>Seleccione el motivo</option>
+        @for (motivo of motivosNoAplica; track motivo) {
+        <option [value]="motivo">{{ motivo }}</option>
+        }
+        @if (motivoFueraDeCatalogo(r)) {
+        <option [value]="r.comentarioEdit">{{ r.comentarioEdit }}</option>
+        }
+    </select>
+    }
+    } @else {
+    {{ r.comentarioValidado || '' }}
+    }
+</ng-template>
+
 <!-- REGISTROS -->
 <div class="card">
     <div class="card-header">
@@ -148,7 +195,8 @@
             }
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- VERSIÓN ESCRITORIO (TABLA) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="table table-sm table-bordered table-hover w-full align-middle">
                 <thead>
                     <tr class="text-[0.85em]">
@@ -200,52 +248,90 @@
                         <td class="text-center whitespace-nowrap">{{ r.fechaVigencia | date:'dd/MM/yyyy':'UTC' }}</td>
                         <td class="text-center whitespace-nowrap">{{ r.fechaReferenciacion ? (r.fechaReferenciacion | date:'dd/MM/yyyy':'UTC') : '—' }}</td>
                         <td class="text-center whitespace-nowrap">
-                            @if (editable()) {
-                            <div class="inline-flex rounded-md shadow-sm" role="group">
-                                <button type="button" (click)="setValidado(r.id, true)" [disabled]="isSaving()"
-                                    class="px-2.5 py-1 text-xs font-medium border rounded-s-md"
-                                    [class]="r.validadoEdit === true ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50'">
-                                    Sí
-                                </button>
-                                <button type="button" (click)="setValidado(r.id, false)" [disabled]="isSaving()"
-                                    class="px-2.5 py-1 text-xs font-medium border border-s-0 rounded-e-md"
-                                    [class]="r.validadoEdit === false ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-red-50'">
-                                    No
-                                </button>
-                            </div>
-                            } @else {
-                            @switch (r.validadoEdit) {
-                            @case (true) { <span class="text-xs font-semibold px-2 py-0.5 rounded bg-green-100 text-green-800">Aplica</span> }
-                            @case (false) { <span class="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-800">No aplica</span> }
-                            @default { <span class="text-xs font-semibold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800">Pendiente</span> }
-                            }
-                            }
+                            <ng-container *ngTemplateOutlet="controlAplica; context: { $implicit: r, grande: false }" />
                         </td>
                         <td>
-                            @if (editable()) {
-                            @if (r.validadoEdit === false) {
-                            <select [ngModel]="r.comentarioEdit" (ngModelChange)="setComentario(r.id, $event)"
-                                [disabled]="isSaving()"
-                                class="w-full px-2 py-1 border rounded text-xs focus:outline-none focus:ring-2"
-                                [class]="requiereComentario(r) ? 'border-red-500 bg-red-50 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'">
-                                <option value="" disabled>Seleccione el motivo</option>
-                                @for (motivo of motivosNoAplica; track motivo) {
-                                <option [value]="motivo">{{ motivo }}</option>
-                                }
-                                @if (motivoFueraDeCatalogo(r)) {
-                                <option [value]="r.comentarioEdit">{{ r.comentarioEdit }}</option>
-                                }
-                            </select>
-                            }
-                            } @else {
-                            {{ r.comentarioValidado || '' }}
-                            }
+                            <ng-container *ngTemplateOutlet="controlMotivo; context: { $implicit: r }" />
                         </td>
                     </tr>
                     }
                     }
                 </tbody>
             </table>
+        </div>
+
+        <!-- VERSIÓN MÓVIL (TARJETAS): la validación queda visible sin desplazamiento horizontal -->
+        <div class="md:hidden space-y-3">
+            @if (isLoading()) {
+            <div class="text-center py-6">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <span class="ms-2">Cargando registros...</span>
+            </div>
+            } @else {
+            @for (r of registrosPagina(); track r.id) {
+            <div class="rounded-lg border p-3 text-sm shadow-sm"
+                [class]="tieneCambios(r) ? 'border-yellow-300 bg-yellow-50' : 'border-gray-300 bg-white'">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                    <div class="min-w-0">
+                        <span class="block font-semibold text-gray-800 break-words">{{ nombreCliente(r) }}</span>
+                        <span class="block text-xs text-gray-500">DPI {{ r.dpi }}</span>
+                    </div>
+                    <span class="shrink-0 font-semibold whitespace-nowrap">{{ r.montoOtorgado | currency:'GTQ':'symbol':'1.2-2' }}</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-xs mb-3">
+                    <div class="col-span-2">
+                        <span class="block text-gray-500">Aliado</span>
+                        <span class="font-medium">{{ r.nombreEmpresa }}</span>
+                        <span class="text-gray-500"> · {{ r.username }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-gray-500">Teléfono</span>
+                        <span>{{ r.telefono || '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-gray-500">Agencia</span>
+                        <span>{{ nombreAgencia(r.sucursal) }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-gray-500">Cuenta</span>
+                        <span class="break-all">{{ r.cuenta }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-gray-500">Operación</span>
+                        <span class="break-all">{{ r.operacion }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-gray-500">Ciclo</span>
+                        <span>{{ r.ciclo ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-gray-500">Fecha vigencia</span>
+                        <span>{{ r.fechaVigencia | date:'dd/MM/yyyy':'UTC' }}</span>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="block text-gray-500">Fecha referenciación</span>
+                        <span>{{ r.fechaReferenciacion ? (r.fechaReferenciacion | date:'dd/MM/yyyy':'UTC') : '—' }}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 pt-2 border-t border-gray-200">
+                    <span class="text-xs font-medium text-gray-600">Aplica</span>
+                    <ng-container *ngTemplateOutlet="controlAplica; context: { $implicit: r, grande: true }" />
+                </div>
+                @if (editable() ? r.validadoEdit === false : !!r.comentarioValidado) {
+                <div class="mt-2">
+                    <span class="block text-xs font-medium text-gray-600 mb-1">Motivo (No aplica)</span>
+                    <ng-container *ngTemplateOutlet="controlMotivo; context: { $implicit: r }" />
+                </div>
+                }
+            </div>
+            } @empty {
+            <div class="text-center py-6 text-gray-500">No se encontraron registros</div>
+            }
+            }
         </div>
 
         <app-pagination-all [paginationObj]="paginationView()" (changePage)="onChangePage($event)" />
@@ -265,7 +351,7 @@
                 <p class="text-gray-500">Sin cambios. Modifique los registros que necesite corregir.</p>
                 }
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 <button type="button" (click)="descartarCambios()" [disabled]="cambios().length === 0 || isSaving()"
                     class="border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                     Descartar cambios
