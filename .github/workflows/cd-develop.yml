@@ -12,15 +12,10 @@ jobs:
   security-scan:
     name: "DevSecOps Security Scan"
     uses: ./.github/workflows/security-scan.yml
-    # Un workflow reutilizable no puede pedir más permisos que los que le da el job que lo
-    # llama, y security-scan.yml declara security-events: write.
-    permissions:
-      contents: read
-      security-events: write
 
   build-and-deploy:
     name: "Build y Despliegue Frontend a Servidor Develop"
-    # Solo despliega si pasan los 3 jobs del escaneo: build, SAST y SCA
+    # Solo despliega si pasan todos los jobs del escaneo: build, SAST, SCA y secrets
     needs: security-scan
     # La etiqueta personalizada 'development' asegura que el job corra solo en el runner 'desarrollotrans'.
     # Sin ella, el job también puede caer en 'Fundea_pro' (tiene las mismas etiquetas por defecto).

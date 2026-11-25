@@ -1,16 +1,16 @@
 name: "DevSecOps Security Scan - FUNDEA"
 on:
   pull_request:
-    branches: [ "develop", "production", "certification" ]
-  push:
-    # develop no va aquí: en cada push a develop este escaneo lo ejecuta cd-develop.yml
-    # (vía workflow_call) antes de desplegar, así no corre dos veces por el mismo commit.
-    branches: [ "production", "certification" ]
+    branches: [ "develop", "production" ]
+  # Sin disparador push: en cada push a develop o production este escaneo lo ejecutan
+  # cd-develop.yml y cd-production.yml (vía workflow_call) antes de desplegar.
+  # Si también corriera en push, se ejecutaría dos veces por el mismo commit.
   workflow_call:
+  workflow_dispatch:
 
+# Ningún paso sube resultados a la pestaña Security, así que basta con solo lectura.
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   build-validation:
@@ -19,15 +19,20 @@ jobs:
     steps:
       - name: Checkout del Código Fuente
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
-        
+
       - name: Configurar Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
-          node-version: '20' # Ajusta esta versión según lo que requiera tu proyecto (ej. 16, 18, 20)
-          cache: 'npm'       # Activa el caché para acelerar futuras ejecuciones
+          node-version: '20'
+          cache: 'npm'
 
       - name: Instalar Dependencias
-        run: npm ci # Recomendado para CI/CD en lugar de 'npm install' para usar versiones exactas
+        run: npm ci # Usa las versiones exactas de package-lock.json
+
+      - name: Verificar Firmas de Paquetes npm
+        # Comprueba que los paquetes instalados desde el registry de npm no fueron alterados
+        # (firmas del registry y attestations de procedencia).
+        run: npm audit signatures
 
       - name: Ejecutar Build
         run: npm run build
@@ -38,15 +43,23 @@ jobs:
     steps:
       - name: Checkout del Código Fuente
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
-        
-      - name: Ejecutar Escaneo SAST
+
+      - name: Ejecutar Escaneo SAST (Semgrep)
+        # Una sola ejecución: muestra los hallazgos en el log, guarda una copia en JSON
+        # y con --error termina en 1 si hay hallazgos, lo que bloquea el despliegue.
         run: |
-          id=$(docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep semgrep scan --config=auto --json -o semgrep-results.json || true)
-          cat semgrep-results.json          
-      
-      - name: Validar Bloqueo por Vulnerabilidades Críticas
-        run: |
-          docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep semgrep scan --config=auto --error
+          docker run --rm -v "${{ github.workspace }}:/src" \
+            semgrep/semgrep:1.185.0@sha256:67518c174185a2043fdbed16c70631b79209499b3671178e7194379b48295a0d \
+            semgrep scan --config=auto --error --json-output=semgrep-results.json
+
+      - name: Guardar Resultados de Semgrep
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: semgrep-results
+          path: semgrep-results.json
+          if-no-files-found: ignore
+          retention-days: 30
 
   sca-scan:
     name: "Análisis de Dependencias Terceras (SCA)"
@@ -54,7 +67,7 @@ jobs:
     steps:
       - name: Checkout del Código Fuente
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
-        
+
       - name: Ejecutar Escaneo SCA (Trivy)
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
@@ -64,3 +77,21 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: 'HIGH,CRITICAL'
+
+  secrets-scan:
+    name: "Detección de Secrets en el Historial (Gitleaks)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del Código Fuente (historial completo)
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          fetch-depth: 0 # Gitleaks necesita todo el historial, no solo el último commit
+
+      - name: Ejecutar Escaneo de Secrets (Gitleaks)
+        # Se usa la imagen Docker y no gitleaks-action porque esta exige una licencia
+        # de pago en repositorios de organizaciones.
+        # --redact oculta el valor del secret en el log; termina en 1 si encuentra alguno.
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            git /repo --redact --no-banner --verbose
