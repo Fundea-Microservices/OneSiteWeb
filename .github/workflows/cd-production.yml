@@ -50,8 +50,8 @@ jobs:
           cat <<EOF > src/environments/environment.prod.ts
           export const environment = {
               production: true,
-              path: '${{ secrets.ANGULAR_PROD_API_URL }}',
-              apiPath: '${{ secrets.ANGULAR_PROD_API_URL }}${{ secrets.ANGULAR_PROD_PREFIX }}',
+              path: '${{ secrets.FUNDEA_PROD_API_URL }}',
+              apiPath: '${{ secrets.FUNDEA_PROD_API_URL }}${{ secrets.FUNDEA_PROD_PREFIX }}',
               tokenCheckInterval: 5,
               agente: {
                   endpoint: '${{ secrets.AGENTE_PROD_ENDPOINT }}',
