@@ -88,12 +88,20 @@
             <button type="button" class="btn btn-outline-primary fw-semibold" (click)="abrirPreliminar()">
                 <ion-icon name="document-text-outline"></ion-icon> Flujo Preliminar
             </button>
-            <button type="button" class="btn btn-outline-secondary fw-semibold" [disabled]="descargandoExcel()"
-                (click)="descargarExcel()">
-                @if (descargandoExcel()) {
+            <button type="button" class="btn btn-outline-success fw-semibold" [disabled]="descargandoExcel()"
+                title="Base, Flujo y Flujo ajustado con los datos de Bantotal" (click)="descargarExcel('AJUSTADO')">
+                @if (descargandoExcel() === 'AJUSTADO') {
                 <span class="spinner-border spinner-border-sm me-1"></span> Generando...
                 } @else {
-                <ion-icon name="download-outline" class="text-success"></ion-icon> Descargar Excel
+                <ion-icon name="download-outline"></ion-icon> Descargar Excel
+                }
+            </button>
+            <button type="button" class="btn btn-outline-secondary fw-semibold" [disabled]="descargandoExcel()"
+                title="Matriz mensual por actividad" (click)="descargarExcel('DETALLADO')">
+                @if (descargandoExcel() === 'DETALLADO') {
+                <span class="spinner-border spinner-border-sm me-1"></span> Generando...
+                } @else {
+                <ion-icon name="grid-outline" class="text-success"></ion-icon> Excel detallado
                 }
             </button>
         </div>

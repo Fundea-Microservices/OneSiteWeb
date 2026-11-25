@@ -26,7 +26,7 @@ import {
 import { CatalogoService } from '../../../../services/flujo-fondos/catalogo.service';
 import { ConversacionFlujoService } from '../../../../services/flujo-fondos/conversacion.service';
 import { FlujoFondosService } from '../../../../services/flujo-fondos/flujo-fondos.service';
-import { ReporteFlujoService } from '../../../../services/flujo-fondos/reporte-flujo.service';
+import { FormatoExcelFlujo, ReporteFlujoService } from '../../../../services/flujo-fondos/reporte-flujo.service';
 import { NotificacionesFlujoModal } from '../../components/notificaciones-flujo-modal/notificaciones-flujo-modal';
 import { ActividadesEstacionalesComponent } from '../../components/flujo/actividades-estacionales/actividades-estacionales';
 import { OtrosPrestamosComponent } from '../../components/flujo/otros-prestamos/otros-prestamos';
@@ -161,7 +161,8 @@ export default class AprobacionFlujoComponent implements OnInit {
   flujo = signal<IFlujoDetalle | null>(null);
   agrupar = signal(true);
   cargandoProyeccion = signal(false);
-  descargandoExcel = signal(false);
+  /** Formato que se está generando (null: ninguno). */
+  descargandoExcel = signal<FormatoExcelFlujo | null>(null);
   private unidades = signal<Map<string, string>>(new Map());
   /** codigoActividad → tipo de actividad (Cultivo, Pecuario...), sale del resumen de actividades. */
   private tipos = signal<Map<string, string>>(new Map());
@@ -431,15 +432,19 @@ export default class AprobacionFlujoComponent implements OnInit {
 
   // ── Descargar Excel ──────────────────────────────────────────────────────
 
-  /** Llena la plantilla FLUJOF-REPORTE-EXEL con el flujo y la descarga (en el navegador). */
-  async descargarExcel() {
+  /**
+   * Llena la plantilla del formato con el flujo y la descarga (en el navegador):
+   * AJUSTADO (principal) = FLUJOF-REPORTE-EXCEL, usa los parámetros de la sección I;
+   * DETALLADO (secundario) = FLUJOF-REPORTE-EXCEL-V2.
+   */
+  async descargarExcel(formato: FormatoExcelFlujo) {
     const f = this.flujo();
     if (!f || this.descargandoExcel()) return;
-    this.descargandoExcel.set(true);
+    this.descargandoExcel.set(formato);
     try {
-      await this.reporteService.descargarExcel(f);
+      await this.reporteService.descargarExcel(f, formato, this.parametros()?.parametros);
     } finally {
-      this.descargandoExcel.set(false);
+      this.descargandoExcel.set(null);
     }
   }
 

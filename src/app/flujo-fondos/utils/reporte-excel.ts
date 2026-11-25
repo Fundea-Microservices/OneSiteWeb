@@ -3,7 +3,7 @@ import { IFlujoDetalle } from '../../../interfaces/flujo-fondos';
 import { etiquetaFormaPago, formatoFecha, formatoPeriodo, sumarMeses } from './flujo';
 
 /** Código de la plantilla en el módulo de Plantillas. */
-export const CODIGO_PLANTILLA_FLUJO_EXCEL = 'FLUJOF-REPORTE-EXEL';
+export const CODIGO_PLANTILLA_FLUJO_EXCEL = 'FLUJOF-REPORTE-EXCEL-V2';
 
 /**
  * Llenado de la plantilla Excel del flujo de fondos ("Descargar Excel").
@@ -58,7 +58,8 @@ const SIN_DATO = '—';
 /** La plantilla no sigue la convención: el mensaje se muestra tal cual al usuario. */
 export class PlantillaFlujoError extends Error {}
 
-type Datos = Record<string, string | number | null | undefined>;
+/** Valores de los {{campo}}. Un Date solo se escribe como fecha si la celda es solo el marcador. */
+export type Datos = Record<string, string | number | Date | null | undefined>;
 
 interface CeldaModelo { valor: CellValue; estilo: Partial<Style> }
 interface FilaModelo { altura?: number; celdas: CeldaModelo[] } // celdas[c] = columna c (desde 1)
@@ -67,7 +68,7 @@ interface Combinacion { fila: number; col: number; filas: number; cols: number }
 
 // ── Utilidades ──────────────────────────────────────────────────────────────
 
-function letra(col: number): string {
+export function letra(col: number): string {
   let s = '';
   for (let n = col; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
   return s;
@@ -85,7 +86,7 @@ function rango(ref: string) {
   return { top: Number(f1), left: numeroColumna(c1), bottom: Number(f2), right: numeroColumna(c2) };
 }
 
-function texto(valor: CellValue): string {
+export function texto(valor: CellValue): string {
   if (typeof valor === 'string') return valor;
   if (valor && typeof valor === 'object' && 'richText' in valor) return valor.richText.map(r => r.text).join('');
   return '';
@@ -95,15 +96,17 @@ function reemplazarTexto(t: string, datos: Datos): string {
   return t.replace(MARCADOR, (original, clave: string) => {
     if (!(clave in datos)) return original; // marcador desconocido: se deja para que se note
     const v = datos[clave];
+    if (v instanceof Date) return formatoFecha(v.toISOString());
     return v === null || v === undefined || v === '' ? SIN_DATO : String(v);
   });
 }
 
 /** Reemplaza los {{campo}} en un texto simple o enriquecido; los demás valores no cambian. */
-function reemplazar(valor: CellValue, datos: Datos): CellValue {
+export function reemplazar(valor: CellValue, datos: Datos): CellValue {
   if (typeof valor === 'string') {
     const unico = valor.match(MARCADOR_UNICO);
-    if (unico && typeof datos[unico[1]] === 'number') return datos[unico[1]] as number;
+    const dato = unico ? datos[unico[1]] : undefined;
+    if (typeof dato === 'number' || dato instanceof Date) return dato;
     return reemplazarTexto(valor, datos);
   }
   if (valor && typeof valor === 'object' && 'richText' in valor) {
@@ -114,7 +117,7 @@ function reemplazar(valor: CellValue, datos: Datos): CellValue {
 
 const formatoCantidad = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 
-function fechaHora(d: Date): string {
+export function fechaHora(d: Date): string {
   const dos = (n: number) => String(n).padStart(2, '0');
   return `${dos(d.getDate())}/${dos(d.getMonth() + 1)}/${d.getFullYear()} ${dos(d.getHours())}:${dos(d.getMinutes())}`;
 }
