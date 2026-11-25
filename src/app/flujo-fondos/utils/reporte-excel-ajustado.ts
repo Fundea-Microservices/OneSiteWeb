@@ -58,6 +58,7 @@ const indiceMes = (fecha: string) => {
   return anio * 12 + mes - 1;
 };
 
+// Un NaN se deja pasar: limpiarLibro lo escribe como 0 y lo avisa en la consola
 const redondear = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
 const formatoCantidad = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
@@ -87,6 +88,46 @@ function montosParametro(p: IParametroFlujo, inicio: number, plazo: number): num
     }
   }
   return montos;
+}
+
+/** Caracteres de control que no admite el XML de Excel (salvo tabulador y saltos de línea). */
+const CONTROL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g;
+
+/**
+ * Deja el libro en valores que Excel acepta sin "reparar" el archivo:
+ * - exceljs escribe tal cual un número no finito (<v>NaN</v>); los resultados en caché con
+ *   error de la plantilla vuelven así. Excel lo toma como celda dañada.
+ * - Los demás resultados en caché son los del ejemplo con que se hizo la plantilla (otro cliente,
+ *   otras fechas): se quitan y Excel los recalcula al abrir (fullCalcOnLoad).
+ * - Solo se conservan los resultados válidos de las filas que se acaban de calcular (`conservar`).
+ */
+function limpiarLibro(wb: Workbook, conservar: (hoja: Worksheet, fila: number) => boolean) {
+  const noNumericos: string[] = [];
+  for (const hoja of wb.worksheets) {
+    hoja.eachRow((row, fila) => row.eachCell(cell => {
+      if (cell.isMerged && cell.master !== cell) return;
+      const v = cell.value as any;
+      if (typeof v === 'number') {
+        if (!Number.isFinite(v)) {
+          noNumericos.push(`${hoja.name}!${cell.address}`);
+          cell.value = 0;
+        }
+      } else if (typeof v === 'string') {
+        const limpio = v.replace(CONTROL, '');
+        if (limpio !== v) cell.value = limpio;
+      } else if (v instanceof Date) {
+        if (isNaN(v.getTime())) cell.value = null;
+      } else if (v && typeof v === 'object' && ('formula' in v || 'sharedFormula' in v)) {
+        // Siempre se reasigna: el valor que da exceljs oculta un resultado falsy (0, NaN) pero lo escribe
+        const { result, ...formula } = v;
+        const valido = typeof result === 'string' || typeof result === 'boolean'
+          || (typeof result === 'number' && Number.isFinite(result));
+        cell.value = valido && conservar(hoja, fila) ? { ...formula, result } : formula;
+      }
+    }));
+  }
+  // Un monto que no es número indica un dato mal formado del back (p. ej. una cuota con texto)
+  if (noNumericos.length) console.warn('Excel del flujo: montos no numéricos escritos como 0 en', noNumericos);
 }
 
 function hojaBase(wb: Workbook): Worksheet {
@@ -316,6 +357,8 @@ export function llenarPlantillaFlujoAjustado(
   for (const [codigo, lineas] of parametrosDe) {
     if (!usadas.has(`${PREFIJO_PARAMETROS}${codigo}`)) omitidos.push(...lineas.map(l => nombreParametro.get(l)!));
   }
+
+  limpiarLibro(wb, (hoja, fila) => hoja === ws && fila > filaMeses);
 
   // exceljs escribe <pageSetUpPr> antes de <outlinePr> (ver llenarPlantillaFlujo)
   for (const hoja of wb.worksheets) {
